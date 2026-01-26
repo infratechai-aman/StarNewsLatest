@@ -921,11 +921,14 @@ const AdminDashboard = ({ user, toast }) => {
       const formData = new FormData()
       formData.append('file', enewspaperPdfFile)
       const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
-      if (!uploadRes.ok) {
-        const err = await uploadRes.json()
-        throw new Error(err.error || 'Upload failed')
-      }
       const uploadData = await uploadRes.json()
+
+      if (!uploadRes.ok) {
+        // Show detailed error if available
+        const errorMsg = uploadData.error || 'Upload failed'
+        const errorDetails = uploadData.details ? `\nDetails: ${uploadData.details}` : ''
+        throw new Error(`${errorMsg}${errorDetails}`)
+      }
       setUploadingEnewspaper(false)
 
       // Save e-newspaper record
