@@ -237,14 +237,18 @@ async function handleRoute(request, context) {
       if (!email || !password) {
         return handleCORS(NextResponse.json({ error: 'Email and password required' }, { status: 400 }))
       }
+      console.log('Login attempt for:', email)
       const result = await pool.query('SELECT * FROM users WHERE email = $1', [email])
       if (result.rows.length === 0) {
-        return handleCORS(NextResponse.json({ error: 'Invalid credentials' }, { status: 401 }))
+        console.log('User not found:', email)
+        return handleCORS(NextResponse.json({ error: 'Invalid credentials (User not found)' }, { status: 401 }))
       }
       const foundUser = result.rows[0]
+      console.log('User found, comparing password...')
       const isValidPassword = await comparePassword(password, foundUser.password)
       if (!isValidPassword) {
-        return handleCORS(NextResponse.json({ error: 'Invalid credentials' }, { status: 401 }))
+        console.log('Password mismatch for:', email)
+        return handleCORS(NextResponse.json({ error: 'Invalid credentials (Password mismatch)' }, { status: 401 }))
       }
       if (foundUser.status === 'blocked') {
         return handleCORS(NextResponse.json({ error: 'Account is blocked' }, { status: 403 }))
