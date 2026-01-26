@@ -6,13 +6,7 @@ import { getCurrentUser, generateToken, hashPassword, comparePassword, hasRole, 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60; // 60 seconds max duration
 // Increase payload limit for this route
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb', // Set desired limit here
-    },
-  },
-}
+// Config removed for App Router compatibility
 
 // PostgreSQL connection pool
 const pool = new Pool({

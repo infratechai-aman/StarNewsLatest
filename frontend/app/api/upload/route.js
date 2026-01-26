@@ -8,13 +8,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 // Increase body limit again just in case (handled in global config too)
-export const config = {
-    api: {
-        bodyParser: {
-            sizeLimit: '15mb',
-        },
-    },
-}
+// Config removed for App Router compatibility
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL || 'postgresql://starnews:StarNews@2026!@31.97.60.66:5432/starnews',
