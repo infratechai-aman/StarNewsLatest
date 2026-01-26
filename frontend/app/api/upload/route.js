@@ -63,6 +63,10 @@ export async function POST(request) {
         })
     } catch (error) {
         console.error('Upload error:', error)
-        return NextResponse.json({ error: 'Upload failed: ' + error.message }, { status: 500 })
+        return NextResponse.json({
+            error: 'Upload failed: ' + error.message,
+            details: error.stack,
+            code: error.code // Postgres error code
+        }, { status: 500 })
     }
 }
