@@ -921,7 +921,15 @@ const AdminDashboard = ({ user, toast }) => {
       const formData = new FormData()
       formData.append('file', enewspaperPdfFile)
       const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
-      const uploadData = await uploadRes.json()
+      const resText = await uploadRes.text()
+
+      let uploadData;
+      try {
+        uploadData = JSON.parse(resText)
+      } catch (e) {
+        // If JSON parse fails, it's likely a Vercel HTML error (413, 504, etc)
+        throw new Error(`Server Error (${uploadRes.status}): ${resText.slice(0, 100)}...`)
+      }
 
       if (!uploadRes.ok) {
         // Show detailed error if available
