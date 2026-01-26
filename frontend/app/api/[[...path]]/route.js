@@ -4,6 +4,15 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser, generateToken, hashPassword, comparePassword, hasRole, isSuperAdmin, ROLES, ADMIN_USERNAME, ADMIN_DEFAULT_PASSWORD } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 60; // 60 seconds max duration
+// Increase payload limit for this route
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Set desired limit here
+    },
+  },
+}
 
 // PostgreSQL connection pool
 const pool = new Pool({

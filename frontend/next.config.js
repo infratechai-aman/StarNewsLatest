@@ -6,6 +6,9 @@ const nextConfig = {
   experimental: {
     // Remove if not using Server Components
     serverComponentsExternalPackages: ['mongodb'],
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
   webpack(config, { dev }) {
     if (dev) {
