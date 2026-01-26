@@ -1040,6 +1040,25 @@ async function handleRoute(request, context) {
       return handleCORS(NextResponse.json(result.rows[0]))
     }
 
+    // ADMIN - GET PENDING TICKER
+    if (route === '/admin/pending-ticker' && method === 'GET') {
+      // EMERGENCY: Auth disabled
+      // if (!hasRole(user, [ROLES.SUPER_ADMIN, ROLES.REPORTER])) {
+      //   return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+      // }
+
+      const result = await pool.query('SELECT * FROM breaking_news ORDER BY created_at DESC LIMIT 1')
+      const ticker = result.rows[0] ? {
+        text: result.rows[0].text,
+        pendingText: result.rows[0].pending_text,
+        pendingStatus: result.rows[0].pending_status,
+        pendingBy: result.rows[0].pending_by,
+        pendingAt: result.rows[0].pending_at
+      } : null
+
+      return handleCORS(NextResponse.json({ ticker }))
+    }
+
     // BUSINESS PROMOTIONS - SUBMIT (Public) & LIST (Admin)
     if (route === '/business-promotions') {
       // POST: Submit
