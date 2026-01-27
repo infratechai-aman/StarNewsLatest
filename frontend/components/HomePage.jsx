@@ -1063,7 +1063,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
           <BusinessAdWidget
             settings={businessAdSettings}
             t={t}
-            onClick={() => businessAdSettings?.linkUrl && window.open(businessAdSettings.linkUrl, '_blank')}
+            onClick={() => setPromotionOpen(true)}
           />
           <SubscribeWidget />
           <ContactWidget t={t} />
