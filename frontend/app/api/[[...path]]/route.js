@@ -823,7 +823,9 @@ async function handleRoute(request, context) {
 
       if (method === 'GET') {
         const result = await pool.query('SELECT * FROM businesses ORDER BY created_at DESC')
-        return handleCORS(NextResponse.json(result.rows))
+        // Map active -> enabled for frontend compatibility
+        const businesses = result.rows.map(b => ({ ...b, enabled: b.active }))
+        return handleCORS(NextResponse.json(businesses))
       }
 
       if (method === 'POST') {
@@ -840,6 +842,43 @@ async function handleRoute(request, context) {
           [uuidv4(), name, description, category, address, city, phone, email, website, image, coverImage, JSON.stringify(images || []), ownerId || user.userId]
         )
         return handleCORS(NextResponse.json(result.rows[0]))
+      }
+    }
+
+    // ADMIN - BUSINESS ACTIONS (Delete, Toggle)
+    if (route.startsWith('/admin/businesses/')) {
+      if (!isSuperAdmin(user)) {
+        return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+      }
+
+      if (method === 'DELETE') {
+        const businessId = path[2]
+        await pool.query('DELETE FROM businesses WHERE id = $1', [businessId])
+        return handleCORS(NextResponse.json({ success: true }))
+      }
+
+      if (route.endsWith('/toggle') && method === 'POST') {
+        const businessId = path[2]
+        const current = await pool.query('SELECT active FROM businesses WHERE id = $1', [businessId])
+        if (current.rows.length > 0) {
+          const newStatus = !current.rows[0].active
+          await pool.query('UPDATE businesses SET active = $1 WHERE id = $2', [newStatus, businessId])
+          return handleCORS(NextResponse.json({ success: true, enabled: newStatus }))
+        }
+        return handleCORS(NextResponse.json({ error: 'Business not found' }, { status: 404 }))
+      }
+
+      // Update Business (PUT) - It was missing too! adding it just in case
+      if (method === 'PUT' && !route.endsWith('/toggle')) {
+        const businessId = path[2]
+        const body = await request.json()
+        const { name, category, description, phone, email, website, address, city, image, coverImage, images } = body
+
+        await pool.query(
+          `UPDATE businesses SET name=$1, category=$2, description=$3, phone=$4, email=$5, website=$6, address=$7, city=$8, image=$9, cover_image=$10, images=$11, updated_at=NOW() WHERE id=$12`,
+          [name, category, description, phone, email, website, address, city, image, coverImage, JSON.stringify(images || []), businessId]
+        )
+        return handleCORS(NextResponse.json({ success: true }))
       }
     }
 
