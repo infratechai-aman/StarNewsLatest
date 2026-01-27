@@ -14,7 +14,6 @@ import {
   getTrendingSettings,
   getArticleAdSettings,
   getBusinessAdSettings,
-  getBusinessAdSettings,
 } from '@/lib/contentStore'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
