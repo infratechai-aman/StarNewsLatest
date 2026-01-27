@@ -14,7 +14,14 @@ import {
   getTrendingSettings,
   getArticleAdSettings,
   getBusinessAdSettings,
+  getBusinessAdSettings,
 } from '@/lib/contentStore'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import { Store } from 'lucide-react'
 
 
 // Right side advertisement images
@@ -265,6 +272,47 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
   const [oldNews, setOldNews] = useState([]) // Archive for items beyond 6 per category
   const [visibleMoreStories, setVisibleMoreStories] = useState(15) // Show 15 initially
   const [loadingMoreStories, setLoadingMoreStories] = useState(false)
+
+  // Promotion Form State
+  const [promotionOpen, setPromotionOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [promotionData, setPromotionData] = useState({
+    businessName: '', ownerName: '', phone: '', email: '', address: '', description: ''
+  })
+
+  const handlePromotionSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      // Use the same endpoint as Business Directory to centralize requests
+      const res = await fetch('/api/business-promotions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(promotionData)
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        toast.success("Ad Request Submitted!", {
+          description: "Our team will contact you shortly."
+        })
+        setPromotionOpen(false)
+        setPromotionData({ businessName: '', ownerName: '', phone: '', email: '', address: '', description: '' })
+      } else {
+        toast.error("Submission Failed", {
+          description: data.error || "Please try again later."
+        })
+      }
+    } catch (error) {
+      console.error('Promotion submit error:', error)
+      toast.error("Error", {
+        description: "Something went wrong. Please check your connection."
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
 
 
@@ -608,9 +656,91 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
         <BusinessAdWidget
           settings={businessAdSettings}
           t={t}
-          onClick={() => businessAdSettings?.linkUrl && window.open(businessAdSettings.linkUrl, '_blank')}
+          onClick={() => setPromotionOpen(true)}
         />
       </div>
+
+      {/* Promotion/Ad Request Dialog */}
+      <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Post Your Ad</DialogTitle>
+            <DialogDescription>
+              Submit your ad details. Our team will contact you for verification and pricing.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="businessName">Business/Ad Name *</Label>
+              <Input
+                id="businessName"
+                value={promotionData.businessName}
+                onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
+                placeholder="e.g. Star Electronics / Sale"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ownerName">Your Name *</Label>
+                <Input
+                  id="ownerName"
+                  value={promotionData.ownerName}
+                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
+                  placeholder="Your Name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  value={promotionData.phone}
+                  onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
+                  placeholder="9876543210"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={promotionData.email}
+                onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
+                placeholder="contact@email.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Address / Location *</Label>
+              <Textarea
+                id="address"
+                value={promotionData.address}
+                onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
+                placeholder="Shop No, Building, Area, City"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Ad Description / Message (Optional)</Label>
+              <Textarea
+                id="description"
+                value={promotionData.description}
+                onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
+                placeholder="Briefly describe what you want to advertise..."
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
+                {isSubmitting ? 'Submitting...' : 'Submit Request'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* NEWS SECTIONS WITH SIDEBAR */}
       <div className="grid lg:grid-cols-12 gap-6">
