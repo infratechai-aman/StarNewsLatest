@@ -133,18 +133,55 @@ const BusinessDetailPage = ({ business, setCurrentView, user, toast }) => {
       </div>
 
       {/* ==================== 2. GALLERY ==================== */}
-      {business.images && business.images.length > 1 && (
+      {business.images && business.images.length > 0 && (
         <>
           <div className="mb-4">
-            <div className="relative rounded-xl overflow-hidden bg-gray-100">
-              <img
-                src={galleryImages[mainImage]}
-                alt={`${business.name} - Image ${mainImage + 1}`}
-                className="w-full h-64 md:h-96 object-cover transition-all duration-300"
+            <div className="relative rounded-xl overflow-hidden bg-gray-900 group">
+              {/* Blurred Background */}
+              <div
+                className="absolute inset-0 bg-cover bg-center blur-2xl opacity-60"
+                style={{
+                  backgroundImage: `url(${galleryImages[mainImage]})`
+                }}
               />
-              <Badge className="absolute top-3 right-3 bg-black/60 text-white text-xs">
+
+              {/* Main Image - Contained */}
+              <div className="relative h-64 md:h-[500px] w-full flex items-center justify-center">
+                <img
+                  src={galleryImages[mainImage]}
+                  alt={`${business.name} - Image ${mainImage + 1}`}
+                  className="max-h-full max-w-full object-contain z-10 shadow-xl"
+                />
+              </div>
+
+              {/* Image Counter Badge */}
+              <Badge className="absolute top-3 right-3 bg-black/60 text-white text-xs z-20">
                 {mainImage + 1} / {galleryImages.length}
               </Badge>
+
+              {/* Navigation Buttons (Only if > 1 image) */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setMainImage((prev) => (prev - 1 + galleryImages.length) % galleryImages.length)
+                    }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                  >
+                    <ChevronLeft className="h-8 w-8" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setMainImage((prev) => (prev + 1) % galleryImages.length)
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 z-20"
+                  >
+                    <ChevronRight className="h-8 w-8" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

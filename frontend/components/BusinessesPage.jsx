@@ -286,15 +286,29 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
         {filteredBusinesses.map((business) => (
           <Card key={business.id} className="overflow-hidden hover:shadow-2xl transition-all border-2 hover:border-blue-600 cursor-pointer">
             {/* Rectangle Image on Top */}
-            <div className="relative">
+            {/* Rectangle Image on Top with Premium Blur Effect */}
+            <div className="relative aspect-video w-full overflow-hidden bg-gray-100 group">
+              {/* 1. Blurred Background Layer */}
+              <div
+                className="absolute inset-0 bg-cover bg-center blur-xl opacity-50 scale-110"
+                style={{
+                  backgroundImage: `url(${business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'})`
+                }}
+              />
+
+              {/* 2. Main Image Layer - Centered & Contained */}
               <img
                 src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0]}
                 alt={business.name}
-                className="w-full aspect-video object-cover"
+                className="relative w-full h-full object-contain z-10 transition-transform duration-500 group-hover:scale-105"
                 onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'; }}
               />
+
+              {/* Gradient Overlay for Text Readability (Optional, adds depth) */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-20 pointer-events-none" />
+
               {business.featured && (
-                <Badge className="absolute top-3 right-3 bg-gradient-to-r from-yellow-600 to-orange-600">
+                <Badge className="absolute top-3 right-3 z-30 bg-gradient-to-r from-yellow-600 to-orange-600 shadow-sm">
                   FEATURED
                 </Badge>
               )}

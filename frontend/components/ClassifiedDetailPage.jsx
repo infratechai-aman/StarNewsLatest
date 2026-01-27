@@ -127,20 +127,31 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                     <Card>
                         <CardContent className="p-0">
                             {/* Main Image with Navigation Arrows - COMPACT SIZE */}
-                            <div className="relative bg-gray-100 rounded-t-lg">
-                                <img
-                                    src={images[currentImageIndex]}
-                                    alt={classified.title}
-                                    className="w-full h-[200px] md:h-[280px] object-contain"
+                            <div className="relative bg-gray-900 rounded-t-lg group overflow-hidden">
+                                {/* Blurred Background Effect */}
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center blur-xl opacity-50 scale-110"
+                                    style={{
+                                        backgroundImage: `url(${images[currentImageIndex]})`
+                                    }}
                                 />
 
+                                {/* Main Image Container - Centered & Contained */}
+                                <div className="relative h-[300px] md:h-[400px] flex items-center justify-center">
+                                    <img
+                                        src={images[currentImageIndex]}
+                                        alt={classified.title}
+                                        className="max-h-full max-w-full object-contain z-10"
+                                    />
+                                </div>
+
                                 {/* Image Counter Badge */}
-                                <Badge className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5">
+                                <Badge className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-0.5 z-20">
                                     {currentImageIndex + 1} / {images.length}
                                 </Badge>
 
                                 {/* Favorite & Share Buttons */}
-                                <div className="absolute top-3 left-3 flex gap-2">
+                                <div className="absolute top-3 left-3 flex gap-2 z-20">
                                     <button
                                         onClick={() => setIsFavorite(!isFavorite)}
                                         className={`p-2 rounded-full ${isFavorite ? 'bg-red-500 text-white' : 'bg-white/90 text-gray-700'} shadow-lg transition-all hover:scale-110`}
@@ -156,7 +167,7 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                                 {images.length > 1 && (
                                     <button
                                         onClick={prevImage}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all hover:scale-110"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full shadow-lg transition-all hover:scale-110 z-20 opacity-0 group-hover:opacity-100"
                                     >
                                         <ChevronLeft className="h-6 w-6" />
                                     </button>
@@ -166,7 +177,7 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                                 {images.length > 1 && (
                                     <button
                                         onClick={nextImage}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all hover:scale-110"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/60 text-white p-2 rounded-full shadow-lg transition-all hover:scale-110 z-20 opacity-0 group-hover:opacity-100"
                                     >
                                         <ChevronRight className="h-6 w-6" />
                                     </button>
