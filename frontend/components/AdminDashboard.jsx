@@ -611,7 +611,10 @@ const AdminDashboard = ({ user, toast }) => {
     if (activeTab === 'reporter-apps') loadReporterApplications()
     if (activeTab === 'reporters') loadAllReporters()
     if (activeTab === 'enewspaper') loadAllEnewspapers()
-    if (activeTab === 'content') loadSidebarAd()
+    if (activeTab === 'content') {
+      loadSidebarAd()
+      loadBusinessPromotions()
+    }
   }, [activeTab])
 
   // ===== BUSINESS CRUD Handlers =====
@@ -2593,6 +2596,86 @@ const AdminDashboard = ({ user, toast }) => {
 
         {/* Content Management Tab */}
         < TabsContent value="content" className="space-y-4" >
+          {/* Ads Request Section */}
+          <Card className="border-l-4 border-l-blue-500 bg-blue-50/10">
+            <CardHeader className="bg-blue-50/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-blue-700">
+                    <Megaphone className="h-5 w-5" />
+                    Ads Request
+                  </CardTitle>
+                  <CardDescription>Requests from 'Promote Your Business/Ad' forms</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loadingPromotions ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {businessPromotions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No ad requests found</p>
+                </div>
+              ) : (
+                <div className="space-y-4 pt-4">
+                  {businessPromotions.map((promo) => (
+                    <Card key={promo.id} className={`border-l-4 ${promo.status === 'PENDING' ? 'border-l-yellow-500' : promo.status === 'CONTACTED' ? 'border-l-blue-500' : promo.status === 'APPROVED' ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-bold text-lg">{promo.businessName}</h3>
+                              <Badge variant={promo.status === 'PENDING' ? 'outline' : 'default'} className={
+                                promo.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                  promo.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
+                                    promo.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }>
+                                {promo.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm font-medium mt-1 break-words line-clamp-2" title={promo.reason}>{promo.reason}</p>
+                            <p className="text-sm font-medium text-gray-700 break-words">Owner: {promo.ownerName}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {promo.phone}</span>
+                              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {promo.email}</span>
+                            </div>
+                            <p className="text-sm mt-2 break-all"><span className="font-semibold">Address:</span> {promo.address}</p>
+                            {promo.description && (
+                              <p className="text-sm mt-2 text-gray-600 bg-gray-50 p-2 rounded">"{promo.description}"</p>
+                            )}
+                            <p className="text-xs text-gray-400 mt-2">Submitted: {new Date(promo.submittedAt).toLocaleString()}</p>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {promo.status === 'PENDING' && (
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 w-full" onClick={() => handlePromotionAction(promo.id, 'contacted')}>
+                                Mark Contacted
+                              </Button>
+                            )}
+                            {promo.status !== 'APPROVED' && (
+                              <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 w-full" onClick={() => handlePromotionAction(promo.id, 'approve')}>
+                                <Check className="h-3 w-3 mr-1" /> Approve
+                              </Button>
+                            )}
+                            {promo.status !== 'REJECTED' && (
+                              <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 w-full" onClick={() => handlePromotionAction(promo.id, 'reject')}>
+                                <X className="h-3 w-3 mr-1" /> Reject
+                              </Button>
+                            )}
+                            <Button size="sm" variant="ghost" className="text-gray-400 hover:text-red-600" onClick={() => handlePromotionAction(promo.id, 'delete')}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Premium Advertisement Banner */}
           < Card >
             <CardHeader>
