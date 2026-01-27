@@ -142,6 +142,106 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
   )
 }
 
+
+// --- REUSABLE AD WIDGETS ---
+
+const BusinessAdWidget = ({ settings, t, onClick }) => {
+  if (!settings?.enabled) return null
+  return (
+    <Card
+      className="overflow-hidden border-2 border-gray-200 shadow-lg bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 cursor-pointer transition-transform hover:scale-[1.02] mb-4"
+      onClick={onClick}
+    >
+      <CardContent className="p-0 h-64 relative flex flex-col items-center justify-center text-center">
+        <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('advertisement')}</Badge>
+        {settings?.imageUrl ? (
+          <img src={settings.imageUrl} alt="Business Ad" className="w-full h-full object-cover" />
+        ) : (
+          <div className="text-white p-4">
+            <p className="text-2xl font-bold mb-2">🏢 {settings?.title || 'BUSINESS'}</p>
+            <p className="text-lg font-semibold">{settings?.subtitle || t('advertisement')}</p>
+            <div className="mt-4 border-t border-white/30 pt-4">
+              <p className="text-sm">{t('advertiseYourBusiness')}</p>
+              <Button size="sm" className="mt-3 bg-white text-orange-600 hover:bg-gray-100 font-bold">{settings?.buttonText || t('postYourAd')}</Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+const SubscribeWidget = () => (
+  <Card className="overflow-hidden border-2 border-red-100 shadow-lg bg-white mb-4">
+    <CardContent className="p-4 flex flex-col items-center text-center space-y-4">
+      <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg mb-2 cursor-pointer hover:scale-110 transition-transform">
+        <Youtube className="w-8 h-8 text-white" />
+      </div>
+      <div>
+        <h3 className="font-bold text-xl text-gray-900">Subscribe Now!</h3>
+        <p className="text-sm text-gray-600 mt-1">
+          Join our YouTube channel for breaking news and live updates.
+        </p>
+      </div>
+      <a
+        href="https://www.youtube.com/@starnewsindialive?sub_confirmation=1"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full"
+      >
+        <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold text-lg h-12 shadow-md transition-transform hover:scale-105">
+          <Youtube className="mr-2 h-5 w-5" />
+          Subscribe
+        </Button>
+      </a>
+    </CardContent>
+  </Card>
+)
+
+const ContactWidget = ({ t }) => (
+  <Card className="overflow-hidden border-2 border-gray-200 shadow-lg bg-gradient-to-br from-gray-800 via-gray-900 to-black mb-4">
+    <CardContent className="p-0 h-56 relative flex flex-col items-center justify-center text-center">
+      <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('contactUs')}</Badge>
+      <div className="text-white p-4">
+        <p className="text-2xl font-bold mb-2">📞 StarNews</p>
+        <p className="text-lg font-semibold">{t('getInTouch')}</p>
+        <div className="mt-4 border-t border-white/30 pt-4">
+          <p className="text-sm">{t('whatsAppUs')}</p>
+          <p className="text-lg font-bold">+91 70208 73300</p>
+          <a href="https://wa.me/917020873300" target="_blank" rel="noopener noreferrer">
+            <Button size="sm" className="mt-3 bg-green-500 text-white hover:bg-green-600 font-bold">{t('chatNow')}</Button>
+          </a>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)
+
+const StickyAdWidget = ({ settings, t, onClick }) => {
+  if (!settings?.sticky?.enabled) return null
+  return (
+    <Card className="overflow-hidden border-2 border-gray-200 shadow-lg cursor-pointer transition-transform hover:scale-[1.02] mb-4"
+      onClick={onClick}
+    >
+      <CardContent className="p-0 min-h-[400px] relative bg-gray-100 flex items-center justify-center">
+        {settings.sticky?.imageUrl ? (
+          <img
+            src={settings.sticky.imageUrl}
+            alt={settings.sticky.title || 'Advertisement'}
+            className="w-full h-auto object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-4 text-white text-center">
+            <p className="font-bold text-lg">{t('yourAdHere')}</p>
+            <p className="text-sm opacity-80">300 x 400 px</p>
+          </div>
+        )}
+        <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{t('advertisement')}</Badge>
+      </CardContent>
+    </Card>
+  )
+}
+
 const HomePage = ({ setCurrentView, setSelectedArticle }) => {
   const { t, language } = useLanguage()
   const [currentAdIndex, setCurrentAdIndex] = useState(0)
@@ -503,6 +603,15 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
       )
       }
 
+      {/* MOBILE AD INJECTION 1: Business Promo (After Politics) */}
+      <div className="block lg:hidden">
+        <BusinessAdWidget
+          settings={businessAdSettings}
+          t={t}
+          onClick={() => businessAdSettings?.linkUrl && window.open(businessAdSettings.linkUrl, '_blank')}
+        />
+      </div>
+
       {/* NEWS SECTIONS WITH SIDEBAR */}
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-9 space-y-8">
@@ -583,6 +692,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
             )}
           </div>
 
+          {/* MOBILE AD INJECTION 2: Subscribe (After Business) */}
+          <div className="block lg:hidden">
+            <SubscribeWidget />
+          </div>
+
           {/* NATIONAL Section - 8 Cards with Varied Bento Grid Layout */}
           <div>
             <div className="border-b-4 border-gray-900 pb-1 mb-4">
@@ -626,6 +740,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
             ) : (
               <p className="text-muted-foreground text-center py-8">No National news available</p>
             )}
+          </div>
+
+          {/* MOBILE AD INJECTION 3: Contact (After National) */}
+          <div className="block lg:hidden">
+            <ContactWidget t={t} />
           </div>
 
           {/* ENTERTAINMENT Section - 4 Cards Attractive Layout */}
@@ -677,6 +796,15 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
             ) : (
               <p className="text-muted-foreground text-center py-8">No Entertainment news available</p>
             )}
+          </div>
+
+          {/* MOBILE AD INJECTION 4: Sticky Ad (After Entertainment) */}
+          <div className="block lg:hidden">
+            <StickyAdWidget
+              settings={articleAdSettings}
+              t={t}
+              onClick={() => articleAdSettings.sticky?.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')}
+            />
           </div>
           {/* OLD NEWS Section - Dynamic from API (Uncategorized/Other articles) */}
           <div>
@@ -800,98 +928,22 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR ADS */}
-        <div className="lg:col-span-3 space-y-4">
-          {businessAdSettings?.enabled && (
-            <Card
-              className="overflow-hidden border-2 border-gray-200 shadow-lg bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 cursor-pointer transition-transform hover:scale-[1.02]"
-              onClick={() => businessAdSettings?.linkUrl && window.open(businessAdSettings.linkUrl, '_blank')}
-            >
-              <CardContent className="p-0 h-64 relative flex flex-col items-center justify-center text-center">
-                <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('advertisement')}</Badge>
-                {businessAdSettings?.imageUrl ? (
-                  <img src={businessAdSettings.imageUrl} alt="Business Ad" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-white p-4">
-                    <p className="text-2xl font-bold mb-2">🏢 {businessAdSettings?.title || 'BUSINESS'}</p>
-                    <p className="text-lg font-semibold">{businessAdSettings?.subtitle || t('advertisement')}</p>
-                    <div className="mt-4 border-t border-white/30 pt-4">
-                      <p className="text-sm">{t('advertiseYourBusiness')}</p>
-                      <Button size="sm" className="mt-3 bg-white text-orange-600 hover:bg-gray-100 font-bold">{businessAdSettings?.buttonText || t('postYourAd')}</Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="overflow-hidden border-2 border-red-100 shadow-lg bg-white">
-            <CardContent className="p-4 flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg mb-2 cursor-pointer hover:scale-110 transition-transform">
-                <Youtube className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl text-gray-900">Subscribe Now!</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Join our YouTube channel for breaking news and live updates.
-                </p>
-              </div>
-              <a
-                href="https://www.youtube.com/@starnewsindialive?sub_confirmation=1"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full"
-              >
-                <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold text-lg h-12 shadow-md transition-transform hover:scale-105">
-                  <Youtube className="mr-2 h-5 w-5" />
-                  Subscribe
-                </Button>
-              </a>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-2 border-gray-200 shadow-lg bg-gradient-to-br from-gray-800 via-gray-900 to-black">
-            <CardContent className="p-0 h-56 relative flex flex-col items-center justify-center text-center">
-              <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('contactUs')}</Badge>
-              <div className="text-white p-4">
-                <p className="text-2xl font-bold mb-2">📞 StarNews</p>
-                <p className="text-lg font-semibold">{t('getInTouch')}</p>
-                <div className="mt-4 border-t border-white/30 pt-4">
-                  <p className="text-sm">{t('whatsAppUs')}</p>
-                  <p className="text-lg font-bold">+91 70208 73300</p>
-                  <a href="https://wa.me/917020873300" target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="mt-3 bg-green-500 text-white hover:bg-green-600 font-bold">{t('chatNow')}</Button>
-                  </a>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {
-            articleAdSettings?.sticky?.enabled && (
-              <div className="sticky top-20">
-                <Card className="overflow-hidden border-2 border-gray-200 shadow-lg cursor-pointer transition-transform hover:scale-[1.02]"
-                  onClick={() => articleAdSettings.sticky?.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')}
-                >
-                  <CardContent className="p-0 min-h-[400px] relative bg-gray-100 flex items-center justify-center">
-                    {articleAdSettings.sticky?.imageUrl ? (
-                      <img
-                        src={articleAdSettings.sticky.imageUrl}
-                        alt={articleAdSettings.sticky.title || 'Advertisement'}
-                        className="w-full h-auto object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-4 text-white text-center">
-                        <p className="font-bold text-lg">{t('yourAdHere')}</p>
-                        <p className="text-sm opacity-80">300 x 400 px</p>
-                      </div>
-                    )}
-                    <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-1.5 py-0.5">{t('advertisement')}</Badge>
-                  </CardContent>
-                </Card>
-              </div>
-            )
-          }
+        {/* RIGHT SIDEBAR ADS (DESKTOP ONLY) */}
+        <div className="hidden lg:block lg:col-span-3 space-y-4">
+          <BusinessAdWidget
+            settings={businessAdSettings}
+            t={t}
+            onClick={() => businessAdSettings?.linkUrl && window.open(businessAdSettings.linkUrl, '_blank')}
+          />
+          <SubscribeWidget />
+          <ContactWidget t={t} />
+          <div className="sticky top-20">
+            <StickyAdWidget
+              settings={articleAdSettings}
+              t={t}
+              onClick={() => articleAdSettings.sticky?.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')}
+            />
+          </div>
         </div>
       </div>
 
