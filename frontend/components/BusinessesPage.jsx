@@ -290,7 +290,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               <img
                 src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0]}
                 alt={business.name}
-                className="w-full h-48 object-cover"
+                className="w-full aspect-video object-cover"
                 onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'; }}
               />
               {business.featured && (

@@ -231,7 +231,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           return (
             <Card key={ad.id} className="overflow-hidden hover:shadow-xl transition-all group cursor-pointer flex flex-col h-full" onClick={() => handleContactSeller(ad)}>
               {/* Fixed aspect ratio image container for uniform sizing */}
-              <div className="relative aspect-square overflow-hidden bg-gray-100">
+              <div className="relative aspect-video overflow-hidden bg-gray-100">
                 <img
                   src={ad.image || ad.images?.[0]}
                   alt={ad.title}
@@ -334,9 +334,10 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               {/* Images Upload */}
               <div className="space-y-2">
                 <Label>Images * (Minimum 1, Maximum 8, Max 1 MB)</Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-2">Recommended size: 800x600px (Landscape)</p>
                 <div className="grid grid-cols-4 gap-3">
                   {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200">
+                    <div key={index} className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200">
                       <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -352,7 +353,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-orange-500 hover:bg-orange-50 transition-colors"
+                      className="aspect-video rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-orange-500 hover:bg-orange-50 transition-colors"
                     >
                       <Upload className="h-6 w-6 text-gray-400" />
                       <span className="text-xs text-gray-500 mt-1">Add Image</span>
