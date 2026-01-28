@@ -671,8 +671,25 @@ async function handleRoute(request, context) {
       const pendingBusinesses = await pool.query('SELECT * FROM businesses WHERE approval_status = $1', ['pending'])
       const pendingClassifieds = await pool.query('SELECT * FROM classified_ads WHERE approval_status = $1', ['pending'])
       const pendingUsers = await pool.query('SELECT * FROM users WHERE status = $1', ['pending'])
+
+      // Map news articles to camelCase
+      const mappedNews = pendingNews.rows.map(a => ({
+        ...a,
+        mainImage: a.main_image,
+        galleryImages: a.gallery_images,
+        youtubeUrl: a.youtube_url,
+        videoUrl: a.video_url,
+        thumbnailUrl: a.thumbnail_url,
+        authorName: a.author_name,
+        metaDescription: a.meta_description,
+        categoryId: a.category_id,
+        approvalStatus: a.approval_status,
+        createdAt: a.created_at,
+        publishedAt: a.published_at
+      }))
+
       return handleCORS(NextResponse.json({
-        news: pendingNews.rows,
+        news: mappedNews,
         businesses: pendingBusinesses.rows,
         ads: [],
         classifieds: pendingClassifieds.rows,
@@ -702,7 +719,22 @@ async function handleRoute(request, context) {
         return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
       }
       const result = await pool.query('SELECT * FROM news_articles ORDER BY created_at DESC')
-      const articles = result.rows.map(a => ({ ...a, enabled: a.active }))
+      // Map snake_case to camelCase for frontend compatibility
+      const articles = result.rows.map(a => ({
+        ...a,
+        enabled: a.active,
+        mainImage: a.main_image,
+        galleryImages: a.gallery_images,
+        youtubeUrl: a.youtube_url,
+        videoUrl: a.video_url,
+        thumbnailUrl: a.thumbnail_url,
+        authorName: a.author_name,
+        metaDescription: a.meta_description,
+        categoryId: a.category_id,
+        approvalStatus: a.approval_status,
+        createdAt: a.created_at,
+        publishedAt: a.published_at
+      }))
       return handleCORS(NextResponse.json(articles))
     }
 
