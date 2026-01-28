@@ -743,6 +743,30 @@ async function handleRoute(request, context) {
     }
 
 
+    // ADMIN - UPDATE NEWS
+    if (route.startsWith('/admin/news/') && method === 'PUT') {
+      if (!isSuperAdmin(user)) {
+        return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+      }
+      const articleId = path[2]
+      const body = await request.json()
+      const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, authorName, thumbnailUrl, featured, showOnHome, genre } = body
+
+      let catId = categoryId || category
+      // If categoryId is not a UUID, look it up by name
+      if (catId && !catId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const catResult = await pool.query('SELECT id FROM news_categories WHERE name ILIKE $1 OR slug ILIKE $1 LIMIT 1', [catId.replace(' News', '')])
+        catId = catResult.rows.length > 0 ? catResult.rows[0].id : null
+      }
+
+      await pool.query(
+        `UPDATE news_articles SET title=$1, content=$2, category_id=$3, city=$4, main_image=$5, gallery_images=$6, video_url=$7, youtube_url=$8, tags=$9, meta_description=$10, author_name=$11, thumbnail_url=$12, featured=$13, active=$14, genre=$15, updated_at=NOW() WHERE id=$16`,
+        [title, content, catId, city || '', mainImage || '', JSON.stringify(galleryImages || []), videoUrl || '', youtubeUrl || '', JSON.stringify(tags || []), metaDescription || '', authorName || '', thumbnailUrl || '', featured || false, showOnHome !== false, genre || 'breaking', articleId]
+      )
+      const result = await pool.query('SELECT * FROM news_articles WHERE id = $1', [articleId])
+      return handleCORS(NextResponse.json(result.rows[0]))
+    }
+
     // ADMIN - CREATE NEWS
     if (route === '/admin/news' && method === 'POST') {
       // EMERGENCY: Auth disabled for immediate news posting
@@ -750,11 +774,19 @@ async function handleRoute(request, context) {
       //   return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
       // }
       const body = await request.json()
-      const { title, content, categoryId, city, mainImage, galleryImages, videoUrl, youtubeUrl, genre } = body
+      const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, genre, tags, metaDescription, authorName, thumbnailUrl, featured, showOnHome } = body
+
+      let catId = categoryId || category
+      // If categoryId is not a UUID, look it up by name
+      if (catId && !catId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        const catResult = await pool.query('SELECT id FROM news_categories WHERE name ILIKE $1 OR slug ILIKE $1 LIMIT 1', [catId.replace(' News', '')])
+        catId = catResult.rows.length > 0 ? catResult.rows[0].id : null
+      }
+
       const result = await pool.query(
-        `INSERT INTO news_articles (id, title, content, category_id, city, genre, main_image, gallery_images, video_url, youtube_url, author_id, approval_status, published_at, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'approved', NOW(), NOW(), NOW()) RETURNING *`,
-        [uuidv4(), title, content, categoryId, city, genre || 'breaking', mainImage, JSON.stringify(galleryImages || []), videoUrl, youtubeUrl, user.userId]
+        `INSERT INTO news_articles (id, title, content, category_id, city, genre, main_image, gallery_images, video_url, youtube_url, tags, meta_description, author_name, thumbnail_url, featured, active, author_id, approval_status, published_at, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, 'approved', NOW(), NOW(), NOW()) RETURNING *`,
+        [uuidv4(), title, content, catId, city, genre || 'breaking', mainImage, JSON.stringify(galleryImages || []), videoUrl, youtubeUrl, JSON.stringify(tags || []), metaDescription, authorName, thumbnailUrl, featured || false, showOnHome !== false, user.userId]
       )
       return handleCORS(NextResponse.json(result.rows[0]))
     }
