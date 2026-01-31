@@ -19,6 +19,13 @@ async function initTables() {
   if (tablesInitialized) return
   const client = await pool.connect()
   try {
+    // Optimization: Check if tables exist before running heavy DDL
+    const check = await client.query("SELECT to_regclass('public.users') as exists")
+    if (check.rows[0]?.exists) {
+      tablesInitialized = true
+      return
+    }
+
     await client.query(`
       ALTER TABLE businesses ADD COLUMN IF NOT EXISTS cover_image TEXT;
       ALTER TABLE businesses ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]';
@@ -649,52 +656,62 @@ async function handleRoute(request, context) {
 
     // ADMIN - STATS
     if (route === '/admin/stats' && method === 'GET') {
-      if (!isSuperAdmin(user)) {
-        return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+      try {
+        if (!isSuperAdmin(user)) {
+          return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+        }
+        const newsCount = await pool.query('SELECT COUNT(*) FROM news_articles')
+        const usersCount = await pool.query('SELECT COUNT(*) FROM users')
+        const businessCount = await pool.query('SELECT COUNT(*) FROM businesses')
+        return handleCORS(NextResponse.json({
+          totalNews: parseInt(newsCount.rows[0].count),
+          totalUsers: parseInt(usersCount.rows[0].count),
+          totalBusinesses: parseInt(businessCount.rows[0].count)
+        }))
+      } catch (err) {
+        console.error("STATS ERROR:", err);
+        return handleCORS(NextResponse.json({ error: "STATS CRASH: " + err.message }, { status: 500 }))
       }
-      const newsCount = await pool.query('SELECT COUNT(*) FROM news_articles')
-      const usersCount = await pool.query('SELECT COUNT(*) FROM users')
-      const businessCount = await pool.query('SELECT COUNT(*) FROM businesses')
-      return handleCORS(NextResponse.json({
-        totalNews: parseInt(newsCount.rows[0].count),
-        totalUsers: parseInt(usersCount.rows[0].count),
-        totalBusinesses: parseInt(businessCount.rows[0].count)
-      }))
     }
 
     // ADMIN - PENDING
     if (route === '/admin/pending' && method === 'GET') {
-      if (!isSuperAdmin(user)) {
-        return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+      try {
+        if (!isSuperAdmin(user)) {
+          return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+        }
+        const pendingNews = await pool.query('SELECT * FROM news_articles WHERE approval_status = $1', ['pending'])
+        const pendingBusinesses = await pool.query('SELECT * FROM businesses WHERE approval_status = $1', ['pending'])
+        const pendingClassifieds = await pool.query('SELECT * FROM classified_ads WHERE approval_status = $1', ['pending'])
+        const pendingUsers = await pool.query('SELECT * FROM users WHERE status = $1', ['pending'])
+
+        // Map news articles to camelCase
+        const mappedNews = pendingNews.rows.map(a => ({
+          ...a,
+          mainImage: a.main_image,
+          galleryImages: a.gallery_images,
+          youtubeUrl: a.youtube_url,
+          videoUrl: a.video_url,
+          thumbnailUrl: a.thumbnail_url,
+          authorName: a.author_name,
+          metaDescription: a.meta_description,
+          categoryId: a.category_id,
+          approvalStatus: a.approval_status,
+          createdAt: a.created_at,
+          publishedAt: a.published_at
+        }))
+
+        return handleCORS(NextResponse.json({
+          news: mappedNews,
+          businesses: pendingBusinesses.rows,
+          ads: [],
+          classifieds: pendingClassifieds.rows,
+          users: pendingUsers.rows
+        }))
+      } catch (err) {
+        console.error("PENDING ERROR:", err);
+        return handleCORS(NextResponse.json({ error: "PENDING CRASH: " + err.message }, { status: 500 }))
       }
-      const pendingNews = await pool.query('SELECT * FROM news_articles WHERE approval_status = $1', ['pending'])
-      const pendingBusinesses = await pool.query('SELECT * FROM businesses WHERE approval_status = $1', ['pending'])
-      const pendingClassifieds = await pool.query('SELECT * FROM classified_ads WHERE approval_status = $1', ['pending'])
-      const pendingUsers = await pool.query('SELECT * FROM users WHERE status = $1', ['pending'])
-
-      // Map news articles to camelCase
-      const mappedNews = pendingNews.rows.map(a => ({
-        ...a,
-        mainImage: a.main_image,
-        galleryImages: a.gallery_images,
-        youtubeUrl: a.youtube_url,
-        videoUrl: a.video_url,
-        thumbnailUrl: a.thumbnail_url,
-        authorName: a.author_name,
-        metaDescription: a.meta_description,
-        categoryId: a.category_id,
-        approvalStatus: a.approval_status,
-        createdAt: a.created_at,
-        publishedAt: a.published_at
-      }))
-
-      return handleCORS(NextResponse.json({
-        news: mappedNews,
-        businesses: pendingBusinesses.rows,
-        ads: [],
-        classifieds: pendingClassifieds.rows,
-        users: pendingUsers.rows
-      }))
     }
 
     // ADMIN - APPROVE NEWS
@@ -1144,7 +1161,7 @@ async function handleRoute(request, context) {
       //   return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
       // }
 
-      const result = await pool.query('SELECT * FROM breaking_news ORDER BY created_at DESC LIMIT 1')
+      const result = await pool.query('SELECT id, text, texts, status, updated_at, updated_by FROM breaking_ticker ORDER BY updated_at DESC LIMIT 1')
       const ticker = result.rows[0] ? {
         text: result.rows[0].text,
         pendingText: result.rows[0].pending_text,
@@ -1175,11 +1192,15 @@ async function handleRoute(request, context) {
 
       // GET: Admin List
       if (method === 'GET') {
-        if (!isSuperAdmin(user)) {
-          return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+        try {
+          if (!isSuperAdmin(user)) {
+            return handleCORS(NextResponse.json({ error: 'Unauthorized' }, { status: 403 }))
+          }
+          const result = await pool.query('SELECT id, business_name, owner_name, phone, email, address, description, status, submitted_at, updated_at FROM business_promotions ORDER BY updated_at DESC')
+          return handleCORS(NextResponse.json(result.rows))
+        } catch (innerErr) {
+          return handleCORS(NextResponse.json({ error: "INNER CRASH: " + innerErr.message + " Stack: " + innerErr.stack }, { status: 500 }))
         }
-        const result = await pool.query('SELECT * FROM business_promotions ORDER BY submitted_at DESC')
-        return handleCORS(NextResponse.json(result.rows))
       }
     }
 
