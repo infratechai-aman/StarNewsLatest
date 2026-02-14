@@ -107,27 +107,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Translations for static text
-  const texts = {
-    backToHome: { en: 'Back to Home', hi: 'होम पर वापस जाएं', mr: 'मुख्यपृष्ठावर परत जा' },
-    views: { en: 'views', hi: 'व्यूज', mr: 'व्हिव्स' },
-    share: { en: 'Share:', hi: 'शेयर करें:', mr: 'शेअर करा:' },
-    photoGallery: { en: '📸 Photo Gallery', hi: '📸 फोटो गैलरी', mr: '📸 फोटो गॅलरी' },
-    tags: { en: 'Tags:', hi: 'टैग्स:', mr: 'टॅग्स:' },
-    relatedNews: { en: 'Related News', hi: 'संबंधित समाचार', mr: 'संबंधित बातम्या' },
-    noRelatedNews: { en: 'No related news found', hi: 'कोई संबंधित समाचार नहीं', mr: 'कोणत्याही संबंधित बातम्या नाहीत' },
-    latestNews: { en: 'Latest News', hi: 'ताज़ा खबरें', mr: 'ताज्या बातम्या' },
-    advertise: { en: 'Advertise', hi: 'विज्ञापन दें', mr: 'जाहिरात द्या' },
-    yourBusiness: { en: 'Your Business', hi: 'अपना व्यापार', mr: 'तुमचा व्यवसाय' },
-    premiumPlacement: { en: 'Premium Placement', hi: 'प्रीमियम प्लेसमेंट', mr: 'प्रीमियम प्लेसमेंट' },
-    contactUs: { en: 'Contact Us!', hi: 'संपर्क करें!', mr: 'संपर्क साधा!' },
-    bookNow: { en: 'BOOK NOW', hi: 'अभी बुक करें', mr: 'आता बुक करा' },
-    premiumAdSpace: { en: 'Premium Ad Space', hi: 'प्रीमियम विज्ञापन स्थान', mr: 'प्रीमियम जाहिरात जागा' },
-    advertisement: { en: 'Advertisement', hi: 'विज्ञापन', mr: 'जाहिरात' },
-    by: { en: 'By', hi: 'द्वारा', mr: 'लेखक' }
-  }
 
-  const getText = (key) => texts[key]?.[language] || texts[key]?.en || key
 
   // Handle back to home
   const handleBackToHome = () => {
@@ -149,7 +129,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         className="mb-6 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
-        {getText('backToHome')}
+        {t('backToHome')}
       </Button>
 
       <div className="grid lg:grid-cols-12 gap-8">
@@ -171,7 +151,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             {(article.authorName || article.author?.name) && (
               <>
                 <span className="font-bold text-red-600 flex items-center gap-1">
-                  {getText('by')} {article.authorName || article.author.name}
+                  {t('by')} {article.authorName || article.author.name}
                 </span>
                 <span className="text-gray-300">|</span>
               </>
@@ -184,13 +164,13 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             <span className="text-gray-300">|</span>
             <span className="flex items-center gap-1">
               <Eye className="h-4 w-4" />
-              {(article.views || 0).toLocaleString()} {getText('views')}
+              {(article.views || 0).toLocaleString()} {t('views')}
             </span>
           </div>
 
           {/* Share Buttons */}
           <div className="flex items-center gap-4 py-2">
-            <span className="text-sm font-medium text-gray-600">{getText('share')}</span>
+            <span className="text-sm font-medium text-gray-600">{t('share')}</span>
             <Button variant="outline" size="sm" className="rounded-full">
               <Facebook className="h-4 w-4 text-blue-600" />
             </Button>
@@ -264,7 +244,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           {article.galleryImages && article.galleryImages.length > 0 && (
             <div className="mt-8">
               <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                {getText('photoGallery')}
+                {t('photoGallery')}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {article.galleryImages.map((img, idx) => (
@@ -293,7 +273,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           {/* Related News */}
           <div className="bg-white rounded-xl shadow-lg p-4 border">
             <h3 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-red-600 pb-2">
-              {getText('relatedNews')}
+              {t('relatedNews')}
             </h3>
             <div className="space-y-4">
               {relatedNews.length > 0 ? relatedNews.map((news) => (
@@ -319,7 +299,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   </div>
                 </Card>
               )) : (
-                <p className="text-sm text-gray-500">{getText('noRelatedNews')}</p>
+                <p className="text-sm text-gray-500">{t('noRelatedNews')}</p>
               )}
             </div>
           </div>
@@ -341,20 +321,20 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       alt="Advertisement"
                       className="w-full h-64 object-cover"
                     />
-                    <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{getText('advertisement')}</Badge>
+                    <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{t('advertisement')}</Badge>
                   </a>
                 ) : (
                   // Default placeholder banner
                   <div className="h-64 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex flex-col items-center justify-center text-center">
-                    <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{getText('advertisement')}</Badge>
+                    <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('advertisement')}</Badge>
                     <div className="text-white p-4">
-                      <p className="text-2xl font-bold mb-2">📢 {getText('advertise')}</p>
-                      <p className="text-lg font-semibold">{getText('yourBusiness')}</p>
+                      <p className="text-2xl font-bold mb-2">📢 {t('advertise')}</p>
+                      <p className="text-lg font-semibold">{t('yourBusiness')}</p>
                       <div className="mt-4 border-t border-white/30 pt-4">
-                        <p className="text-sm">{getText('premiumPlacement')}</p>
-                        <p className="text-lg font-bold">{getText('contactUs')}</p>
+                        <p className="text-sm">{t('premiumPlacement')}</p>
+                        <p className="text-lg font-bold">{t('contactUs')}</p>
                         <Button size="sm" className="mt-3 bg-white text-purple-600 hover:bg-gray-100 font-bold">
-                          {getText('bookNow')}
+                          {t('bookNow')}
                         </Button>
                       </div>
                     </div>
@@ -367,7 +347,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           {/* More Latest News */}
           <div className="bg-white rounded-xl shadow-lg p-4 border">
             <h3 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-blue-600 pb-2">
-              {getText('latestNews')}
+              {t('latestNews')}
             </h3>
             <div className="space-y-3">
               {(latestNews.length > 0 ? latestNews : newsData.slice(0, 5)).map((newsItem, idx) => (
@@ -403,7 +383,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                         alt="Advertisement"
                         className="w-full h-full object-cover"
                       />
-                      <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{getText('advertisement')}</Badge>
+                      <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{t('advertisement')}</Badge>
                     </a>
                   ) : (
                     // Default placeholder
@@ -414,9 +394,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-4 text-white text-center">
-                        <p className="font-bold text-lg">{getText('premiumAdSpace')}</p>
+                        <p className="font-bold text-lg">{t('premiumAdSpace')}</p>
                         <p className="text-sm opacity-80">300 x 400 px</p>
-                        <Badge className="mt-2 bg-white/20">{getText('advertisement')}</Badge>
+                        <Badge className="mt-2 bg-white/20">{t('advertisement')}</Badge>
                       </div>
                     </>
                   )}

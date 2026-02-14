@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Download, Eye, Newspaper, FileText } from 'lucide-react'
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 const EnewspaperPage = () => {
+  const { t } = useLanguage()
   const [newspapers, setNewspapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewingPdf, setViewingPdf] = useState(null)
@@ -62,17 +65,17 @@ const EnewspaperPage = () => {
             <Newspaper className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">E-Newspaper</h1>
-            <p className="text-muted-foreground">Read today's edition online</p>
+            <h1 className="text-3xl font-bold">{t('eNewspaper')}</h1>
+            <p className="text-muted-foreground">{t('readOnlineSubtitle')}</p>
           </div>
         </div>
 
         <div className="bg-gradient-to-r from-red-50 to-purple-50 p-6 rounded-lg border">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold mb-2">Digital Edition Available</h2>
+              <h2 className="text-xl font-bold mb-2">{t('digitalEditionAvailable')}</h2>
               <p className="text-muted-foreground">
-                Read the latest news, download PDF, or browse previous editions
+                {t('digitalEditionDesc')}
               </p>
             </div>
             <Calendar className="h-12 w-12 text-red-600" />
@@ -88,10 +91,10 @@ const EnewspaperPage = () => {
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => handleDownload(viewingPdf)}>
                   <Download className="h-4 w-4 mr-2" />
-                  Download PDF
+                  {t('downloadPdf')}
                 </Button>
                 <Button variant="outline" onClick={() => setViewingPdf(null)}>
-                  Close
+                  {t('close')}
                 </Button>
               </div>
             </div>
@@ -110,8 +113,8 @@ const EnewspaperPage = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-semibold text-gray-600">No E-Newspapers Available</h3>
-            <p className="text-muted-foreground mt-2">Check back later for new editions</p>
+            <h3 className="text-xl font-semibold text-gray-600">{t('noEpapers')}</h3>
+            <p className="text-muted-foreground mt-2">{t('checkBackLater')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -135,7 +138,7 @@ const EnewspaperPage = () => {
                     <p className="text-sm text-muted-foreground mb-2">{newspaper.description}</p>
                   )}
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Edition: {new Date(newspaper.editionDate).toLocaleDateString()}</span>
+                    <span>{t('edition')}: {new Date(newspaper.editionDate).toLocaleDateString()}</span>
                   </div>
                 </div>
 
@@ -145,7 +148,7 @@ const EnewspaperPage = () => {
                     onClick={() => setViewingPdf(newspaper)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    Read Online
+                    {t('readOnline')}
                   </Button>
                   <Button
                     variant="outline"
@@ -164,13 +167,13 @@ const EnewspaperPage = () => {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-lg mb-2">Subscribe to Daily E-Paper</h3>
+              <h3 className="font-bold text-lg mb-2">{t('subscribeEpaperTitle')}</h3>
               <p className="text-sm text-muted-foreground">
-                Get the newspaper delivered to your email every morning
+                {t('subscribeEpaperDesc')}
               </p>
             </div>
             <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
-              Subscribe Now
+              {t('subscribeNow')}
             </Button>
           </div>
         </CardContent>

@@ -11,7 +11,7 @@ import { getLocalizedText } from '@/lib/newsData'
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
 const CityPage = ({ setCurrentView, setSelectedArticle }) => {
-    const { language } = useLanguage()
+    const { language, t } = useLanguage()
     const [selectedCity, setSelectedCity] = useState('')
     const [cityNews, setCityNews] = useState([])
     const [allArticles, setAllArticles] = useState([])
@@ -66,13 +66,13 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
             {/* Header */}
             <div className="text-center py-6 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl text-white">
                 <MapPin className="h-12 w-12 mx-auto mb-3" />
-                <h1 className="text-3xl font-bold">City News</h1>
-                <p className="text-blue-100 mt-2">Select a city to view local news and updates</p>
+                <h1 className="text-3xl font-bold">{t('selectCityTitle')}</h1>
+                <p className="text-blue-100 mt-2">{t('selectCityDesc')}</p>
             </div>
 
             {/* Popular Cities */}
             <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800">Popular Cities</h2>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">{t('popularCities')}</h2>
                 <div className="flex flex-wrap gap-2">
                     {POPULAR_CITIES.map(city => (
                         <Button
@@ -90,21 +90,21 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
 
             {/* All Cities Dropdown */}
             <div className="bg-white p-6 rounded-xl shadow-sm border">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800">All Cities</h2>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">{t('allCities')}</h2>
                 <div className="flex items-center gap-4">
                     <select
                         className="flex-1 px-4 py-3 border rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={selectedCity}
                         onChange={(e) => setSelectedCity(e.target.value)}
                     >
-                        <option value="">Choose a city...</option>
+                        <option value="">{t('chooseCity')}</option>
                         {INDIAN_CITIES_SORTED.map(city => (
                             <option key={city} value={city}>{city}</option>
                         ))}
                     </select>
                     {selectedCity && (
                         <Button variant="outline" onClick={() => setSelectedCity('')}>
-                            Clear
+                            {t('clear')}
                         </Button>
                     )}
                 </div>
@@ -115,7 +115,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                 <div className="bg-white p-6 rounded-xl shadow-sm border">
                     <h2 className="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
-                        News from {selectedCity}
+                        {t('newsFrom')} {selectedCity}
                     </h2>
                     {cityNews.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -151,16 +151,16 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                     ) : (
                         <div className="text-center py-12 bg-gray-50 rounded-lg">
                             <MapPin className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                            <p className="text-gray-500 text-lg">No news available from {selectedCity} yet.</p>
-                            <p className="text-sm text-gray-400 mt-2">News articles tagged with this city will appear here.</p>
+                            <p className="text-gray-500 text-lg">{t('noCityNews')}</p>
+                            <p className="text-sm text-gray-400 mt-2">{t('cityNewsTag')}</p>
                         </div>
                     )}
                 </div>
             ) : (
                 <div className="text-center py-16 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
                     <MapPin className="h-16 w-16 mx-auto text-blue-400 mb-4" />
-                    <p className="text-blue-700 font-medium text-lg">Select a city above to view local news</p>
-                    <p className="text-blue-500 text-sm mt-2">Choose from popular cities or use the dropdown</p>
+                    <p className="text-blue-700 font-medium text-lg">{t('selectCityPrompt')}</p>
+                    <p className="text-blue-500 text-sm mt-2">{t('cityPromptDesc')}</p>
                 </div>
             )}
         </div>

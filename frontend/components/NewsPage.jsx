@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Newspaper } from 'lucide-react'
 import { news, categories } from '@/lib/api'
 
+import { useLanguage } from '@/contexts/LanguageContext'
+
 const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPageState }) => {
+  const { t } = useLanguage()
   // Use props if available, else local state (fallback)
   const [newsArticles, setLocalNewsArticles] = useState([])
   const [categoryList, setLocalCategoryList] = useState([])
@@ -98,11 +101,11 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">All News</h1>
+        <h1 className="text-3xl font-bold">{t('allNews')}</h1>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-48"><SelectValue placeholder="All Categories" /></SelectTrigger>
+          <SelectTrigger className="w-48"><SelectValue placeholder={t('allCategories')} /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">{t('allCategories')}</SelectItem>
             {categoriesData.map((cat) => (<SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>))}
           </SelectContent>
         </Select>
@@ -128,8 +131,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             </div>
             <CardContent className="p-4 flex-1 flex flex-col">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="text-xs">News</Badge>
-                {article.featured && <Badge variant="default" className="text-xs">Featured</Badge>}
+                <Badge variant="secondary" className="text-xs">{t('news')}</Badge>
+                {article.featured && <Badge variant="default" className="text-xs">{t('featured')}</Badge>}
               </div>
               <h2 className="text-lg font-bold mb-2 line-clamp-2 hover:text-primary">{article.title}</h2>
               <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{article.metaDescription || 'Read the full article...'}</p>
@@ -138,7 +141,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                   <span>{new Date(article.createdAt).toLocaleDateString()}</span>
                   <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{article.views || 0}</span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 px-2">Read</Button>
+                <Button variant="ghost" size="sm" className="h-8 px-2">{t('read')}</Button>
               </div>
             </CardContent>
           </Card>
@@ -146,7 +149,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
       </div>
 
       {articles.length === 0 && (
-        <Card><CardContent className="py-12 text-center"><Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">No news articles found</p></CardContent></Card>
+        <Card><CardContent className="py-12 text-center"><Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">{t('noResults')}</p></CardContent></Card>
       )}
     </div>
   )

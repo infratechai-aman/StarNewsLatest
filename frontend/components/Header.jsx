@@ -299,13 +299,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               <Dialog open={reporterDialogOpen} onOpenChange={setReporterDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-green-600 hover:bg-green-700 text-white font-medium text-sm px-3 py-1.5 h-8">
-                    <UserPlus className="mr-1.5 h-3.5 w-3.5" />Join as Reporter
+                    <UserPlus className="mr-1.5 h-3.5 w-3.5" />{t('joinAsReporter')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">Join as a Reporter</DialogTitle>
-                    <DialogDescription>Want to be part of StarNews? Submit your application and our team will review it.</DialogDescription>
+                    <DialogTitle className="text-xl font-bold">{t('joinAsReporter')}</DialogTitle>
+                    <DialogDescription>{t('reportJoinDesc')}</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleReporterSubmit}>
                     <div className="grid gap-4 py-4">
@@ -321,7 +321,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setReporterDialogOpen(false)} disabled={submittingReporter}>Cancel</Button>
                       <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={submittingReporter}>
-                        {submittingReporter ? 'Submitting...' : 'Submit Application'}
+                        {submittingReporter ? t('pleaseWait') : t('submitApplication')}
                       </Button>
                     </DialogFooter>
                   </form>
@@ -352,7 +352,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 </div>
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t">
                   <Globe className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-500 text-sm">Language:</span>
+                  <span className="text-gray-500 text-sm">{t('language')}:</span>
                   {languageOptions.map((lang) => (
                     <button
                       key={lang.code}
