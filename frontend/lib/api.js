@@ -1,5 +1,8 @@
 // API utility functions
 
+import { auth as firebaseAuth } from '@/lib/firebase'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+
 export const API_BASE = '/api'
 
 export async function apiRequest(endpoint, options = {}) {
@@ -26,7 +29,27 @@ export async function apiRequest(endpoint, options = {}) {
 
 export const auth = {
   register: (data) => apiRequest('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data) => apiRequest('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  login: async (data) => {
+    // Use Firebase Client SDK for login
+    try {
+      const userCredential = await signInWithEmailAndPassword(firebaseAuth, data.email, data.password)
+      const token = await userCredential.user.getIdToken()
+
+      // Fetch full user profile from backend to get Role
+      const userProfile = await apiRequest('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      return {
+        token,
+        user: userProfile,
+        requirePasswordChange: userProfile.requirePasswordChange || false
+      }
+    } catch (error) {
+      console.error("Firebase Login Error", error)
+      throw new Error(error.code === 'auth/invalid-credential' ? 'Invalid email or password' : error.message)
+    }
+  },
   getMe: () => apiRequest('/auth/me'),
   changePassword: (data) => apiRequest('/auth/change-password', { method: 'POST', body: JSON.stringify(data) }),
 }

@@ -1,130 +1,171 @@
-const { Pool } = require('pg');
-const { v4: uuidv4 } = require('uuid');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const path = require('path');
+const fs = require('fs');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
 
-// DB connection string
-const connectionString = process.env.DATABASE_URL || 'postgresql://starnews:starnews123@localhost:5432/starnews';
-
-const pool = new Pool({
-    connectionString
-});
-
-const cities = [
-    'Mumbai', 'Pune', 'Delhi', 'Bangalore', 'Hyderabad',
-    'Chennai', 'Kolkata', 'Ahmedabad', 'Surat', 'Jaipur'
-];
-
-const mockTitles = [
-    "New Development Project Announced in {city}",
-    "Local {category} Summit Draws Huge Crowd",
-    "Breaking: Major {category} Event to be Held in {city}",
-    "Citizens of {city} Demand Better Infrastructure",
-    "Top {category} Trends to Watch This Year",
-    "Interview: {city} Mayor Discusses Future Plans",
-    "Unexpected Turn of Events in the {category} World",
-    "Why {city} is Becoming a Hub for {category}",
-    "Daily Update: What's Happening in {city}",
-    "Expert Analysis: The State of {category} in India"
-];
-
-const images = [
-    'https://images.unsplash.com/photo-1504711434969-e33886168f5c',
-    'https://images.unsplash.com/photo-1495020689067-958852a7765e',
-    'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3',
-    'https://images.unsplash.com/photo-1523995462485-3d171b5c8fa9',
-    'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4',
-    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab',
-    'https://images.unsplash.com/photo-1529243856184-485f9d0d83ac'
-];
-
-function getRandomElement(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+// Initialize Firebase Admin
+if (!process.env.FIREBASE_PROJECT_ID) {
+    console.error('ERROR: FIREBASE_PROJECT_ID is missing in .env.local');
+    process.exit(1);
 }
 
-async function seedData() {
-    const client = await pool.connect();
-    console.log('Connected to database...');
+const serviceAccount = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+};
 
+const app = initializeApp({
+    credential: cert(serviceAccount)
+});
+
+const db = getFirestore(app);
+
+const TARGET_COUNT = 50;
+const RSS_URL = 'https://starnewsindia.in/feed';
+
+async function fetchRSS(page = 1) {
+    const url = page === 1 ? RSS_URL : `${RSS_URL}/?paged=${page}`;
+    console.log(`Fetching RSS Page: ${url}`);
+    const res = await fetch(url);
+    const text = await res.text();
+    return text;
+}
+
+function extractItems(xml) {
+    const items = [];
+    // Simple regex to extract item blocks
+    const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+    let match;
+    while ((match = itemRegex.exec(xml)) !== null) {
+        items.push(match[1]);
+    }
+    return items;
+}
+
+function parseItem(itemXml) {
+    const getTag = (tag) => {
+        const regex = new RegExp(`<${tag}.*?>([\\s\\S]*?)<\/${tag}>`, 'i');
+        const m = regex.exec(itemXml);
+        return m ? m[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').trim() : '';
+    };
+
+    return {
+        title: getTag('title'),
+        link: getTag('link'),
+        pubDate: getTag('pubDate'),
+        description: getTag('description'),
+        content: getTag('content:encoded')
+    };
+}
+
+async function scrapeArticle(url) {
     try {
-        // 1. Fetch or Create Categories
-        let categoriesResult = await client.query('SELECT * FROM news_categories');
-        let categories = categoriesResult.rows;
+        console.log(`  Scraping: ${url}`);
+        const res = await fetch(url);
+        const html = await res.text();
 
-        if (categories.length === 0) {
-            console.log('No categories found. Creating default categories...');
-            const defaultCats = ['Politics', 'Business', 'Sports', 'Entertainment', 'City News', 'National'];
-            for (const catName of defaultCats) {
-                const insertRes = await client.query(
-                    'INSERT INTO news_categories (id, name, slug) VALUES ($1, $2, $3) RETURNING *',
-                    [uuidv4(), catName, catName.toLowerCase().replace(/ /g, '-')]
-                );
-                categories.push(insertRes.rows[0]);
-            }
-        } else {
-            console.log(`Found ${categories.length} existing categories.`);
-        }
+        // Extract YouTube
+        // Look for iframeSrc with youtube
+        const ytRegex = /src=["'](https:\/\/(?:www\.)?youtube\.com\/embed\/[\w-]+)["']/;
+        const ytMatch = ytRegex.exec(html);
+        const youtubeUrl = ytMatch ? ytMatch[1] : null;
 
-        // 2. Fetch an Author (User)
-        let usersResult = await client.query('SELECT id FROM users LIMIT 1');
-        let authorId;
-        if (usersResult.rows.length > 0) {
-            authorId = usersResult.rows[0].id;
-        } else {
-            console.log('No users found. Creating a default admin user...');
-            authorId = uuidv4();
-            // Insert a dummy user if none exists (password hash is dummy)
-            await client.query(
-                "INSERT INTO users (id, email, password, name, role) VALUES ($1, 'admin@example.com', 'dummyhash', 'Admin', 'super_admin')",
-                [authorId]
-            );
-        }
+        // Extract Image (og:image)
+        const imgRegex = /meta property=["']og:image["'] content=["'](.*?)["']/;
+        const imgMatch = imgRegex.exec(html);
+        const mainImage = imgMatch ? imgMatch[1] : null;
 
-        // 3. Insert 50 Articles
-        console.log('Inserting 50 news articles...');
-        for (let i = 0; i < 50; i++) {
-            const category = getRandomElement(categories); // This is the full category object
-            const city = getRandomElement(cities);
-            const titleTemplate = getRandomElement(mockTitles);
-            const title = titleTemplate.replace('{city}', city).replace('{category}', category.name) + ` - ${i + 1}`;
+        // Extract Category? We can skip or infer.
 
-            const articleId = uuidv4();
-            const isFeatured = Math.random() > 0.8; // 20% displayed as featured
-
-            const query = `
-        INSERT INTO news_articles (
-          id, title, content, category_id, city, 
-          main_image, thumbnail_url, author_id, approval_status, 
-          created_at, published_at, updated_at, 
-          active, featured, views
-        ) VALUES (
-          $1, $2, $3, $4, $5, 
-          $6, $7, $8, 'approved', 
-          NOW() - (random() * interval '30 days'), NOW() - (random() * interval '30 days'), NOW(), 
-          true, $9, floor(random() * 5000)::int
-        )
-      `;
-
-            const values = [
-                articleId,
-                title,
-                `This is a mock article about ${title}. Lorem ipsum dolor sit amet.`,
-                category.id, // ID from the category object
-                city,
-                getRandomElement(images), // main_image
-                getRandomElement(images), // thumbnail_url
-                authorId,
-                isFeatured
-            ];
-
-            await client.query(query, values);
-        }
-        console.log('Successfully seeded 50 articles!');
-
-    } catch (err) {
-        console.error('Error seeding data:', err);
-    } finally {
-        client.release();
-        pool.end();
+        return { youtubeUrl, mainImage };
+    } catch (e) {
+        console.error(`  Failed to scrape ${url}:`, e.message);
+        return { youtubeUrl: null, mainImage: null };
     }
 }
 
-seedData();
+async function seed() {
+    console.log('Starting Seed Process...');
+    let totalAdded = 0;
+    let page = 1;
+
+    // Fetch Categories for ID mapping
+    const catSnap = await db.collection('news_categories').limit(1).get();
+    let defaultCategoryId = '';
+    let defaultCategoryName = 'General';
+    if (!catSnap.empty) {
+        defaultCategoryId = catSnap.docs[0].id; // Use first available category
+        defaultCategoryName = catSnap.docs[0].data().name;
+    } else {
+        console.log('No categories found. Creating "General" category.');
+        const catRef = await db.collection('news_categories').add({
+            name: 'General',
+            slug: 'general',
+            active: true,
+            createdAt: new Date().toISOString()
+        });
+        defaultCategoryId = catRef.id;
+    }
+
+    while (totalAdded < TARGET_COUNT) {
+        const xml = await fetchRSS(page);
+        const itemXmls = extractItems(xml);
+
+        if (itemXmls.length === 0) {
+            console.log('No more items found in RSS.');
+            break;
+        }
+
+        for (const itemXml of itemXmls) {
+            if (totalAdded >= TARGET_COUNT) break;
+
+            const data = parseItem(itemXml);
+
+            // Check if exists
+            const exists = await db.collection('news_articles').where('title', '==', data.title).get();
+            if (!exists.empty) {
+                console.log(`  Skipping (Duplicate): ${data.title}`);
+                continue;
+            }
+
+            // Scrape Details
+            const details = await scrapeArticle(data.link);
+
+            // Create Document
+            const article = {
+                title: data.title,
+                content: data.content || data.description || '',
+                categoryId: defaultCategoryId, // Default to first category
+                category: defaultCategoryName,
+                city: 'India', // Default
+                genre: details.youtubeUrl ? 'video' : 'breaking',
+                mainImage: details.mainImage || '',
+                galleryImages: [],
+                videoUrl: '',
+                youtubeUrl: details.youtubeUrl || '',
+                tags: ['Imported', 'StarNewsIndia'],
+                metaDescription: data.description ? data.description.substring(0, 150) : '',
+                authorId: 'system',
+                authorName: 'System Crawler',
+                approvalStatus: 'approved',
+                active: true,
+                featured: false,
+                views: 0,
+                createdAt: new Date(data.pubDate).toISOString(),
+                updatedAt: new Date().toISOString(),
+                publishedAt: new Date(data.pubDate).toISOString()
+            };
+
+            await db.collection('news_articles').add(article);
+            console.log(`  Added [${totalAdded + 1}]: ${data.title}`);
+            totalAdded++;
+        }
+        page++;
+    }
+
+    console.log(`DONE. Added ${totalAdded} articles.`);
+}
+
+seed().catch(console.error);

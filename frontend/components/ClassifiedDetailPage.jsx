@@ -63,7 +63,7 @@ const getClassifiedImages = (classified) => {
     // Return unique images or placeholder
     return uniqueImages.length > 0
         ? uniqueImages
-        : ['https://via.placeholder.com/400x300?text=No+Image']
+        : ['https://placehold.co/400x300?text=No+Image']
 }
 
 const ClassifiedDetailPage = ({ classified, setCurrentView }) => {

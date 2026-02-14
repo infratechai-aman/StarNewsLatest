@@ -1768,10 +1768,10 @@ const AdminDashboard = ({ user, toast }) => {
                       <div className="flex items-center gap-4 min-w-0 flex-1">
                         <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
                           <img
-                            src={business.coverImage || business.cover_image || business.images?.[0] || business.image || 'https://via.placeholder.com/64'}
+                            src={business.coverImage || business.cover_image || business.images?.[0] || business.image || 'https://placehold.co/64?text=Img'}
                             alt={business.name}
                             className="w-full h-full object-cover"
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/64?text=Img'; }}
+                            onError={(e) => { e.target.src = 'https://placehold.co/64?text=Img'; }}
                           />
                         </div>
                         <div className="min-w-0 flex-1">
@@ -1836,7 +1836,7 @@ const AdminDashboard = ({ user, toast }) => {
                           <div className="flex items-center gap-3">
                             {/* Small Thumbnail */}
                             <img
-                              src={classified.image || classified.images?.[0] || 'https://via.placeholder.com/80'}
+                              src={classified.image || classified.images?.[0] || 'https://placehold.co/80?text=Ad'}
                               alt={classified.title}
                               style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }}
                               className="rounded object-cover flex-shrink-0"
