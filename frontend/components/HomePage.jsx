@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -91,13 +92,14 @@ const NewsBox = ({ item, onClick, language }) => {
     >
       <div className="relative h-40 md:h-48 overflow-hidden bg-gray-100">
         {images.map((img, index) => (
-          <img
+          <Image
             key={index}
             src={img}
             alt={title}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${index === currentImageIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
+            fill
+            className={`object-cover transition-all duration-700 ${index === currentImageIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
             style={{ transform: index === currentImageIndex ? 'translateX(0)' : index < currentImageIndex ? 'translateX(-100%)' : 'translateX(100%)' }}
-            onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ))}
         {category && <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs z-10">{category}</Badge>}
@@ -122,6 +124,11 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
   // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
   const category = getLocalizedText(item.category, language) || ''
+  const [imgSrc, setImgSrc] = useState(item.mainImage || item.images?.[0] || `https://picsum.photos/600/400?random=${item.id}`)
+
+  useEffect(() => {
+    setImgSrc(item.mainImage || item.images?.[0] || `https://picsum.photos/600/400?random=${item.id}`)
+  }, [item])
 
   return (
     <Card
@@ -129,12 +136,15 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
       onClick={() => onClick(item)}
     >
       <div className="relative h-40 overflow-hidden">
-        <img
-          src={item.mainImage || item.images?.[0] || 'https://picsum.photos/600/400?random=' + item.id}
+        <Image
+          src={imgSrc}
           alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={() => setImgSrc('/placeholder-news.svg')}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        {category && <Badge className={`absolute top-2 left-2 bg-${accentColor}-600 text-white text-xs font-bold`}>{category}</Badge>}
+        {category && <Badge className={`absolute top-2 left-2 bg-${accentColor}-600 text-white text-xs font-bold z-10`}>{category}</Badge>}
       </div>
       <CardContent className="p-3">
         <h4 className={`font-bold text-sm line-clamp-2 group-hover:text-${accentColor}-600 transition-colors leading-tight`}>{title}</h4>
@@ -161,7 +171,15 @@ const BusinessAdWidget = ({ settings, t, onClick }) => {
       <CardContent className="p-0 h-64 relative flex flex-col items-center justify-center text-center">
         <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('advertisement')}</Badge>
         {settings?.imageUrl ? (
-          <img src={settings.imageUrl} alt="Business Ad" className="w-full h-full object-cover" />
+          <div className="relative w-full h-full">
+            <Image
+              src={settings.imageUrl}
+              alt="Business Ad"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 300px"
+            />
+          </div>
         ) : (
           <div className="text-white p-4">
             <p className="text-2xl font-bold mb-2">🏢 {settings?.title || 'BUSINESS'}</p>
@@ -231,11 +249,15 @@ const StickyAdWidget = ({ settings, t, onClick }) => {
     >
       <CardContent className="p-0 min-h-[400px] relative bg-gray-100 flex items-center justify-center">
         {settings.sticky?.imageUrl ? (
-          <img
-            src={settings.sticky.imageUrl}
-            alt={settings.sticky.title || 'Advertisement'}
-            className="w-full h-auto object-cover"
-          />
+          <div className="relative w-full h-full">
+            <Image
+              src={settings.sticky.imageUrl}
+              alt={settings.sticky.title || 'Advertisement'}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 300px"
+            />
+          </div>
         ) : (
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-4 text-white text-center">
             <p className="font-bold text-lg">{t('yourAdHere')}</p>
@@ -457,9 +479,16 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
       {premiumAdSettings.enabled && (
         <div className="sticky top-12 z-40 relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-lg premium-ad-banner">
           {premiumAdSettings.imageUrl ? (
-            <div className="relative h-full group">
-              <a href={premiumAdSettings.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block h-full">
-                <img src={premiumAdSettings.imageUrl} alt={premiumAdSettings.title || 'Advertisement'} className="w-full h-full object-cover object-center" />
+            <div className="relative h-full group w-full">
+              <a href={premiumAdSettings.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block h-full w-full relative">
+                <Image
+                  src={premiumAdSettings.imageUrl}
+                  alt={premiumAdSettings.title || 'Advertisement'}
+                  fill
+                  className="object-cover object-center"
+                  priority
+                  sizes="100vw"
+                />
 
               </a>
             </div>
@@ -543,11 +572,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                               pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
                             }}
                           >
-                            <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-md">
-                              <img
+                            <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-md relative">
+                              <Image
                                 src={item.imageUrl}
                                 alt={`Advertisement ${index + 1}`}
-                                className="w-full h-full object-cover object-center"
+                                fill
+                                className="object-cover object-center"
+                                sizes="(max-width: 1024px) 100vw, 300px"
                               />
                             </div>
                           </a>
@@ -617,11 +648,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                           const images = getImages(item)
                           // Simple carousel logic or just first image
                           return (
-                            <img
+                            <Image
                               src={images[0]}
                               alt={getLocalizedText(item.title, language)}
-                              className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                              onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                              fill
+                              className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
                             />
                           )
                         })()}
@@ -763,11 +795,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                       onClick={() => handleNewsClick(businessNews[0])}
                     >
                       <div className="relative h-[65%] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
-                        <img
+                        <Image
                           src={businessNews[0].thumbnailUrl || businessNews[0].mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(businessNews[0].title, language)}
-                          className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
-                          onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                          fill
+                          className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                          sizes="(max-width: 768px) 100vw, 50vw"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                         <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-sm px-3 py-1">Business</Badge>
@@ -799,11 +832,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                       onClick={() => handleNewsClick(item)}
                     >
                       <div className="relative h-[60%] w-full flex-shrink-0 overflow-hidden bg-gray-100">
-                        <img
+                        <Image
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
-                          className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                          fill
+                          className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 768px) 50vw, 25vw"
                         />
                         <Badge className="absolute top-1 left-1 bg-orange-500/90 text-white text-[9px] px-1.5 py-0.5">Business</Badge>
                       </div>
@@ -843,11 +877,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                     onClick={() => handleNewsClick(item)}
                   >
                     <div className="relative w-[180px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
-                      <img
+                      <Image
                         src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                         alt={getLocalizedText(item.title, language)}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 768px) 40vw, 20vw"
                       />
                       <Badge className="absolute top-1 left-1 bg-red-600 text-white text-[10px]">National</Badge>
                     </div>
@@ -898,11 +933,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                           <span className="text-4xl text-white opacity-80 group-hover:opacity-100 transition-opacity">▶</span>
                         </div>
                       ) : (
-                        <img
+                        <Image
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 768px) 40vw, 25vw"
                         />
                       )}
                       <Badge className="absolute top-1 left-1 bg-purple-600 text-white text-[10px]">Entertainment</Badge>
@@ -978,11 +1014,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                                 }
                                 const images = getImages(item)
                                 return (
-                                  <img
+                                  <Image
                                     src={images[0]}
                                     alt={getLocalizedText(item.title, language)}
-                                    className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105 opacity-90"
-                                    onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                                    fill
+                                    className="object-cover object-center transition-transform duration-300 group-hover:scale-105 opacity-90"
+                                    sizes="(max-width: 768px) 50vw, 25vw"
                                   />
                                 )
                               })()}
