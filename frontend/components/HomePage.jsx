@@ -274,10 +274,10 @@ const StickyAdWidget = ({ settings, t, onClick }) => {
   )
 }
 
-const HomePage = ({ setCurrentView, setSelectedArticle }) => {
+const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData }) => {
   const { t, language } = useLanguage()
   const [currentAdIndex, setCurrentAdIndex] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!newsData?.loaded)
   const [newsKey, setNewsKey] = useState(0)
 
   // Admin content settings
@@ -287,19 +287,34 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
   const [businessAdSettings, setBusinessAdSettings] = useState({ enabled: true, imageUrl: '', linkUrl: '', title: 'BUSINESS', subtitle: 'Advertisement', buttonText: 'POST YOUR AD' })
   const [trendingSettings, setTrendingSettings] = useState({ enabled: true, newsIds: [] })
 
-  // News data
-  const [mainNewsBoxes, setMainNewsBoxes] = useState([])
-  const [trendingNews, setTrendingNews] = useState([])
-  const [businessNews, setBusinessNews] = useState([])
-  const [sportsNews, setSportsNews] = useState([])
-  const [nationNews, setNationNews] = useState([])
-  const [entertainmentNews, setEntertainmentNews] = useState([])
-  const [oldNews, setOldNews] = useState([]) // Archive for items beyond 6 per category
+  // Promotion popup state
+  const [promotionOpen, setPromotionOpen] = useState(false)
+
+  // -- STATE LIFTING: Use props if available, otherwise fallback to local (though page.js always passes them now) --
+  const mainNewsBoxes = newsData?.mainNewsBoxes || []
+  const trendingNews = newsData?.trendingNews || []
+  const businessNews = newsData?.businessNews || []
+  const nationNews = newsData?.nationNews || []
+  const entertainmentNews = newsData?.entertainmentNews || []
+  const oldNews = newsData?.oldNews || []
+  // sportsNews was unused in local state, ignoring it or we can derive it if needed (it was set to empty array)
+  // const sportsNews = [] 
+
+  // Helpers to update parent state safely
+  const setMainNewsBoxes = (data) => setNewsData && setNewsData(prev => ({ ...prev, mainNewsBoxes: data }))
+  const setTrendingNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, trendingNews: data }))
+  const setBusinessNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, businessNews: data }))
+  const setNationNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, nationNews: data }))
+  const setEntertainmentNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, entertainmentNews: data }))
+  const setOldNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, oldNews: data }))
+  const setSportsNews = (data) => { } // No-op since we don't store sportsNews in lifted state but keep function signature if used
+
+  // Local UI state
   const [visibleMoreStories, setVisibleMoreStories] = useState(15) // Show 15 initially
   const [loadingMoreStories, setLoadingMoreStories] = useState(false)
 
   // Promotion Form State
-  const [promotionOpen, setPromotionOpen] = useState(false)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [promotionData, setPromotionData] = useState({
     businessName: '', ownerName: '', phone: '', email: '', address: '', description: ''
@@ -409,13 +424,28 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
       ])
       const oldNewsFiltered = remaining.filter(a => !usedIds.has(a.id))
 
-      setTrendingNews(politicsNews) // Politics/City News
-      setBusinessNews(businessNewsFiltered)
-      setSportsNews([])
-      setNationNews(nationNewsFiltered)
-      setEntertainmentNews(entertainmentFiltered)
-      setOldNews(oldNewsFiltered) // No random sort, keeps date order
-      setOldNews(oldNewsFiltered) // No random sort, keeps date order
+      // Batch update the parent state
+      if (setNewsData) {
+        setNewsData(prev => ({
+          ...prev,
+          mainNewsBoxes: topNews,
+          trendingNews: politicsNews,
+          businessNews: businessNewsFiltered,
+          nationNews: nationNewsFiltered,
+          entertainmentNews: entertainmentFiltered,
+          oldNews: oldNewsFiltered,
+          loaded: true
+        }))
+      } else {
+        // Fallback for local state only (should not happen with new page.js)
+        setMainNewsBoxes(topNews)
+        setTrendingNews(politicsNews)
+        setBusinessNews(businessNewsFiltered)
+        setNationNews(nationNewsFiltered)
+        setEntertainmentNews(entertainmentFiltered)
+        setOldNews(oldNewsFiltered)
+      }
+
     } catch (error) {
       console.error('Failed to fetch news:', error)
       // On error, load static data 

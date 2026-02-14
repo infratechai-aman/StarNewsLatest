@@ -43,6 +43,19 @@ const App = () => {
   const [selectedArticle, setSelectedArticle] = useState(null)
   const [selectedBusiness, setSelectedBusiness] = useState(null)
   const [selectedClassified, setSelectedClassified] = useState(null)
+
+
+  // Lifted state for News Data (to persist across navigation)
+  const [newsData, setNewsData] = useState({
+    mainNewsBoxes: [],
+    trendingNews: [],
+    businessNews: [],
+    nationNews: [],
+    entertainmentNews: [],
+    oldNews: [],
+    loaded: false
+  })
+
   const { toast } = useToast()
 
   useEffect(() => {
@@ -117,7 +130,7 @@ const App = () => {
         <BreakingNewsTicker />
 
         <main className="container py-6">
-          {currentView === 'home' && <HomePage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
+          {currentView === 'home' && <HomePage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
           {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={setCurrentView} />}
           {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
           {currentView === 'businesses' && <BusinessesPage setSelectedBusiness={setSelectedBusiness} setCurrentView={setCurrentView} />}
