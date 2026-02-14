@@ -149,7 +149,16 @@ export async function GET(request) {
             };
         }
 
-        return NextResponse.json(responseData)
+        const response = NextResponse.json(responseData)
+
+        // Add Cache-Control headers for Edge Caching
+        // s-maxage=60: Cache on Vercel Edge Network for 60 seconds
+        // stale-while-revalidate=30: Serve stale content for up to 30s while revalidating
+        if (isDefaultQuery) {
+            response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30')
+        }
+
+        return response
 
     } catch (error) {
         console.error('News GET Error:', error)
