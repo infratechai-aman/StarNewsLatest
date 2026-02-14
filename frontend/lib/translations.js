@@ -263,6 +263,8 @@ export const translations = {
         note: 'Note',
         userSubmitted: 'User Submitted',
         priceOnRequest: 'Price on request',
+        moreStories: 'More Stories',
+        discoverWhatsHappening: "Discover What's Happening",
     },
 
     hi: {
@@ -526,6 +528,8 @@ export const translations = {
         note: 'नोट',
         userSubmitted: 'उपयोगकर्ता द्वारा जमा',
         priceOnRequest: 'अनुरोध पर कीमत',
+        moreStories: 'और कहानियां',
+        discoverWhatsHappening: 'जानें क्या हो रहा है',
     },
 
     mr: {
@@ -789,6 +793,8 @@ export const translations = {
         note: 'टीप',
         userSubmitted: 'वापरकर्त्याने सबमिट केले',
         priceOnRequest: 'विनंतीवर किंमत',
+        moreStories: 'अधिक कथा',
+        discoverWhatsHappening: 'काय घडत आहे ते शोधा',
     }
 }
 

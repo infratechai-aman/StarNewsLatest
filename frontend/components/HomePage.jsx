@@ -31,12 +31,43 @@ const adImages = [
   '/placeholder-news.svg',
 ]
 
+// Helper to map DB category names to translation keys
+const getTranslatedCategory = (cat, t, language) => {
+  if (!cat) return ''
+  // If it's already an object, use getLocalizedText
+  if (typeof cat === 'object') return getLocalizedText(cat, language)
+
+  // Map common DB strings to translation keys
+  const map = {
+    'Business': 'business',
+    'National': 'nation',
+    'Nation': 'nation',
+    'Politics': 'politics',
+    'Entertainment': 'entertainment',
+    'Sports': 'sports',
+    'Technology': 'technology',
+    'Health': 'health',
+    'Education': 'education',
+    'Crime': 'crime',
+    'City News': 'cityNews',
+    'Jobs': 'jobs',
+    'Trending': 'trending'
+  }
+
+  const key = map[cat] || cat.toLowerCase()
+  // Try to translate, fallback to original string
+  const translated = t(key)
+  return translated !== key ? translated : cat
+}
+
 // News Box Component - Language Aware with API data support
 const NewsBox = ({ item, onClick, language }) => {
+  const { t } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
-  const category = getLocalizedText(item.category, language) || ''
+  // Use helper to translate category string
+  const category = getTranslatedCategory(item.category, t, language)
 
   useEffect(() => {
     if (item.images && item.images.length > 1) {
@@ -124,9 +155,10 @@ const NewsBox = ({ item, onClick, language }) => {
 
 // News Card Component - Language Aware with API data support
 const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
+  const { t } = useLanguage()
   // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
-  const category = getLocalizedText(item.category, language) || ''
+  const category = getTranslatedCategory(item.category, t, language)
   const [imgSrc, setImgSrc] = useState(item.mainImage || item.images?.[0] || `https://picsum.photos/600/400?random=${item.id}`)
 
   useEffect(() => {
@@ -655,7 +687,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div className="border-b-4 border-red-600 pb-1 mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
-              Politics / City News
+              {t('politics')} / {t('cityNews')}
             </h2>
           </div>
           {trendingNews.length > 0 ? (
@@ -825,7 +857,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="border-b-4 border-orange-500 pb-1 mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span className="bg-orange-500 text-white px-3 py-1 text-sm">॥</span>
-                Business
+                {t('business')}
               </h2>
             </div>
             {businessNews.length > 0 ? (
@@ -910,7 +942,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="border-b-4 border-gray-900 pb-1 mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span className="bg-gray-900 text-white px-3 py-1 text-sm">॥</span>
-                National
+                {t('nation')}
               </h2>
             </div>
             {nationNews.length > 0 ? (
@@ -962,7 +994,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="border-b-4 border-purple-600 pb-1 mb-4">
               <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                 <span className="bg-purple-600 text-white px-3 py-1 text-sm">॥</span>
-                Entertainment
+                {t('entertainment')}
               </h2>
             </div>
             {entertainmentNews.length > 0 ? (
@@ -1022,9 +1054,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div>
             <div className="border-b-4 border-gray-500 pb-1 mb-4">
               <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-                More Stories
+                {t('moreStories')}
               </h2>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-1">Discover What's Happening</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-1">{t('discoverWhatsHappening')}</p>
             </div>
             {
               oldNews.length > 0 ? (
