@@ -9,9 +9,10 @@ import { Eye, Newspaper } from 'lucide-react'
 import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
+import { newsData, getLocalizedText } from '@/lib/newsData'
 
 const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPageState }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   // Use props if available, else local state (fallback)
   const [newsArticles, setLocalNewsArticles] = useState([])
   const [categoryList, setLocalCategoryList] = useState([])
@@ -85,7 +86,21 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         params.featured = true
       }
       const data = await news.getAll(params)
-      setArticles(data.articles || [])
+      // Merge static translated newsData with API data for demo
+      const dbArticles = data.articles || []
+      // Filter newsData based on category if needed, for now just Prepend
+      let staticNews = newsData || []
+
+      if (currentCategory !== 'all' && currentCategory !== 'trending') {
+        staticNews = staticNews.filter(n => {
+          const cat = n.category?.en || n.category
+          return cat?.toLowerCase() === currentCategory.toLowerCase() ||
+            (cat === 'Nation' && currentCategory === 'national')
+        })
+      }
+
+      // Combine: Static first (translated) + DB second
+      setArticles([...staticNews, ...dbArticles])
     } catch (error) {
       console.error('Error loading news:', error)
     }
@@ -134,8 +149,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 <Badge variant="secondary" className="text-xs">{t('news')}</Badge>
                 {article.featured && <Badge variant="default" className="text-xs">{t('featured')}</Badge>}
               </div>
-              <h2 className="text-lg font-bold mb-2 line-clamp-2 hover:text-primary">{article.title}</h2>
-              <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{article.metaDescription || 'Read the full article...'}</p>
+              <h2 className="text-lg font-bold mb-2 line-clamp-2 hover:text-primary">{getLocalizedText(article.title, language) || article.title}</h2>
+              <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{getLocalizedText(article.content, language)?.replace(/<[^>]*>/g, '').substring(0, 100) || article.metaDescription || 'Read the full article...'}</p>
               <div className="flex items-center justify-between mt-auto pt-4 border-t">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   <span>{new Date(article.createdAt).toLocaleDateString()}</span>

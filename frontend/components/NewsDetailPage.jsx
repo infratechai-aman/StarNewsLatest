@@ -36,7 +36,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     const fetchLatestNews = async () => {
       try {
         const response = await news.getAll({ limit: 20 })
-        const articles = response?.articles || response || []
+        const apiArticles = response?.articles || response || []
+        // Merge static newsData to ensure translated articles appear in sidebar/related
+        const articles = [...newsData, ...apiArticles]
 
         // Ensure articles is an array
         if (!Array.isArray(articles)) {

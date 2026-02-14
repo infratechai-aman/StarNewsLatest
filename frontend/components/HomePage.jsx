@@ -401,11 +401,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       const response = await news.getAll({ limit: 100 })
       let articles = response.articles || []
 
-      // If no articles from API, use static newsData as fallback
-      if (articles.length === 0) {
-        const { newsData } = await import('@/lib/newsData')
-        articles = newsData || []
-      }
+      const { newsData } = await import('@/lib/newsData')
+      const staticArticles = newsData || []
+
+      // Merge: Static (translated) first, then API articles
+      articles = [...staticArticles, ...articles]
 
       // Sort articles by date (newest first)
       articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
