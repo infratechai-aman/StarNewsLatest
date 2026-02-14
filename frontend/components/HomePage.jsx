@@ -358,6 +358,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   // Fetch news - re-run when language changes
   const fetchNews = useCallback(async () => {
+    // Optimization: If data is already loaded in parent, start with that.
+    if (newsData?.loaded) {
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const response = await news.getAll({ limit: 100 })
