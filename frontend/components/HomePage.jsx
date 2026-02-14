@@ -97,8 +97,11 @@ const NewsBox = ({ item, onClick, language }) => {
             src={img}
             alt={title}
             fill
-            className={`object-cover transition-all duration-700 ${index === currentImageIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
-            style={{ transform: index === currentImageIndex ? 'translateX(0)' : index < currentImageIndex ? 'translateX(-100%)' : 'translateX(100%)' }}
+            className={`transition-all duration-700 ${index === currentImageIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
+            style={{
+              objectFit: 'cover',
+              transform: index === currentImageIndex ? 'translateX(0)' : index < currentImageIndex ? 'translateX(-100%)' : 'translateX(100%)'
+            }}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ))}
@@ -140,7 +143,8 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
           src={imgSrc}
           alt={title}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="group-hover:scale-105 transition-transform duration-300"
+          style={{ objectFit: 'cover' }}
           onError={() => setImgSrc('/placeholder-news.svg')}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
@@ -485,7 +489,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                   src={premiumAdSettings.imageUrl}
                   alt={premiumAdSettings.title || 'Advertisement'}
                   fill
-                  className="object-cover object-center"
+                  className="object-center"
+                  style={{ objectFit: 'cover' }}
                   priority
                   sizes="100vw"
                 />
@@ -577,7 +582,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                                 src={item.imageUrl}
                                 alt={`Advertisement ${index + 1}`}
                                 fill
-                                className="object-cover object-center"
+                                className="object-center"
+                                style={{ objectFit: 'cover' }}
                                 sizes="(max-width: 1024px) 100vw, 300px"
                               />
                             </div>
@@ -652,7 +658,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                               src={images[0]}
                               alt={getLocalizedText(item.title, language)}
                               fill
-                              className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                              className="object-center transition-transform duration-300 group-hover:scale-105"
+                              style={{ objectFit: 'cover' }}
                               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
                             />
                           )
@@ -799,7 +806,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                           src={businessNews[0].thumbnailUrl || businessNews[0].mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(businessNews[0].title, language)}
                           fill
-                          className="object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                          className="object-center transition-transform duration-500 group-hover:scale-110"
+                          style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 100vw, 50vw"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -836,7 +844,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
                           fill
-                          className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                          className="object-center transition-transform duration-300 group-hover:scale-105"
+                          style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 50vw, 25vw"
                         />
                         <Badge className="absolute top-1 left-1 bg-orange-500/90 text-white text-[9px] px-1.5 py-0.5">Business</Badge>
@@ -881,7 +890,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                         src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                         alt={getLocalizedText(item.title, language)}
                         fill
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="transition-transform duration-300 group-hover:scale-105"
+                        style={{ objectFit: 'cover' }}
                         sizes="(max-width: 768px) 40vw, 20vw"
                       />
                       <Badge className="absolute top-1 left-1 bg-red-600 text-white text-[10px]">National</Badge>
@@ -937,7 +947,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="transition-transform duration-300 group-hover:scale-105"
+                          style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 40vw, 25vw"
                         />
                       )}
@@ -1018,7 +1029,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle }) => {
                                     src={images[0]}
                                     alt={getLocalizedText(item.title, language)}
                                     fill
-                                    className="object-cover object-center transition-transform duration-300 group-hover:scale-105 opacity-90"
+                                    className="object-center transition-transform duration-300 group-hover:scale-105 opacity-90"
+                                    style={{ objectFit: 'cover' }}
                                     sizes="(max-width: 768px) 50vw, 25vw"
                                   />
                                 )
