@@ -8,22 +8,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Newspaper } from 'lucide-react'
 import { news, categories } from '@/lib/api'
 
-const NewsPage = ({ setSelectedArticle, setCurrentView }) => {
-  const [newsArticles, setNewsArticles] = useState([])
-  const [categoryList, setCategoryList] = useState([])
-  const [selectedCategory, setSelectedCategory] = useState('all')
+const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPageState }) => {
+  // Use props if available, else local state (fallback)
+  const [newsArticles, setLocalNewsArticles] = useState([])
+  const [categoryList, setLocalCategoryList] = useState([])
+  const [selectedCategory, setLocalSelectedCategory] = useState('all')
   const [loading, setLoading] = useState(true)
+
+  // Derived state
+  const articles = newsPageState?.articles?.length > 0 ? newsPageState.articles : newsArticles
+  const categoriesData = newsPageState?.categories?.length > 0 ? newsPageState.categories : categoryList
+  const currentCategory = newsPageState?.selectedCategory || selectedCategory
+
+  // Setters
+  const setArticles = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, articles: data })) : setLocalNewsArticles(data)
+  const setCategories = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, categories: data })) : setLocalCategoryList(data)
+  const setSelectedCat = (cat) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, selectedCategory: cat })) : setLocalSelectedCategory(cat)
+  const setLoaded = (status) => setNewsPageState && setNewsPageState(prev => ({ ...prev, loaded: status }))
 
   useEffect(() => {
     const storedCategory = localStorage.getItem('selectedCategory')
     if (storedCategory) {
-      setSelectedCategory(storedCategory)
+      setSelectedCat(storedCategory)
       localStorage.removeItem('selectedCategory')
     }
     const handleCategoryChange = () => {
       const newCategory = localStorage.getItem('selectedCategory')
       if (newCategory) {
-        setSelectedCategory(newCategory)
+        setSelectedCat(newCategory)
         localStorage.removeItem('selectedCategory')
       }
     }
@@ -32,14 +44,28 @@ const NewsPage = ({ setSelectedArticle, setCurrentView }) => {
   }, [])
 
   useEffect(() => {
-    loadCategories()
-    loadNews()
-  }, [selectedCategory])
+    // If loaded and category hasn't changed from what's in state, skip fetch
+    if (newsPageState?.loaded && newsPageState.selectedCategory === currentCategory) {
+      setLoading(false)
+      return
+    }
+
+    // If not loaded or category changed, fetch
+    const fetchData = async () => {
+      setLoading(true)
+      await loadCategories()
+      await loadNews()
+      setLoading(false)
+      if (setNewsPageState) setLoaded(true)
+    }
+    fetchData()
+  }, [currentCategory]) // Trigger on category change
 
   const loadCategories = async () => {
     try {
+      if (newsPageState?.categories?.length > 0) return // Skip if already loaded
       const data = await categories.getAll()
-      setCategoryList(data || [])
+      setCategories(data || [])
     } catch (error) {
       console.error('Error loading categories:', error)
     }
@@ -47,20 +73,18 @@ const NewsPage = ({ setSelectedArticle, setCurrentView }) => {
 
   const loadNews = async () => {
     try {
-      const cats = await categories.getAll()
+      const cats = newsPageState?.categories?.length > 0 ? newsPageState.categories : await categories.getAll()
       let params = {}
-      if (selectedCategory !== 'all' && selectedCategory !== 'trending' && selectedCategory !== 'special') {
-        const cat = cats.find(c => c.slug === selectedCategory)
+      if (currentCategory !== 'all' && currentCategory !== 'trending' && currentCategory !== 'special') {
+        const cat = cats.find(c => c.slug === currentCategory)
         if (cat) params.category = cat.id
-      } else if (selectedCategory === 'trending') {
+      } else if (currentCategory === 'trending') {
         params.featured = true
       }
       const data = await news.getAll(params)
-      setNewsArticles(data.articles || [])
+      setArticles(data.articles || [])
     } catch (error) {
       console.error('Error loading news:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -79,13 +103,13 @@ const NewsPage = ({ setSelectedArticle, setCurrentView }) => {
           <SelectTrigger className="w-48"><SelectValue placeholder="All Categories" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categoryList.map((cat) => (<SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>))}
+            {categoriesData.map((cat) => (<SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {newsArticles.map((article) => (
+        {articles.map((article) => (
           <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full" onClick={() => viewArticle(article)}>
             <div className="relative h-48 overflow-hidden">
               {/* Updated image logic to match HomePage (thumbnails/placeholders) */}
@@ -121,7 +145,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView }) => {
         ))}
       </div>
 
-      {newsArticles.length === 0 && (
+      {articles.length === 0 && (
         <Card><CardContent className="py-12 text-center"><Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">No news articles found</p></CardContent></Card>
       )}
     </div>
