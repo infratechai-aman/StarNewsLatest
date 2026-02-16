@@ -825,64 +825,63 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </h2>
             </div>
             {trendingNews.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-4">
-                {trendingNews.map((item) => (
-                  <Card
-                    key={item.id}
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border hover:border-red-500 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(20%-13px)] h-[280px] flex flex-col"
-                    onClick={() => handleNewsClick(item)}
-                  >
-                    <div className="relative h-[160px] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
-                      {(item.youtubeUrl || item.videoUrl) ? (
-                        <iframe
-                          src={`${(item.youtubeUrl || item.videoUrl).replace('watch?v=', 'embed/')}?autoplay=1&mute=1&loop=1&playlist=${(item.youtubeUrl || item.videoUrl).split('v=')[1]?.split('&')[0] || ''}`}
-                          className="w-full h-full"
-                          allow="autoplay; encrypted-media"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <div className="w-full h-full relative">
-                          {(() => {
-                            const getImages = (itm) => {
-                              const list = []
-                              const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
-                              if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
-                              if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
-                              if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
-                              if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
-                              if (!list.length) list.push('/placeholder-news.svg')
-                              return list
-                            }
-                            const images = getImages(item)
-                            // Simple carousel logic or just first image
-                            return (
-                              <Image
-                                src={images[0]}
-                                alt={getLocalizedText(item.title, language)}
-                                fill
-                                className="object-center transition-transform duration-300 group-hover:scale-105"
-                                style={{ objectFit: 'cover' }}
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
-                              />
-                            )
-                          })()}
-                          {(getLocalizedText(item.category, language)) && (
-                            <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">{getLocalizedText(item.category, language)}</Badge>
-                          )}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Main Hero Article (Left) */}
+                {trendingNews[0] && (
+                  <div className="col-span-12 lg:col-span-7 group cursor-pointer" onClick={() => handleNewsClick(trendingNews[0])}>
+                    <div className="relative h-[240px] md:h-[350px] rounded-xl overflow-hidden mb-3 shadow-sm border border-gray-200">
+                      <Image
+                        src={trendingNews[0].mainImage || trendingNews[0].images?.[0] || '/placeholder-news.svg'}
+                        alt={getLocalizedText(trendingNews[0].title, language)}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <Badge className="absolute top-3 left-3 bg-red-600 text-white border-none px-3 py-1 text-xs font-bold shadow-sm">Politics</Badge>
+                      <div className="absolute bottom-0 left-0 p-5 w-full">
+                        <h3 className="text-white font-bold text-xl md:text-3xl leading-tight line-clamp-2 drop-shadow-lg mb-2">
+                          {getLocalizedText(trendingNews[0].title, language)}
+                        </h3>
+                        <div className="flex items-center text-gray-200 text-xs gap-3 font-medium">
+                          <span className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                            <Clock className="w-3.5 h-3.5" />
+                            {new Date(trendingNews[0].createdAt).toLocaleDateString()}
+                          </span>
                         </div>
-                      )}
+                      </div>
                     </div>
-                    <CardContent className="p-3 flex-1 flex flex-col justify-between">
-                      <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors">
-                        {getLocalizedText(item.title, language)}
-                      </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                        {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
-                      </p>
+                    <p className="text-gray-600 text-sm md:text-base line-clamp-2 hidden md:block leading-relaxed px-1">
+                      {getLocalizedText(trendingNews[0].content, language)?.substring(0, 180)}...
+                    </p>
+                  </div>
+                )}
 
-                    </CardContent>
-                  </Card>
-                ))}
+                {/* Right Column List (Stacked) */}
+                <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
+                  {trendingNews.slice(1, 5).map((item) => (
+                    <div key={item.id} onClick={() => handleNewsClick(item)} className="flex gap-4 group cursor-pointer items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-red-100 transition-all">
+                      <div className="relative w-28 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100 shadow-inner">
+                        <Image
+                          src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
+                          alt={item.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5 py-0.5">
+                        <Badge variant="outline" className="w-fit text-[10px] h-5 px-1.5 border-red-200 text-red-600 bg-red-50">
+                          {getLocalizedText(item.category, language) || 'Politics'}
+                        </Badge>
+                        <h4 className="font-bold text-sm leading-snug text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
+                          {getLocalizedText(item.title, language)}
+                        </h4>
+                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
@@ -1000,33 +999,33 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {businessNews[0] && (
                   <div className="col-span-12 md:col-span-6 lg:col-span-7 h-full">
                     <Card
-                      className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group border hover:border-orange-500 h-full flex flex-col"
+                      className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-orange-200 h-full flex flex-col rounded-xl shadow-sm"
                       onClick={() => handleNewsClick(businessNews[0])}
                     >
-                      <div className="relative h-[65%] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
+                      <div className="relative h-[65%] flex-shrink-0 overflow-hidden bg-gray-100">
                         <Image
                           src={businessNews[0].thumbnailUrl || businessNews[0].mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(businessNews[0].title, language)}
                           fill
-                          className="object-center transition-transform duration-500 group-hover:scale-110"
+                          className="object-center transition-transform duration-700 group-hover:scale-105"
                           style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 100vw, 50vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                        <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-sm px-3 py-1">Business</Badge>
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h3 className="font-bold text-xl text-white line-clamp-2 drop-shadow-lg">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                        <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-sm px-3 py-1 font-bold shadow-sm border-none">Business</Badge>
+                        <div className="absolute bottom-0 left-0 right-0 p-5">
+                          <h3 className="font-bold text-xl md:text-2xl text-white line-clamp-2 drop-shadow-md leading-tight">
                             {getLocalizedText(businessNews[0].title, language)}
                           </h3>
                         </div>
                       </div>
-                      <CardContent className="p-4 flex-1 flex flex-col justify-between bg-gradient-to-r from-orange-50 to-white">
-                        <p className="text-sm text-gray-700 line-clamp-3 mb-2">
+                      <CardContent className="p-5 flex-1 flex flex-col justify-between bg-white relative">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-100 opacity-50"></div>
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-2 leading-relaxed">
                           {getLocalizedText(businessNews[0].metaDescription || businessNews[0].content, language)?.substring(0, 150)}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-auto">
-
-                          <Clock className="h-3 w-3" /> {new Date(businessNews[0].createdAt).toLocaleDateString()}
+                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-auto font-medium">
+                          <Clock className="h-3.5 w-3.5" /> {new Date(businessNews[0].createdAt).toLocaleDateString()}
                         </div>
                       </CardContent>
                     </Card>
@@ -1038,7 +1037,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   {businessNews.slice(1, 5).map((item, idx) => (
                     <Card
                       key={item.id}
-                      className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border hover:border-orange-500 aspect-square flex flex-col"
+                      className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-orange-200 aspect-square flex flex-col rounded-xl shadow-sm"
                       onClick={() => handleNewsClick(item)}
                     >
                       <div className="relative h-[60%] w-full flex-shrink-0 overflow-hidden bg-gray-100">
@@ -1046,14 +1045,14 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
                           fill
-                          className="object-center transition-transform duration-300 group-hover:scale-105"
+                          className="object-center transition-transform duration-500 group-hover:scale-110"
                           style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 50vw, 25vw"
                         />
-                        <Badge className="absolute top-1 left-1 bg-orange-500/90 text-white text-[9px] px-1.5 py-0.5">Business</Badge>
+                        <Badge className="absolute top-2 left-2 bg-white/90 text-orange-600 text-[10px] px-1.5 py-0.5 font-bold shadow-sm backdrop-blur-sm">Business</Badge>
                       </div>
-                      <CardContent className="p-2 flex-1 flex flex-col justify-between bg-white overflow-hidden">
-                        <h3 className="font-semibold text-xs line-clamp-3 group-hover:text-orange-600 transition-colors leading-tight">
+                      <CardContent className="p-3 flex-1 flex flex-col justify-between bg-white overflow-hidden">
+                        <h3 className="font-bold text-xs md:text-sm line-clamp-3 group-hover:text-orange-600 transition-colors leading-snug text-gray-900">
                           {getLocalizedText(item.title, language)}
                         </h3>
                       </CardContent>
@@ -1084,7 +1083,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {nationNews.slice(0, 8).map((item) => (
                   <Card
                     key={item.id}
-                    className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-200 hover:border-red-500 bg-white h-[140px] flex flex-row"
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-red-200 bg-white h-[140px] flex flex-row rounded-xl shadow-sm"
                     onClick={() => handleNewsClick(item)}
                   >
                     <div className="relative w-[180px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
@@ -1092,24 +1091,23 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                         src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                         alt={getLocalizedText(item.title, language)}
                         fill
-                        className="transition-transform duration-300 group-hover:scale-105"
+                        className="transition-transform duration-500 group-hover:scale-110"
                         style={{ objectFit: 'cover' }}
                         sizes="(max-width: 768px) 40vw, 20vw"
                       />
-                      <Badge className="absolute top-1 left-1 bg-red-600 text-white text-[10px]">National</Badge>
+                      <Badge className="absolute top-2 left-2 bg-white/90 text-red-700 text-[10px] font-bold shadow-sm backdrop-blur-sm">National</Badge>
                     </div>
-                    <CardContent className="p-3 flex-1 flex flex-col justify-center bg-white">
-                      <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 group-hover:text-red-600 transition-colors mb-2">
+                    <CardContent className="p-4 flex-1 flex flex-col justify-center bg-white relative">
+                      <h3 className="font-bold text-sm md:text-base line-clamp-2 text-gray-900 group-hover:text-red-600 transition-colors mb-2 leading-tight">
                         {getLocalizedText(item.title, language)}
                       </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2">
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">
                         {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 80)}...
                       </p>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                        <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
+                      </div>
                     </CardContent>
-                    <div className="px-3 pb-2 bg-white border-t border-gray-100 pt-2 flex items-center justify-between text-xs text-gray-500">
-
-                      <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {item.views || 0}</span>
-                    </div>
                   </Card>
                 ))}
               </div>
@@ -1136,38 +1134,37 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {entertainmentNews.slice(0, 4).map((item) => (
                   <Card
                     key={item.id}
-                    className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-200 hover:border-purple-500 bg-white h-[140px] flex flex-row"
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-purple-200 bg-white h-[150px] flex flex-row rounded-xl shadow-sm"
                     onClick={() => handleNewsClick(item)}
                   >
                     <div className="relative w-[180px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
                       {(item.youtubeUrl || item.videoUrl) ? (
-                        <div className="w-full h-full bg-purple-900 flex items-center justify-center">
-                          <span className="text-4xl text-white opacity-80 group-hover:opacity-100 transition-opacity">▶</span>
+                        <div className="w-full h-full bg-purple-900 flex items-center justify-center group-hover:bg-purple-800 transition-colors">
+                          <span className="text-4xl text-white opacity-90 group-hover:scale-110 transition-transform">▶</span>
                         </div>
                       ) : (
                         <Image
                           src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
                           alt={getLocalizedText(item.title, language)}
                           fill
-                          className="transition-transform duration-300 group-hover:scale-105"
+                          className="transition-transform duration-500 group-hover:scale-110"
                           style={{ objectFit: 'cover' }}
                           sizes="(max-width: 768px) 40vw, 25vw"
                         />
                       )}
-                      <Badge className="absolute top-1 left-1 bg-purple-600 text-white text-[10px]">Entertainment</Badge>
+                      <Badge className="absolute top-2 left-2 bg-purple-600/90 text-white text-[10px] shadow-sm backdrop-blur-sm font-bold">Entertainment</Badge>
                     </div>
-                    <CardContent className="p-3 flex-1 flex flex-col justify-center bg-white">
-                      <h3 className="font-semibold text-sm line-clamp-2 text-gray-900 group-hover:text-purple-600 transition-colors mb-2">
+                    <CardContent className="p-4 flex-1 flex flex-col justify-center bg-white">
+                      <h3 className="font-bold text-sm md:text-base line-clamp-2 text-gray-900 group-hover:text-purple-700 transition-colors mb-2 leading-tight">
                         {getLocalizedText(item.title, language)}
                       </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2">
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">
                         {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 80)}...
                       </p>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
+                        <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
+                      </div>
                     </CardContent>
-                    <div className="px-3 pb-2 bg-white border-t border-gray-100 pt-2 flex items-center justify-between text-xs text-gray-500">
-
-                      <span className="flex items-center gap-1"><Eye className="h-3 w-3" /> {item.views || 0}</span>
-                    </div>
                   </Card>
                 ))}
               </div>
