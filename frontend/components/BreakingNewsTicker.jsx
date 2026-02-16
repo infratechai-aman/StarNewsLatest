@@ -56,11 +56,11 @@ const BreakingNewsTicker = () => {
   const tickerText = ticker.text + ' • '
 
   return (
-    <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white py-2 overflow-hidden sticky top-0 z-50 shadow-lg">
+    <div className="bg-gradient-to-r from-red-800 via-red-600 to-red-800 text-white py-1.5 overflow-hidden sticky top-0 lg:top-auto z-40 shadow-md">
       <div className="container flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full shrink-0 backdrop-blur-sm">
-          <Radio className="h-4 w-4 animate-pulse" />
-          <span className="font-bold text-sm uppercase tracking-wider">{t('breakingNews')}</span>
+        <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-sm shrink-0 backdrop-blur-md border border-white/10 shadow-sm">
+          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
+          <span className="font-bold text-[10px] md:text-xs uppercase tracking-widest">{t('breakingNews')}</span>
         </div>
         <div className="overflow-hidden flex-1">
           <div className="ticker-wrapper" key={tickerKey}>

@@ -577,22 +577,77 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       )}
 
-      {/* MAIN NEWS GRID */}
-      <div className="grid lg:grid-cols-12 gap-4">
+      {/* MAIN NEWS GRID / LIST */}
+      <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-9">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+          {/* --- DESKTOP VIEW (Grid) --- */}
+          <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 gap-6">
             {mainNewsBoxes.map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
+
+          {/* --- MOBILE VIEW (Premium List) --- */}
+          <div className="lg:hidden flex flex-col gap-4">
+            {mainNewsBoxes.map((item, index) => {
+              // First item is Featured (Hero Card)
+              if (index === 0) {
+                return (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className="relative h-[280px] w-full rounded-xl overflow-hidden shadow-md mb-2">
+                    <Image
+                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                      alt={getLocalizedText(item.title, language)}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-4 w-full">
+                      {(item.category) && <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-red-600 px-2 py-0.5 rounded-sm mb-2 inline-block shadow-sm">{getLocalizedText(item.category, language)}</span>}
+                      <h2 className="text-white font-bold text-xl leading-snug line-clamp-3 drop-shadow-sm font-sans">{getLocalizedText(item.title, language)}</h2>
+                      <div className="flex items-center text-gray-300 text-xs mt-2 gap-2">
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }
+              // Other items are List View (Clean & Compact)
+              return (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="flex gap-4 p-3 bg-white rounded-lg border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
+                  <div className="relative w-[120px] h-[85px] shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <Image
+                      src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                      alt={getLocalizedText(item.title, language)}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-between flex-1 h-[85px]">
+                    <h3 className="font-bold text-[15px] leading-tight text-gray-900 line-clamp-3 font-sans">
+                      {getLocalizedText(item.title, language)}
+                    </h3>
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className="text-red-600 text-[10px] font-bold uppercase">{t('readMore')}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
         </div>
 
         {/* SIDEBAR AD - Square Images with Individual Destinations */}
         {sidebarAdSettings.enabled && (
           <div className="lg:col-span-3">
-            <Card className="overflow-hidden border-2 border-gray-200 shadow-lg h-full bg-gray-50 sidebar-ad-container">
+            <Card className="overflow-hidden border border-gray-200 shadow-md h-full bg-white sidebar-ad-container">
+              {/* ... (Existing Sidebar Content) ... */}
               <CardContent className="p-0 h-full min-h-[420px] relative">
-                <Badge className="absolute top-2 right-2 z-10 bg-gray-800/70 text-white text-xs">{t('advertisement')}</Badge>
+                <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
                 {(() => {
                   // Get items from new structure, fallback to legacy format
                   const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
@@ -609,9 +664,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     // No images configured - show placeholder
                     return (
                       <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
-                        <div className="aspect-square w-full max-w-[280px] bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex flex-col items-center justify-center">
-                          <p className="text-gray-500 font-medium">{t('yourBusinessAdHere')}</p>
-                          <p className="text-xs text-gray-400 mt-1">Square Ad Space</p>
+                        <div className="aspect-square w-full max-w-[280px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
+                          <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
                         </div>
                       </div>
                     )
@@ -645,7 +699,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                               pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
                             }}
                           >
-                            <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-md relative">
+                            <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-sm relative">
                               <Image
                                 src={item.imageUrl}
                                 alt={`Advertisement ${index + 1}`}
@@ -665,7 +719,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                           {displayItems.map((_, index) => (
                             <span
                               key={index}
-                              className={`w-2 h-2 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-white scale-125 shadow-md' : 'bg-white/50'}`}
+                              className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`}
                             />
                           ))}
                         </div>
@@ -679,7 +733,21 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         )}
       </div>
 
-
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/917020873300"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 group flex items-center justify-center"
+      >
+        <div className="absolute right-14 bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">
+          Chat with Us
+        </div>
+        <div className="bg-[#25D366] p-3 rounded-full shadow-lg hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
+          <WhatsAppIcon className="w-8 h-8 text-white fill-current" />
+        </div>
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 border-2 border-white rounded-full animate-pulse"></span>
+      </a>
 
       {/* POLITICS / CITY NEWS Section - Dynamic from API */}
       {trendingSettings.enabled && (

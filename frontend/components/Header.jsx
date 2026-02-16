@@ -68,6 +68,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
     message: ''
   })
 
+  // Use language context
+  const { language, changeLanguage, t, languageOptions } = useLanguage()
+
   const handleCategoryClick = (category) => {
     setCurrentView('news')
     localStorage.setItem('selectedCategory', category)
@@ -101,11 +104,6 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
   }
 
   const [reporterDialogOpen, setReporterDialogOpen] = useState(false)
-
-  // Use language context
-  const { language, changeLanguage, t, languageOptions } = useLanguage()
-
-
   const [submittingReporter, setSubmittingReporter] = useState(false)
 
   const handleReporterSubmit = async (e) => {
@@ -146,23 +144,20 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
   return (
     <>
-      {/* Top Bar with Logo, Social Icons, Login/Register */}
-      <div className="bg-gray-900 text-white">
+      {/* --- DESKTOP HEADER (Large Screens Only) --- */}
+      <div className="hidden lg:block bg-gray-900 text-white">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-[75px]">
-            {/* Left: Logo */}
             <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('home')}>
               <img
                 src="/images/star-news-india-logo.png"
                 alt="Star News India Logo"
-                className="h-[50px] md:h-[58px] lg:h-[65px] w-auto min-w-[140px] md:min-w-[170px] lg:min-w-[200px] object-contain"
+                className="h-[65px] w-auto min-w-[200px] object-contain"
                 style={{ maxHeight: '65px' }}
               />
             </div>
-
-            {/* Right: Follow Us + Login/Register */}
             <div className="flex items-center gap-6">
-              <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <span className="text-gray-400 text-sm">{t('followUs')}:</span>
                 <div className="flex items-center gap-2">
                   {SOCIAL_LINKS.facebook && <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors"><FacebookIcon /></a>}
@@ -171,9 +166,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                   {SOCIAL_LINKS.youtube && <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors"><YouTubeIcon /></a>}
                 </div>
               </div>
-
-              {/* Language Switcher */}
-              <div className="hidden md:block">
+              <div className="block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800 gap-1">
@@ -215,18 +208,14 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                   </DropdownMenu>
                 )}
               </div>
-              <button className="lg:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Navigation Bar */}
-      <header className="bg-white border-b sticky top-0 z-50 shadow-md">
+      <header className="hidden lg:block bg-white border-b sticky top-0 z-50 shadow-md">
         <div className="container mx-auto px-4">
-          <nav className="hidden lg:flex items-center justify-between h-12">
+          <nav className="flex items-center justify-between h-12">
             <div className="flex items-center gap-1">
               <Button variant={currentView === 'home' ? 'default' : 'ghost'} onClick={() => setCurrentView('home')} className={`rounded-md ${currentView === 'home' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
                 <Home className="mr-2 h-4 w-4" />{t('home')}
@@ -295,7 +284,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               </Dialog>
 
 
-              {/* Join as Reporter Dialog */}
+              {/* Join as Reporter Dialog (Desktop) */}
               <Dialog open={reporterDialogOpen} onOpenChange={setReporterDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-green-600 hover:bg-green-700 text-white font-medium text-sm px-3 py-1.5 h-8">
@@ -329,45 +318,132 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               </Dialog>
             </div>
           </nav>
-
-          {mobileMenuOpen && (
-            <div className="lg:hidden py-4 border-t">
-              <nav className="flex flex-col gap-2">
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('home'); setMobileMenuOpen(false) }}><Home className="mr-2 h-4 w-4" />{t('home')}</Button>
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('news'); setMobileMenuOpen(false) }}><Newspaper className="mr-2 h-4 w-4" />{t('news')}</Button>
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('enewspaper'); setMobileMenuOpen(false) }}><FileText className="mr-2 h-4 w-4" />{t('eNewspaper')}</Button>
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('city'); setMobileMenuOpen(false) }}><MapPin className="mr-2 h-4 w-4" />City</Button>
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('classifieds'); setMobileMenuOpen(false) }}><Tag className="mr-2 h-4 w-4" />{t('classified')}</Button>
-                <Button variant="ghost" className="justify-start" onClick={() => { setCurrentView('businesses'); setMobileMenuOpen(false) }}><Building2 className="mr-2 h-4 w-4" />{t('businessDirectory')}</Button>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white justify-start mt-2" onClick={() => { setPromoteDialogOpen(true); setMobileMenuOpen(false) }}>
-                  <Briefcase className="mr-2 h-4 w-4" />{t('promoteYourBusiness')}
-                </Button>
-
-                <div className="flex items-center gap-3 mt-4 pt-4 border-t">
-                  <span className="text-gray-500 text-sm">{t('followUs')}:</span>
-                  {SOCIAL_LINKS.facebook && <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600"><FacebookIcon /></a>}
-                  {SOCIAL_LINKS.whatsapp && <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="text-green-600"><WhatsAppIcon /></a>}
-                  {SOCIAL_LINKS.instagram && <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600"><InstagramIcon /></a>}
-                  {SOCIAL_LINKS.youtube && <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-red-600"><YouTubeIcon /></a>}
-                </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                  <Globe className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-500 text-sm">{t('language')}:</span>
-                  {languageOptions.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => changeLanguage(lang.code)}
-                      className={`px-2 py-1 rounded text-sm font-medium ${language === lang.code ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                    >
-                      {lang.label}
-                    </button>
-                  ))}
-                </div>
-              </nav>
-            </div>
-          )}
         </div>
       </header>
+
+      {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
+      <div className="lg:hidden">
+        {/* Top White Bar: Main Navigation */}
+        <div className="bg-white text-gray-900 border-b border-gray-100 flex items-center justify-between px-4 h-[65px] sticky top-0 z-50 shadow-sm relative">
+
+          {/* Left: Hamburger Menu */}
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-1 hover:bg-gray-100 rounded-md transition-colors">
+            <Menu className="h-6 w-6 text-gray-700" />
+          </button>
+
+          {/* Center: Logo */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer" onClick={() => setCurrentView('home')}>
+            <img
+              src="/images/star-news-india-logo.png"
+              alt="Star News"
+              className="h-[50px] w-auto object-contain"
+            />
+          </div>
+
+          {/* Right: Search & Live TV */}
+          <div className="flex items-center gap-3">
+            <button onClick={() => setCurrentView('live-tv')} className="text-red-600 hover:text-red-700 transition-colors" title="Live TV">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM8 9l5 3-5 3V9z" /></svg>
+            </button>
+            <button onClick={() => setCurrentView('search')} className="text-gray-700 hover:text-red-600 transition-colors">
+              <Search className="h-6 w-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrolling Category Bar (Premium Look) */}
+        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide shadow-inner py-1">
+          <div className="flex items-center px-4 space-x-6 whitespace-nowrap min-w-full">
+            <button onClick={() => setCurrentView('home')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>Home</button>
+            <button onClick={() => handleCategoryClick('state')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">State</button>
+            <button onClick={() => handleCategoryClick('nation')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">National</button>
+            <button onClick={() => handleCategoryClick('sports')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Sports</button>
+            <button onClick={() => handleCategoryClick('entertainment')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Entertainment</button>
+            <button onClick={() => handleCategoryClick('crime')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Crime</button>
+            <button onClick={() => handleCategoryClick('education')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Education</button>
+            <button onClick={() => handleCategoryClick('international')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">World</button>
+          </div>
+        </div>
+
+        {/* Mobile Sidebar Menu (Drawer) */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[60] flex">
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
+            <div className="relative bg-white w-[280px] h-full shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-300">
+              <div className="p-5 border-b flex justify-between items-center bg-gray-50">
+                <img
+                  src="/images/logo-icon.png" // Use fallback or icon if ample
+                  onError={(e) => e.target.style.display = 'none'}
+                  alt="Star"
+                  className="h-8 w-auto"
+                />
+                <span className="font-bold text-lg text-gray-900 absolute left-1/2 -translate-x-1/2">Menu</span>
+                <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-200 transition-colors"><X className="h-5 w-5 text-gray-600" /></button>
+              </div>
+
+              <div className="flex flex-col p-2">
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main</div>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('home'); setMobileMenuOpen(false) }}><Home className="mr-3 h-5 w-5" />{t('home')}</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('news'); setMobileMenuOpen(false) }}><Newspaper className="mr-3 h-5 w-5" />{t('news')}</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('enewspaper'); setMobileMenuOpen(false) }}><FileText className="mr-3 h-5 w-5" />{t('eNewspaper')}</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('city'); setMobileMenuOpen(false) }}><MapPin className="mr-3 h-5 w-5" />City News</Button>
+
+                <div className="my-2 border-t border-gray-100"></div>
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Services</div>
+
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('classifieds'); setMobileMenuOpen(false) }}><Tag className="mr-3 h-5 w-5" />{t('classified')}</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('businesses'); setMobileMenuOpen(false) }}><Building2 className="mr-3 h-5 w-5" />{t('businessDirectory')}</Button>
+
+                <div className="my-2"></div>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-center" onClick={() => { setPromoteDialogOpen(true); setMobileMenuOpen(false) }}>
+                  <Briefcase className="mr-2 h-4 w-4" />{t('promoteYourBusiness')}
+                </Button>
+                <Button className="w-full bg-green-600 hover:bg-green-700 text-white justify-center mt-2" onClick={() => { setReporterDialogOpen(true); setMobileMenuOpen(false) }}>
+                  <UserPlus className="mr-2 h-4 w-4" />{t('joinAsReporter')}
+                </Button>
+
+                <div className="my-2 border-t border-gray-100"></div>
+
+                {user ? (
+                  <div className="px-2 py-2 bg-gray-50 rounded-lg mx-2">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="h-10 w-10"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-100 text-red-600">{user.name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-900">{user.name}</p>
+                        <p className="text-xs text-gray-500 truncate max-w-[140px]">{user.email}</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50" onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />{t('logout')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="px-2">
+                    <Button variant="default" className="w-full bg-red-600 hover:bg-red-700 text-white shadow-md" onClick={() => { setCurrentView('login'); setMobileMenuOpen(false) }}>
+                      Login / Register
+                    </Button>
+                  </div>
+                )}
+
+                <div className="my-4 px-2">
+                  <p className="text-xs text-center text-gray-400 mb-2">{t('language')}</p>
+                  <div className="flex justify-center gap-2">
+                    {languageOptions.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border ${language === lang.code ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-300 text-gray-600'}`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   )
 }
