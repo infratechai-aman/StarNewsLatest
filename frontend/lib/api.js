@@ -120,8 +120,8 @@ export const admin = {
   approveUser: (userId, action) => apiRequest('/admin/users/approve', { method: 'POST', body: JSON.stringify({ userId, action }) }),
 
   // Breaking News
-  getBreakingNews: () => apiRequest('/admin/breaking-news'),
-  setBreakingNews: (data) => apiRequest('/admin/breaking-news', { method: 'POST', body: JSON.stringify(data) }),
+  getBreakingNews: () => apiRequest('/breaking-ticker'),
+  setBreakingNews: (data) => apiRequest('/admin/pending-ticker', { method: 'POST', body: JSON.stringify(data) }),
 
   // Navigation
   getNavigation: () => apiRequest('/admin/navigation'),
@@ -160,8 +160,8 @@ export const admin = {
   updateHomeSettings: (data) => apiRequest('/admin/home-settings', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Sidebar Ad with WhatsApp
-  getSidebarAd: () => apiRequest('/admin/sidebar-ad'),
-  updateSidebarAd: (data) => apiRequest('/admin/sidebar-ad', { method: 'PUT', body: JSON.stringify(data) }),
+  getSidebarAd: () => apiRequest('/ads/sidebar'),
+  updateSidebarAd: (data) => apiRequest('/ads/sidebar', { method: 'POST', body: JSON.stringify(data) }),
 
   // Layout (legacy)
   getLayout: () => apiRequest('/admin/layout'),

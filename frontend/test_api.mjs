@@ -68,7 +68,7 @@ async function runTests() {
     try {
         // First try to get existing categories to find one
         const getRes = await fetch(`${BASE_URL}/categories`);
-        const existing cats = await getRes.json();
+        const existingCats = await getRes.json();
 
         // Try to create one
         const res = await fetch(`${BASE_URL}/categories`, {
@@ -89,9 +89,9 @@ async function runTests() {
             console.log('✅ Category Created:', data.name);
         } else {
             // Fallback to existing if create failed
-            if (cats && cats.length > 0) {
-                categoryId = cats[0].id;
-                console.log('⚠️ using existing category:', cats[0].name);
+            if (existingCats && existingCats.length > 0) {
+                categoryId = existingCats[0].id;
+                console.log('⚠️ using existing category:', existingCats[0].name);
             } else {
                 console.error('❌ Create Category Failed:', data);
             }

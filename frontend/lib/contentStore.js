@@ -138,7 +138,7 @@ export const getSidebarAdSettings = () => {
 export const saveSidebarAdSettings = async (adSettings) => {
     try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : ''
-        const res = await fetch('/api/admin/ads/sidebar', {
+        const res = await fetch('/api/ads/sidebar', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
