@@ -354,14 +354,12 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         {/* Scrolling Category Bar (Premium Look) */}
         <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide shadow-inner py-1">
           <div className="flex items-center px-4 space-x-6 whitespace-nowrap min-w-full">
-            <button onClick={() => setCurrentView('home')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>Home</button>
-            <button onClick={() => handleCategoryClick('state')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">State</button>
-            <button onClick={() => handleCategoryClick('nation')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">National</button>
-            <button onClick={() => handleCategoryClick('sports')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Sports</button>
-            <button onClick={() => handleCategoryClick('entertainment')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Entertainment</button>
-            <button onClick={() => handleCategoryClick('crime')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Crime</button>
-            <button onClick={() => handleCategoryClick('education')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">Education</button>
-            <button onClick={() => handleCategoryClick('international')} className="text-sm font-bold uppercase tracking-wide border-b-2 border-transparent py-2 text-gray-500 hover:text-red-600 hover:border-red-100 transition-colors">World</button>
+            <button onClick={() => setCurrentView('home')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('home')}</button>
+            <button onClick={() => setCurrentView('news')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('news')}</button>
+            <button onClick={() => setCurrentView('enewspaper')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('eNewspaper')}</button>
+            <button onClick={() => setCurrentView('city')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>City</button>
+            <button onClick={() => setCurrentView('classifieds')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('classified')}</button>
+            <button onClick={() => setCurrentView('businesses')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('businessDirectory')}</button>
           </div>
         </div>
 
