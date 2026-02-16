@@ -591,10 +591,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           {/* --- MOBILE VIEW (Premium List) --- */}
           <div className="lg:hidden flex flex-col gap-4">
             {mainNewsBoxes.map((item, index) => {
+              if (!item) return null; // Safety check
+
               // First item is Featured (Hero Card)
               if (index === 0) {
                 return (
-                  <div key={item.id} onClick={() => handleNewsClick(item)} className="relative h-[280px] w-full rounded-xl overflow-hidden shadow-md mb-2">
+                  <div key={item.id || index} onClick={() => handleNewsClick(item)} className="relative h-[280px] w-full rounded-xl overflow-hidden shadow-md mb-2">
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
@@ -603,10 +605,10 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                     <div className="absolute bottom-0 left-0 p-4 w-full">
-                      {(item.category) && <span className="text-[10px] font-bold uppercase tracking-wider text-white bg-red-600 px-2 py-0.5 rounded-sm mb-2 inline-block shadow-sm">{getLocalizedText(item.category, language)}</span>}
+                      {(item.category) && <Badge className="mb-2 bg-red-600 text-white border-none">{getLocalizedText(item.category, language)}</Badge>}
                       <h2 className="text-white font-bold text-xl leading-snug line-clamp-3 drop-shadow-sm font-sans">{getLocalizedText(item.title, language)}</h2>
                       <div className="flex items-center text-gray-300 text-xs mt-2 gap-2">
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -614,7 +616,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               }
               // Other items are List View (Clean & Compact)
               return (
-                <div key={item.id} onClick={() => handleNewsClick(item)} className="flex gap-4 p-3 bg-white rounded-lg border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
+                <div key={item.id || index} onClick={() => handleNewsClick(item)} className="flex gap-4 p-3 bg-white rounded-lg border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
                   <div className="relative w-[120px] h-[85px] shrink-0 rounded-md overflow-hidden bg-gray-100">
                     <Image
                       src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
@@ -629,7 +631,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     </h3>
                     <div className="flex items-center justify-between mt-auto">
                       <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}
                       </span>
                       <span className="text-red-600 text-[10px] font-bold uppercase">{t('readMore')}</span>
                     </div>

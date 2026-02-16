@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Radio } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 // Default breaking news headlines (shown when no API data)
