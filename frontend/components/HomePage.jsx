@@ -628,6 +628,66 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <WeatherWidget />
           <CricketWidget />
 
+          {/* SIDEBAR AD CAROUSEL */}
+          {sidebarAdSettings.enabled && (
+            <Card className="overflow-hidden border border-gray-200 shadow-md bg-white mb-6">
+              <CardContent className="p-0 min-h-[350px] relative">
+                <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
+                {(() => {
+                  const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
+                  const legacyItems = sidebarAdSettings.images?.map(img => ({
+                    imageUrl: img,
+                    destinationUrl: sidebarAdSettings.linkUrl || '#'
+                  })) || []
+                  const displayItems = items.length > 0 ? items : legacyItems
+
+                  if (displayItems.length === 0) {
+                    return (
+                      <div className="w-full h-[300px] flex flex-col items-center justify-center text-center p-4">
+                        <div className="aspect-square w-full max-w-[200px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
+                          <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div className="relative h-[350px] w-full overflow-hidden group">
+                      <div className="sidebar-carousel w-full h-full flex flex-col items-center justify-center p-2 relative">
+                        {displayItems.map((item, index) => (
+                          <a key={index} href={item.destinationUrl || '#'} target="_blank" rel="noopener noreferrer"
+                            className="absolute inset-0 w-full h-full flex items-center justify-center p-2 transition-all duration-700"
+                            style={{
+                              transform: index === currentAdIndex % displayItems.length ? 'translateX(0)' : index < currentAdIndex % displayItems.length ? 'translateX(-100%)' : 'translateX(100%)',
+                              opacity: index === currentAdIndex % displayItems.length ? 1 : 0,
+                              pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
+                            }}>
+                            <div className="aspect-square w-full h-auto max-h-full rounded-lg overflow-hidden relative shadow-sm">
+                              <Image
+                                src={item.imageUrl}
+                                alt="Ad"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 300px"
+                              />
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                      {displayItems.length > 1 && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                          {displayItems.map((_, index) => (
+                            <span key={index} className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
             <h3 className="font-bold text-lg border-l-4 border-red-600 pl-3 mb-4 text-gray-800">Top Stories</h3>
             <div className="flex flex-col gap-4">
@@ -676,161 +736,75 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           // First item is Featured (Hero Card)
           if (index === 0) {
             return (
+              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative w-full h-64 rounded-xl overflow-hidden shadow-sm shrink-0 mb-2 cursor-pointer">
+                <Image
+                  src={item.mainImage || '/images/placeholder.svg'}
+                  alt={item.title || 'News'}
+                  fill
+                  className="object-cover"
+                />
                 <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md z-10">
                   {t('featured')}
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                 <div className="absolute bottom-0 left-0 p-4 w-full">
-                   <h2 className="text-white font-bold text-xl leading-tight drop-shadow-md">
-                     {getLocalizedText(item.title, language)}
-                   </h2>
-                   <div className="flex items-center text-gray-200 text-xs mt-2 gap-3">
-                      <span className="bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold">{getLocalizedText(item.category, language)}</span>
-                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
-                   </div>
-                </div>
-              </div>
-      )
-          }
-
-      // List Items (Rest of the feed)
-      return (
-      <div key={item.id || index} onClick={() => handleNewsClick(item)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex gap-4 active:scale-[0.98] transition-transform">
-        {/* Image (Left) */}
-        <div className="relative w-28 h-20 shrink-0 rounded-md overflow-hidden bg-gray-100">
-          <Image
-            src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-            alt={item.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        {/* Content (Right) */}
-        <div className="flex flex-col justify-between flex-1 py-0.5">
-          <div>
-            <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 text-[15px] mb-1.5">
-              {getLocalizedText(item.title, language)}
-            </h3>
-            <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
-              <span className="text-red-600 uppercase tracking-wide">{getLocalizedText(item.category, language)}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      )
-        })}
-    </div>
-      
-      {/* --- END MOBILE VIEW --- */ }
-
-
-
-    </div >
-
-  {/* SIDEBAR AD - Square Images with Individual Destinations */ }
-{
-  sidebarAdSettings.enabled && (
-    <div className="col-span-12 lg:col-span-4">
-      <Card className="overflow-hidden border border-gray-200 shadow-md h-full bg-white sidebar-ad-container">
-        {/* ... (Existing Sidebar Content) ... */}
-        <CardContent className="p-0 h-full min-h-[420px] relative">
-          <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
-          {(() => {
-            // Get items from new structure, fallback to legacy format
-            const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
-
-            // Legacy fallback: convert old images array to items format
-            const legacyItems = sidebarAdSettings.images?.map(img => ({
-              imageUrl: img,
-              destinationUrl: sidebarAdSettings.linkUrl || '#'
-            })) || []
-
-            const displayItems = items.length > 0 ? items : legacyItems
-
-            if (displayItems.length === 0) {
-              // No images configured - show placeholder
-              return (
-                <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
-                  <div className="aspect-square w-full max-w-[280px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
-                    <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
+                  <h2 className="text-white font-bold text-xl leading-tight drop-shadow-md line-clamp-2">
+                    {getLocalizedText(item.title, language)}
+                  </h2>
+                  <div className="flex items-center text-gray-200 text-xs mt-2 gap-3">
+                    <span className="bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold">{getLocalizedText(item.category, language)}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
                   </div>
                 </div>
-              )
-            }
-
-            return (
-              <div
-                className="relative h-full overflow-hidden group"
-                onMouseEnter={() => {
-                  // Pause carousel on hover
-                  const el = document.querySelector('.sidebar-carousel')
-                  if (el) el.dataset.paused = 'true'
-                }}
-                onMouseLeave={() => {
-                  const el = document.querySelector('.sidebar-carousel')
-                  if (el) el.dataset.paused = 'false'
-                }}
-              >
-                {/* Square Carousel Container */}
-                <div className="sidebar-carousel w-full h-full flex flex-col items-center justify-center p-2">
-                  {displayItems.map((item, index) => (
-                    <a
-                      key={index}
-                      href={item.destinationUrl || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="absolute inset-0 w-full h-full flex items-center justify-center p-2 transition-all duration-700"
-                      style={{
-                        transform: index === currentAdIndex % displayItems.length ? 'translateX(0)' : index < currentAdIndex % displayItems.length ? 'translateX(-100%)' : 'translateX(100%)',
-                        opacity: index === currentAdIndex % displayItems.length ? 1 : 0,
-                        pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
-                      }}
-                    >
-                      <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-sm relative">
-                        <Image
-                          src={item.imageUrl}
-                          alt={`Advertisement ${index + 1}`}
-                          fill
-                          className="object-center"
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 1024px) 100vw, 300px"
-                        />
-                      </div>
-                    </a>
-                  ))}
-                </div>
-
-                {/* Carousel Indicators */}
-                {displayItems.length > 1 && (
-                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                    {displayItems.map((_, index) => (
-                      <span
-                        key={index}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`}
-                      />
-                    ))}
-                  </div>
-                )}
               </div>
             )
-          })()}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-      </div >
 
-  {/* Floating WhatsApp Button */ }
-  < a
-href = "https://wa.me/917020873300"
-target = "_blank"
-rel = "noopener noreferrer"
-className = "fixed bottom-6 right-6 z-50 group flex items-center justify-center"
-  >
+          }
+
+          // List Items (Rest of the feed)
+          return (
+            <div key={item.id || index} onClick={() => handleNewsClick(item)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex gap-4 active:scale-[0.98] transition-transform">
+              {/* Image (Left) */}
+              <div className="relative w-28 h-20 shrink-0 rounded-md overflow-hidden bg-gray-100">
+                <Image
+                  src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              {/* Content (Right) */}
+              <div className="flex flex-col justify-between flex-1 py-0.5">
+                <div>
+                  <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 text-[15px] mb-1.5">
+                    {getLocalizedText(item.title, language)}
+                  </h3>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
+                    <span className="text-red-600 uppercase tracking-wide">{getLocalizedText(item.category, language)}</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* --- END MOBILE VIEW --- */}
+
+
+
+
+
+      {/* Floating WhatsApp Button */}
+      < a
+        href="https://wa.me/917020873300"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 group flex items-center justify-center"
+      >
         <div className="absolute right-14 bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">
           Chat with Us
         </div>
@@ -840,175 +814,175 @@ className = "fixed bottom-6 right-6 z-50 group flex items-center justify-center"
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 border-2 border-white rounded-full animate-pulse"></span>
       </a >
 
-  {/* POLITICS / CITY NEWS Section - Dynamic from API */ }
-{
-  trendingSettings.enabled && (
-    <div className="mb-8">
-      <div className="border-b-4 border-red-600 pb-1 mb-4">
-        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-          <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
-          {t('politics')} / {t('cityNews')}
-        </h2>
-      </div>
-      {trendingNews.length > 0 ? (
-        <div className="flex flex-wrap justify-center gap-4">
-          {trendingNews.map((item) => (
-            <Card
-              key={item.id}
-              className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border hover:border-red-500 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(20%-13px)] h-[280px] flex flex-col"
-              onClick={() => handleNewsClick(item)}
-            >
-              <div className="relative h-[160px] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
-                {(item.youtubeUrl || item.videoUrl) ? (
-                  <iframe
-                    src={`${(item.youtubeUrl || item.videoUrl).replace('watch?v=', 'embed/')}?autoplay=1&mute=1&loop=1&playlist=${(item.youtubeUrl || item.videoUrl).split('v=')[1]?.split('&')[0] || ''}`}
-                    className="w-full h-full"
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="w-full h-full relative">
-                    {(() => {
-                      const getImages = (itm) => {
-                        const list = []
-                        const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
-                        if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
-                        if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
-                        if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
-                        if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
-                        if (!list.length) list.push('/placeholder-news.svg')
-                        return list
-                      }
-                      const images = getImages(item)
-                      // Simple carousel logic or just first image
-                      return (
-                        <Image
-                          src={images[0]}
-                          alt={getLocalizedText(item.title, language)}
-                          fill
-                          className="object-center transition-transform duration-300 group-hover:scale-105"
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
+      {/* POLITICS / CITY NEWS Section - Dynamic from API */}
+      {
+        trendingSettings.enabled && (
+          <div className="mb-8">
+            <div className="border-b-4 border-red-600 pb-1 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
+                {t('politics')} / {t('cityNews')}
+              </h2>
+            </div>
+            {trendingNews.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-4">
+                {trendingNews.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border hover:border-red-500 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(20%-13px)] h-[280px] flex flex-col"
+                    onClick={() => handleNewsClick(item)}
+                  >
+                    <div className="relative h-[160px] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
+                      {(item.youtubeUrl || item.videoUrl) ? (
+                        <iframe
+                          src={`${(item.youtubeUrl || item.videoUrl).replace('watch?v=', 'embed/')}?autoplay=1&mute=1&loop=1&playlist=${(item.youtubeUrl || item.videoUrl).split('v=')[1]?.split('&')[0] || ''}`}
+                          className="w-full h-full"
+                          allow="autoplay; encrypted-media"
+                          allowFullScreen
                         />
-                      )
-                    })()}
-                    {(getLocalizedText(item.category, language)) && (
-                      <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">{getLocalizedText(item.category, language)}</Badge>
-                    )}
-                  </div>
-                )}
+                      ) : (
+                        <div className="w-full h-full relative">
+                          {(() => {
+                            const getImages = (itm) => {
+                              const list = []
+                              const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
+                              if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
+                              if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
+                              if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
+                              if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
+                              if (!list.length) list.push('/placeholder-news.svg')
+                              return list
+                            }
+                            const images = getImages(item)
+                            // Simple carousel logic or just first image
+                            return (
+                              <Image
+                                src={images[0]}
+                                alt={getLocalizedText(item.title, language)}
+                                fill
+                                className="object-center transition-transform duration-300 group-hover:scale-105"
+                                style={{ objectFit: 'cover' }}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
+                              />
+                            )
+                          })()}
+                          {(getLocalizedText(item.category, language)) && (
+                            <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">{getLocalizedText(item.category, language)}</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-3 flex-1 flex flex-col justify-between">
+                      <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors">
+                        {getLocalizedText(item.title, language)}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
+                      </p>
+
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-              <CardContent className="p-3 flex-1 flex flex-col justify-between">
-                <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors">
-                  {getLocalizedText(item.title, language)}
-                </h3>
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                  {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
-                </p>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
+            )}
+          </div>
+        )
+      }
 
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
-      )}
-    </div>
-  )
-}
-
-{/* MOBILE AD INJECTION 1: Business Promo (After Politics) */ }
-<div className="block lg:hidden">
-  <BusinessAdWidget
-    settings={businessAdSettings}
-    t={t}
-    onClick={() => setPromotionOpen(true)}
-  />
-</div>
-
-{/* Promotion/Ad Request Dialog */ }
-<Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-  <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle>Post Your Ad</DialogTitle>
-      <DialogDescription>
-        Submit your ad details. Our team will contact you for verification and pricing.
-      </DialogDescription>
-    </DialogHeader>
-    <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
-      <div className="space-y-2">
-        <Label htmlFor="businessName">Business/Ad Name *</Label>
-        <Input
-          id="businessName"
-          value={promotionData.businessName}
-          onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
-          placeholder="e.g. Star Electronics / Sale"
-          required
+      {/* MOBILE AD INJECTION 1: Business Promo (After Politics) */}
+      <div className="block lg:hidden">
+        <BusinessAdWidget
+          settings={businessAdSettings}
+          t={t}
+          onClick={() => setPromotionOpen(true)}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="ownerName">Your Name *</Label>
-          <Input
-            id="ownerName"
-            value={promotionData.ownerName}
-            onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
-            placeholder="Your Name"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number *</Label>
-          <Input
-            id="phone"
-            value={promotionData.phone}
-            onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
-            placeholder="9876543210"
-            required
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address *</Label>
-        <Input
-          id="email"
-          type="email"
-          value={promotionData.email}
-          onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
-          placeholder="contact@email.com"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="address">Address / Location *</Label>
-        <Textarea
-          id="address"
-          value={promotionData.address}
-          onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
-          placeholder="Shop No, Building, Area, City"
-          required
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">Ad Description / Message (Optional)</Label>
-        <Textarea
-          id="description"
-          value={promotionData.description}
-          onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-          placeholder="Briefly describe what you want to advertise..."
-        />
-      </div>
-      <DialogFooter className="pt-4">
-        <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
-        <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
-          {isSubmitting ? 'Submitting...' : 'Submit Request'}
-        </Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
-</Dialog>
 
-{/* NEWS SECTIONS WITH SIDEBAR */ }
+      {/* Promotion/Ad Request Dialog */}
+      <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Post Your Ad</DialogTitle>
+            <DialogDescription>
+              Submit your ad details. Our team will contact you for verification and pricing.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="businessName">Business/Ad Name *</Label>
+              <Input
+                id="businessName"
+                value={promotionData.businessName}
+                onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
+                placeholder="e.g. Star Electronics / Sale"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ownerName">Your Name *</Label>
+                <Input
+                  id="ownerName"
+                  value={promotionData.ownerName}
+                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
+                  placeholder="Your Name"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  value={promotionData.phone}
+                  onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
+                  placeholder="9876543210"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={promotionData.email}
+                onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
+                placeholder="contact@email.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Address / Location *</Label>
+              <Textarea
+                id="address"
+                value={promotionData.address}
+                onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
+                placeholder="Shop No, Building, Area, City"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Ad Description / Message (Optional)</Label>
+              <Textarea
+                id="description"
+                value={promotionData.description}
+                onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
+                placeholder="Briefly describe what you want to advertise..."
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
+                {isSubmitting ? 'Submitting...' : 'Submit Request'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* NEWS SECTIONS WITH SIDEBAR */}
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-9 space-y-8">
 
