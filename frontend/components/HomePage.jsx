@@ -21,7 +21,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { Store } from 'lucide-react'
+import { Store, ChevronRight } from 'lucide-react'
+import CricketWidget from './CricketWidget'
+import WeatherWidget from './WeatherWidget'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }) => (
@@ -582,171 +584,253 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       )}
 
-      {/* MAIN NEWS GRID / LIST */}
-      <div className="grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-9">
+      {/* --- DESKTOP VIEW (Magazine Style Grid) --- */}
+      <div className="hidden lg:grid grid-cols-12 gap-8 mb-12">
 
-          {/* --- DESKTOP VIEW (Grid) --- */}
-          <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 gap-6">
-            {mainNewsBoxes.map((item) => (
+        {/* LEFT COLUMN (Hero Section - 8 cols) */}
+        <div className="col-span-8">
+          {mainNewsBoxes[0] && (
+            <div onClick={() => handleNewsClick(mainNewsBoxes[0])} className="relative h-[500px] w-full rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
+              <Image
+                src={mainNewsBoxes[0].mainImage || mainNewsBoxes[0].images?.[0] || '/placeholder-news.svg'}
+                alt={getLocalizedText(mainNewsBoxes[0].title, language)}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 p-8 w-full">
+                {(mainNewsBoxes[0].category) && <Badge className="mb-3 bg-red-600 hover:bg-red-700 text-white border-none text-sm px-3 py-1">{getLocalizedText(mainNewsBoxes[0].category, language)}</Badge>}
+                <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight drop-shadow-md font-sans mb-3 group-hover:text-red-100 transition-colors">
+                  {getLocalizedText(mainNewsBoxes[0].title, language)}
+                </h1>
+                <p className="text-gray-200 line-clamp-2 text-lg mb-4 max-w-3xl">
+                  {getLocalizedText(mainNewsBoxes[0].content, language)?.substring(0, 150)}...
+                </p>
+                <div className="flex items-center text-gray-300 text-sm gap-4">
+                  <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {new Date(mainNewsBoxes[0].publishedAt || mainNewsBoxes[0].createdAt || Date.now()).toLocaleDateString()}</span>
+                  <span className="text-red-500 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">{t('readMore')} <ChevronRight className="w-4 h-4" /></span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Secondary Grid (News below Hero) */}
+          <div className="grid grid-cols-2 gap-6 mt-8">
+            {mainNewsBoxes.slice(1, 5).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
+        </div>
 
-          {/* --- MOBILE VIEW (Premium List) --- */}
-          <div className="lg:hidden flex flex-col gap-4">
-            {mainNewsBoxes.map((item, index) => {
-              if (!item) return null; // Safety check
+        {/* RIGHT COLUMN (Sidebar & Widgets - 4 cols) */}
+        <div className="col-span-4 space-y-6">
+          {/* UTILITY WIDGETS */}
+          <WeatherWidget />
+          <CricketWidget />
 
-              // First item is Featured (Hero Card)
-              if (index === 0) {
-                return (
-                  <div key={item.id || index} onClick={() => handleNewsClick(item)} className="relative h-[280px] w-full rounded-xl overflow-hidden shadow-md mb-2">
-                    <Image
-                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                      alt={getLocalizedText(item.title, language)}
-                      fill
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                    <div className="absolute bottom-0 left-0 p-4 w-full">
-                      {(item.category) && <Badge className="mb-2 bg-red-600 text-white border-none">{getLocalizedText(item.category, language)}</Badge>}
-                      <h2 className="text-white font-bold text-xl leading-snug line-clamp-3 drop-shadow-sm font-sans">{getLocalizedText(item.title, language)}</h2>
-                      <div className="flex items-center text-gray-300 text-xs mt-2 gap-2">
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              }
-              // Other items are List View (Clean & Compact)
-              return (
-                <div key={item.id || index} onClick={() => handleNewsClick(item)} className="flex gap-4 p-3 bg-white rounded-lg border border-gray-100 shadow-sm active:bg-gray-50 transition-colors">
-                  <div className="relative w-[120px] h-[85px] shrink-0 rounded-md overflow-hidden bg-gray-100">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <h3 className="font-bold text-lg border-l-4 border-red-600 pl-3 mb-4 text-gray-800">Top Stories</h3>
+            <div className="flex flex-col gap-4">
+              {mainNewsBoxes.slice(5, 10).map((item) => (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                  <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden">
                     <Image
                       src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                      alt={getLocalizedText(item.title, language)}
+                      alt={item.title}
                       fill
-                      className="object-cover"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
-                  <div className="flex flex-col justify-between flex-1 h-[85px]">
-                    <h3 className="font-bold text-[15px] leading-tight text-gray-900 line-clamp-3 font-sans">
+                  <div className="flex flex-col justify-center">
+                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-wide mb-1">
+                      {getLocalizedText(item.category, language)}
+                    </span>
+                    <h4 className="font-bold text-sm text-gray-900 leading-snug line-clamp-2 group-hover:text-red-700 transition-colors">
                       {getLocalizedText(item.title, language)}
-                    </h3>
-                    <div className="flex items-center justify-between mt-auto">
-                      <span className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}
-                      </span>
-                      <span className="text-red-600 text-[10px] font-bold uppercase">{t('readMore')}</span>
-                    </div>
+                    </h4>
+                    <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button variant="outline" className="w-full mt-4 text-xs font-bold text-gray-600" onClick={() => setCurrentView('news')}>
+              View All News
+            </Button>
+          </div>
+
+          {/* Ad Space */}
+          <div className="w-full h-[600px] bg-gray-100 rounded-xl flex items-center justify-center border border-dashed border-gray-300 relative overflow-hidden">
+            <Image src="/ads/tall-banner.jpg" alt="Advertisement" fill className="object-cover opacity-80 hover:opacity-100 transition-opacity cursor-pointer" />
+            <span className="absolute bottom-2 right-2 text-[10px] text-gray-500 bg-white/80 px-1 rounded">AD</span>
+          </div>
+        </div>
+      </div>
+
+      {/* --- MOBILE VIEW (List) - UNCHANGED --- */}
+      <div className="lg:hidden flex flex-col gap-4">
+        {mainNewsBoxes.map((item, index) => {
+          if (!item) return null; // Safety check
+
+          // First item is Featured (Hero Card)
+          if (index === 0) {
+            return (
+                <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md z-10">
+                  {t('featured')}
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-4 w-full">
+                   <h2 className="text-white font-bold text-xl leading-tight drop-shadow-md">
+                     {getLocalizedText(item.title, language)}
+                   </h2>
+                   <div className="flex items-center text-gray-200 text-xs mt-2 gap-3">
+                      <span className="bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold">{getLocalizedText(item.category, language)}</span>
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
+                   </div>
+                </div>
+              </div>
+      )
+          }
+
+      // List Items (Rest of the feed)
+      return (
+      <div key={item.id || index} onClick={() => handleNewsClick(item)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex gap-4 active:scale-[0.98] transition-transform">
+        {/* Image (Left) */}
+        <div className="relative w-28 h-20 shrink-0 rounded-md overflow-hidden bg-gray-100">
+          <Image
+            src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+            alt={item.title}
+            fill
+            className="object-cover"
+          />
+        </div>
+
+        {/* Content (Right) */}
+        <div className="flex flex-col justify-between flex-1 py-0.5">
+          <div>
+            <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 text-[15px] mb-1.5">
+              {getLocalizedText(item.title, language)}
+            </h3>
+            <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
+              <span className="text-red-600 uppercase tracking-wide">{getLocalizedText(item.category, language)}</span>
+              <span>•</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      )
+        })}
+    </div>
+      
+      {/* --- END MOBILE VIEW --- */ }
+
+
+
+    </div >
+
+  {/* SIDEBAR AD - Square Images with Individual Destinations */ }
+{
+  sidebarAdSettings.enabled && (
+    <div className="col-span-12 lg:col-span-4">
+      <Card className="overflow-hidden border border-gray-200 shadow-md h-full bg-white sidebar-ad-container">
+        {/* ... (Existing Sidebar Content) ... */}
+        <CardContent className="p-0 h-full min-h-[420px] relative">
+          <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
+          {(() => {
+            // Get items from new structure, fallback to legacy format
+            const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
+
+            // Legacy fallback: convert old images array to items format
+            const legacyItems = sidebarAdSettings.images?.map(img => ({
+              imageUrl: img,
+              destinationUrl: sidebarAdSettings.linkUrl || '#'
+            })) || []
+
+            const displayItems = items.length > 0 ? items : legacyItems
+
+            if (displayItems.length === 0) {
+              // No images configured - show placeholder
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
+                  <div className="aspect-square w-full max-w-[280px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
+                    <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
                   </div>
                 </div>
               )
-            })}
-          </div>
+            }
 
-        </div>
-
-        {/* SIDEBAR AD - Square Images with Individual Destinations */}
-        {sidebarAdSettings.enabled && (
-          <div className="lg:col-span-3">
-            <Card className="overflow-hidden border border-gray-200 shadow-md h-full bg-white sidebar-ad-container">
-              {/* ... (Existing Sidebar Content) ... */}
-              <CardContent className="p-0 h-full min-h-[420px] relative">
-                <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
-                {(() => {
-                  // Get items from new structure, fallback to legacy format
-                  const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
-
-                  // Legacy fallback: convert old images array to items format
-                  const legacyItems = sidebarAdSettings.images?.map(img => ({
-                    imageUrl: img,
-                    destinationUrl: sidebarAdSettings.linkUrl || '#'
-                  })) || []
-
-                  const displayItems = items.length > 0 ? items : legacyItems
-
-                  if (displayItems.length === 0) {
-                    // No images configured - show placeholder
-                    return (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
-                        <div className="aspect-square w-full max-w-[280px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
-                          <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div
-                      className="relative h-full overflow-hidden group"
-                      onMouseEnter={() => {
-                        // Pause carousel on hover
-                        const el = document.querySelector('.sidebar-carousel')
-                        if (el) el.dataset.paused = 'true'
-                      }}
-                      onMouseLeave={() => {
-                        const el = document.querySelector('.sidebar-carousel')
-                        if (el) el.dataset.paused = 'false'
+            return (
+              <div
+                className="relative h-full overflow-hidden group"
+                onMouseEnter={() => {
+                  // Pause carousel on hover
+                  const el = document.querySelector('.sidebar-carousel')
+                  if (el) el.dataset.paused = 'true'
+                }}
+                onMouseLeave={() => {
+                  const el = document.querySelector('.sidebar-carousel')
+                  if (el) el.dataset.paused = 'false'
+                }}
+              >
+                {/* Square Carousel Container */}
+                <div className="sidebar-carousel w-full h-full flex flex-col items-center justify-center p-2">
+                  {displayItems.map((item, index) => (
+                    <a
+                      key={index}
+                      href={item.destinationUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 w-full h-full flex items-center justify-center p-2 transition-all duration-700"
+                      style={{
+                        transform: index === currentAdIndex % displayItems.length ? 'translateX(0)' : index < currentAdIndex % displayItems.length ? 'translateX(-100%)' : 'translateX(100%)',
+                        opacity: index === currentAdIndex % displayItems.length ? 1 : 0,
+                        pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
                       }}
                     >
-                      {/* Square Carousel Container */}
-                      <div className="sidebar-carousel w-full h-full flex flex-col items-center justify-center p-2">
-                        {displayItems.map((item, index) => (
-                          <a
-                            key={index}
-                            href={item.destinationUrl || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="absolute inset-0 w-full h-full flex items-center justify-center p-2 transition-all duration-700"
-                            style={{
-                              transform: index === currentAdIndex % displayItems.length ? 'translateX(0)' : index < currentAdIndex % displayItems.length ? 'translateX(-100%)' : 'translateX(100%)',
-                              opacity: index === currentAdIndex % displayItems.length ? 1 : 0,
-                              pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
-                            }}
-                          >
-                            <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-sm relative">
-                              <Image
-                                src={item.imageUrl}
-                                alt={`Advertisement ${index + 1}`}
-                                fill
-                                className="object-center"
-                                style={{ objectFit: 'cover' }}
-                                sizes="(max-width: 1024px) 100vw, 300px"
-                              />
-                            </div>
-                          </a>
-                        ))}
+                      <div className="aspect-square w-full max-w-full h-auto rounded-lg overflow-hidden shadow-sm relative">
+                        <Image
+                          src={item.imageUrl}
+                          alt={`Advertisement ${index + 1}`}
+                          fill
+                          className="object-center"
+                          style={{ objectFit: 'cover' }}
+                          sizes="(max-width: 1024px) 100vw, 300px"
+                        />
                       </div>
+                    </a>
+                  ))}
+                </div>
 
-                      {/* Carousel Indicators */}
-                      {displayItems.length > 1 && (
-                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                          {displayItems.map((_, index) => (
-                            <span
-                              key={index}
-                              className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
+                {/* Carousel Indicators */}
+                {displayItems.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                    {displayItems.map((_, index) => (
+                      <span
+                        key={index}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })()}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+      </div >
 
-      {/* Floating WhatsApp Button */}
-      <a
-        href="https://wa.me/917020873300"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 group flex items-center justify-center"
-      >
+  {/* Floating WhatsApp Button */ }
+  < a
+href = "https://wa.me/917020873300"
+target = "_blank"
+rel = "noopener noreferrer"
+className = "fixed bottom-6 right-6 z-50 group flex items-center justify-center"
+  >
         <div className="absolute right-14 bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">
           Chat with Us
         </div>
@@ -754,176 +838,177 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <WhatsAppIcon className="w-8 h-8 text-white fill-current" />
         </div>
         <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 border-2 border-white rounded-full animate-pulse"></span>
-      </a>
+      </a >
 
-      {/* POLITICS / CITY NEWS Section - Dynamic from API */}
-      {trendingSettings.enabled && (
-        <div className="mb-8">
-          <div className="border-b-4 border-red-600 pb-1 mb-4">
-            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
-              {t('politics')} / {t('cityNews')}
-            </h2>
-          </div>
-          {trendingNews.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-4">
-              {trendingNews.map((item) => (
-                <Card
-                  key={item.id}
-                  className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border hover:border-red-500 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(20%-13px)] h-[280px] flex flex-col"
-                  onClick={() => handleNewsClick(item)}
-                >
-                  <div className="relative h-[160px] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
-                    {(item.youtubeUrl || item.videoUrl) ? (
-                      <iframe
-                        src={`${(item.youtubeUrl || item.videoUrl).replace('watch?v=', 'embed/')}?autoplay=1&mute=1&loop=1&playlist=${(item.youtubeUrl || item.videoUrl).split('v=')[1]?.split('&')[0] || ''}`}
-                        className="w-full h-full"
-                        allow="autoplay; encrypted-media"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <div className="w-full h-full relative">
-                        {(() => {
-                          const getImages = (itm) => {
-                            const list = []
-                            const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
-                            if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
-                            if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
-                            if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
-                            if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
-                            if (!list.length) list.push('/placeholder-news.svg')
-                            return list
-                          }
-                          const images = getImages(item)
-                          // Simple carousel logic or just first image
-                          return (
-                            <Image
-                              src={images[0]}
-                              alt={getLocalizedText(item.title, language)}
-                              fill
-                              className="object-center transition-transform duration-300 group-hover:scale-105"
-                              style={{ objectFit: 'cover' }}
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
-                            />
-                          )
-                        })()}
-                        {(getLocalizedText(item.category, language)) && (
-                          <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">{getLocalizedText(item.category, language)}</Badge>
-                        )}
-                      </div>
+  {/* POLITICS / CITY NEWS Section - Dynamic from API */ }
+{
+  trendingSettings.enabled && (
+    <div className="mb-8">
+      <div className="border-b-4 border-red-600 pb-1 mb-4">
+        <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
+          {t('politics')} / {t('cityNews')}
+        </h2>
+      </div>
+      {trendingNews.length > 0 ? (
+        <div className="flex flex-wrap justify-center gap-4">
+          {trendingNews.map((item) => (
+            <Card
+              key={item.id}
+              className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border hover:border-red-500 w-full sm:w-[calc(50%-8px)] md:w-[calc(33.33%-11px)] lg:w-[calc(20%-13px)] h-[280px] flex flex-col"
+              onClick={() => handleNewsClick(item)}
+            >
+              <div className="relative h-[160px] flex-shrink-0 overflow-hidden bg-gray-100 rounded-t-lg">
+                {(item.youtubeUrl || item.videoUrl) ? (
+                  <iframe
+                    src={`${(item.youtubeUrl || item.videoUrl).replace('watch?v=', 'embed/')}?autoplay=1&mute=1&loop=1&playlist=${(item.youtubeUrl || item.videoUrl).split('v=')[1]?.split('&')[0] || ''}`}
+                    className="w-full h-full"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                  />
+                ) : (
+                  <div className="w-full h-full relative">
+                    {(() => {
+                      const getImages = (itm) => {
+                        const list = []
+                        const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
+                        if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
+                        if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
+                        if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
+                        if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
+                        if (!list.length) list.push('/placeholder-news.svg')
+                        return list
+                      }
+                      const images = getImages(item)
+                      // Simple carousel logic or just first image
+                      return (
+                        <Image
+                          src={images[0]}
+                          alt={getLocalizedText(item.title, language)}
+                          fill
+                          className="object-center transition-transform duration-300 group-hover:scale-105"
+                          style={{ objectFit: 'cover' }}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 20vw"
+                        />
+                      )
+                    })()}
+                    {(getLocalizedText(item.category, language)) && (
+                      <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs">{getLocalizedText(item.category, language)}</Badge>
                     )}
                   </div>
-                  <CardContent className="p-3 flex-1 flex flex-col justify-between">
-                    <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors">
-                      {getLocalizedText(item.title, language)}
-                    </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                      {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
-                    </p>
+                )}
+              </div>
+              <CardContent className="p-3 flex-1 flex flex-col justify-between">
+                <h3 className="font-bold text-sm line-clamp-2 group-hover:text-red-600 transition-colors">
+                  {getLocalizedText(item.title, language)}
+                </h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                  {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
+                </p>
 
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
-          )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      )
-      }
+      ) : (
+        <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
+      )}
+    </div>
+  )
+}
 
-      {/* MOBILE AD INJECTION 1: Business Promo (After Politics) */}
-      <div className="block lg:hidden">
-        <BusinessAdWidget
-          settings={businessAdSettings}
-          t={t}
-          onClick={() => setPromotionOpen(true)}
+{/* MOBILE AD INJECTION 1: Business Promo (After Politics) */ }
+<div className="block lg:hidden">
+  <BusinessAdWidget
+    settings={businessAdSettings}
+    t={t}
+    onClick={() => setPromotionOpen(true)}
+  />
+</div>
+
+{/* Promotion/Ad Request Dialog */ }
+<Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
+  <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle>Post Your Ad</DialogTitle>
+      <DialogDescription>
+        Submit your ad details. Our team will contact you for verification and pricing.
+      </DialogDescription>
+    </DialogHeader>
+    <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
+      <div className="space-y-2">
+        <Label htmlFor="businessName">Business/Ad Name *</Label>
+        <Input
+          id="businessName"
+          value={promotionData.businessName}
+          onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
+          placeholder="e.g. Star Electronics / Sale"
+          required
         />
       </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="ownerName">Your Name *</Label>
+          <Input
+            id="ownerName"
+            value={promotionData.ownerName}
+            onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
+            placeholder="Your Name"
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone Number *</Label>
+          <Input
+            id="phone"
+            value={promotionData.phone}
+            onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
+            placeholder="9876543210"
+            required
+          />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email Address *</Label>
+        <Input
+          id="email"
+          type="email"
+          value={promotionData.email}
+          onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
+          placeholder="contact@email.com"
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="address">Address / Location *</Label>
+        <Textarea
+          id="address"
+          value={promotionData.address}
+          onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
+          placeholder="Shop No, Building, Area, City"
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">Ad Description / Message (Optional)</Label>
+        <Textarea
+          id="description"
+          value={promotionData.description}
+          onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
+          placeholder="Briefly describe what you want to advertise..."
+        />
+      </div>
+      <DialogFooter className="pt-4">
+        <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
+        <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
+          {isSubmitting ? 'Submitting...' : 'Submit Request'}
+        </Button>
+      </DialogFooter>
+    </form>
+  </DialogContent>
+</Dialog>
 
-      {/* Promotion/Ad Request Dialog */}
-      <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Post Your Ad</DialogTitle>
-            <DialogDescription>
-              Submit your ad details. Our team will contact you for verification and pricing.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business/Ad Name *</Label>
-              <Input
-                id="businessName"
-                value={promotionData.businessName}
-                onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
-                placeholder="e.g. Star Electronics / Sale"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ownerName">Your Name *</Label>
-                <Input
-                  id="ownerName"
-                  value={promotionData.ownerName}
-                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
-                  placeholder="Your Name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  value={promotionData.phone}
-                  onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
-                  placeholder="9876543210"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={promotionData.email}
-                onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
-                placeholder="contact@email.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address / Location *</Label>
-              <Textarea
-                id="address"
-                value={promotionData.address}
-                onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
-                placeholder="Shop No, Building, Area, City"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Ad Description / Message (Optional)</Label>
-              <Textarea
-                id="description"
-                value={promotionData.description}
-                onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-                placeholder="Briefly describe what you want to advertise..."
-              />
-            </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
-                {isSubmitting ? 'Submitting...' : 'Submit Request'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* NEWS SECTIONS WITH SIDEBAR */}
+{/* NEWS SECTIONS WITH SIDEBAR */ }
       <div className="grid lg:grid-cols-12 gap-6">
         <div className="lg:col-span-9 space-y-8">
 
