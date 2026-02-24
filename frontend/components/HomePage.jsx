@@ -308,13 +308,18 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   // -- STATE LIFTING: Use props if available, otherwise fallback to local (though page.js always passes them now) --
   const mainNewsBoxes = newsData?.mainNewsBoxes || []
-  const trendingNews = newsData?.trendingNews || []
+  const politicsNews = newsData?.trendingNews || []
   const businessNews = newsData?.businessNews || []
   const nationNews = newsData?.nationNews || []
   const entertainmentNews = newsData?.entertainmentNews || []
   const oldNews = newsData?.oldNews || []
-  // sportsNews was unused in local state, ignoring it or we can derive it if needed (it was set to empty array)
-  // const sportsNews = [] 
+
+  // Derived collections for specific sections
+  const latestNews = oldNews.slice(0, 10)
+  const topEducationNews = oldNews.filter(a => {
+    const cat = typeof a.category === 'string' ? a.category : (a.category?.en || '')
+    return cat.toLowerCase().includes('education')
+  })
 
   // Helpers to update parent state safely
   const setMainNewsBoxes = (data) => setNewsData && setNewsData(prev => ({ ...prev, mainNewsBoxes: data }))
@@ -526,6 +531,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
     window.history.pushState({ view: 'news-detail', article: article }, '', `?article=${article.id}`)
     setSelectedArticle(article)
     setCurrentView('news-detail')
+  }
+
+  // Handle category clicks to navigate to news page
+  const handleCategoryClick = (category) => {
+    window.history.pushState({ view: 'news' }, '', `?category=${category}`)
+    setCurrentView('news')
   }
 
   return (
