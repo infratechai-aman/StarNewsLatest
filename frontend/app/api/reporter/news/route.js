@@ -1,5 +1,6 @@
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { translateText } from '@/lib/translation';
 
 // Helper for Role check
 async function canManageNews(token) {
@@ -65,13 +66,17 @@ export async function POST(request) {
         const body = await request.json();
         const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, authorName, thumbnailUrl, featured } = body;
 
+        // Auto-translate Title and Content
+        const translatedTitle = await translateText(title);
+        const translatedContent = await translateText(content);
+
         // Resolve Category
         let finalCategoryId = categoryId || category;
         // Simple validation...
 
         const newArticle = {
-            title,
-            content,
+            title: translatedTitle,
+            content: translatedContent,
             categoryId: finalCategoryId,
             city: city || '',
             genre: 'breaking',

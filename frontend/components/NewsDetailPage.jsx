@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Eye, Clock, ArrowLeft, Share2, Bookmark, Facebook, Twitter, MessageCircle, Quote } from 'lucide-react'
 import Image from 'next/image'
-import { newsData, getLocalizedText } from '@/lib/newsData'
+import { getLocalizedText } from '@/lib/newsData'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getArticleAdSettings } from '@/lib/contentStore'
 import { news } from '@/lib/api'
@@ -37,9 +37,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     const fetchLatestNews = async () => {
       try {
         const response = await news.getAll({ limit: 20 })
-        const apiArticles = response?.articles || response || []
-        // Merge static newsData to ensure translated articles appear in sidebar/related
-        const articles = [...newsData, ...apiArticles]
+        const articles = response?.articles || response || []
 
         // Ensure articles is an array
         if (!Array.isArray(articles)) {
@@ -68,9 +66,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         }
       } catch (error) {
         console.error('Failed to fetch latest news:', error)
-        // Fallback to static data
-        setLatestNews(newsData.slice(0, 5))
-        setRelatedNewsFromApi(newsData.slice(0, 4))
+        setLatestNews([])
+        setRelatedNewsFromApi([])
       }
     }
     if (article?.id) {
@@ -86,9 +83,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   const content = getLocalizedText(article.content, language)
 
   // Get related news - use API data if available, otherwise fallback to static
-  const relatedNews = relatedNewsFromApi.length > 0 ? relatedNewsFromApi : newsData
-    .filter(n => n.id !== article.id && getLocalizedText(n.category, 'en') === getLocalizedText(article.category, 'en'))
-    .slice(0, 4)
+  const relatedNews = relatedNewsFromApi
+  const sidebarLatest = latestNews.slice(0, 5)
 
   // Format date based on language
   const formatDate = (dateStr) => {
@@ -353,7 +349,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               {t('topStories') || 'Hot Right Now'}
             </h3>
             <div className="space-y-8">
-              {(latestNews.length > 0 ? latestNews : newsData.slice(0, 5)).map((newsItem, idx) => (
+              {sidebarLatest.map((newsItem, idx) => (
                 <div
                   key={newsItem.id}
                   className="flex gap-4 cursor-pointer group"

@@ -10,7 +10,7 @@ import Image from 'next/image'
 import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
-import { newsData, getLocalizedText } from '@/lib/newsData'
+import { getLocalizedText } from '@/lib/newsData'
 
 const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPageState }) => {
   const { t, language } = useLanguage()
@@ -87,21 +87,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         params.featured = true
       }
       const data = await news.getAll(params)
-      // Merge static translated newsData with API data for demo
       const dbArticles = data.articles || []
-      // Filter newsData based on category if needed, for now just Prepend
-      let staticNews = newsData || []
-
-      if (currentCategory !== 'all' && currentCategory !== 'trending') {
-        staticNews = staticNews.filter(n => {
-          const cat = n.category?.en || n.category
-          return cat?.toLowerCase() === currentCategory.toLowerCase() ||
-            (cat === 'Nation' && currentCategory === 'national')
-        })
-      }
-
-      // Combine: Static first (translated) + DB second
-      setArticles([...(staticNews || []), ...(dbArticles || [])])
+      setArticles(dbArticles)
     } catch (error) {
       console.error('Error loading news:', error)
     }

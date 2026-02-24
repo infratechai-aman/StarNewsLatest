@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
+import { translateText } from '@/lib/translation'
 
 // Simple in-memory cache for default news feed
 let newsCache = {
@@ -182,13 +183,17 @@ export async function POST(request) {
 
         const approvalStatus = status === 'submit' ? 'pending' : 'draft'
 
+        // Auto-translate Title and Content
+        const translatedTitle = await translateText(title);
+        const translatedContent = await translateText(content);
+
         // Fetch Category Name for denormalization
         const catDoc = await db.collection('news_categories').doc(categoryId).get()
         const categoryName = catDoc.exists ? catDoc.data().name : ''
 
         const newArticle = {
-            title,
-            content,
+            title: translatedTitle,
+            content: translatedContent,
             categoryId,
             category: categoryName, // Denormalized
             city: city || '',

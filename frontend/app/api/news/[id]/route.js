@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES, isSuperAdmin } from '@/lib/auth'
+import { translateText } from '@/lib/translation'
 
 export async function GET(request, { params }) {
     try {
@@ -60,6 +61,14 @@ export async function PUT(request, { params }) {
 
         // Prepare update data
         const updateData = { ...body, updatedAt: new Date().toISOString() }
+
+        // Auto-translate if title or content is provided as a string
+        if (body.title && typeof body.title === 'string') {
+            updateData.title = await translateText(body.title);
+        }
+        if (body.content && typeof body.content === 'string') {
+            updateData.content = await translateText(body.content);
+        }
 
         // Status handling: if reporter updates, reset to pending?
         if (!isSuperAdmin(user) && currentData.approvalStatus === 'approved') {
