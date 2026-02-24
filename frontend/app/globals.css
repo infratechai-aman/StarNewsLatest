@@ -376,8 +376,8 @@ code {
 .bento-magazine {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: 200px;
-  gap: 1.5rem;
+  grid-auto-rows: 300px;
+  gap: 2rem;
 }
 
 .bento-item-large {

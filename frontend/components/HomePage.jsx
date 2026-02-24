@@ -577,7 +577,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="flex items-center justify-center h-full border border-white/10">
               <div className="text-center text-white/80">
                 <p className="text-xl md:text-2xl font-serif italic font-bold">🎯 {premiumAdSettings.title || t('premiumAdSpace')}</p>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-black opacity-50 mt-2">Reach Millions • Contact for Placements</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black opacity-50 mt-2">{t('contactForPlacements') || 'Reach Millions • Contact for Placements'}</p>
               </div>
             </div>
           )}
@@ -700,15 +700,20 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
             <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 relative z-10">
               <div className="max-w-2xl">
-                <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">Market Intelligence</Badge>
-                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">Business & <br /><span className="text-blue-500 italic font-serif">Economy</span></h2>
+                <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">
+                  {t('marketIntelligence') || 'Market Intelligence'}
+                </Badge>
+                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">
+                  {t('business') || 'Business'} & <br />
+                  <span className="text-blue-500 italic font-serif">{t('economy') || 'Economy'}</span>
+                </h2>
               </div>
               <Button
                 variant="outline"
                 className="text-white border-white/10 bg-white/5 hover:bg-white hover:text-black font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group"
                 onClick={() => handleCategoryClick('business')}
               >
-                FULL DIRECTORY <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                {t('fullDirectory') || 'FULL DIRECTORY'} <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
 
@@ -743,19 +748,19 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         <section className="mb-24 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
           <div className="lg:col-span-8">
             <div className="mag-section-header mb-12">
-              <h2 className="text-4xl font-heading font-black tracking-tighter">National <span className="text-red-600">Politics</span></h2>
+              <h2 className="text-4xl font-heading font-black tracking-tighter">{t('nationalPolitics') || 'National Politics'}</h2>
             </div>
             <div className="space-y-12">
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="premium-card rounded-[32px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100">
                   <div className="relative aspect-[21/9] mb-8 overflow-hidden">
                     <Image src={cleanPoliticsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
-                    <Badge className="absolute top-6 left-6 bg-red-600 text-white border-none px-4 py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">Breaking News</Badge>
+                    <Badge className="absolute top-6 left-6 bg-red-600 text-white border-none px-4 py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">{t('breakingNews') || 'Breaking News'}</Badge>
                   </div>
                   <div className="px-8 pb-8">
                     <h3 className="font-heading font-black text-4xl mb-6 leading-tight group-hover:text-red-600 transition-colors tracking-tighter">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
                     <p className="text-gray-600 line-clamp-2 mb-8 text-xl leading-relaxed">{getLocalizedText(cleanPoliticsNews[0].content, language)?.substring(0, 200)}...</p>
-                    <span className="text-sm font-black text-red-600 flex items-center gap-2 group-hover:translate-x-2 transition-transform">VIEW FULL REPORT <ChevronRight className="w-5 h-5" /></span>
+                    <span className="text-sm font-black text-red-600 flex items-center gap-2 group-hover:translate-x-2 transition-transform">{t('viewFullReport') || 'VIEW FULL REPORT'} <ChevronRight className="w-5 h-5" /></span>
                   </div>
                 </div>
               )}
@@ -769,11 +774,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
           <div className="lg:col-span-4 space-y-16">
             <div>
-              <div className="mag-section-header text-2xl mb-12">The Daily Digest</div>
+              <div className="mag-section-header text-2xl mb-12">{t('dailyDigest') || 'The Daily Digest'}</div>
               <div className="space-y-10">
                 {topEducationNews.slice(0, 4).map(item => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-l-4 border-red-600 pl-8 transition-all hover:bg-gray-50 py-2">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-2 block">Quick Brief</span>
+                    <span className="text-sm font-black text-red-600 mb-2 block">{t('quickBrief') || 'Quick Brief'}</span>
                     <h4 className="font-heading font-black text-xl leading-tight group-hover:text-red-700 transition-colors tracking-tight">{getLocalizedText(item.title, language)}</h4>
                   </div>
                 ))}
@@ -781,13 +786,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             </div>
 
             <div className="sponsored-card bg-gray-50 rounded-[40px] p-10 border border-gray-100 flex flex-col items-center text-center">
-              <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">Sponsored</Badge>
+              <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">{t('sponsored') || 'Sponsored'}</Badge>
               <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-6">
                 <Shield className="w-8 h-8 text-red-600" />
               </div>
-              <h3 className="font-heading font-black text-2xl mb-4">Premium Business Placements</h3>
-              <p className="text-gray-500 text-sm mb-8 leading-relaxed">Reach our exclusive audience of millions with high-impact editorial placements.</p>
-              <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>GET IN TOUCH</Button>
+              <h3 className="font-heading font-black text-2xl mb-4">{t('premiumBusinessPlacements') || 'Premium Business Placements'}</h3>
+              <p className="text-gray-500 text-sm mb-8 leading-relaxed">{t('premiumPlacementDesc') || 'Reach our exclusive audience of millions with high-impact editorial placements.'}</p>
+              <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>{t('getInTouch') || 'GET IN TOUCH'}</Button>
             </div>
           </div>
         </section>
@@ -797,7 +802,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       <div className="lg:hidden space-y-0 -mx-4 mb-20">
         <div className="px-6 mb-10">
           <div className="mag-section-header">
-            <h2 className="text-2xl font-heading font-black tracking-tighter italic">Today's Headlines</h2>
+            <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>
           </div>
         </div>
         {cleanMainNews.slice(0, 15).map((item, index) => {
@@ -811,7 +816,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <Image src={item.mainImage || '/placeholder-news.svg'} alt={title} fill className="object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 <div className="absolute bottom-0 left-0 p-8">
-                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] shadow-2xl tracking-[0.2em]">Top Story</Badge>
+                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] shadow-2xl tracking-[0.2em]">{t('topStory') || 'Top Story'}</Badge>
                   <h2 className="text-3xl font-heading font-black text-white leading-[1.1] drop-shadow-2xl tracking-tighter italic">{title}</h2>
                 </div>
               </div>

@@ -292,13 +292,38 @@ export const breakingHeadlines = {
     ]
 };
 
+// Function to decode HTML entities
+export const decodeHTMLEntities = (text) => {
+    if (typeof text !== 'string') return text;
+    return text.replace(/&#(\d+);/g, (match, dec) => {
+        return String.fromCharCode(dec);
+    }).replace(/&[a-z]+;/gi, (match) => {
+        const entities = {
+            '&amp;': '&',
+            '&quot;': '"',
+            '&apos;': "'",
+            '&lt;': '<',
+            '&gt;': '>',
+            '&ndash;': '–',
+            '&mdash;': '—',
+            '&lsquo;': '‘',
+            '&rsquo;': '’',
+            '&ldquo;': '“',
+            '&rdquo;': '”'
+        };
+        return entities[match] || match;
+    });
+};
+
 // Helper function to get localized text from multilingual object
 export const getLocalizedText = (obj, lang = 'en') => {
-    if (typeof obj === 'string') return obj;
-    if (typeof obj === 'object' && obj !== null) {
-        return obj[lang] || obj.en || obj.mr || obj.hi || '';
+    let result = '';
+    if (typeof obj === 'string') {
+        result = obj;
+    } else if (typeof obj === 'object' && obj !== null) {
+        result = obj[lang] || obj.en || obj.mr || obj.hi || '';
     }
-    return '';
+    return decodeHTMLEntities(result);
 };
 
 // Helper functions for data access
