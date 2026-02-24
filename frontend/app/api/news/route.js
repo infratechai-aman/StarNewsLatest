@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebaseAdmin'
+import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
 import { translateText } from '@/lib/translation'
 
@@ -11,6 +11,7 @@ let newsCache = {
 const CACHE_TTL = 60 * 1000; // 1 minute
 
 export async function GET(request) {
+    const db = getDb();
     if (!db) {
         console.error('Database not initialized');
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
@@ -172,6 +173,7 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+    const db = getDb();
     if (!db) {
         console.error('Database not initialized');
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });

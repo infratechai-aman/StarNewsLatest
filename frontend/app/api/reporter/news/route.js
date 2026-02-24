@@ -1,10 +1,13 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
 
 // Helper for Role check
 async function canManageNews(token) {
     if (!token) return false;
+    const db = getDb();
+    const auth = getAuth();
+    if (!db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();
@@ -17,6 +20,10 @@ async function canManageNews(token) {
 
 // GET: My Submitted News
 export async function GET(request) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -51,6 +58,10 @@ export async function GET(request) {
 // POST: Submit News for Review
 // Note: This duplicates some logic from /api/news POST, but enforces 'pending' status
 export async function POST(request) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

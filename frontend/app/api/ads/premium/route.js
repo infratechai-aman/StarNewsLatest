@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebaseAdmin'
+import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 
 export async function GET() {
+    const db = getDb();
     if (!db) {
-        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' })
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }
     try {
         const doc = await db.collection('site_settings').doc('premium_ad').get()

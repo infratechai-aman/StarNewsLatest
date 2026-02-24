@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebaseAdmin'
+import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES, isSuperAdmin } from '@/lib/auth'
 import { translateText } from '@/lib/translation'
 
 export async function GET(request, { params }) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const { id } = params
         const doc = await db.collection('news_articles').doc(id).get()
@@ -36,6 +40,10 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const user = await getCurrentUser(request)
         if (!hasRole(user, [ROLES.REPORTER, ROLES.SUPER_ADMIN])) {
@@ -101,6 +109,10 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const user = await getCurrentUser(request)
         // Only Admin can delete? Or author too? Original said "Emergency: Auth disabled" for admin delete
