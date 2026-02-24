@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Clock, Youtube, User } from 'lucide-react'
+import { Eye, Clock, Youtube, User, Shield } from 'lucide-react'
 import { news } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
@@ -539,12 +539,27 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
     setCurrentView('news')
   }
 
+  // Data Cleanup: Filter out placeholder articles
+  const filterNews = (newsArray) => {
+    return (newsArray || []).filter(item => {
+      const title = getLocalizedText(item.title, language) || ''
+      return !title.toLowerCase().includes('test article') && title.trim() !== ''
+    })
+  }
+
+  const cleanMainNews = filterNews(mainNewsBoxes)
+  const cleanPoliticsNews = filterNews(politicsNews)
+  const cleanBusinessNews = filterNews(businessNews)
+  const cleanNationNews = filterNews(nationNews)
+  const cleanEntertainmentNews = filterNews(entertainmentNews)
+  const cleanLatestNews = filterNews(latestNews)
+
   return (
     <div className="space-y-4" key={newsKey}>
 
       {/* PREMIUM AD BANNER */}
       {premiumAdSettings.enabled && (
-        <div className="sticky top-12 z-40 relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-lg premium-ad-banner">
+        <div className="z-40 relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900 via-red-900 to-gray-900 shadow-2xl premium-ad-banner mb-8 mx-auto max-w-7xl h-32 md:h-40">
           {premiumAdSettings.imageUrl ? (
             <div className="relative h-full group w-full">
               <a href={premiumAdSettings.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block h-full w-full relative">
@@ -552,103 +567,104 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   src={premiumAdSettings.imageUrl}
                   alt={premiumAdSettings.title || 'Advertisement'}
                   fill
-                  className="object-center"
-                  style={{ objectFit: 'cover' }}
+                  className="object-cover object-center group-hover:scale-105 transition-transform duration-[2000ms]"
                   priority
-                  sizes="100vw"
                 />
-
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60" />
               </a>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-28 md:h-36">
-              <div className="text-center text-white">
-                <p className="text-lg md:text-2xl font-bold">🎯 {premiumAdSettings.title || t('premiumAdSpace')}</p>
-                <p className="text-sm opacity-80">970 x 150 pixels • {t('contactForBooking')}</p>
+            <div className="flex items-center justify-center h-full border border-white/10">
+              <div className="text-center text-white/80">
+                <p className="text-xl md:text-2xl font-serif italic font-bold">🎯 {premiumAdSettings.title || t('premiumAdSpace')}</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black opacity-50 mt-2">Reach Millions • Contact for Placements</p>
               </div>
             </div>
           )}
-          <Badge className="absolute top-2 right-2 bg-white/20 text-white text-xs">{t('advertisement')}</Badge>
+          <Badge className="absolute top-4 right-4 bg-white/10 backdrop-blur-md text-white border-white/20 text-[10px] uppercase font-black tracking-widest">{t('advertisement')}</Badge>
         </div>
       )}
 
-      {/* --- DESKTOP VIEW (Magazine Style Grid) --- */}
-      <div className="hidden lg:grid grid-cols-12 gap-8 mb-12">
-
-        <div className="magazine-grid lg:grid-cols-12 gap-8 mb-16">
+      {/* --- DESKTOP VIEW (Magazine Style Hero) --- */}
+      <div className="hidden lg:block max-w-[1440px] mx-auto px-6 mb-20">
+        <div className="grid grid-cols-12 gap-8">
           {/* HERO LEAD STORY */}
-          <div className="lg:col-span-12">
-            {mainNewsBoxes[0] && (
+          <div className="col-span-12 lg:col-span-8">
+            {cleanMainNews[0] && (
               <div
-                onClick={() => handleNewsClick(mainNewsBoxes[0])}
-                className="relative h-[450px] md:h-[650px] w-full rounded-[20px] overflow-hidden cursor-pointer group shadow-2xl premium-card"
+                onClick={() => handleNewsClick(cleanMainNews[0])}
+                className="relative h-[650px] w-full rounded-[32px] overflow-hidden cursor-pointer group shadow-2xl premium-card"
               >
                 <Image
-                  src={mainNewsBoxes[0].mainImage || mainNewsBoxes[0].images?.[0] || '/placeholder-news.svg'}
-                  alt={getLocalizedText(mainNewsBoxes[0].title, language)}
+                  src={cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg'}
+                  alt={getLocalizedText(cleanMainNews[0].title, language)}
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                  className="object-cover group-hover:scale-110 transition-transform duration-[3000ms] ease-out"
                   priority
-                  sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:max-w-4xl">
-                  <Badge className="mb-4 bg-red-600 hover:bg-red-700 text-white border-none text-xs font-black uppercase tracking-widest px-4 py-1.5 shadow-lg">
-                    Featured News
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-12 w-full max-w-3xl">
+                  <Badge className="mb-6 bg-red-600 hover:bg-red-700 text-white border-none text-[10px] font-black uppercase tracking-[0.3em] px-5 py-2 shadow-xl">
+                    Lead Story
                   </Badge>
-                  <h1 className="hero-title text-white text-3xl md:text-6xl mb-6 group-hover:text-red-100 transition-colors drop-shadow-2xl">
-                    {getLocalizedText(mainNewsBoxes[0].title, language)}
+                  <h1 className="hero-title text-white text-5xl md:text-7xl mb-8 group-hover:text-red-100 transition-colors drop-shadow-2xl font-heading font-black leading-[1.05] tracking-tighter">
+                    {getLocalizedText(cleanMainNews[0].title, language)}
                   </h1>
-                  <div className="flex items-center gap-6">
-                    <div className="flex flex-col">
-                      <span className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Published On</span>
-                      <span className="text-white text-sm font-black flex items-center gap-2">
-                        {new Date(mainNewsBoxes[0].publishedAt || mainNewsBoxes[0].createdAt || Date.now()).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                  <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                        <Clock className="w-5 h-5 text-red-500" />
+                      </div>
+                      <span className="text-white text-sm font-black uppercase tracking-widest">
+                        {new Date(cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
-                    <div className="h-10 w-px bg-white/20 hidden md:block"></div>
-                    <Button className="bg-white text-black hover:bg-red-600 hover:text-white font-black rounded-full px-8 h-12 transition-all transform group-hover:translate-x-2 hidden md:flex">
-                      READ ARTICLE <ChevronRight className="ml-2 w-5 h-5" />
+                    <Button className="bg-white text-black hover:bg-red-600 hover:text-white font-black rounded-full px-10 h-14 transition-all shadow-2xl transform active:scale-95">
+                      EXPLORE NOW <ChevronRight className="ml-2 w-6 h-6" />
                     </Button>
                   </div>
                 </div>
               </div>
             )}
-          </div>
 
-          {/* SUB-FEATURED GRID (The "Understory") */}
-          <div className="lg:col-span-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-              {mainNewsBoxes.slice(1, 5).map((item) => (
+            {/* SUB-FEATURED GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
+              {cleanMainNews.slice(1, 5).map((item) => (
                 <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
               ))}
             </div>
           </div>
 
-          {/* SIDEBAR UTILITIES & TOP STORIES */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100/50 shadow-inner">
-              <div className="grid grid-cols-2 gap-4">
+          {/* HERO SIDEBAR */}
+          <div className="col-span-12 lg:col-span-4 space-y-8">
+            <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-100 shadow-sm">
+              <div className="grid grid-cols-2 gap-6">
                 <WeatherWidget />
                 <CricketWidget />
               </div>
             </div>
 
-            <div className="premium-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-red-600"></div>
-              <h3 className="font-heading font-black text-2xl mb-6 flex items-center gap-3">
+            <div className="premium-card bg-white rounded-[32px] border border-gray-100 p-8 shadow-xl overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-400"></div>
+              <h3 className="font-heading font-black text-3xl mb-8 flex items-center gap-4">
                 Must Read
-                <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse"></span>
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                </span>
               </h3>
-              <div className="space-y-6">
-                {mainNewsBoxes.slice(5, 10).map((item, idx) => (
-                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-4 cursor-pointer items-start">
-                    <span className="text-4xl font-heading font-black text-gray-100 group-hover:text-red-100 transition-colors shrink-0 leading-none pt-1">0{idx + 1}</span>
-                    <div className="space-y-1">
-                      <h4 className="font-extrabold text-[15px] text-gray-900 leading-snug line-clamp-2 group-hover:text-red-600 transition-colors">
+              <div className="space-y-8">
+                {cleanMainNews.slice(5, 10).map((item, idx) => (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-6 cursor-pointer items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0">
+                    <span className="text-5xl font-heading font-black text-gray-100 group-hover:text-red-600 transition-all shrink-0 leading-none">0{idx + 1}</span>
+                    <div className="space-y-2">
+                      <h4 className="font-heading font-black text-lg text-gray-900 leading-[1.2] line-clamp-3 group-hover:text-red-700 transition-colors tracking-tight">
                         {getLocalizedText(item.title, language)}
                       </h4>
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getLocalizedText(item.category, language)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{getTranslatedCategory(item.category, t, language)}</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -658,119 +674,145 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       </div>
 
-      {/* LATEST NEWS SECTION - Magazine Layout */}
-      <section className="mb-20">
-        <div className="mag-section-header">
-          <span className="text-red-600">Latest</span> Update
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {latestNews.slice(0, 8).map((item) => (
-            <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-          ))}
-        </div>
-      </section>
-
-      {/* BUSINESS SECTION - Bento Grid */}
-      <section className="mb-20 bg-gray-900 text-white p-12 rounded-[40px] relative overflow-hidden">
-        <div className="grain-overlay" />
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 relative z-10">
-          <div>
-            <Badge className="bg-blue-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase tracking-widest">Global Markets</Badge>
-            <h2 className="font-heading font-black text-5xl md:text-7xl leading-tight">Business & <br /><span className="text-blue-500">Economy</span></h2>
+      {/* LATEST NEWS SECTION */}
+      {cleanLatestNews.length > 0 && (
+        <section className="mb-24 container mx-auto px-6">
+          <div className="mag-section-header mb-12 flex items-center justify-between">
+            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
+              <span className="text-red-600">Latest</span> Update
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
           </div>
-          <Button variant="outline" className="text-white border-white/20 hover:bg-white hover:text-black font-black rounded-full px-8" onClick={() => handleCategoryClick('business')}>
-            VIew Full Directory
-          </Button>
-        </div>
-
-        <div className="bento-magazine relative z-10">
-          {businessNews.slice(0, 5).map((item, idx) => (
-            <div
-              key={item.id}
-              onClick={() => handleNewsClick(item)}
-              className={`premium-card cursor-pointer rounded-2xl overflow-hidden relative group transition-all duration-500 ${idx === 0 ? 'bento-item-large' : idx === 1 ? 'bento-item-wide' : ''}`}
-            >
-              <Image
-                src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                alt={getLocalizedText(item.title, language)}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 p-6">
-                <h3 className={`font-heading font-black leading-tight group-hover:text-blue-400 transition-colors ${idx === 0 ? 'text-3xl' : 'text-lg'}`}>
-                  {getLocalizedText(item.title, language)}
-                </h3>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* POLITICS & NATIONAL - Asymmetric Layout */}
-      <section className="mb-20 grid lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2">
-          <div className="mag-section-header">Politics</div>
-          <div className="magazine-grid">
-            {politicsNews[0] && (
-              <div onClick={() => handleNewsClick(politicsNews[0])} className="premium-card rounded-2xl overflow-hidden cursor-pointer group mb-8">
-                <div className="relative aspect-[21/9] mb-6">
-                  <Image src={politicsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover" />
-                  <Badge className="absolute top-4 left-4 bg-red-600 text-white border-none">Breaking</Badge>
-                </div>
-                <h3 className="font-heading font-black text-3xl mb-4 leading-tight group-hover:text-red-600 transition-colors">{getLocalizedText(politicsNews[0].title, language)}</h3>
-                <p className="text-gray-500 line-clamp-3 mb-6 text-lg">{getLocalizedText(politicsNews[0].content, language)?.substring(0, 200)}...</p>
-              </div>
-            )}
-            <div className="grid md:grid-cols-2 gap-8">
-              {politicsNews.slice(1, 3).map(item => (
-                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-              ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            {cleanLatestNews.slice(0, 8).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
           </div>
-        </div>
+        </section>
+      )}
 
-        <div className="space-y-12">
-          <div>
-            <div className="mag-section-header text-xl">Daily Digest</div>
-            <div className="space-y-8">
-              {topEducationNews.slice(0, 4).map(item => (
-                <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-accent-left pl-6">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 block">Quick Read</span>
-                  <h4 className="font-heading font-black text-lg leading-tight group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
+      {/* BUSINESS SECTION - Refined Aesthetics */}
+      {cleanBusinessNews.length > 0 && (
+        <section className="mb-24 container mx-auto px-4 lg:px-6">
+          <div className="relative bg-[#0a0c10] text-white p-12 lg:p-20 rounded-[48px] overflow-hidden shadow-2xl">
+            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 relative z-10">
+              <div className="max-w-2xl">
+                <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">Market Intelligence</Badge>
+                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">Business & <br /><span className="text-blue-500 italic font-serif">Economy</span></h2>
+              </div>
+              <Button
+                variant="outline"
+                className="text-white border-white/10 bg-white/5 hover:bg-white hover:text-black font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group"
+                onClick={() => handleCategoryClick('business')}
+              >
+                FULL DIRECTORY <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+
+            <div className="bento-magazine relative z-10 gap-8">
+              {cleanBusinessNews.slice(0, 5).map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleNewsClick(item)}
+                  className={`premium-card cursor-pointer rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[300px] border border-white/5 ${idx === 0 ? 'bento-item-large md:h-[632px]' : idx === 1 ? 'bento-item-wide' : ''}`}
+                >
+                  <Image
+                    src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                    alt={getLocalizedText(item.title, language)}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 p-8 w-full">
+                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-400 transition-colors tracking-tight ${idx === 0 ? 'text-4xl' : 'text-xl md:text-2xl'}`}>
+                      {getLocalizedText(item.title, language)}
+                    </h3>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        </section>
+      )}
 
-          <div className="sponsored-card">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Sponsored Content</span>
-            {/* Premium Ad Space */}
-            <div className="aspect-[4/5] bg-gray-100 rounded-lg flex items-center justify-center border border-dashed text-gray-400 text-center p-8">
-              Your Premium Ad Can Appear Here. Contact us for placements.
+      {/* POLITICS & NATIONAL */}
+      {cleanPoliticsNews.length > 0 && (
+        <section className="mb-24 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
+          <div className="lg:col-span-8">
+            <div className="mag-section-header mb-12">
+              <h2 className="text-4xl font-heading font-black tracking-tighter">National <span className="text-red-600">Politics</span></h2>
+            </div>
+            <div className="space-y-12">
+              {cleanPoliticsNews[0] && (
+                <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="premium-card rounded-[32px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100">
+                  <div className="relative aspect-[21/9] mb-8 overflow-hidden">
+                    <Image src={cleanPoliticsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
+                    <Badge className="absolute top-6 left-6 bg-red-600 text-white border-none px-4 py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">Breaking News</Badge>
+                  </div>
+                  <div className="px-8 pb-8">
+                    <h3 className="font-heading font-black text-4xl mb-6 leading-tight group-hover:text-red-600 transition-colors tracking-tighter">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
+                    <p className="text-gray-600 line-clamp-2 mb-8 text-xl leading-relaxed">{getLocalizedText(cleanPoliticsNews[0].content, language)?.substring(0, 200)}...</p>
+                    <span className="text-sm font-black text-red-600 flex items-center gap-2 group-hover:translate-x-2 transition-transform">VIEW FULL REPORT <ChevronRight className="w-5 h-5" /></span>
+                  </div>
+                </div>
+              )}
+              <div className="grid md:grid-cols-2 gap-10">
+                {cleanPoliticsNews.slice(1, 3).map(item => (
+                  <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+
+          <div className="lg:col-span-4 space-y-16">
+            <div>
+              <div className="mag-section-header text-2xl mb-12">The Daily Digest</div>
+              <div className="space-y-10">
+                {topEducationNews.slice(0, 4).map(item => (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-l-4 border-red-600 pl-8 transition-all hover:bg-gray-50 py-2">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-2 block">Quick Brief</span>
+                    <h4 className="font-heading font-black text-xl leading-tight group-hover:text-red-700 transition-colors tracking-tight">{getLocalizedText(item.title, language)}</h4>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="sponsored-card bg-gray-50 rounded-[40px] p-10 border border-gray-100 flex flex-col items-center text-center">
+              <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">Sponsored</Badge>
+              <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-6">
+                <Shield className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="font-heading font-black text-2xl mb-4">Premium Business Placements</h3>
+              <p className="text-gray-500 text-sm mb-8 leading-relaxed">Reach our exclusive audience of millions with high-impact editorial placements.</p>
+              <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>GET IN TOUCH</Button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* --- PREMIUM MOBILE VIEW (NYT Inspired) --- */}
       <div className="lg:hidden space-y-0 -mx-4 mb-20">
-        <div className="px-4 mb-8">
-          <div className="mag-section-header text-lg">Top Stories</div>
+        <div className="px-6 mb-10">
+          <div className="mag-section-header">
+            <h2 className="text-2xl font-heading font-black tracking-tighter italic">Today's Headlines</h2>
+          </div>
         </div>
-        {mainNewsBoxes.map((item, index) => {
+        {cleanMainNews.slice(0, 15).map((item, index) => {
           const title = getLocalizedText(item.title, language)
           const category = getTranslatedCategory(item.category, t, language)
           const isLarge = index === 0
 
           if (isLarge) {
             return (
-              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative aspect-[16/10] w-full mb-8 cursor-pointer group">
+              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative aspect-[16/10] w-full mb-10 cursor-pointer group">
                 <Image src={item.mainImage || '/placeholder-news.svg'} alt={title} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <Badge className="bg-red-600 text-white border-none mb-3 px-3 py-1 font-black uppercase text-[10px]">Featured Story</Badge>
-                  <h2 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-lg">{title}</h2>
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 p-8">
+                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] shadow-2xl tracking-[0.2em]">Top Story</Badge>
+                  <h2 className="text-3xl font-heading font-black text-white leading-[1.1] drop-shadow-2xl tracking-tighter italic">{title}</h2>
                 </div>
               </div>
             )
