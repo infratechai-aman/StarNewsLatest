@@ -29,8 +29,19 @@ async function getRecentLinks() {
         'https://starnewsindia.in/',
         'https://starnewsindia.in/page/2/',
         'https://starnewsindia.in/page/3/',
+        'https://starnewsindia.in/page/4/',
+        'https://starnewsindia.in/page/5/',
+        'https://starnewsindia.in/page/6/',
+        'https://starnewsindia.in/page/7/',
+        'https://starnewsindia.in/page/8/',
+        'https://starnewsindia.in/page/9/',
+        'https://starnewsindia.in/page/10/',
         'https://starnewsindia.in/category/india-news/',
-        'https://starnewsindia.in/category/business/'
+        'https://starnewsindia.in/category/india-news/page/2/',
+        'https://starnewsindia.in/category/business/',
+        'https://starnewsindia.in/category/business/page/2/',
+        'https://starnewsindia.in/category/entertainment/',
+        'https://starnewsindia.in/category/politics/'
     ];
 
     const links = new Set();
