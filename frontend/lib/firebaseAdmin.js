@@ -11,23 +11,28 @@ import dotenv from 'dotenv';
 const cleanPrivateKey = (key) => {
     if (!key) return null;
 
-    // Handle various escaping and formatting issues common in .env
-    let cleaned = key;
+    let cleaned = key.replace(/^['"](.*)['"]$/, '$1');
 
-    // 1. Remove wrapping quotes (single or double)
-    cleaned = cleaned.replace(/^['"](.*)['"]$/, '$1');
+    const beginMarker = '-----BEGIN PRIVATE KEY-----';
+    const endMarker = '-----END PRIVATE KEY-----';
 
-    // 2. Handle double-escaped newlines: replace '\\n' with actual '\n'
-    // and literal spaces that should be newlines if the block headers are mangled
-    cleaned = cleaned.replace(/\\n/g, '\n');
+    if (cleaned.includes(beginMarker) && cleaned.includes(endMarker)) {
+        // Extract the raw base64 payload between the markers
+        let base64 = cleaned.substring(
+            cleaned.indexOf(beginMarker) + beginMarker.length,
+            cleaned.indexOf(endMarker)
+        );
 
-    // 3. Ensure the PEM headers and footers are correctly formatted
-    // Sometimes they arrive with missing newlines after the header
-    if (!cleaned.includes('\n') && cleaned.includes('BEGIN PRIVATE KEY')) {
-        // If it's a single line but has the header, it's definitely malformed
-        cleaned = cleaned
-            .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
-            .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
+        // Obliterate ANY whitespaces, literal \n strings, or junk
+        base64 = base64.replace(/\\n/g, ''); // literal \n
+        base64 = base64.replace(/\s+/g, ''); // spaces, tabs, real newlines
+
+        // Reconstruct exactly into 64-character lines as required by Node/OpenSSL
+        const lines = base64.match(/.{1,64}/g) || [];
+        cleaned = `${beginMarker}\n${lines.join('\n')}\n${endMarker}\n`;
+    } else {
+        // Fallback if markers are completely missing (unlikely, but safe)
+        cleaned = cleaned.replace(/\\n/g, '\n');
     }
 
     return cleaned;
