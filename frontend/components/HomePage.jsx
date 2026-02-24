@@ -22,7 +22,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Store, ChevronRight } from 'lucide-react'
-import CricketWidget from './CricketWidget'
 import WeatherWidget from './WeatherWidget'
 
 // WhatsApp Icon Component
@@ -632,9 +631,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           {/* HERO SIDEBAR */}
           <div className="col-span-12 lg:col-span-4 space-y-8">
             <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-100 shadow-sm">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="flex justify-center">
                 <WeatherWidget />
-                <CricketWidget />
               </div>
             </div>
 
@@ -859,8 +857,29 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* Sidebar and Main Layout Wrapper for bottom sections */}
       <div className="hidden lg:grid grid-cols-12 gap-12 container mx-auto px-4 mt-20">
-        <div className="lg:col-span-9 space-y-20">
-          {/* Additional sections can go here */}
+        <div className="lg:col-span-9 space-y-12">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl font-heading font-black tracking-tighter">
+              {t('moreStories') || 'More Stories'}
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {oldNews.slice(0, visibleMoreStories).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
+          </div>
+          {oldNews.length > visibleMoreStories && (
+            <div className="flex justify-center pt-8">
+              <Button
+                variant="outline"
+                className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
+                onClick={() => setVisibleMoreStories(prev => prev + 12)}
+              >
+                {t('loadMore') || 'LOAD MORE STORIES'}
+              </Button>
+            </div>
+          )}
         </div>
         <div className="lg:col-span-3 space-y-8">
           <BusinessAdWidget
