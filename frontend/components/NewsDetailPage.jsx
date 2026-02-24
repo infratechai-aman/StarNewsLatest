@@ -403,7 +403,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         }
       `}</style>
       </div>
-      )
+    </div>
+  )
 }
 
-      export default NewsDetailPage
+export default NewsDetailPage
