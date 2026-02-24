@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic';
 // GET: Breaking Ticker
 export async function GET(request) {
     try {
+        const db = getDb();
         if (!db) {
             return NextResponse.json({ enabled: false, text: '', texts: [] });
         }
