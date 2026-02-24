@@ -235,7 +235,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           return (
             <div
               key={ad.id}
-              className="premium-card rounded-[40px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+              className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
               onClick={() => handleContactSeller(ad)}
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
@@ -243,7 +243,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'}
                   alt={ad.title}
                   fill
-                  className="object-contain group-hover:scale-110 transition-transform duration-[2000ms]"
+                  className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

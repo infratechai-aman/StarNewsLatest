@@ -123,7 +123,7 @@ const EnewspaperPage = () => {
           {newspapers.map((newspaper) => (
             <div
               key={newspaper.id}
-              className="premium-card rounded-[40px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+              className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
               onClick={() => setViewingPdf(newspaper)}
             >
               <div className="relative aspect-[4/5] overflow-hidden bg-gray-50 border-b border-gray-50">
@@ -144,7 +144,7 @@ const EnewspaperPage = () => {
                   </Button>
                 </div>
               </div>
-              <div className="p-10 flex-1 flex flex-col">
+              <div className="p-6 flex-1 flex flex-col">
                 <h3 className="font-heading font-black text-2xl mb-4 leading-tight group-hover:text-red-600 transition-colors tracking-tighter italic">
                   {newspaper.title}
                 </h3>

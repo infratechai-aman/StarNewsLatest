@@ -99,8 +99,8 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                     key={city}
                                     variant={selectedCity === city ? "default" : "outline"}
                                     className={`rounded-full px-8 h-14 font-black transition-all duration-300 ${selectedCity === city
-                                            ? 'bg-blue-600 text-white scale-105 shadow-xl'
-                                            : 'border-gray-100 hover:border-blue-500 hover:bg-blue-50 text-gray-600'
+                                        ? 'bg-blue-600 text-white scale-105 shadow-xl'
+                                        : 'border-gray-100 hover:border-blue-500 hover:bg-blue-50 text-gray-600'
                                         }`}
                                     onClick={() => handleCityClick(city)}
                                 >
@@ -112,7 +112,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                 </div>
 
                 <div className="lg:col-span-4">
-                    <div className="bg-gray-50 p-10 rounded-[40px] border border-gray-100 h-full flex flex-col justify-center">
+                    <div className="bg-gray-50 p-6 lg:p-10 rounded-3xl border border-gray-100 h-full flex flex-col justify-center">
                         <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-6">{t('allCities')}</h2>
                         <div className="relative">
                             <select
@@ -162,7 +162,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                             {cityNews.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="premium-card rounded-[32px] overflow-hidden cursor-pointer group border border-gray-100 bg-white hover:-translate-y-2 transition-all duration-500 shadow-sm"
+                                    className="premium-card rounded-3xl overflow-hidden cursor-pointer group border border-gray-100 bg-white hover:-translate-y-2 transition-all duration-500 shadow-sm"
                                     onClick={() => handleNewsClick(item)}
                                 >
                                     <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
@@ -178,7 +178,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                             {selectedCity}
                                         </Badge>
                                     </div>
-                                    <div className="p-8">
+                                    <div className="p-6">
                                         <div className="flex items-center gap-2 mb-3">
                                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                                 {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}

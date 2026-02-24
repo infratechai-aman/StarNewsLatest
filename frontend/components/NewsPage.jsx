@@ -137,7 +137,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         {articles.map((article) => (
           <div
             key={article.id}
-            className="premium-card rounded-[32px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+            className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
             onClick={() => viewArticle(article)}
           >
             <div className="relative aspect-[16/10] overflow-hidden">
@@ -161,7 +161,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               )}
             </div>
 
-            <div className="p-8 flex-1 flex flex-col">
+            <div className="p-6 flex-1 flex flex-col">
               <div className="flex items-center gap-3 mb-4">
                 <Badge className="bg-gray-100 text-red-600 border-none font-black text-[10px] tracking-widest px-3">
                   {getLocalizedText(article.category, language) || t('news')}

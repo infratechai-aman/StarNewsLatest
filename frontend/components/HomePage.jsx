@@ -691,26 +691,27 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </section>
       )}
 
-      {/* BUSINESS SECTION - Refined Aesthetics */}
+      {/* BUSINESS SECTION - Restored Vibrant Blue Aesthetic */}
       {cleanBusinessNews.length > 0 && (
         <section className="mb-16 container mx-auto px-4 lg:px-6">
-          <div className="relative bg-[#0a0c10] text-white p-12 lg:p-20 rounded-[48px] overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white p-12 lg:p-16 rounded-[48px] overflow-hidden shadow-2xl border border-blue-900/20">
+            <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 relative z-10">
               <div className="max-w-2xl">
-                <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">
+                <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                   {t('marketIntelligence') || 'Market Intelligence'}
                 </Badge>
                 <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">
                   {t('business') || 'Business'} & <br />
-                  <span className="text-blue-500 italic font-serif">{t('economy') || 'Economy'}</span>
+                  <span className="text-blue-400 italic font-serif glow-text-blue">{t('economy') || 'Economy'}</span>
                 </h2>
               </div>
               <Button
                 variant="outline"
-                className="text-white border-white/10 bg-white/5 hover:bg-white hover:text-black font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group"
+                className="text-white border-blue-500/30 bg-blue-600/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group shadow-lg shadow-blue-900/20"
                 onClick={() => handleCategoryClick('business')}
               >
                 {t('fullDirectory') || 'FULL DIRECTORY'} <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
@@ -730,9 +731,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-8 w-full">
-                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-400 transition-colors tracking-tight ${idx === 0 ? 'text-4xl' : 'text-xl md:text-2xl'}`}>
+                  <div className="absolute bottom-0 left-0 p-6 w-full">
+                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-4xl' : 'text-xl md:text-2xl'}`}>
                       {getLocalizedText(item.title, language)}
                     </h3>
                   </div>

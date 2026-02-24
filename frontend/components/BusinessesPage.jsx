@@ -296,7 +296,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
         {filteredBusinesses.map((business) => (
           <div
             key={business.id}
-            className="premium-card rounded-[40px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+            className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
             onClick={() => {
               setSelectedBusiness(business)
               setCurrentView('business-detail')
@@ -307,7 +307,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'}
                 alt={business.name}
                 fill
-                className="object-contain group-hover:scale-110 transition-transform duration-[2000ms]"
+                className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
