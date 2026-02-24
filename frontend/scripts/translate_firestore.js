@@ -76,16 +76,36 @@ async function migrate() {
         let needsUpdate = false;
         let updateData = {};
 
+        // Check Title
         if (typeof data.title === 'string') {
-            console.log(`Translating title for: ${data.id}`);
+            console.log(`Translating string title for: ${data.id}`);
             updateData.title = await translateText(data.title);
             needsUpdate = true;
+        } else if (typeof data.title === 'object' && data.title !== null) {
+            const hi = data.title.hi;
+            const mr = data.title.mr;
+            const en = data.title.en;
+            if (en && (!hi || !mr || hi.trim() === '' || mr.trim() === '')) {
+                console.log(`Fixing missing object title translations for: ${data.id}`);
+                updateData.title = await translateText(en);
+                needsUpdate = true;
+            }
         }
 
+        // Check Content
         if (typeof data.content === 'string') {
-            console.log(`Translating content for: ${data.id}`);
+            console.log(`Translating string content for: ${data.id}`);
             updateData.content = await translateText(data.content);
             needsUpdate = true;
+        } else if (typeof data.content === 'object' && data.content !== null) {
+            const hi = data.content.hi;
+            const mr = data.content.mr;
+            const en = data.content.en;
+            if (en && (!hi || !mr || hi.trim() === '' || mr.trim() === '')) {
+                console.log(`Fixing missing object content translations for: ${data.id}`);
+                updateData.content = await translateText(en);
+                needsUpdate = true;
+            }
         }
 
         if (needsUpdate) {

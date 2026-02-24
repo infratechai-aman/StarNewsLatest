@@ -21,6 +21,11 @@ export async function translateText(text, fromLang = 'en') {
         text = baseText;
     }
 
+    // Auto-detect Devanagari script if fromLang is set to English
+    if (fromLang === 'en' && typeof text === 'string' && /[\u0900-\u097F]/.test(text)) {
+        fromLang = 'hi';
+    }
+
     const results = { [fromLang]: text };
 
     const translatePromises = TARGET_LANGUAGES.map(async (lang) => {

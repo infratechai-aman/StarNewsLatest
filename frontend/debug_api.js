@@ -1,19 +1,14 @@
-const fetch = require('node-fetch');
+const fs = require('fs');
 
-async function checkApi() {
-    try {
-        const res = await fetch('http://localhost:3000/api/news?limit=5');
-        const data = await res.json();
-        console.log('Total articles:', data.total);
-        if (data.articles && data.articles.length > 0) {
-            console.log('First article:', JSON.stringify(data.articles[0], null, 2));
-            console.log('Categories found:', data.articles.map(a => `ID: ${a.categoryId}, Name: ${a.category}`).join('\n'));
-        } else {
-            console.log('No articles found in API response');
-        }
-    } catch (error) {
-        console.error('Error fetching API:', error);
-    }
-}
-
-checkApi();
+fetch('http://localhost:3000/api/news?limit=100')
+    .then(res => res.json())
+    .then(data => {
+        const target = data.articles.find(a => JSON.stringify(a).includes('Sanskar Apne Apne'));
+        const result = {
+            found: !!target,
+            article: target
+        };
+        fs.writeFileSync('debug_api.json', JSON.stringify(result, null, 2));
+        console.log('Done');
+    })
+    .catch(err => console.error(err));
