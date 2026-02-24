@@ -3,6 +3,9 @@ import { db } from '@/lib/firebaseAdmin'
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 
 export async function GET() {
+    if (!db) {
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' })
+    }
     try {
         const doc = await db.collection('site_settings').doc('premium_ad').get()
 
@@ -23,6 +26,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const user = await getCurrentUser(request)
         if (!isSuperAdmin(user)) {

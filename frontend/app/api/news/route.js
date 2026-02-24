@@ -11,6 +11,10 @@ let newsCache = {
 const CACHE_TTL = 60 * 1000; // 1 minute
 
 export async function GET(request) {
+    if (!db) {
+        console.error('Database not initialized');
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const { searchParams } = new URL(request.url)
         const categoryParam = searchParams.get('category')
@@ -168,6 +172,10 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+    if (!db) {
+        console.error('Database not initialized');
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
         const user = await getCurrentUser(request)
         if (!hasRole(user, [ROLES.REPORTER, ROLES.SUPER_ADMIN])) {

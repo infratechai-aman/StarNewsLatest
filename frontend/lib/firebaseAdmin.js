@@ -7,19 +7,29 @@ if (!admin.apps.length) {
 
     if (projectId && clientEmail && privateKey) {
         try {
+            // Sanitize private key: handle double-escaped newlines and potential wrapping quotes from .env
+            const sanitizedKey = privateKey
+                .replace(/^"(.*)"$/, '$1') // Remove wrapping quotes if present
+                .replace(/\\n/g, '\n');
+
             admin.initializeApp({
                 credential: admin.credential.cert({
                     projectId: projectId,
                     clientEmail: clientEmail,
-                    privateKey: privateKey.replace(/\\n/g, '\n'),
+                    privateKey: sanitizedKey,
                 }),
                 storageBucket: process.env.FIREBASE_STORAGE_BUCKET
             });
+            console.log('Firebase admin initialized successfully for project:', projectId);
         } catch (error) {
-            console.error('Firebase admin initialization error', error.stack);
+            console.error('Firebase admin initialization error:', error.message);
         }
     } else {
-        console.warn('Firebase admin environment variables are missing. Skipping initialization.');
+        const missing = [];
+        if (!projectId) missing.push('FIREBASE_PROJECT_ID');
+        if (!clientEmail) missing.push('FIREBASE_CLIENT_EMAIL');
+        if (!privateKey) missing.push('FIREBASE_PRIVATE_KEY');
+        console.warn('Firebase admin environment variables are missing:', missing.join(', '), '. Skipping initialization.');
     }
 }
 
