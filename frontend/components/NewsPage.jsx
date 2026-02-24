@@ -34,13 +34,13 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   useEffect(() => {
     const storedCategory = localStorage.getItem('selectedCategory')
     if (storedCategory) {
-      setSelectedCat(storedCategory)
+      setSelectedCategory(storedCategory)
       localStorage.removeItem('selectedCategory')
     }
     const handleCategoryChange = () => {
       const newCategory = localStorage.getItem('selectedCategory')
       if (newCategory) {
-        setSelectedCat(newCategory)
+        setSelectedCategory(newCategory)
         localStorage.removeItem('selectedCategory')
       }
     }
@@ -101,7 +101,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
       }
 
       // Combine: Static first (translated) + DB second
-      setArticles([...staticNews, ...dbArticles])
+      setArticles([...(staticNews || []), ...(dbArticles || [])])
     } catch (error) {
       console.error('Error loading news:', error)
     }
@@ -148,7 +148,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                   article.mainImage ||
                   '/placeholder-news.svg'
                 }
-                alt={getLocalizedText(article.title, language) || article.title}
+                alt={(article && article.title) ? (getLocalizedText(article.title, language) || article.title) : 'News Article'}
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

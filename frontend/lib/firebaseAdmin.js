@@ -9,9 +9,9 @@ if (!admin.apps.length) {
         try {
             admin.initializeApp({
                 credential: admin.credential.cert({
-                    project_id: projectId,
-                    client_email: clientEmail,
-                    private_key: privateKey.replace(/\\n/g, '\n'),
+                    projectId: projectId,
+                    clientEmail: clientEmail,
+                    privateKey: privateKey.replace(/\\n/g, '\n'),
                 }),
                 storageBucket: process.env.FIREBASE_STORAGE_BUCKET
             });

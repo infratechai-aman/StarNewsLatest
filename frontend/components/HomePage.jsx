@@ -586,7 +586,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       )}
 
       {/* --- DESKTOP VIEW (Magazine Style Hero) --- */}
-      <div className="hidden lg:block max-w-[1440px] mx-auto px-6 mb-20">
+      <div className="hidden lg:block max-w-[1440px] mx-auto px-6 mb-10">
         <div className="grid grid-cols-12 gap-8">
           {/* HERO LEAD STORY */}
           <div className="col-span-12 lg:col-span-8">
@@ -676,8 +676,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* LATEST NEWS SECTION */}
       {cleanLatestNews.length > 0 && (
-        <section className="mb-16 container mx-auto px-6">
-          <div className="mag-section-header mb-12 flex items-center justify-between">
+        <section className="mb-10 container mx-auto px-6">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
             <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
               <span className="text-red-600">Latest</span> Update
             </h2>
@@ -693,13 +693,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* BUSINESS SECTION - Restored Vibrant Blue Aesthetic */}
       {cleanBusinessNews.length > 0 && (
-        <section className="mb-16 container mx-auto px-4 lg:px-6">
-          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white p-12 lg:p-16 rounded-[48px] overflow-hidden shadow-2xl border border-blue-900/20">
+        <section className="mb-10 container mx-auto px-4 lg:px-6">
+          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white p-8 lg:p-12 rounded-[48px] overflow-hidden shadow-2xl border border-blue-900/20">
             <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8 relative z-10">
               <div className="max-w-2xl">
                 <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                   {t('marketIntelligence') || 'Market Intelligence'}
@@ -745,19 +745,19 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* POLITICS & NATIONAL */}
       {cleanPoliticsNews.length > 0 && (
-        <section className="mb-16 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
+        <section className="mb-10 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
           <div className="lg:col-span-8">
-            <div className="mag-section-header mb-12">
+            <div className="mag-section-header mb-8">
               <h2 className="text-4xl font-heading font-black tracking-tighter">{t('nationalPolitics') || 'National Politics'}</h2>
             </div>
-            <div className="space-y-12">
+            <div className="space-y-8">
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="premium-card rounded-[32px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100">
                   <div className="relative aspect-[21/9] mb-8 overflow-hidden">
                     <Image src={cleanPoliticsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
                     <Badge className="absolute top-6 left-6 bg-red-600 text-white border-none px-4 py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">{t('breakingNews') || 'Breaking News'}</Badge>
                   </div>
-                  <div className="px-8 pb-8">
+                  <div className="px-6 pb-6">
                     <h3 className="font-heading font-black text-4xl mb-6 leading-tight group-hover:text-red-600 transition-colors tracking-tighter">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
                     <p className="text-gray-600 line-clamp-2 mb-8 text-xl leading-relaxed">{getLocalizedText(cleanPoliticsNews[0].content, language)?.substring(0, 200)}...</p>
                     <span className="text-sm font-black text-red-600 flex items-center gap-2 group-hover:translate-x-2 transition-transform">{t('viewFullReport') || 'VIEW FULL REPORT'} <ChevronRight className="w-5 h-5" /></span>
@@ -772,9 +772,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             </div>
           </div>
 
-          <div className="lg:col-span-4 space-y-16">
+          <div className="lg:col-span-4 space-y-10">
             <div>
-              <div className="mag-section-header text-2xl mb-12">{t('dailyDigest') || 'The Daily Digest'}</div>
+              <div className="mag-section-header text-2xl mb-8">{t('dailyDigest') || 'The Daily Digest'}</div>
               <div className="space-y-10">
                 {topEducationNews.slice(0, 4).map(item => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-l-4 border-red-600 pl-8 transition-all hover:bg-gray-50 py-2">
@@ -785,7 +785,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </div>
             </div>
 
-            <div className="sponsored-card bg-gray-50 rounded-[40px] p-10 border border-gray-100 flex flex-col items-center text-center">
+            <div className="sponsored-card bg-gray-50 rounded-[40px] p-8 border border-gray-100 flex flex-col items-center text-center">
               <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">{t('sponsored') || 'Sponsored'}</Badge>
               <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-6">
                 <Shield className="w-8 h-8 text-red-600" />
@@ -799,7 +799,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       )}
 
       {/* --- PREMIUM MOBILE VIEW (NYT Inspired) --- */}
-      <div className="lg:hidden space-y-0 -mx-4 mb-20">
+      <div className="lg:hidden space-y-0 -mx-4 mb-10">
         <div className="px-6 mb-10">
           <div className="mag-section-header">
             <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>

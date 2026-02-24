@@ -141,9 +141,9 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
     if (searchTerm) {
       filtered = filtered.filter(b =>
-        b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        b.area.toLowerCase().includes(searchTerm.toLowerCase())
+        (b.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.area || '').toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 

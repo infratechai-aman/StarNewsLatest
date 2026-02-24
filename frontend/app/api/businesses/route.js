@@ -13,6 +13,7 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 export async function GET(request) {
     try {
         if (!db) {
+            console.error('Firestore DB not initialized in Business API');
             return NextResponse.json([]);
         }
         const { searchParams } = new URL(request.url);
@@ -54,7 +55,7 @@ export async function GET(request) {
 
         return NextResponse.json(businesses);
     } catch (error) {
-        console.error('Error fetching businesses:', error);
+        console.error('Error fetching businesses:', error, error.stack);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
