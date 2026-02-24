@@ -25,18 +25,25 @@ export async function GET(request) {
 
         let query = db.collection('businesses')
             .where('approvalStatus', '==', 'approved')
-            .where('active', '==', true)
-            .orderBy('createdAt', 'desc');
+            .where('active', '==', true);
 
         if (category) {
             query = query.where('category', '==', category);
         }
 
         const snapshot = await query.get();
-        const businesses = snapshot.docs.map(doc => ({
+        let businesses = snapshot.docs.map(doc => ({
             ...doc.data(),
+            id: doc.id,
             enabled: doc.data().active // Map for frontend compatibility
         }));
+
+        // Sort in memory to avoid index requirements
+        businesses.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || 0;
+            const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || 0;
+            return dateB - dateA;
+        });
 
         if (isDefaultQuery) {
             businessCache = {

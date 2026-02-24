@@ -47,7 +47,7 @@ const mockClassifieds = [
 ]
 
 const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [classifieds, setClassifieds] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -257,7 +257,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 )}
               </div>
 
-              <div className="p-8 flex-1 flex flex-col">
+              <div className="p-6 flex-1 flex flex-col">
                 <h3 className="font-heading font-black text-xl mb-4 leading-tight group-hover:text-orange-600 transition-colors tracking-tighter italic line-clamp-2 min-h-[3rem]">
                   {ad.title}
                 </h3>
@@ -273,7 +273,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8">
+                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">
                   <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                   <span className="truncate">{ad.location}</span>
                 </div>

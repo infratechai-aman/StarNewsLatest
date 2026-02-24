@@ -31,7 +31,7 @@ const BUSINESS_CATEGORIES = [
 ]
 
 const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [businessList, setBusinessList] = useState([])
   const [filteredBusinesses, setFilteredBusinesses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -324,8 +324,8 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               </div>
             </div>
 
-            <div className="p-10 flex-1 flex flex-col">
-              <div className="flex items-center gap-3 mb-6">
+            <div className="p-6 flex-1 flex flex-col">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge className="bg-gray-100 text-blue-600 border-none font-black text-[10px] tracking-widest px-4 py-1">
                   {business.category}
                 </Badge>
@@ -338,11 +338,11 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 {business.name}
               </h3>
 
-              <p className="text-gray-500 text-sm line-clamp-2 mb-8 flex-1 leading-relaxed">
+              <p className="text-gray-500 text-sm line-clamp-2 mb-6 flex-1 leading-relaxed">
                 {business.description || 'Exclusive local partner of StarNews India...'}
               </p>
 
-              <div className="pt-8 border-t border-gray-50 mt-auto flex items-center justify-between">
+              <div className="pt-6 border-t border-gray-50 mt-auto flex items-center justify-between">
                 <a
                   href={`tel:${business.phone}`}
                   className="flex items-center gap-3 text-blue-600 font-black text-xs group-hover:gap-4 transition-all"

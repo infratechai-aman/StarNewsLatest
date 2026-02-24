@@ -142,6 +142,14 @@ export const translations = {
         emailUs: 'Email Us',
         locationAddress: 'Location Address',
         workingHours: 'Working Hours',
+        businessDirectoryDesc: 'Explore Elite Local Enterprises',
+        searchBusinesses: 'Search elite firms, services, or locations...',
+        promotionFormDescription: 'Submit your details and our team will contact you to promote your business elite-style.',
+        businessNamePlaceholder: 'e.g., Star Enterprises',
+        ownerNamePlaceholder: 'e.g., John Doe',
+        addressPlaceholder: 'e.g., MG Road, Pune',
+        descriptionPlaceholder: 'Tell us about your premium services...',
+        submitRequest: 'Submit Request',
 
         // Footer
         quickLinks: 'Quick Links',
@@ -452,6 +460,14 @@ export const translations = {
         emailUs: 'ईमेल करें',
         locationAddress: 'स्थान का पता',
         workingHours: 'कार्य का समय',
+        businessDirectoryDesc: 'विशिष्ट स्थानीय उद्यमों को खोजें',
+        searchBusinesses: 'बेहतरीन फर्मों, सेवाओं या स्थानों की खोज करें...',
+        promotionFormDescription: 'अपना विवरण जमा करें और हमारी टीम आपके व्यवसाय को बढ़ावा देने के लिए आपसे संपर्क करेगी।',
+        businessNamePlaceholder: 'जैसे, स्टार एंटरप्राइजेज',
+        ownerNamePlaceholder: 'जैसे, जॉन डो',
+        addressPlaceholder: 'जैसे, एमजी रोड, पुणे',
+        descriptionPlaceholder: 'हमें अपनी प्रीमियम सेवाओं के बारे में बताएं...',
+        submitRequest: 'अनुरोध जमा करें',
 
         // Footer
         quickLinks: 'त्वरित लिंक',
@@ -763,6 +779,14 @@ export const translations = {
         emailUs: 'ईमेल करा',
         locationAddress: 'पत्ता',
         workingHours: 'कामाचे तास',
+        businessDirectoryDesc: 'भेट द्या स्थानिक उद्योगांना',
+        searchBusinesses: 'उत्कृष्ट कंपन्या, सेवा किंवा ठिकाणे शोधा...',
+        promotionFormDescription: 'तुमचा तपशील सबमिट करा आणि आमची टीम तुमच्या व्यवसायाचा प्रचार करण्यासाठी तुमच्याशी संपर्क साधेल.',
+        businessNamePlaceholder: 'उदा. स्टार एंटरप्राइजेस',
+        ownerNamePlaceholder: 'उदा. जॉन डो',
+        addressPlaceholder: 'उदा. एमजी रोड, पुणे',
+        descriptionPlaceholder: 'आम्हाला तुमच्या प्रीमियम सेवांबद्दल सांगा...',
+        submitRequest: 'विनंती सबमिट करा',
 
         // Footer
         quickLinks: 'जलद लिंक्स',

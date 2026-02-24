@@ -676,7 +676,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* LATEST NEWS SECTION */}
       {cleanLatestNews.length > 0 && (
-        <section className="mb-24 container mx-auto px-6">
+        <section className="mb-16 container mx-auto px-6">
           <div className="mag-section-header mb-12 flex items-center justify-between">
             <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
               <span className="text-red-600">Latest</span> Update
@@ -693,7 +693,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* BUSINESS SECTION - Refined Aesthetics */}
       {cleanBusinessNews.length > 0 && (
-        <section className="mb-24 container mx-auto px-4 lg:px-6">
+        <section className="mb-16 container mx-auto px-4 lg:px-6">
           <div className="relative bg-[#0a0c10] text-white p-12 lg:p-20 rounded-[48px] overflow-hidden shadow-2xl">
             <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 blur-[120px] rounded-full pointer-events-none"></div>
@@ -745,7 +745,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* POLITICS & NATIONAL */}
       {cleanPoliticsNews.length > 0 && (
-        <section className="mb-24 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
+        <section className="mb-16 container mx-auto px-6 grid lg:grid-cols-12 gap-16">
           <div className="lg:col-span-8">
             <div className="mag-section-header mb-12">
               <h2 className="text-4xl font-heading font-black tracking-tighter">{t('nationalPolitics') || 'National Politics'}</h2>
