@@ -1,9 +1,14 @@
 import { db } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // GET: Breaking Ticker
 export async function GET(request) {
     try {
+        if (!db) {
+            return NextResponse.json({ enabled: false, text: '', texts: [] });
+        }
         // Assuming a single document 'main' in 'breaking_ticker' collection
         const doc = await db.collection('breaking_ticker').doc('main').get();
 

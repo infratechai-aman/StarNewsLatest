@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { db } from '@/lib/firebaseAdmin'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
     try {
         const user = await getCurrentUser(request)
 
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        if (!db) {
+            return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
         }
 
         // Fetch latest data from Firestore

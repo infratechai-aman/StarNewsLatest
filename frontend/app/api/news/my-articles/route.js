@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/firebaseAdmin'
 import { getCurrentUser, ROLES } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
     try {
         const user = await getCurrentUser(request)
@@ -13,6 +15,10 @@ export async function GET(request) {
         // Allow Reporters and Admins
         if (user.role !== ROLES.REPORTER && user.role !== ROLES.SUPER_ADMIN) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+        }
+
+        if (!db) {
+            return NextResponse.json({ articles: [] })
         }
 
         // Query Firestore for articles by this author

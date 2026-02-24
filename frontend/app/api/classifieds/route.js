@@ -1,9 +1,14 @@
 import { db } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // GET: List active Classifieds (Public)
 export async function GET(request) {
     try {
+        if (!db) {
+            return NextResponse.json([]);
+        }
         const snapshot = await db.collection('classified_ads')
             .where('approvalStatus', '==', 'approved')
             .where('active', '==', true)

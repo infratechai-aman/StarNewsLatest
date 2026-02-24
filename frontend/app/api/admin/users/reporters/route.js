@@ -1,9 +1,14 @@
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // List Reporters (Admin)
 export async function GET(request) {
     try {
+        if (!db || !auth) {
+            return NextResponse.json({ reporters: [] });
+        }
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 

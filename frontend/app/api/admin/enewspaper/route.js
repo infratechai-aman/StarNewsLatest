@@ -1,8 +1,10 @@
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 async function hasRole(token, allowedRoles) {
-    if (!token) return false;
+    if (!token || !db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();

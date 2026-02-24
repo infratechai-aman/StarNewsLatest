@@ -1,6 +1,8 @@
 import { db } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 let businessCache = {
     data: null,
     lastFetch: 0
@@ -10,6 +12,9 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 // GET: List active businesses (Public)
 export async function GET(request) {
     try {
+        if (!db) {
+            return NextResponse.json([]);
+        }
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
         const isDefaultQuery = !category;
