@@ -21,6 +21,16 @@ export const getLocalizedText = (obj, lang = 'en') => {
     } else if (typeof obj === 'object' && obj !== null) {
         result = obj[lang] || obj.en || obj.mr || obj.hi || '';
     }
+
+    // Clean CDATA and common scraper junk
+    if (typeof result === 'string') {
+        result = result
+            .replace(/<!\[CDATA\[/gi, '')
+            .replace(/\]\]>/gi, '')
+            .split('Source link')[0] // Optional: strip source links if consistent
+            .trim();
+    }
+
     return decodeHTMLEntities(result);
 };
 

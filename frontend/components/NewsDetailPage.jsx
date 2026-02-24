@@ -120,79 +120,62 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto" key={language}>
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10" key={language}>
       {/* Navigation */}
-      <div className="flex items-center justify-between mb-12">
+      <div className="flex items-center justify-between mb-16">
         <Button
           variant="ghost"
           onClick={handleBackToHome}
-          className="group flex items-center gap-3 font-black text-xs tracking-widest uppercase hover:bg-gray-100 rounded-full px-6"
+          className="group flex items-center gap-4 font-black text-xs tracking-[0.3em] uppercase hover:bg-gray-100 rounded-full px-8 h-12 border-2 border-transparent hover:border-gray-200 transition-all"
         >
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-2 transition-transform text-red-600" />
           {t('backToHome')}
         </Button>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-8">
+      <div className="grid lg:grid-cols-12 gap-16">
         {/* Main Article Content */}
-        <article className="lg:col-span-8 space-y-6 select-none" onContextMenu={(e) => e.preventDefault()}>
+        <article className="lg:col-span-8 space-y-10 select-none" onContextMenu={(e) => e.preventDefault()}>
           {/* Header Section */}
           <div className="space-y-8">
-            <Badge className="bg-red-600 text-white px-5 py-1.5 font-black uppercase text-[10px] tracking-[0.2em] border-none shadow-xl">
+            <Badge className="bg-red-600 text-white px-6 py-2 font-black uppercase text-[10px] tracking-[0.4em] border-none shadow-[0_10px_30px_-5px_rgba(220,38,38,0.5)]">
               {category}
             </Badge>
 
-            <h1 className="text-5xl md:text-7xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter">
+            <h1 className="text-5xl md:text-8xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter drop-shadow-sm">
               {title}
             </h1>
           </div>
 
           {/* Author & Meta */}
-          <div className="flex flex-wrap items-center gap-6 py-8 border-y border-gray-100">
+          <div className="flex flex-wrap items-center gap-8 py-10 border-y border-gray-100">
             {(article.authorName || article.author?.name) && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-red-50/50">
                   {(article.authorName || article.author?.name)?.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('writtenBy') || 'Written By'}</p>
-                  <p className="font-bold text-gray-900">{article.authorName || article.author.name}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{t('writtenBy') || 'Correspondent'}</p>
+                  <p className="font-heading font-black text-xl text-gray-900 tracking-tight">{article.authorName || article.author.name}</p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-6 text-xs font-bold text-gray-500 uppercase tracking-widest ml-auto">
-              <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-red-600" />
+            <div className="flex items-center gap-10 text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-auto">
+              <span className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-red-600" />
+                </div>
                 {formatDate(article.publishedAt || article.createdAt)}
               </span>
-              <span className="flex items-center gap-2">
-                <Eye className="w-4 h-4 text-red-600" />
+              <span className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-red-600" />
+                </div>
                 {(article.views || 0).toLocaleString()}
               </span>
             </div>
           </div>
-
-          {/* Share Buttons */}
-          <div className="flex items-center gap-4 py-2">
-            <span className="text-sm font-medium text-gray-600">{t('share')}</span>
-            <Button variant="outline" size="sm" className="rounded-full">
-              <Facebook className="h-4 w-4 text-blue-600" />
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-full">
-              <Twitter className="h-4 w-4 text-sky-500" />
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-full">
-              <MessageCircle className="h-4 w-4 text-green-600" />
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-full">
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="rounded-full ml-auto">
-              <Bookmark className="h-4 w-4" />
-            </Button>
-          </div>
-
 
           {/* Visual Content: Video or Image */}
           {(article.youtubeUrl || article.videoUrl) ? (() => {
@@ -207,7 +190,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             }
             if (!videoId) return null
             return (
-              <div className="relative w-full rounded-[32px] overflow-hidden shadow-2xl border border-gray-100" style={{ paddingTop: '56.25%' }}>
+              <div className="relative w-full rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
                   className="absolute top-0 left-0 w-full h-full"
@@ -219,7 +202,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </div>
             )
           })() : article.mainImage && (
-            <div className="relative aspect-video rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
+            <div className="relative aspect-video rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
               <Image
                 src={article.mainImage}
                 alt={title}
@@ -232,78 +216,79 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
           {/* Lead/Short Description */}
           {(article.metaDescription || article.shortDescription) && (
-            <div className="relative p-10 bg-gray-50 rounded-[32px] border-l-8 border-red-600">
-              <Quote className="absolute top-4 right-8 w-12 h-12 text-red-600/10" />
-              <p className="text-2xl font-heading font-black text-gray-900 leading-tight tracking-tight italic">
+            <div className="relative p-12 bg-gray-50 rounded-[40px] border-l-[12px] border-red-600 shadow-sm overflow-hidden">
+              <Quote className="absolute top-8 right-10 w-20 h-20 text-red-600/5 rotate-12" />
+              <p className="text-3xl font-heading font-black text-gray-900 leading-tight tracking-tight italic relative z-10">
                 {getLocalizedText(article.metaDescription || article.shortDescription, language)}
               </p>
             </div>
           )}
 
           {/* Article Body */}
-          <div className="prose prose-2xl max-w-none text-gray-800 leading-[1.6] magazine-body font-serif">
-            <div dangerouslySetInnerHTML={{ __html: content }} />
+          <div className="prose prose-2xl max-w-none text-gray-800 leading-[1.8] magazine-body font-serif selection:bg-red-100">
+            <div
+              className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
           </div>
 
           {/* Gallery Sections */}
           {article.galleryImages && article.galleryImages.length > 0 && (
-            <div className="mt-16 pt-16 border-t border-gray-100">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8 border-l-4 border-red-600 pl-4">
-                {t('photoGallery') || 'Visual Evidence'}
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="mt-20 pt-20 border-t border-gray-100">
+              <div className="flex items-center gap-6 mb-12">
+                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-gray-400">
+                  {t('photoGallery') || 'Visual Evidence'}
+                </h3>
+                <div className="h-px flex-1 bg-gray-100"></div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                 {article.galleryImages.map((img, idx) => (
-                  <div key={idx} className="relative h-64 rounded-[24px] overflow-hidden shadow-xl hover:scale-105 transition-transform duration-700 cursor-zoom-in group">
+                  <div key={idx} className="relative h-72 rounded-[32px] overflow-hidden shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-700 cursor-zoom-in group border-4 border-white">
                     <Image
                       src={img}
                       alt={`Gallery ${idx + 1}`}
                       fill
                       className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Tags and Author Name */}
-          <div className="flex items-center justify-between gap-2 flex-wrap pt-6 border-t">
-            {/* Tags on left */}
-            {/* Tags section removed per user request */}
-
-
-          </div>
         </article>
 
         {/* Right Sidebar */}
-        <aside className="lg:col-span-4 space-y-6">
+        <aside className="lg:col-span-4 space-y-12">
           {/* Related Stories */}
-          <div className="bg-gray-50 rounded-[40px] p-8 border border-gray-100">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8">
-              {t('relatedStories') || 'More on this category'}
-            </h3>
-            <div className="space-y-6">
-              {relatedNews.slice(0, 3).map((item) => (
+          <div className="bg-gray-50 rounded-[48px] p-10 border border-gray-100">
+            <div className="flex items-center gap-4 mb-10">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 shrink-0">
+                {t('relatedStories')}
+              </h3>
+              <div className="h-px flex-1 bg-gray-200"></div>
+            </div>
+            <div className="space-y-10">
+              {relatedNews.slice(0, 4).map((item) => (
                 <div
                   key={item.id}
                   className="flex gap-6 group cursor-pointer"
                   onClick={() => handleRelatedClick(item)}
                 >
-                  <div className="relative w-24 h-24 shrink-0 rounded-[20px] overflow-hidden bg-white shadow-sm">
+                  <div className="relative w-28 h-28 shrink-0 rounded-[28px] overflow-hidden bg-white shadow-md ring-4 ring-white transition-transform group-hover:scale-105 duration-500">
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      className="object-cover border-none"
                     />
                   </div>
-                  <div className="flex-1 py-1">
+                  <div className="flex-1 py-1 flex flex-col justify-center">
                     <h4 className="font-heading font-black text-lg leading-tight group-hover:text-red-600 transition-colors tracking-tight line-clamp-2">
                       {getLocalizedText(item.title, language)}
                     </h4>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">
-                      {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3 flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-red-500" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -313,7 +298,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
           {/* Featured Advertisement */}
           {articleAdSettings.banner?.enabled !== false && (
-            <div className="premium-card rounded-[40px] overflow-hidden shadow-2xl border border-gray-100 bg-white">
+            <div className="premium-card rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white ring-1 ring-gray-100">
               <div className="relative aspect-[4/5]">
                 {articleAdSettings.banner?.imageUrl ? (
                   <a href={articleAdSettings.banner?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
@@ -321,20 +306,21 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       src={articleAdSettings.banner.imageUrl}
                       alt="Ad"
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-[3000ms]"
+                      className="object-cover group-hover:scale-110 transition-transform duration-[4000ms]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-8 left-8 right-8">
-                      <Badge className="bg-white/20 backdrop-blur-md text-white border-none mb-4 uppercase font-black text-[10px] tracking-widest">{t('sponsored') || 'Editor\'s Choice'}</Badge>
-                      <h4 className="text-white font-heading font-black text-2xl tracking-tighter italic">Exclusive Placements</h4>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    <div className="absolute bottom-10 left-10 right-10">
+                      <Badge className="bg-red-600 text-white border-none mb-4 uppercase font-black text-[10px] tracking-widest shadow-lg px-4 py-1.5">{t('sponsored') || 'Editor\'s Choice'}</Badge>
+                      <h4 className="text-white font-heading font-black text-3xl leading-[1.1] tracking-tighter italic">Experience Peak Influence</h4>
                     </div>
                   </a>
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-900 to-red-900 flex flex-col items-center justify-center p-12 text-center text-white relative">
-                    <Badge className="absolute top-8 left-8 bg-white/10 text-white border-none font-black text-[10px] tracking-[0.2em]">{t('advertisement') || 'PREMIUM'}</Badge>
-                    <p className="text-3xl font-serif italic font-bold mb-4">🎯 {t('yourAdHere') || 'Premium Space'}</p>
-                    <p className="text-xs uppercase tracking-[0.2em] font-black opacity-50 mb-8">Reach Millions Locally</p>
-                    <Button className="rounded-full bg-white text-black font-black hover:bg-red-600 hover:text-white transition-all px-8 h-12">
+                  <div className="w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex flex-col items-center justify-center p-14 text-center text-white relative">
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                    <Badge className="absolute top-10 left-10 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black text-[10px] tracking-[0.3em] px-5 py-2">PREMIUM</Badge>
+                    <p className="text-4xl font-serif italic font-bold mb-6 drop-shadow-lg">🎯 {t('yourAdHere') || 'Exclusive Reach'}</p>
+                    <p className="text-xs uppercase tracking-[0.4em] font-black opacity-40 mb-10 leading-relaxed">Reach Millions • Dominate Your Market</p>
+                    <Button className="rounded-full bg-red-600 text-white font-black hover:bg-white hover:text-red-600 transition-all px-12 h-14 shadow-xl text-xs tracking-widest">
                       {t('getInTouch') || 'CONTACT US'}
                     </Button>
                   </div>
@@ -344,21 +330,28 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           )}
 
           {/* Top Stories Sidebar */}
-          <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm">
-            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8 border-l-4 border-blue-600 pl-4">
-              {t('topStories') || 'Hot Right Now'}
-            </h3>
-            <div className="space-y-8">
+          <div className="bg-white rounded-[48px] p-10 border border-gray-100 shadow-xl overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-blue-400"></div>
+            <div className="flex items-center gap-4 mb-10">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 shrink-0">
+                {t('topStories') || 'Hot Right Now'}
+              </h3>
+              <div className="h-px flex-1 bg-gray-100"></div>
+            </div>
+            <div className="space-y-10">
               {sidebarLatest.map((newsItem, idx) => (
                 <div
                   key={newsItem.id}
-                  className="flex gap-4 cursor-pointer group"
+                  className="flex gap-6 cursor-pointer group"
                   onClick={() => handleRelatedClick(newsItem)}
                 >
-                  <span className="font-heading font-black text-4xl text-gray-100 group-hover:text-blue-600/20 transition-colors leading-none">{idx + 1}</span>
-                  <p className="font-heading font-black text-md leading-tight group-hover:text-blue-600 transition-colors tracking-tight line-clamp-2 pt-1">
-                    {getLocalizedText(newsItem.title, language)}
-                  </p>
+                  <span className="font-heading font-black text-5xl text-gray-100 group-hover:text-blue-600/30 transition-all leading-none shrink-0 italic transform -rotate-6">0{idx + 1}</span>
+                  <div className="pt-1">
+                    <p className="font-heading font-black text-xl leading-[1.2] group-hover:text-blue-600 transition-colors tracking-tight line-clamp-3">
+                      {getLocalizedText(newsItem.title, language)}
+                    </p>
+                    <Badge className="mt-3 bg-blue-50 text-blue-600 border-none font-black text-[8px] tracking-widest px-3 py-1 uppercase">{getTranslatedCategory(newsItem.category, language)}</Badge>
+                  </div>
                 </div>
               ))}
             </div>
@@ -367,31 +360,50 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           {/* Vertical Sticky Ad */}
           {articleAdSettings.sticky?.enabled !== false && (
             <div className="sticky top-24">
-              <div className="rounded-[40px] overflow-hidden shadow-2xl border-4 border-white aspect-[3/4] relative group">
+              <div className="rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100 aspect-[3/4.5] relative group">
                 {articleAdSettings.sticky?.imageUrl ? (
                   <a href={articleAdSettings.sticky?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
                     <Image
                       src={articleAdSettings.sticky.imageUrl}
                       alt="Ad"
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-[5000ms]"
+                      className="object-cover group-hover:scale-110 transition-transform duration-[6000ms]"
                     />
-                    <Badge className="absolute top-6 right-6 bg-black/50 text-white border-none font-black text-[8px] uppercase tracking-widest backdrop-blur-md">{t('advertisement')}</Badge>
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                    <Badge className="absolute top-8 right-8 bg-black/60 backdrop-blur-md text-white border-none font-black text-[9px] uppercase tracking-[0.2em] px-4 py-2 opacity-80">{t('advertisement')}</Badge>
                   </a>
                 ) : (
-                  <div className="w-full h-full bg-blue-600 flex flex-col items-center justify-center p-8 text-center text-white relative">
-                    <Badge className="absolute top-6 right-6 bg-white/20 text-white border-none font-black text-[8px] uppercase tracking-widest">{t('advertisement')}</Badge>
-                    <p className="text-xl font-heading font-black italic mb-2">Premium Discovery</p>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">300 x 400 Editorial</p>
+                  <div className="w-full h-full bg-gradient-to-br from-blue-700 to-blue-900 flex flex-col items-center justify-center p-12 text-center text-white relative">
+                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                    <Badge className="absolute top-10 right-10 bg-white/20 text-white border-none font-black text-[9px] uppercase tracking-widest px-4 py-1.5 backdrop-blur-sm">EDITORIAL</Badge>
+                    <p className="text-3xl font-heading font-black italic mb-4 leading-none tracking-tighter transform -rotate-2">Premium Discovery</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-4 whitespace-nowrap">High-Impact Vertical</p>
+                    <div className="w-16 h-1 bg-white/30 rounded-full mt-4"></div>
                   </div>
                 )}
               </div>
             </div>
           )}
         </aside>
+        <style jsx>{`
+        .font-serif-premium {
+          font-family: var(--font-playfair), serif;
+        }
+        .magazine-body :global(p) {
+          margin-bottom: 2rem;
+        }
+        .magazine-body :global(p:first-of-type::first-letter) {
+          float: left;
+          font-size: 5.5rem;
+          line-height: 1;
+          padding: 0.5rem 0.75rem 0.25rem 0;
+          font-family: var(--font-playfair), serif;
+          font-weight: 900;
+          color: #dc2626;
+        }
+      `}</style>
       </div>
-    </div>
-  )
+      )
 }
 
-export default NewsDetailPage
+      export default NewsDetailPage
