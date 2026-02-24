@@ -71,92 +71,69 @@ const getTranslatedCategory = (cat, t, language) => {
 const NewsBox = ({ item, onClick, language }) => {
   const { t } = useLanguage()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
-  // Use helper to translate category string
   const category = getTranslatedCategory(item.category, t, language)
 
   useEffect(() => {
     if (item.images && item.images.length > 1) {
       const timer = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % item.images.length)
-      }, 2000)
+      }, 3000)
       return () => clearInterval(timer)
     }
   }, [item.images])
 
   const getValidImages = () => {
     const imgList = []
+    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image'))
 
-    // Helper to validate check both http and data URIs
-    const isValidUrl = (url) => {
-      if (!url) return false
-      return url.startsWith('http') || url.startsWith('data:image')
-    }
-
-    // Priority 1: Thumbnails array (from new admin feature)
-    if (item.thumbnails && item.thumbnails.length > 0) {
-      item.thumbnails.forEach(t => {
-        if (isValidUrl(t) && !imgList.includes(t)) imgList.push(t)
-      })
-    }
-
-    // Priority 2: Legacy images array if no thumbnails found
-    if (imgList.length === 0 && item.images && item.images.length > 0) {
-      item.images.forEach(img => {
-        if (isValidUrl(img) && !imgList.includes(img)) imgList.push(img)
-      })
-    }
-
-    // Priority 3: Single Thumbnail URL or Main Image
-    if (imgList.length === 0) {
+    if (item.thumbnails?.length) item.thumbnails.forEach(t => isValidUrl(t) && !imgList.includes(t) && imgList.push(t))
+    if (!imgList.length && item.images?.length) item.images.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
+    if (!imgList.length) {
       if (isValidUrl(item.thumbnailUrl)) imgList.push(item.thumbnailUrl)
       else if (isValidUrl(item.mainImage)) imgList.push(item.mainImage)
     }
-
-    // Fallback
-    if (imgList.length === 0) {
-      imgList.push('/placeholder-news.svg')
-    }
+    if (!imgList.length) imgList.push('/placeholder-news.svg')
     return imgList
   }
 
   const images = getValidImages()
 
   return (
-    <Card
-      className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 hover:border-red-500"
+    <div
+      className="premium-card group cursor-pointer overflow-hidden rounded-xl bg-white border border-gray-100"
       onClick={() => onClick(item)}
     >
-      <div className="relative h-40 md:h-48 overflow-hidden bg-gray-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
         {images.map((img, index) => (
           <Image
             key={index}
             src={img}
             alt={title}
             fill
-            className={`transition-all duration-700 ${index === currentImageIndex ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
-            style={{
-              objectFit: 'cover',
-              transform: index === currentImageIndex ? 'translateX(0)' : index < currentImageIndex ? 'translateX(-100%)' : 'translateX(100%)'
-            }}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className={`object-cover transition-all duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+            sizes="(max-width: 768px) 100vw, 33vw"
           />
         ))}
-        {category && <Badge className="absolute top-2 left-2 bg-red-600 text-white text-xs z-10">{category}</Badge>}
-        {images.length > 1 && (
-          <div className="absolute bottom-2 right-2 flex gap-1 z-10">
-            {images.map((_, index) => (
-              <span key={index} className={`w-2 h-2 rounded-full ${index === currentImageIndex ? 'bg-white' : 'bg-white/50'}`} />
-            ))}
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        {category && (
+          <Badge className="absolute top-3 left-3 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white border-none px-2 py-0.5 shadow-sm">
+            {category}
+          </Badge>
         )}
       </div>
-      <CardContent className="p-3">
-        <h3 className="font-semibold text-sm md:text-base line-clamp-2 group-hover:text-red-600 transition-colors">{title}</h3>
-
-      </CardContent>
-    </Card>
+      <div className="p-4">
+        <h3 className="font-heading font-extrabold text-base md:text-lg leading-[1.2] line-clamp-2 group-hover:text-red-600 transition-colors tracking-tight text-gray-900">
+          {title}
+        </h3>
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+            <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+          </span>
+          <span className="text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Read Full Story →</span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -587,726 +564,253 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       {/* --- DESKTOP VIEW (Magazine Style Grid) --- */}
       <div className="hidden lg:grid grid-cols-12 gap-8 mb-12">
 
-        {/* LEFT COLUMN (Hero Section - 8 cols) */}
-        <div className="col-span-8">
-          {mainNewsBoxes[0] && (
-            <div onClick={() => handleNewsClick(mainNewsBoxes[0])} className="relative h-[500px] w-full rounded-2xl overflow-hidden cursor-pointer group shadow-lg">
-              <Image
-                src={mainNewsBoxes[0].mainImage || mainNewsBoxes[0].images?.[0] || '/placeholder-news.svg'}
-                alt={getLocalizedText(mainNewsBoxes[0].title, language)}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 p-8 w-full">
-                {(mainNewsBoxes[0].category) && <Badge className="mb-3 bg-red-600 hover:bg-red-700 text-white border-none text-sm px-3 py-1">{getLocalizedText(mainNewsBoxes[0].category, language)}</Badge>}
-                <h1 className="text-white font-bold text-3xl md:text-4xl leading-tight drop-shadow-md font-sans mb-3 group-hover:text-red-100 transition-colors">
-                  {getLocalizedText(mainNewsBoxes[0].title, language)}
-                </h1>
-                <p className="text-gray-200 line-clamp-2 text-lg mb-4 max-w-3xl">
-                  {getLocalizedText(mainNewsBoxes[0].content, language)?.substring(0, 150)}...
-                </p>
-                <div className="flex items-center text-gray-300 text-sm gap-4">
-                  <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {new Date(mainNewsBoxes[0].publishedAt || mainNewsBoxes[0].createdAt || Date.now()).toLocaleDateString()}</span>
-                  <span className="text-red-500 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">{t('readMore')} <ChevronRight className="w-4 h-4" /></span>
+        <div className="magazine-grid lg:grid-cols-12 gap-8 mb-16">
+          {/* HERO LEAD STORY */}
+          <div className="lg:col-span-12">
+            {mainNewsBoxes[0] && (
+              <div
+                onClick={() => handleNewsClick(mainNewsBoxes[0])}
+                className="relative h-[450px] md:h-[650px] w-full rounded-[20px] overflow-hidden cursor-pointer group shadow-2xl premium-card"
+              >
+                <Image
+                  src={mainNewsBoxes[0].mainImage || mainNewsBoxes[0].images?.[0] || '/placeholder-news.svg'}
+                  alt={getLocalizedText(mainNewsBoxes[0].title, language)}
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                  priority
+                  sizes="100vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:max-w-4xl">
+                  <Badge className="mb-4 bg-red-600 hover:bg-red-700 text-white border-none text-xs font-black uppercase tracking-widest px-4 py-1.5 shadow-lg">
+                    Featured News
+                  </Badge>
+                  <h1 className="hero-title text-white text-3xl md:text-6xl mb-6 group-hover:text-red-100 transition-colors drop-shadow-2xl">
+                    {getLocalizedText(mainNewsBoxes[0].title, language)}
+                  </h1>
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col">
+                      <span className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">Published On</span>
+                      <span className="text-white text-sm font-black flex items-center gap-2">
+                        {new Date(mainNewsBoxes[0].publishedAt || mainNewsBoxes[0].createdAt || Date.now()).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </div>
+                    <div className="h-10 w-px bg-white/20 hidden md:block"></div>
+                    <Button className="bg-white text-black hover:bg-red-600 hover:text-white font-black rounded-full px-8 h-12 transition-all transform group-hover:translate-x-2 hidden md:flex">
+                      READ ARTICLE <ChevronRight className="ml-2 w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Secondary Grid (News below Hero) */}
-          <div className="grid grid-cols-2 gap-6 mt-8">
-            {mainNewsBoxes.slice(1, 5).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-            ))}
+            )}
           </div>
-        </div>
 
-        {/* RIGHT COLUMN (Sidebar & Widgets - 4 cols) */}
-        <div className="col-span-4 space-y-6">
-          {/* UTILITY WIDGETS */}
-          <WeatherWidget />
-          <CricketWidget />
-
-          {/* SIDEBAR AD CAROUSEL */}
-          {sidebarAdSettings.enabled && (
-            <Card className="overflow-hidden border border-gray-200 shadow-md bg-white mb-6">
-              <CardContent className="p-0 min-h-[350px] relative">
-                <Badge className="absolute top-2 right-2 z-10 bg-white/90 text-gray-800 text-[10px] font-bold shadow-sm">{t('advertisement')}</Badge>
-                {(() => {
-                  const items = sidebarAdSettings.items?.filter(item => item?.imageUrl) || []
-                  const legacyItems = sidebarAdSettings.images?.map(img => ({
-                    imageUrl: img,
-                    destinationUrl: sidebarAdSettings.linkUrl || '#'
-                  })) || []
-                  const displayItems = items.length > 0 ? items : legacyItems
-
-                  if (displayItems.length === 0) {
-                    return (
-                      <div className="w-full h-[300px] flex flex-col items-center justify-center text-center p-4">
-                        <div className="aspect-square w-full max-w-[200px] bg-gray-50 border border-gray-200 border-dashed rounded-lg flex flex-col items-center justify-center">
-                          <p className="text-gray-400 font-medium text-sm">{t('yourBusinessAdHere')}</p>
-                        </div>
-                      </div>
-                    )
-                  }
-
-                  return (
-                    <div className="relative h-[350px] w-full overflow-hidden group">
-                      <div className="sidebar-carousel w-full h-full flex flex-col items-center justify-center p-2 relative">
-                        {displayItems.map((item, index) => (
-                          <a key={index} href={item.destinationUrl || '#'} target="_blank" rel="noopener noreferrer"
-                            className="absolute inset-0 w-full h-full flex items-center justify-center p-2 transition-all duration-700"
-                            style={{
-                              transform: index === currentAdIndex % displayItems.length ? 'translateX(0)' : index < currentAdIndex % displayItems.length ? 'translateX(-100%)' : 'translateX(100%)',
-                              opacity: index === currentAdIndex % displayItems.length ? 1 : 0,
-                              pointerEvents: index === currentAdIndex % displayItems.length ? 'auto' : 'none'
-                            }}>
-                            <div className="aspect-square w-full h-auto max-h-full rounded-lg overflow-hidden relative shadow-sm">
-                              <Image
-                                src={item.imageUrl}
-                                alt="Ad"
-                                fill
-                                className="object-cover"
-                                sizes="(max-width: 768px) 100vw, 300px"
-                              />
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                      {displayItems.length > 1 && (
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-                          {displayItems.map((_, index) => (
-                            <span key={index} className={`w-1.5 h-1.5 rounded-full transition-all ${index === currentAdIndex % displayItems.length ? 'bg-red-600 scale-125' : 'bg-gray-300'}`} />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })()}
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-            <h3 className="font-bold text-lg border-l-4 border-red-600 pl-3 mb-4 text-gray-800">Top Stories</h3>
-            <div className="flex flex-col gap-4">
-              {mainNewsBoxes.slice(5, 10).map((item) => (
-                <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                  <div className="relative w-20 h-20 shrink-0 rounded-md overflow-hidden">
-                    <Image
-                      src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                      alt={item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <span className="text-[10px] font-bold text-red-600 uppercase tracking-wide mb-1">
-                      {getLocalizedText(item.category, language)}
-                    </span>
-                    <h4 className="font-bold text-sm text-gray-900 leading-snug line-clamp-2 group-hover:text-red-700 transition-colors">
-                      {getLocalizedText(item.title, language)}
-                    </h4>
-                    <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
+          {/* SUB-FEATURED GRID (The "Understory") */}
+          <div className="lg:col-span-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+              {mainNewsBoxes.slice(1, 5).map((item) => (
+                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4 text-xs font-bold text-gray-600" onClick={() => setCurrentView('news')}>
-              View All News
-            </Button>
           </div>
 
-          {/* Ad Space */}
-          <div className="w-full h-[600px] bg-gray-100 rounded-xl flex items-center justify-center border border-dashed border-gray-300 relative overflow-hidden">
-            <Image src="/ads/tall-banner.jpg" alt="Advertisement" fill className="object-cover opacity-80 hover:opacity-100 transition-opacity cursor-pointer" />
-            <span className="absolute bottom-2 right-2 text-[10px] text-gray-500 bg-white/80 px-1 rounded">AD</span>
+          {/* SIDEBAR UTILITIES & TOP STORIES */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100/50 shadow-inner">
+              <div className="grid grid-cols-2 gap-4">
+                <WeatherWidget />
+                <CricketWidget />
+              </div>
+            </div>
+
+            <div className="premium-card bg-white rounded-2xl border border-gray-100 p-6 shadow-sm overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-red-600"></div>
+              <h3 className="font-heading font-black text-2xl mb-6 flex items-center gap-3">
+                Must Read
+                <span className="flex h-2 w-2 rounded-full bg-red-600 animate-pulse"></span>
+              </h3>
+              <div className="space-y-6">
+                {mainNewsBoxes.slice(5, 10).map((item, idx) => (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-4 cursor-pointer items-start">
+                    <span className="text-4xl font-heading font-black text-gray-100 group-hover:text-red-100 transition-colors shrink-0 leading-none pt-1">0{idx + 1}</span>
+                    <div className="space-y-1">
+                      <h4 className="font-extrabold text-[15px] text-gray-900 leading-snug line-clamp-2 group-hover:text-red-600 transition-colors">
+                        {getLocalizedText(item.title, language)}
+                      </h4>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{getLocalizedText(item.category, language)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* --- MOBILE VIEW (List) - UNCHANGED --- */}
-      <div className="lg:hidden flex flex-col gap-4">
-        {mainNewsBoxes.map((item, index) => {
-          if (!item) return null; // Safety check
+      {/* LATEST NEWS SECTION - Magazine Layout */}
+      <section className="mb-20">
+        <div className="mag-section-header">
+          <span className="text-red-600">Latest</span> Update
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {latestNews.slice(0, 8).map((item) => (
+            <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+          ))}
+        </div>
+      </section>
 
-          // First item is Featured (Hero Card)
-          if (index === 0) {
-            return (
-              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative w-full h-64 rounded-xl overflow-hidden shadow-sm shrink-0 mb-2 cursor-pointer">
-                <Image
-                  src={item.mainImage || '/images/placeholder.svg'}
-                  alt={item.title || 'News'}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md z-10">
-                  {t('featured')}
+      {/* BUSINESS SECTION - Bento Grid */}
+      <section className="mb-20 bg-gray-900 text-white p-12 rounded-[40px] relative overflow-hidden">
+        <div className="grain-overlay" />
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 relative z-10">
+          <div>
+            <Badge className="bg-blue-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase tracking-widest">Global Markets</Badge>
+            <h2 className="font-heading font-black text-5xl md:text-7xl leading-tight">Business & <br /><span className="text-blue-500">Economy</span></h2>
+          </div>
+          <Button variant="outline" className="text-white border-white/20 hover:bg-white hover:text-black font-black rounded-full px-8" onClick={() => handleCategoryClick('business')}>
+            VIew Full Directory
+          </Button>
+        </div>
+
+        <div className="bento-magazine relative z-10">
+          {businessNews.slice(0, 5).map((item, idx) => (
+            <div
+              key={item.id}
+              onClick={() => handleNewsClick(item)}
+              className={`premium-card cursor-pointer rounded-2xl overflow-hidden relative group transition-all duration-500 ${idx === 0 ? 'bento-item-large' : idx === 1 ? 'bento-item-wide' : ''}`}
+            >
+              <Image
+                src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                alt={getLocalizedText(item.title, language)}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6">
+                <h3 className={`font-heading font-black leading-tight group-hover:text-blue-400 transition-colors ${idx === 0 ? 'text-3xl' : 'text-lg'}`}>
+                  {getLocalizedText(item.title, language)}
+                </h3>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* POLITICS & NATIONAL - Asymmetric Layout */}
+      <section className="mb-20 grid lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2">
+          <div className="mag-section-header">Politics</div>
+          <div className="magazine-grid">
+            {politicsNews[0] && (
+              <div onClick={() => handleNewsClick(politicsNews[0])} className="premium-card rounded-2xl overflow-hidden cursor-pointer group mb-8">
+                <div className="relative aspect-[21/9] mb-6">
+                  <Image src={politicsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover" />
+                  <Badge className="absolute top-4 left-4 bg-red-600 text-white border-none">Breaking</Badge>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-4 w-full">
-                  <h2 className="text-white font-bold text-xl leading-tight drop-shadow-md line-clamp-2">
-                    {getLocalizedText(item.title, language)}
-                  </h2>
-                  <div className="flex items-center text-gray-200 text-xs mt-2 gap-3">
-                    <span className="bg-red-600 px-2 py-0.5 rounded text-[10px] font-bold">{getLocalizedText(item.category, language)}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
-                  </div>
+                <h3 className="font-heading font-black text-3xl mb-4 leading-tight group-hover:text-red-600 transition-colors">{getLocalizedText(politicsNews[0].title, language)}</h3>
+                <p className="text-gray-500 line-clamp-3 mb-6 text-lg">{getLocalizedText(politicsNews[0].content, language)?.substring(0, 200)}...</p>
+              </div>
+            )}
+            <div className="grid md:grid-cols-2 gap-8">
+              {politicsNews.slice(1, 3).map(item => (
+                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-12">
+          <div>
+            <div className="mag-section-header text-xl">Daily Digest</div>
+            <div className="space-y-8">
+              {topEducationNews.slice(0, 4).map(item => (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-accent-left pl-6">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600 mb-1 block">Quick Read</span>
+                  <h4 className="font-heading font-black text-lg leading-tight group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="sponsored-card">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4 block">Sponsored Content</span>
+            {/* Premium Ad Space */}
+            <div className="aspect-[4/5] bg-gray-100 rounded-lg flex items-center justify-center border border-dashed text-gray-400 text-center p-8">
+              Your Premium Ad Can Appear Here. Contact us for placements.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- PREMIUM MOBILE VIEW (NYT Inspired) --- */}
+      <div className="lg:hidden space-y-0 -mx-4 mb-20">
+        <div className="px-4 mb-8">
+          <div className="mag-section-header text-lg">Top Stories</div>
+        </div>
+        {mainNewsBoxes.map((item, index) => {
+          const title = getLocalizedText(item.title, language)
+          const category = getTranslatedCategory(item.category, t, language)
+          const isLarge = index === 0
+
+          if (isLarge) {
+            return (
+              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative aspect-[16/10] w-full mb-8 cursor-pointer group">
+                <Image src={item.mainImage || '/placeholder-news.svg'} alt={title} fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6">
+                  <Badge className="bg-red-600 text-white border-none mb-3 px-3 py-1 font-black uppercase text-[10px]">Featured Story</Badge>
+                  <h2 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-lg">{title}</h2>
                 </div>
               </div>
             )
-
           }
 
-          // List Items (Rest of the feed)
           return (
-            <div key={item.id || index} onClick={() => handleNewsClick(item)} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex gap-4 active:scale-[0.98] transition-transform">
-              {/* Image (Left) */}
-              <div className="relative w-28 h-20 shrink-0 rounded-md overflow-hidden bg-gray-100">
+            <div key={item.id} onClick={() => handleNewsClick(item)} className="nyt-list-item px-4 flex gap-4 items-start active:bg-gray-50 transition-colors cursor-pointer">
+              <div className="flex-1 space-y-1.5 py-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600">{category}</span>
+                  <span className="text-[10px] text-gray-400 font-bold">• {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
+                </div>
+                <h3 className="font-heading font-black text-[17px] leading-[1.2] text-gray-900 line-clamp-3">
+                  {title}
+                </h3>
+              </div>
+              <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm mt-1">
                 <Image
                   src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                  alt={item.title}
+                  alt={title}
                   fill
                   className="object-cover"
                 />
-              </div>
-
-              {/* Content (Right) */}
-              <div className="flex flex-col justify-between flex-1 py-0.5">
-                <div>
-                  <h3 className="font-bold text-gray-900 leading-snug line-clamp-2 text-[15px] mb-1.5">
-                    {getLocalizedText(item.title, language)}
-                  </h3>
-                  <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
-                    <span className="text-red-600 uppercase tracking-wide">{getLocalizedText(item.category, language)}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt || Date.now()).toLocaleDateString()}</span>
-                  </div>
-                </div>
               </div>
             </div>
           )
         })}
       </div>
 
-      {/* --- END MOBILE VIEW --- */}
-
-
-
-
-
       {/* Floating WhatsApp Button */}
-      < a
+      <a
         href="https://wa.me/917020873300"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 group flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform"
       >
-        <div className="absolute right-14 bg-white text-gray-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block">
-          Chat with Us
+        <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
+          Need help? <span className="text-green-600 underline">Chat with us</span>
         </div>
-        <div className="bg-[#25D366] p-3 rounded-full shadow-lg hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
-          <WhatsAppIcon className="w-8 h-8 text-white fill-current" />
+        <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
+          <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
         </div>
-        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 border-2 border-white rounded-full animate-pulse"></span>
-      </a >
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
+      </a>
 
-      {/* POLITICS / CITY NEWS Section - Dynamic from API */}
-      {
-        trendingSettings.enabled && (
-          <div className="mb-8">
-            <div className="border-b-4 border-red-600 pb-1 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="bg-red-600 text-white px-3 py-1 text-sm">॥</span>
-                {t('politics')} / {t('cityNews')}
-              </h2>
-            </div>
-            {trendingNews.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Main Hero Article (Left) */}
-                {trendingNews[0] && (
-                  <div className="col-span-12 lg:col-span-7 group cursor-pointer" onClick={() => handleNewsClick(trendingNews[0])}>
-                    <div className="relative h-[240px] md:h-[350px] rounded-xl overflow-hidden mb-3 shadow-sm border border-gray-200">
-                      <Image
-                        src={trendingNews[0].mainImage || trendingNews[0].images?.[0] || '/placeholder-news.svg'}
-                        alt={getLocalizedText(trendingNews[0].title, language)}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <Badge className="absolute top-3 left-3 bg-red-600 text-white border-none px-3 py-1 text-xs font-bold shadow-sm">Politics</Badge>
-                      <div className="absolute bottom-0 left-0 p-5 w-full">
-                        <h3 className="text-white font-bold text-xl md:text-3xl leading-tight line-clamp-2 drop-shadow-lg mb-2">
-                          {getLocalizedText(trendingNews[0].title, language)}
-                        </h3>
-                        <div className="flex items-center text-gray-200 text-xs gap-3 font-medium">
-                          <span className="flex items-center gap-1.5 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                            <Clock className="w-3.5 h-3.5" />
-                            {new Date(trendingNews[0].createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 text-sm md:text-base line-clamp-2 hidden md:block leading-relaxed px-1">
-                      {getLocalizedText(trendingNews[0].content, language)?.substring(0, 180)}...
-                    </p>
-                  </div>
-                )}
-
-                {/* Right Column List (Stacked) */}
-                <div className="col-span-12 lg:col-span-5 flex flex-col gap-4">
-                  {trendingNews.slice(1, 5).map((item) => (
-                    <div key={item.id} onClick={() => handleNewsClick(item)} className="flex gap-4 group cursor-pointer items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-red-100 transition-all">
-                      <div className="relative w-28 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100 shadow-inner">
-                        <Image
-                          src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
-                          alt={item.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5 py-0.5">
-                        <Badge variant="outline" className="w-fit text-[10px] h-5 px-1.5 border-red-200 text-red-600 bg-red-50">
-                          {getLocalizedText(item.category, language) || 'Politics'}
-                        </Badge>
-                        <h4 className="font-bold text-sm leading-snug text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
-                          {getLocalizedText(item.title, language)}
-                        </h4>
-                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No Politics/City News articles available</p>
-            )}
-          </div>
-        )
-      }
-
-      {/* MOBILE AD INJECTION 1: Business Promo (After Politics) */}
-      <div className="block lg:hidden">
-        <BusinessAdWidget
-          settings={businessAdSettings}
-          t={t}
-          onClick={() => setPromotionOpen(true)}
-        />
-      </div>
-
-      {/* Promotion/Ad Request Dialog */}
-      <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Post Your Ad</DialogTitle>
-            <DialogDescription>
-              Submit your ad details. Our team will contact you for verification and pricing.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="businessName">Business/Ad Name *</Label>
-              <Input
-                id="businessName"
-                value={promotionData.businessName}
-                onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
-                placeholder="e.g. Star Electronics / Sale"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ownerName">Your Name *</Label>
-                <Input
-                  id="ownerName"
-                  value={promotionData.ownerName}
-                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
-                  placeholder="Your Name"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
-                <Input
-                  id="phone"
-                  value={promotionData.phone}
-                  onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
-                  placeholder="9876543210"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={promotionData.email}
-                onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
-                placeholder="contact@email.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">Address / Location *</Label>
-              <Textarea
-                id="address"
-                value={promotionData.address}
-                onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
-                placeholder="Shop No, Building, Area, City"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Ad Description / Message (Optional)</Label>
-              <Textarea
-                id="description"
-                value={promotionData.description}
-                onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-                placeholder="Briefly describe what you want to advertise..."
-              />
-            </div>
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
-                {isSubmitting ? 'Submitting...' : 'Submit Request'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* NEWS SECTIONS WITH SIDEBAR */}
-      <div className="grid lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-9 space-y-8">
-
-          {/* BUSINESS Section - 1 Big Card + Smaller Cards Bento Layout */}
-          <div>
-            <div className="border-b-4 border-orange-500 pb-1 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="bg-orange-500 text-white px-3 py-1 text-sm">॥</span>
-                {t('business')}
-              </h2>
-            </div>
-            {businessNews.length > 0 ? (
-              <div className="grid grid-cols-12 gap-4">
-                {/* Big Card - Left Side (First News) */}
-                {businessNews[0] && (
-                  <div className="col-span-12 md:col-span-6 lg:col-span-7 h-full">
-                    <Card
-                      className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-orange-200 h-full flex flex-col rounded-xl shadow-sm"
-                      onClick={() => handleNewsClick(businessNews[0])}
-                    >
-                      <div className="relative h-[65%] flex-shrink-0 overflow-hidden bg-gray-100">
-                        <Image
-                          src={businessNews[0].thumbnailUrl || businessNews[0].mainImage || '/placeholder-news.svg'}
-                          alt={getLocalizedText(businessNews[0].title, language)}
-                          fill
-                          className="object-center transition-transform duration-700 group-hover:scale-105"
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                        <Badge className="absolute top-3 left-3 bg-orange-500 text-white text-sm px-3 py-1 font-bold shadow-sm border-none">Business</Badge>
-                        <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <h3 className="font-bold text-xl md:text-2xl text-white line-clamp-2 drop-shadow-md leading-tight">
-                            {getLocalizedText(businessNews[0].title, language)}
-                          </h3>
-                        </div>
-                      </div>
-                      <CardContent className="p-5 flex-1 flex flex-col justify-between bg-white relative">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-100 opacity-50"></div>
-                        <p className="text-sm text-gray-600 line-clamp-3 mb-2 leading-relaxed">
-                          {getLocalizedText(businessNews[0].metaDescription || businessNews[0].content, language)?.substring(0, 150)}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-auto font-medium">
-                          <Clock className="h-3.5 w-3.5" /> {new Date(businessNews[0].createdAt).toLocaleDateString()}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-
-                {/* Smaller Cards - Right Side (2x2 Grid of Square Cards) */}
-                <div className="col-span-12 md:col-span-6 lg:col-span-5 grid grid-cols-2 gap-3">
-                  {businessNews.slice(1, 5).map((item, idx) => (
-                    <Card
-                      key={item.id}
-                      className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-orange-200 aspect-square flex flex-col rounded-xl shadow-sm"
-                      onClick={() => handleNewsClick(item)}
-                    >
-                      <div className="relative h-[60%] w-full flex-shrink-0 overflow-hidden bg-gray-100">
-                        <Image
-                          src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
-                          alt={getLocalizedText(item.title, language)}
-                          fill
-                          className="object-center transition-transform duration-500 group-hover:scale-110"
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 768px) 50vw, 25vw"
-                        />
-                        <Badge className="absolute top-2 left-2 bg-white/90 text-orange-600 text-[10px] px-1.5 py-0.5 font-bold shadow-sm backdrop-blur-sm">Business</Badge>
-                      </div>
-                      <CardContent className="p-3 flex-1 flex flex-col justify-between bg-white overflow-hidden">
-                        <h3 className="font-bold text-xs md:text-sm line-clamp-3 group-hover:text-orange-600 transition-colors leading-snug text-gray-900">
-                          {getLocalizedText(item.title, language)}
-                        </h3>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No Business news available</p>
-            )}
-          </div>
-
-          {/* MOBILE AD INJECTION 2: Subscribe (After Business) */}
-          <div className="block lg:hidden">
-            <SubscribeWidget />
-          </div>
-
-          {/* NATIONAL Section - 8 Cards with Varied Bento Grid Layout */}
-          <div>
-            <div className="border-b-4 border-gray-900 pb-1 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="bg-gray-900 text-white px-3 py-1 text-sm">॥</span>
-                {t('nation')}
-              </h2>
-            </div>
-            {nationNews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {nationNews.slice(0, 8).map((item) => (
-                  <Card
-                    key={item.id}
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-red-200 bg-white h-[140px] flex flex-row rounded-xl shadow-sm"
-                    onClick={() => handleNewsClick(item)}
-                  >
-                    <div className="relative w-[180px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
-                      <Image
-                        src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
-                        alt={getLocalizedText(item.title, language)}
-                        fill
-                        className="transition-transform duration-500 group-hover:scale-110"
-                        style={{ objectFit: 'cover' }}
-                        sizes="(max-width: 768px) 40vw, 20vw"
-                      />
-                      <Badge className="absolute top-2 left-2 bg-white/90 text-red-700 text-[10px] font-bold shadow-sm backdrop-blur-sm">National</Badge>
-                    </div>
-                    <CardContent className="p-4 flex-1 flex flex-col justify-center bg-white relative">
-                      <h3 className="font-bold text-sm md:text-base line-clamp-2 text-gray-900 group-hover:text-red-600 transition-colors mb-2 leading-tight">
-                        {getLocalizedText(item.title, language)}
-                      </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                        {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 80)}...
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-                        <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No National news available</p>
-            )}
-          </div>
-
-          {/* MOBILE AD INJECTION 3: Contact (After National) */}
-          <div className="block lg:hidden">
-            <ContactWidget t={t} />
-          </div>
-
-          {/* ENTERTAINMENT Section - 4 Cards Attractive Layout */}
-          <div>
-            <div className="border-b-4 border-purple-600 pb-1 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <span className="bg-purple-600 text-white px-3 py-1 text-sm">॥</span>
-                {t('entertainment')}
-              </h2>
-            </div>
-            {entertainmentNews.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {entertainmentNews.slice(0, 4).map((item) => (
-                  <Card
-                    key={item.id}
-                    className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 hover:border-purple-200 bg-white h-[150px] flex flex-row rounded-xl shadow-sm"
-                    onClick={() => handleNewsClick(item)}
-                  >
-                    <div className="relative w-[180px] h-full flex-shrink-0 overflow-hidden bg-gray-100">
-                      {(item.youtubeUrl || item.videoUrl) ? (
-                        <div className="w-full h-full bg-purple-900 flex items-center justify-center group-hover:bg-purple-800 transition-colors">
-                          <span className="text-4xl text-white opacity-90 group-hover:scale-110 transition-transform">▶</span>
-                        </div>
-                      ) : (
-                        <Image
-                          src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
-                          alt={getLocalizedText(item.title, language)}
-                          fill
-                          className="transition-transform duration-500 group-hover:scale-110"
-                          style={{ objectFit: 'cover' }}
-                          sizes="(max-width: 768px) 40vw, 25vw"
-                        />
-                      )}
-                      <Badge className="absolute top-2 left-2 bg-purple-600/90 text-white text-[10px] shadow-sm backdrop-blur-sm font-bold">Entertainment</Badge>
-                    </div>
-                    <CardContent className="p-4 flex-1 flex flex-col justify-center bg-white">
-                      <h3 className="font-bold text-sm md:text-base line-clamp-2 text-gray-900 group-hover:text-purple-700 transition-colors mb-2 leading-tight">
-                        {getLocalizedText(item.title, language)}
-                      </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2 mb-2">
-                        {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 80)}...
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] text-gray-400 font-medium">
-                        <Clock className="w-3 h-3" /> {new Date(item.createdAt).toLocaleDateString()}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">No Entertainment news available</p>
-            )}
-          </div>
-
-          {/* MOBILE AD INJECTION 4: Sticky Ad (After Entertainment) */}
-          <div className="block lg:hidden">
-            <StickyAdWidget
-              settings={articleAdSettings}
-              t={t}
-              onClick={() => articleAdSettings.sticky?.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')}
-            />
-          </div>
-          {/* OLD NEWS Section - Dynamic from API (Uncategorized/Other articles) */}
-          <div>
-            <div className="border-b-4 border-gray-500 pb-1 mb-4">
-              <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-                {t('moreStories')}
-              </h2>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-1">{t('discoverWhatsHappening')}</p>
-            </div>
-            {
-              oldNews.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[220px]">
-                    {oldNews.slice(0, visibleMoreStories).map((item, index) => {
-                      // Bento Grid Logic (repeats every 15 items):
-                      // Index 0, 15, 30...: Big Box (2x2)
-                      // Index 7, 22, 37...: Wide Box (2x1)
-                      // Others: Standard (1x1)
-                      const localIndex = index % 15
-                      const isBig = localIndex === 0
-                      const isWide = localIndex === 7
-
-                      return (
-                        <Card
-                          key={item.id}
-                          className={`overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border hover:border-gray-600 bg-gray-100 flex flex-col ${isBig ? 'col-span-2 row-span-2' : isWide ? 'col-span-2' : 'col-span-1'
-                            }`}
-                          onClick={() => handleNewsClick(item)}
-                        >
-                          <div className={`relative flex-shrink-0 overflow-hidden bg-gray-200 ${isBig ? 'h-[65%]' : 'h-[60%]'} rounded-t-lg`}>
-                            <div className="w-full h-full relative">
-                              {(() => {
-                                const getImages = (itm) => {
-                                  const list = []
-                                  const isValid = u => u && (u.startsWith('http') || u.startsWith('data:image'))
-                                  if (itm.thumbnails && itm.thumbnails.length) itm.thumbnails.forEach(t => isValid(t) && list.push(t))
-                                  if (!list.length && itm.images && itm.images.length) itm.images.forEach(i => isValid(i) && list.push(i))
-                                  if (!list.length && isValid(itm.thumbnailUrl)) list.push(itm.thumbnailUrl)
-                                  if (!list.length && isValid(itm.mainImage)) list.push(itm.mainImage)
-                                  if (!list.length) list.push('/placeholder-news.svg')
-                                  return list
-                                }
-                                const images = getImages(item)
-                                return (
-                                  <Image
-                                    src={images[0]}
-                                    alt={getLocalizedText(item.title, language)}
-                                    fill
-                                    className="object-center transition-transform duration-300 group-hover:scale-105 opacity-90"
-                                    style={{ objectFit: 'cover' }}
-                                    sizes="(max-width: 768px) 50vw, 25vw"
-                                  />
-                                )
-                              })()}
-                              {(getLocalizedText(item.category, language)) && (
-                                <Badge className="absolute top-2 left-2 bg-gray-600 text-white text-xs px-2 py-0.5">
-                                  {getLocalizedText(item.category, language)}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <CardContent className="p-3 bg-gray-100 flex-1 flex flex-col justify-center">
-                            <h3 className={`font-bold text-gray-800 group-hover:text-black transition-colors leading-tight ${isBig ? 'text-lg line-clamp-3' : 'text-sm line-clamp-2'}`}>
-                              {getLocalizedText(item.title, language)}
-                            </h3>
-                            {isBig && (
-                              <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                                {getLocalizedText(item.metaDescription || item.content, language)?.substring(0, 100)}
-                              </p>
-                            )}
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-200 pb-1 leading-snug">
-
-                              <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                                <Clock className="h-3 w-3" /> {new Date(item.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    })
-                    }
-                  </div>
-
-                  {/* Show More / Show Less Buttons */}
-                  <div className="flex justify-center gap-4 mt-6">
-                    {visibleMoreStories > 15 && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="px-8 py-3 border-2 border-gray-400 hover:border-gray-600 hover:bg-gray-100 font-semibold"
-                        onClick={() => {
-                          setVisibleMoreStories(15)
-                          // Scroll to the More Stories section
-                          window.scrollTo({ top: document.querySelector('.border-gray-500')?.offsetTop - 100, behavior: 'smooth' })
-                        }}
-                      >
-                        Show Less
-                      </Button>
-                    )}
-                    {visibleMoreStories < oldNews.length && (
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        className="px-8 py-3 border-2 border-gray-400 hover:border-gray-600 hover:bg-gray-100 font-semibold"
-                        disabled={loadingMoreStories}
-                        onClick={() => {
-                          setLoadingMoreStories(true)
-                          setTimeout(() => {
-                            setVisibleMoreStories(prev => prev + 15)
-                            setLoadingMoreStories(false)
-                          }, 300)
-                        }}
-                      >
-                        {loadingMoreStories ? 'Loading...' : 'Show More'}
-                      </Button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">No other news available</p>
-              )
-            }
-          </div>
+      {/* Sidebar and Main Layout Wrapper for bottom sections */}
+      <div className="hidden lg:grid grid-cols-12 gap-12 container mx-auto px-4 mt-20">
+        <div className="lg:col-span-9 space-y-20">
+          {/* Additional sections can go here */}
         </div>
-
-        {/* RIGHT SIDEBAR ADS (DESKTOP ONLY) */}
-        <div className="hidden lg:block lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 space-y-8">
           <BusinessAdWidget
             settings={businessAdSettings}
             t={t}
@@ -1334,8 +838,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           animation: marquee 30s linear infinite;
         }
       `}</style>
-    </div >
-  )
+    </div>
+  );
 }
 
-export default HomePage
+export default HomePage;

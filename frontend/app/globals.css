@@ -60,12 +60,12 @@ code {
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
@@ -79,29 +79,18 @@ code {
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --radius: 0.75rem;
 
-    /* News Channel Color Tokens */
-    --news-red: 0 85% 45%;
-    --news-red-dark: 0 85% 35%;
-    --news-blue: 215 80% 35%;
-    --news-blue-dark: 215 85% 25%;
-    --news-gold: 45 90% 50%;
-    --news-headline: 220 25% 15%;
-    --news-subtext: 220 10% 45%;
+    /* Magazine Font Tokens */
+    --font-heading: var(--font-playfair), serif;
+    --font-sans: var(--font-inter), sans-serif;
+
+    /* News Channel Color Tokens - Refined */
+    --news-red: 354 70% 45%;
+    --news-red-dark: 354 70% 35%;
+    --news-blue: 217 91% 25%;
+    --news-gold: 43 100% 50%;
+    --news-headline: 222 47% 11%;
   }
 
   .dark {
@@ -347,282 +336,140 @@ code {
 }
 
 /* =============================================
-   NEWS CHANNEL AESTHETICS
+   MAGAZINE TYPOGRAPHY & LAYOUTS
    ============================================= */
 
-/* Breaking News Ticker Enhancement */
-.breaking-ticker {
-  background: linear-gradient(90deg, #c41e3a 0%, #dc143c 50%, #c41e3a 100%);
-  box-shadow: 0 4px 15px rgba(196, 30, 58, 0.4);
-  position: relative;
-  overflow: hidden;
+.font-heading {
+  font-family: var(--font-heading);
 }
 
-.breaking-ticker::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  animation: ticker-shine 3s infinite;
+.font-sans {
+  font-family: var(--font-sans);
 }
 
-@keyframes ticker-shine {
-  0% {
-    left: -100%;
-  }
-
-  100% {
-    left: 100%;
-  }
+.magazine-grid {
+  display: grid;
+  gap: 2rem;
 }
 
-/* News Headlines */
-.news-headline {
-  font-weight: 700;
-  color: hsl(var(--news-headline));
-  line-height: 1.3;
-  transition: color 0.2s ease;
+/* Hero Title - Magazine Style */
+.hero-title {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
 }
 
-.news-headline:hover {
+/* Drop Cap Effect */
+.drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-heading);
+  font-size: 4.5rem;
+  line-height: 0.85;
+  margin: 0.2rem 0.5rem 0 0;
   color: hsl(var(--news-red));
+  font-weight: 900;
 }
 
-/* News Card Enhancements */
-.news-card-enhanced {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+/* Asymmetric Bento Grid */
+.bento-magazine {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 200px;
+  gap: 1.5rem;
 }
 
-.news-card-enhanced:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-  border-color: hsl(var(--news-red) / 0.3);
+.bento-item-large {
+  grid-column: span 2;
+  grid-row: span 2;
 }
 
-/* Featured News Banner */
-.featured-banner {
+.bento-item-wide {
+  grid-column: span 2;
+}
+
+/* Premium Card Styles */
+.premium-card {
   position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: none;
+  background: white;
 }
 
-.featured-banner::after {
+.premium-card:hover {
+  transform: translateY(-8px);
+}
+
+.premium-card-shadow {
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+.premium-card:hover .premium-card-shadow {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
+}
+
+/* High-End Border Accents */
+.border-accent-left {
+  position: relative;
+}
+
+.border-accent-left::before {
   content: '';
   position: absolute;
-  bottom: 0;
   left: 0;
-  right: 0;
-  height: 60%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-}
-
-/* Category Badges - News Style */
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, hsl(var(--news-red)), hsl(var(--news-red-dark)));
-  color: white;
-  box-shadow: 0 2px 8px rgba(196, 30, 58, 0.3);
-}
-
-.category-badge.politics {
-  background: linear-gradient(135deg, #1e40af, #1e3a8a);
-}
-
-.category-badge.sports {
-  background: linear-gradient(135deg, #059669, #047857);
-}
-
-.category-badge.entertainment {
-  background: linear-gradient(135deg, #d946ef, #a855f7);
-}
-
-.category-badge.business {
-  background: linear-gradient(135deg, #0891b2, #0e7490);
-}
-
-.category-badge.technology {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-}
-
-.category-badge.trending {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-/* LIVE Badge Animation */
-.live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: #dc143c;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border-radius: 4px;
-  animation: pulse-live 2s infinite;
-}
-
-.live-badge::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  background: white;
-  border-radius: 50%;
-  animation: blink 1s infinite;
-}
-
-@keyframes pulse-live {
-
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 20, 60, 0.4);
-  }
-
-  50% {
-    box-shadow: 0 0 0 8px rgba(220, 20, 60, 0);
-  }
-}
-
-@keyframes blink {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
-}
-
-/* Section Headers - News Style */
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 3px solid hsl(var(--news-red));
-}
-
-.section-header::before {
-  content: '';
+  top: 0;
+  bottom: 0;
   width: 4px;
-  height: 24px;
   background: hsl(var(--news-red));
   border-radius: 2px;
 }
 
-.section-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: hsl(var(--news-headline));
+/* Magazine Section Header */
+.mag-section-header {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 2.25rem;
   letter-spacing: -0.02em;
-}
-
-/* Glassmorphism Effect */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* Smooth Page Transitions */
-.page-transition {
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Enhanced Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f5f9;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #94a3b8, #64748b);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #64748b, #475569);
-}
-
-/* News Timestamp */
-.news-timestamp {
-  font-size: 12px;
-  color: hsl(var(--news-subtext));
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 1rem;
 }
 
-.news-timestamp::before {
-  content: '●';
-  font-size: 6px;
-  color: hsl(var(--news-red));
-}
-
-/* Button Enhancements */
-.btn-news-primary {
-  background: linear-gradient(135deg, hsl(var(--news-red)), hsl(var(--news-red-dark)));
-  color: white;
-  font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(196, 30, 58, 0.25);
-}
-
-.btn-news-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(196, 30, 58, 0.35);
-}
-
-/* Image Overlay for News Cards */
-.image-overlay {
-  position: relative;
-}
-
-.image-overlay::after {
+.mag-section-header::after {
   content: '';
+  flex: 1;
+  height: 1px;
+  background: hsl(var(--border));
+}
+
+/* Premium Ad Card */
+.sponsored-card {
+  background: hsl(var(--secondary) / 0.5);
+  border: 1px dashed hsl(var(--muted-foreground) / 0.3);
+  padding: 1rem;
+  border-radius: var(--radius);
+}
+
+/* Image Grain Effect (Subtle Texture) */
+.grain-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.6) 0%, transparent 50%);
+  background-image: url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
+  opacity: 0.05;
   pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* NYT Inspired List for Mobile */
+.nyt-list-item {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 1.25rem 0;
+}
+
+.nyt-list-item:last-child {
+  border-bottom: none;
 }
 
 /* Trending Indicator */

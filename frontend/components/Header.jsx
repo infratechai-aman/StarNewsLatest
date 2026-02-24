@@ -144,68 +144,73 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
   return (
     <>
-      {/* --- DESKTOP HEADER (Large Screens Only) --- */}
-      <div className="hidden lg:block bg-gray-900 text-white">
+      {/* --- PREMIUM DESKTOP HEADER --- */}
+      <div className="hidden lg:block bg-white border-b border-gray-100">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-[75px]">
-            <div className="flex items-center cursor-pointer" onClick={() => setCurrentView('home')}>
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
               <img
                 src="/images/star-news-india-logo.png"
-                alt="Star News India Logo"
-                className="h-[65px] w-auto min-w-[200px] object-contain"
-                style={{ maxHeight: '65px' }}
+                alt="Star News India"
+                className="h-[80px] w-auto object-contain transition-transform group-hover:scale-105"
+                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
               />
             </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                <span className="text-gray-400 text-sm">{t('followUs')}:</span>
-                <div className="flex items-center gap-2">
-                  {SOCIAL_LINKS.facebook && <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors"><FacebookIcon /></a>}
-                  {SOCIAL_LINKS.whatsapp && <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-green-400 transition-colors"><WhatsAppIcon /></a>}
-                  {SOCIAL_LINKS.instagram && <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors"><InstagramIcon /></a>}
-                  {SOCIAL_LINKS.youtube && <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors"><YouTubeIcon /></a>}
+
+            <div className="flex flex-col items-end gap-3">
+              <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+                <div className="flex items-center gap-4 border-r pr-6 border-gray-100">
+                  <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[#1877F2] transition-colors"><FacebookIcon /></a>
+                  <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition-colors"><WhatsAppIcon /></a>
+                  <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-[#E4405F] transition-colors"><InstagramIcon /></a>
+                  <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors"><YouTubeIcon /></a>
                 </div>
-              </div>
-              <div className="block">
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800 gap-1">
-                      <Globe className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="font-bold tracking-tight hover:bg-gray-50">
+                      <Globe className="h-4 w-4 mr-2" />
                       {languageOptions.find(l => l.code === language)?.label || 'EN'}
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-48">
                     {languageOptions.map((lang) => (
                       <DropdownMenuItem
                         key={lang.code}
                         onClick={() => changeLanguage(lang.code)}
-                        className={language === lang.code ? 'bg-gray-100' : ''}
+                        className={`flex items-center justify-between ${language === lang.code ? 'bg-gray-50 font-bold' : ''}`}
                       >
-                        <span className="font-medium mr-2">{lang.label}</span>
-                        <span className="text-gray-500 text-sm">{lang.fullName}</span>
+                        <span>{lang.fullName}</span>
+                        {language === lang.code && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-              <div className="flex items-center gap-2">
-                {user && (
+
+                {user ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                        <Avatar><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-gradient-to-r from-red-600 to-purple-600 text-white">{user.name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
-                      </Button>
+                      <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-8 w-8 ring-2 ring-gray-100"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-600 text-white text-xs">{user.name?.[0]}</AvatarFallback></Avatar>
+                        <span className="text-gray-900">{user.name}</span>
+                      </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel><p className="text-sm font-medium">{user.name}</p><p className="text-xs text-muted-foreground">{user.email}</p><Badge variant="outline" className="w-fit mt-1">{user.role}</Badge></DropdownMenuLabel>
+                      <DropdownMenuLabel className="flex flex-col">
+                        <span className="text-sm font-bold">{user.name}</span>
+                        <span className="text-xs text-gray-500">{user.email}</span>
+                      </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')}><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
-                      {user.role === ROLES.ADVERTISER && <DropdownMenuItem onClick={() => setCurrentView('advertiser-dashboard')}><Building2 className="mr-2 h-4 w-4" />Advertiser Dashboard</DropdownMenuItem>}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout}><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                ) : (
+                  <Button variant="outline" size="sm" className="font-bold border-2" onClick={() => setCurrentView('login')}>
+                    Sign In
+                  </Button>
                 )}
               </div>
             </div>
@@ -213,21 +218,29 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         </div>
       </div>
 
-      <header className="hidden lg:block bg-white border-b sticky top-0 z-50 shadow-md">
+      <header className="hidden lg:block bg-white border-b sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-between h-12">
-            <div className="flex items-center gap-1">
-              <Button variant={currentView === 'home' ? 'default' : 'ghost'} onClick={() => setCurrentView('home')} className={`rounded-md ${currentView === 'home' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                <Home className="mr-2 h-4 w-4" />{t('home')}
+          <nav className="flex items-center justify-between h-14">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentView('home')}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'home' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                {t('home')}
               </Button>
               <DropdownMenu open={allNewsOpen} onOpenChange={setAllNewsOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant={currentView === 'news' ? 'default' : 'ghost'} className={`rounded-md ${currentView === 'news' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                    <Newspaper className="mr-2 h-4 w-4" />{t('news')}<ChevronDown className="ml-1 h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'news' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                  >
+                    {t('news')}<ChevronDown className="ml-1 h-3.5 w-3.5 opacity-50" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent className="w-48">
                   <DropdownMenuItem onClick={() => { setCurrentView('news'); localStorage.removeItem('selectedCategory'); setAllNewsOpen(false) }}>{t('allNews')}</DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleCategoryClick('crime')}>{t('crime')}</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCategoryClick('politics')}>{t('politics')}</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCategoryClick('education')}>{t('education')}</DropdownMenuItem>
@@ -236,17 +249,33 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                   <DropdownMenuItem onClick={() => handleCategoryClick('trending')}>{t('trending')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant={currentView === 'enewspaper' ? 'default' : 'ghost'} onClick={() => setCurrentView('enewspaper')} className={`rounded-md ${currentView === 'enewspaper' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                <FileText className="mr-2 h-4 w-4" />{t('eNewspaper')}
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentView('enewspaper')}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'enewspaper' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                {t('eNewspaper')}
               </Button>
-              <Button variant={currentView === 'city' ? 'default' : 'ghost'} onClick={() => setCurrentView('city')} className={`rounded-md ${currentView === 'city' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                <MapPin className="mr-2 h-4 w-4" />City
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentView('city')}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'city' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                City
               </Button>
-              <Button variant={currentView === 'classifieds' ? 'default' : 'ghost'} onClick={() => setCurrentView('classifieds')} className={`rounded-md ${currentView === 'classifieds' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                <Tag className="mr-2 h-4 w-4" />{t('classified')}
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentView('classifieds')}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'classifieds' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                {t('classified')}
               </Button>
-              <Button variant={currentView === 'businesses' ? 'default' : 'ghost'} onClick={() => setCurrentView('businesses')} className={`rounded-md ${currentView === 'businesses' ? 'bg-red-600 hover:bg-red-700 text-white' : ''}`}>
-                <Building2 className="mr-2 h-4 w-4" />{t('businessDirectory')}
+              <Button
+                variant="ghost"
+                onClick={() => setCurrentView('businesses')}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'businesses' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                {t('businessDirectory')}
               </Button>
             </div>
 
@@ -324,42 +353,52 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden">
         {/* Top White Bar: Main Navigation */}
-        <div className="bg-white text-gray-900 border-b border-gray-100 flex items-center justify-between px-4 h-[65px] sticky top-0 z-50 shadow-sm relative">
+        <div className="bg-white text-gray-900 border-b border-gray-100 flex items-center justify-between px-4 h-16 sticky top-0 z-50">
 
           {/* Left: Hamburger Menu */}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-1 hover:bg-gray-100 rounded-md transition-colors">
-            <Menu className="h-6 w-6 text-gray-700" />
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
+            <Menu className="h-6 w-6 text-gray-900" />
           </button>
 
           {/* Center: Logo */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer" onClick={() => setCurrentView('home')}>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
             <img
               src="/images/star-news-india-logo.png"
               alt="Star News"
-              className="h-[50px] w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </div>
 
-          {/* Right: Search & Live TV */}
-          <div className="flex items-center gap-3">
-            <button onClick={() => setCurrentView('live-tv')} className="text-red-600 hover:text-red-700 transition-colors" title="Live TV">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12zM8 9l5 3-5 3V9z" /></svg>
+          {/* Right: Search & Language */}
+          <div className="flex items-center gap-1">
+            <button onClick={() => setCurrentView('search')} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+              <Search className="h-5 w-5 text-gray-900" />
             </button>
-            <button onClick={() => setCurrentView('search')} className="text-gray-700 hover:text-red-600 transition-colors">
-              <Search className="h-6 w-6" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-full bg-gray-900 text-white ml-1">
+                  {language.toUpperCase()}
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {languageOptions.map((lang) => (
+                  <DropdownMenuItem key={lang.code} onClick={() => changeLanguage(lang.code)}>
+                    {lang.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Scrolling Category Bar (Premium Look) */}
-        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide shadow-inner py-1">
-          <div className="flex items-center px-4 space-x-6 whitespace-nowrap min-w-full">
-            <button onClick={() => setCurrentView('home')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('home')}</button>
-            <button onClick={() => setCurrentView('news')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('news')}</button>
-            <button onClick={() => setCurrentView('enewspaper')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('eNewspaper')}</button>
-            <button onClick={() => setCurrentView('city')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>City</button>
-            <button onClick={() => setCurrentView('classifieds')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('classified')}</button>
-            <button onClick={() => setCurrentView('businesses')} className={`text-sm font-bold uppercase tracking-wide border-b-2 py-2 transition-colors ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent hover:text-red-600'}`}>{t('businessDirectory')}</button>
+        {/* Scrolling Category Bar */}
+        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide py-0.5 sticky top-16 z-40">
+          <div className="flex items-center px-4 space-x-6 whitespace-nowrap">
+            <button onClick={() => setCurrentView('home')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('home')}</button>
+            <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
+            <button onClick={() => setCurrentView('enewspaper')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('eNewspaper')}</button>
+            <button onClick={() => handleCategoryClick('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>City</button>
+            <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
           </div>
         </div>
 
