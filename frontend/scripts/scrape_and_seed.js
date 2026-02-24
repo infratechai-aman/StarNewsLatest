@@ -22,20 +22,37 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 
-// Fetch homepage links
+// Fetch links from multiple pages to get a large pool
 async function getRecentLinks() {
-    console.log("Fetching StarNewsIndia homepage...");
-    const response = await fetch('https://starnewsindia.in/');
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    console.log("Fetching StarNewsIndia pages...");
+    const urlsToCrawl = [
+        'https://starnewsindia.in/',
+        'https://starnewsindia.in/page/2/',
+        'https://starnewsindia.in/page/3/',
+        'https://starnewsindia.in/category/india-news/',
+        'https://starnewsindia.in/category/business/'
+    ];
 
     const links = new Set();
-    $('a').each((i, el) => {
-        const href = $(el).attr('href');
-        if (href && href.startsWith('https://starnewsindia.in/') && !href.includes('category') && !href.includes('author') && href.length > 40) {
-            links.add(href);
+
+    for (const pageUrl of urlsToCrawl) {
+        try {
+            console.log(`Crawling: ${pageUrl}`);
+            const response = await fetch(pageUrl);
+            const html = await response.text();
+            const $ = cheerio.load(html);
+
+            $('a').each((i, el) => {
+                const href = $(el).attr('href');
+                // Basic filter to match article permalinks
+                if (href && href.startsWith('https://starnewsindia.in/') && !href.includes('/category/') && !href.includes('/tag/') && !href.includes('/author/') && !href.includes('/page/') && href.length > 40) {
+                    links.add(href);
+                }
+            });
+        } catch (e) {
+            console.warn(`Failed to crawl ${pageUrl}:`, e.message);
         }
-    });
+    }
 
     return Array.from(links);
 }
@@ -97,10 +114,11 @@ async function getCategoryId(categoryName) {
 async function run() {
     console.log("Starting Web Scraper...");
     const links = await getRecentLinks();
-    console.log(`Found ${links.length} potential articles on homepage.`);
+    console.log(`Found ${links.length} potential unique articles to process.`);
 
     let addedCount = 0;
     let skippedCount = 0;
+    const TARGET_COUNT = 30;
 
     for (const url of links) {
         console.log(`\nProcessing: ${url}`);
@@ -110,7 +128,7 @@ async function run() {
             .where('originalUrl', '==', url).limit(1).get();
 
         if (!existingUrlCheck.empty) {
-            console.log("-> Skipping: Article URL already exists in database.");
+            console.log("-> Skipping: URL already exists.");
             skippedCount++;
             continue;
         }
@@ -123,14 +141,12 @@ async function run() {
             continue;
         }
 
-        // 3. Fallback Duplicate Check by Title (to handle older articles before we saved originalUrl)
-        // Note: Title might be Hindi or English on the source site. We check raw string inclusion.
-        const snapshot = await db.collection('news_articles').limit(200).get(); // Check recent 200
+        // 3. Fallback Duplicate Check by Title
+        const snapshot = await db.collection('news_articles').limit(200).get();
         let isDuplicate = false;
         for (const doc of snapshot.docs) {
             const existingTitle = doc.data().title;
             const existingTitleStr = typeof existingTitle === 'object' ? JSON.stringify(existingTitle) : existingTitle;
-            // Simple duplicate check: if the first 20 chars match, it's probably the same
             const excerpt = articleData.title.substring(0, 20);
             if (existingTitleStr && existingTitleStr.includes(excerpt)) {
                 isDuplicate = true;
@@ -139,12 +155,12 @@ async function run() {
         }
 
         if (isDuplicate) {
-            console.log("-> Skipping: Article title seems to already exist.");
+            console.log("-> Skipping: Title already exists.");
             skippedCount++;
             continue;
         }
 
-        // 4. Translate!
+        // 4. Translate
         console.log("-> Translating article...");
         const translatedTitle = await translateText(articleData.title, 'en');
         const translatedContent = await translateText(articleData.content, 'en');
@@ -155,7 +171,7 @@ async function run() {
             title: translatedTitle,
             content: translatedContent,
             categoryId: categoryId,
-            category: articleData.category, // Denormalized string
+            category: articleData.category,
             city: 'India',
             genre: 'breaking',
             mainImage: articleData.mainImage,
@@ -163,7 +179,7 @@ async function run() {
             videoUrl: '',
             youtubeUrl: '',
             tags: ['StarNewsIndia', 'Scraped'],
-            metaDescription: articleData.content.substring(0, 150).replace(/<[^>]*>?/gm, ''), // Strip HTML for meta
+            metaDescription: articleData.content.substring(0, 150).replace(/<[^>]*>?/gm, ''),
             authorId: 'system-scraper',
             authorName: 'StarNews Scraper',
             approvalStatus: 'approved',
@@ -177,12 +193,11 @@ async function run() {
         };
 
         await db.collection('news_articles').add(newDoc);
-        console.log("-> SUCCESSFULLY ADDED:", articleData.title);
+        console.log(`-> SUCCESSFULLY ADDED (${addedCount + 1}/${TARGET_COUNT}):`, articleData.title);
         addedCount++;
 
-        // Only do a max limit per run to avoid huge translate API spam at once (e.g. 10 fresh ones)
-        if (addedCount >= 10) {
-            console.log("\nReached batch limit of 10 new articles.");
+        if (addedCount >= TARGET_COUNT) {
+            console.log(`\nReached target of ${TARGET_COUNT} new articles!`);
             break;
         }
     }
