@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle } from 'lucide-react'
+import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap } from 'lucide-react'
+import Image from 'next/image'
 import { classifieds as classifiedsApi } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -197,85 +198,92 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-lg"><Tag className="h-8 w-8 text-white" /></div>
-            <div>
-              <h1 className="text-3xl font-bold">{t('classifiedAds')}</h1>
-              <p className="text-muted-foreground">{t('language') === 'भाषा' ? 'खरीदें, बेचें, किराये पर दें और नौकरी पाएं' : t('language') === 'भाषा' ? 'खरेदी करा, विक्री करा, भाड्याने द्या आणि नोकऱ्या शोधा' : 'Buy, Sell, Rent & Find Jobs'}</p>
-            </div>
+      <div className="mag-section-header flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 bg-orange-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-orange-100">
+            <Tag className="h-10 w-10 text-white" />
           </div>
-
-          {/* Create Your Listing Button */}
-          <Button
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold"
-            onClick={() => setShowCreateModal(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            {t('postClassified')}
-          </Button>
+          <div>
+            <h1 className="text-5xl font-heading font-black tracking-tighter italic">{t('classifiedAds') || 'Classified Ads'}</h1>
+            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">
+              {language === 'hi' ? 'खरीदें, बेचें, किराये पर दें और नौकरी पाएं' : language === 'mr' ? 'खरेदी करा, विक्री करा, भाड्याने द्या आणि नोकऱ्या शोधा' : 'Premium Marketplace for Pune'}
+            </p>
+          </div>
         </div>
 
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <p className="text-sm"><strong>{t('note')}:</strong> {t('classifiedAdminNote')}</p>
-          </CardContent>
-        </Card>
+        <Button
+          className="h-14 rounded-full px-10 bg-orange-600 hover:bg-black text-white font-black transition-all shadow-xl hover:-translate-y-1"
+          onClick={() => setShowCreateModal(true)}
+        >
+          <Plus className="mr-3 h-5 w-5" /> {t('postClassified') || 'Post Classified'}
+        </Button>
+      </div>
+
+      <div className="bg-orange-50/50 border border-orange-100 rounded-[32px] p-6 mb-12 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+          <Zap className="w-5 h-5 text-orange-600" />
+        </div>
+        <p className="text-sm font-bold text-orange-900 leading-relaxed italic">
+          <strong>{t('note') || 'Note'}:</strong> {t('classifiedAdminNote') || 'All ads are subject to editorial review before publication.'}
+        </p>
       </div>
 
       {/* Classified Ads Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {classifieds.map((ad) => {
           const displayPrice = convertToINR(ad.price)
           return (
-            <Card key={ad.id} className="overflow-hidden hover:shadow-xl transition-all group cursor-pointer flex flex-col h-full" onClick={() => handleContactSeller(ad)}>
-              {/* Fixed aspect ratio image container for uniform sizing */}
-              <div className="relative aspect-video overflow-hidden bg-gray-100">
-                <img
-                  src={ad.image || ad.images?.[0]}
+            <div
+              key={ad.id}
+              className="premium-card rounded-[40px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+              onClick={() => handleContactSeller(ad)}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
+                <Image
+                  src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'}
                   alt={ad.title}
-                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                  fill
+                  className="object-contain group-hover:scale-110 transition-transform duration-[2000ms]"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
-                <Badge className="absolute top-2 left-2 bg-orange-500">{ad.category}</Badge>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <Badge className="absolute top-6 left-6 bg-orange-600 text-white border-none px-4 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl">
+                  {ad.category}
+                </Badge>
                 {ad.condition && (
-                  <Badge variant="outline" className="absolute top-2 right-2 bg-white/90 text-gray-700 text-xs">
-                    {ad.condition}
-                  </Badge>
+                  <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{ad.condition}</span>
+                  </div>
                 )}
               </div>
-              <CardContent className="p-4 space-y-2 flex flex-col flex-grow">
-                <h3 className="font-bold text-base line-clamp-2 group-hover:text-orange-600 transition-colors min-h-[2.5rem]">{ad.title}</h3>
 
-                {/* Price - INR Display */}
-                <div className="flex items-center gap-1.5 text-xl font-bold text-green-600 min-h-[1.75rem]">
+              <div className="p-8 flex-1 flex flex-col">
+                <h3 className="font-heading font-black text-xl mb-4 leading-tight group-hover:text-orange-600 transition-colors tracking-tighter italic line-clamp-2 min-h-[3rem]">
+                  {ad.title}
+                </h3>
+
+                <div className="flex items-center gap-1.5 text-2xl font-black text-green-600 mb-6 tracking-tighter">
                   {displayPrice ? (
                     <>
                       <IndianRupee className="h-5 w-5" />
                       <span>{displayPrice.replace('₹', '')}</span>
                     </>
                   ) : (
-                    <span className="text-gray-400 text-sm font-normal">Price on request</span>
+                    <span className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">{t('priceOnRequest') || 'Price on request'}</span>
                   )}
                 </div>
 
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5 flex-shrink-0" /><span className="truncate">{ad.location}</span></div>
+                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8">
+                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="truncate">{ad.location}</span>
                 </div>
 
-                <div className="mt-auto pt-2">
-                  <Button
-                    className="w-full bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleContactSeller(ad)
-                    }}
-                  >
-                    {t('contactSeller')}
-                  </Button>
+                <div className="pt-6 border-t border-gray-50 mt-auto flex items-center justify-between">
+                  <span className="font-black text-[10px] text-orange-600 uppercase tracking-widest">{t('viewDetails') || 'View Details'}</span>
+                  <ChevronRight className="w-5 h-5 text-gray-200 group-hover:text-orange-600 group-hover:translate-x-2 transition-all" />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )
         })}
       </div>

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Eye, Clock, ArrowLeft, Share2, Bookmark, Facebook, Twitter, MessageCircle } from 'lucide-react'
+import { Eye, Clock, ArrowLeft, Share2, Bookmark, Facebook, Twitter, MessageCircle, Quote } from 'lucide-react'
+import Image from 'next/image'
 import { newsData, getLocalizedText } from '@/lib/newsData'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getArticleAdSettings } from '@/lib/contentStore'
@@ -124,50 +125,56 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
   return (
     <div className="max-w-6xl mx-auto" key={language}>
-      {/* Back Button */}
-      <Button
-        variant="outline"
-        onClick={handleBackToHome}
-        className="mb-6 flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('backToHome')}
-      </Button>
+      {/* Navigation */}
+      <div className="flex items-center justify-between mb-12">
+        <Button
+          variant="ghost"
+          onClick={handleBackToHome}
+          className="group flex items-center gap-3 font-black text-xs tracking-widest uppercase hover:bg-gray-100 rounded-full px-6"
+        >
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          {t('backToHome')}
+        </Button>
+      </div>
 
       <div className="grid lg:grid-cols-12 gap-8">
         {/* Main Article Content */}
         <article className="lg:col-span-8 space-y-6 select-none" onContextMenu={(e) => e.preventDefault()}>
-          {/* Category Badge */}
-          <Badge className="bg-red-600 text-white px-4 py-1 text-sm font-bold">
-            {category}
-          </Badge>
+          {/* Header Section */}
+          <div className="space-y-8">
+            <Badge className="bg-red-600 text-white px-5 py-1.5 font-black uppercase text-[10px] tracking-[0.2em] border-none shadow-xl">
+              {category}
+            </Badge>
 
-          {/* Headline */}
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-            {title}
-          </h1>
+            <h1 className="text-5xl md:text-7xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter">
+              {title}
+            </h1>
+          </div>
 
-          {/* Meta Information */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 border-b pb-4">
-            {/* Author Name - Top Priority */}
+          {/* Author & Meta */}
+          <div className="flex flex-wrap items-center gap-6 py-8 border-y border-gray-100">
             {(article.authorName || article.author?.name) && (
-              <>
-                <span className="font-bold text-red-600 flex items-center gap-1">
-                  {t('by')} {article.authorName || article.author.name}
-                </span>
-                <span className="text-gray-300">|</span>
-              </>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-sm">
+                  {(article.authorName || article.author?.name)?.charAt(0)}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('writtenBy') || 'Written By'}</p>
+                  <p className="font-bold text-gray-900">{article.authorName || article.author.name}</p>
+                </div>
+              </div>
             )}
 
-            <span className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {formatDate(article.publishedAt || article.createdAt)}
-            </span>
-            <span className="text-gray-300">|</span>
-            <span className="flex items-center gap-1">
-              <Eye className="h-4 w-4" />
-              {(article.views || 0).toLocaleString()} {t('views')}
-            </span>
+            <div className="flex items-center gap-6 text-xs font-bold text-gray-500 uppercase tracking-widest ml-auto">
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-red-600" />
+                {formatDate(article.publishedAt || article.createdAt)}
+              </span>
+              <span className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-red-600" />
+                {(article.views || 0).toLocaleString()}
+              </span>
+            </div>
           </div>
 
           {/* Share Buttons */}
@@ -191,7 +198,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
 
-          {/* 1. YouTube Video at TOP (or Main Image if no video) */}
+          {/* Visual Content: Video or Image */}
           {(article.youtubeUrl || article.videoUrl) ? (() => {
             const url = article.youtubeUrl || article.videoUrl
             let videoId = ''
@@ -204,7 +211,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             }
             if (!videoId) return null
             return (
-              <div className="relative w-full rounded-xl overflow-hidden shadow-lg" style={{ paddingTop: '56.25%' }}>
+              <div className="relative w-full rounded-[32px] overflow-hidden shadow-2xl border border-gray-100" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
                   className="absolute top-0 left-0 w-full h-full"
@@ -216,46 +223,49 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </div>
             )
           })() : article.mainImage && (
-            <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <img src={article.mainImage} alt={title} className="w-full h-auto md:h-96 object-cover" />
+            <div className="relative aspect-video rounded-[40px] overflow-hidden shadow-2xl border border-gray-100">
+              <Image
+                src={article.mainImage}
+                alt={title}
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
           )}
 
-          {/* 2. Short Description */}
+          {/* Lead/Short Description */}
           {(article.metaDescription || article.shortDescription) && (
-            <div className="bg-gray-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-              <p className="text-lg text-gray-900 font-bold leading-relaxed">
+            <div className="relative p-10 bg-gray-50 rounded-[32px] border-l-8 border-red-600">
+              <Quote className="absolute top-4 right-8 w-12 h-12 text-red-600/10" />
+              <p className="text-2xl font-heading font-black text-gray-900 leading-tight tracking-tight italic">
                 {getLocalizedText(article.metaDescription || article.shortDescription, language)}
               </p>
             </div>
           )}
 
-          {/* 3. Main Image (if video exists, show image here) */}
-          {(article.youtubeUrl || article.videoUrl) && article.mainImage && (
-            <div className="relative rounded-xl overflow-hidden shadow-lg">
-              <img src={article.mainImage} alt={title} className="w-full h-auto md:h-96 object-cover" />
-            </div>
-          )}
-
-          {/* 4. Full Article Content */}
-          <div className="prose prose-lg max-w-none text-gray-800 leading-relaxed">
+          {/* Article Body */}
+          <div className="prose prose-2xl max-w-none text-gray-800 leading-[1.6] magazine-body font-serif">
             <div dangerouslySetInnerHTML={{ __html: content }} />
           </div>
 
-          {/* Gallery Images */}
+          {/* Gallery Sections */}
           {article.galleryImages && article.galleryImages.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                {t('photoGallery')}
+            <div className="mt-16 pt-16 border-t border-gray-100">
+              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8 border-l-4 border-red-600 pl-4">
+                {t('photoGallery') || 'Visual Evidence'}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {article.galleryImages.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt={`Gallery ${idx + 1}`}
-                    className="w-full h-48 object-cover rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-                  />
+                  <div key={idx} className="relative h-64 rounded-[24px] overflow-hidden shadow-xl hover:scale-105 transition-transform duration-700 cursor-zoom-in group">
+                    <Image
+                      src={img}
+                      alt={`Gallery ${idx + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 ))}
               </div>
             </div>
@@ -272,94 +282,85 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
         {/* Right Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
-          {/* Related News */}
-          <div className="bg-white rounded-xl shadow-lg p-4 border">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-red-600 pb-2">
-              {t('relatedNews')}
+          {/* Related Stories */}
+          <div className="bg-gray-50 rounded-[40px] p-8 border border-gray-100">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8">
+              {t('relatedStories') || 'More on this category'}
             </h3>
-            <div className="space-y-4">
-              {relatedNews.length > 0 ? relatedNews.map((news) => (
-                <Card
-                  key={news.id}
-                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
-                  onClick={() => handleRelatedClick(news)}
+            <div className="space-y-6">
+              {relatedNews.slice(0, 3).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex gap-6 group cursor-pointer"
+                  onClick={() => handleRelatedClick(item)}
                 >
-                  <div className="flex gap-3 p-2">
-                    <img
-                      src={news.mainImage || news.images?.[0]}
-                      alt={getLocalizedText(news.title, language)}
-                      className="w-24 h-20 object-cover rounded"
+                  <div className="relative w-24 h-24 shrink-0 rounded-[20px] overflow-hidden bg-white shadow-sm">
+                    <Image
+                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                      alt={getLocalizedText(item.title, language)}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
                     />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold line-clamp-2 group-hover:text-red-600 transition-colors">
-                        {getLocalizedText(news.title, language)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(news.publishedAt).toLocaleDateString(language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN')}
-                      </p>
-                    </div>
                   </div>
-                </Card>
-              )) : (
-                <p className="text-sm text-gray-500">{t('noRelatedNews')}</p>
-              )}
+                  <div className="flex-1 py-1">
+                    <h4 className="font-heading font-black text-lg leading-tight group-hover:text-red-600 transition-colors tracking-tight line-clamp-2">
+                      {getLocalizedText(item.title, language)}
+                    </h4>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">
+                      {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Advertisement - Admin Controlled Article Ad Banner */}
+          {/* Featured Advertisement */}
           {articleAdSettings.banner?.enabled !== false && (
-            <Card className="overflow-hidden border-2 shadow-lg">
-              <CardContent className="p-0 relative">
+            <div className="premium-card rounded-[40px] overflow-hidden shadow-2xl border border-gray-100 bg-white">
+              <div className="relative aspect-[4/5]">
                 {articleAdSettings.banner?.imageUrl ? (
-                  // Custom admin image
-                  <a
-                    href={articleAdSettings.banner?.linkUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                  >
-                    <img
+                  <a href={articleAdSettings.banner?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
+                    <Image
                       src={articleAdSettings.banner.imageUrl}
-                      alt="Advertisement"
-                      className="w-full h-64 object-cover"
+                      alt="Ad"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-[3000ms]"
                     />
-                    <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{t('advertisement')}</Badge>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-8 left-8 right-8">
+                      <Badge className="bg-white/20 backdrop-blur-md text-white border-none mb-4 uppercase font-black text-[10px] tracking-widest">{t('sponsored') || 'Editor\'s Choice'}</Badge>
+                      <h4 className="text-white font-heading font-black text-2xl tracking-tighter italic">Exclusive Placements</h4>
+                    </div>
                   </a>
                 ) : (
-                  // Default placeholder banner
-                  <div className="h-64 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex flex-col items-center justify-center text-center">
-                    <Badge className="absolute top-2 right-2 bg-white/30 text-white text-xs">{t('advertisement')}</Badge>
-                    <div className="text-white p-4">
-                      <p className="text-2xl font-bold mb-2">📢 {t('advertise')}</p>
-                      <p className="text-lg font-semibold">{t('yourBusiness')}</p>
-                      <div className="mt-4 border-t border-white/30 pt-4">
-                        <p className="text-sm">{t('premiumPlacement')}</p>
-                        <p className="text-lg font-bold">{t('contactUs')}</p>
-                        <Button size="sm" className="mt-3 bg-white text-purple-600 hover:bg-gray-100 font-bold">
-                          {t('bookNow')}
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="w-full h-full bg-gradient-to-br from-gray-900 to-red-900 flex flex-col items-center justify-center p-12 text-center text-white relative">
+                    <Badge className="absolute top-8 left-8 bg-white/10 text-white border-none font-black text-[10px] tracking-[0.2em]">{t('advertisement') || 'PREMIUM'}</Badge>
+                    <p className="text-3xl font-serif italic font-bold mb-4">🎯 {t('yourAdHere') || 'Premium Space'}</p>
+                    <p className="text-xs uppercase tracking-[0.2em] font-black opacity-50 mb-8">Reach Millions Locally</p>
+                    <Button className="rounded-full bg-white text-black font-black hover:bg-red-600 hover:text-white transition-all px-8 h-12">
+                      {t('getInTouch') || 'CONTACT US'}
+                    </Button>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           )}
 
-          {/* More Latest News */}
-          <div className="bg-white rounded-xl shadow-lg p-4 border">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 border-b-2 border-blue-600 pb-2">
-              {t('latestNews')}
+          {/* Top Stories Sidebar */}
+          <div className="bg-white rounded-[40px] p-8 border border-gray-100 shadow-sm">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8 border-l-4 border-blue-600 pl-4">
+              {t('topStories') || 'Hot Right Now'}
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-8">
               {(latestNews.length > 0 ? latestNews : newsData.slice(0, 5)).map((newsItem, idx) => (
                 <div
                   key={newsItem.id}
-                  className="flex items-start gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                  className="flex gap-4 cursor-pointer group"
                   onClick={() => handleRelatedClick(newsItem)}
                 >
-                  <span className="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">{idx + 1}</span>
-                  <p className="text-sm font-medium line-clamp-2 hover:text-red-600 transition-colors">
+                  <span className="font-heading font-black text-4xl text-gray-100 group-hover:text-blue-600/20 transition-colors leading-none">{idx + 1}</span>
+                  <p className="font-heading font-black text-md leading-tight group-hover:text-blue-600 transition-colors tracking-tight line-clamp-2 pt-1">
                     {getLocalizedText(newsItem.title, language)}
                   </p>
                 </div>
@@ -367,43 +368,28 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             </div>
           </div>
 
-          {/* Sticky Ad - Admin Controlled Article Sticky Ad */}
+          {/* Vertical Sticky Ad */}
           {articleAdSettings.sticky?.enabled !== false && (
-            <div className="sticky top-20">
-              <Card className="overflow-hidden border-2 shadow-lg">
-                <CardContent className="p-0 h-72 relative">
-                  {articleAdSettings.sticky?.imageUrl ? (
-                    // Custom admin image
-                    <a
-                      href={articleAdSettings.sticky?.linkUrl || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full h-full"
-                    >
-                      <img
-                        src={articleAdSettings.sticky.imageUrl}
-                        alt="Advertisement"
-                        className="w-full h-full object-cover"
-                      />
-                      <Badge className="absolute top-2 right-2 bg-black/50 text-white text-xs">{t('advertisement')}</Badge>
-                    </a>
-                  ) : (
-                    // Default placeholder
-                    <>
-                      <img
-                        src="https://picsum.photos/300/400?random=detailad"
-                        alt="Advertisement"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-4 text-white text-center">
-                        <p className="font-bold text-lg">{t('premiumAdSpace')}</p>
-                        <p className="text-sm opacity-80">300 x 400 px</p>
-                        <Badge className="mt-2 bg-white/20">{t('advertisement')}</Badge>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+            <div className="sticky top-24">
+              <div className="rounded-[40px] overflow-hidden shadow-2xl border-4 border-white aspect-[3/4] relative group">
+                {articleAdSettings.sticky?.imageUrl ? (
+                  <a href={articleAdSettings.sticky?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
+                    <Image
+                      src={articleAdSettings.sticky.imageUrl}
+                      alt="Ad"
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-[5000ms]"
+                    />
+                    <Badge className="absolute top-6 right-6 bg-black/50 text-white border-none font-black text-[8px] uppercase tracking-widest backdrop-blur-md">{t('advertisement')}</Badge>
+                  </a>
+                ) : (
+                  <div className="w-full h-full bg-blue-600 flex flex-col items-center justify-center p-8 text-center text-white relative">
+                    <Badge className="absolute top-6 right-6 bg-white/20 text-white border-none font-black text-[8px] uppercase tracking-widest">{t('advertisement')}</Badge>
+                    <p className="text-xl font-heading font-black italic mb-2">Premium Discovery</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">300 x 400 Editorial</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </aside>

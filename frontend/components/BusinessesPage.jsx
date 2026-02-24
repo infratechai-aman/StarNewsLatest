@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, MapPin, Phone, Globe, Star, Building2, Filter, Store } from 'lucide-react'
+import { Search, MapPin, Phone, Globe, Star, Building2, Filter, Store, ChevronRight, Zap } from 'lucide-react'
+import Image from 'next/image'
 import { businesses } from '@/lib/api'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { useLanguage } from '@/contexts/LanguageContext'
 
 const BUSINESS_CATEGORIES = [
   'All Categories',
@@ -29,6 +31,7 @@ const BUSINESS_CATEGORIES = [
 ]
 
 const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
+  const { t } = useLanguage()
   const [businessList, setBusinessList] = useState([])
   const [filteredBusinesses, setFilteredBusinesses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -153,223 +156,204 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
-              <Building2 className="h-8 w-8 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">Business Directory</h1>
-              <p className="text-muted-foreground">Discover local businesses in Pune</p>
-            </div>
+      <div className="mag-section-header flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+        <div className="flex items-center gap-6">
+          <div className="w-20 h-20 bg-blue-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-blue-100">
+            <Building2 className="h-10 w-10 text-white" />
           </div>
+          <div>
+            <h1 className="text-5xl font-heading font-black tracking-tighter italic">{t('businessDirectory') || 'Business Directory'}</h1>
+            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">{t('businessDirectoryDesc') || 'Discover elite local enterprises'}</p>
+          </div>
+        </div>
 
-          <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-lg">
-                <Store className="mr-2 h-4 w-4" /> Promote Your Business
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Promote Your Business</DialogTitle>
-                <DialogDescription>
-                  Submit your business details. Our team will contact you for verification and listing.
-                </DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handlePromotionSubmit} className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name *</Label>
+        <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
+          <DialogTrigger asChild>
+            <Button className="h-14 rounded-full px-10 bg-blue-600 hover:bg-black text-white font-black transition-all shadow-xl hover:-translate-y-1">
+              <Store className="mr-3 h-5 w-5" /> {t('promoteYourBusiness') || 'Post your Ad'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px] p-8 rounded-2xl shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-3xl font-bold text-gray-900 mb-2">{t('promoteYourBusiness') || 'Promote Your Business'}</DialogTitle>
+              <DialogDescription className="text-gray-600 text-base">
+                {t('promotionFormDescription') || 'Fill out the form below and our team will contact you to help promote your business.'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePromotionSubmit} className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="businessName" className="text-sm font-medium text-gray-700">{t('businessName') || 'Business Name'}</Label>
+                <Input
+                  id="businessName"
+                  placeholder={t('businessNamePlaceholder') || "e.g., My Awesome Restaurant"}
+                  value={promotionData.businessName}
+                  onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
+                  required
+                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="ownerName" className="text-sm font-medium text-gray-700">{t('ownerName') || 'Your Name'}</Label>
+                <Input
+                  id="ownerName"
+                  placeholder={t('ownerNamePlaceholder') || "e.g., John Doe"}
+                  value={promotionData.ownerName}
+                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
+                  required
+                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700">{t('phone') || 'Phone'}</Label>
                   <Input
-                    id="businessName"
-                    value={promotionData.businessName}
-                    onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
-                    placeholder="e.g. Star Electronics"
+                    id="phone"
+                    type="tel"
+                    placeholder={t('phonePlaceholder') || "+91 98765 43210"}
+                    value={promotionData.phone}
+                    onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
                     required
+                    className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="ownerName">Owner Name *</Label>
-                    <Input
-                      id="ownerName"
-                      value={promotionData.ownerName}
-                      onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
-                      placeholder="Your Name"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      value={promotionData.phone}
-                      onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
-                      placeholder="9876543210"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
+                <div className="grid gap-2">
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">{t('email') || 'Email'}</Label>
                   <Input
                     id="email"
                     type="email"
+                    placeholder={t('emailPlaceholder') || "you@example.com"}
                     value={promotionData.email}
                     onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
-                    placeholder="contact@business.com"
                     required
+                    className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Business Address *</Label>
-                  <Textarea
-                    id="address"
-                    value={promotionData.address}
-                    onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
-                    placeholder="Shop No, Building, Area, City"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Business Description (Optional)</Label>
-                  <Textarea
-                    id="description"
-                    value={promotionData.description}
-                    onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-                    placeholder="Briefly describe your services..."
-                  />
-                </div>
-                <DialogFooter className="pt-4">
-                  <Button type="button" variant="outline" onClick={() => setPromotionOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isSubmitting} className="bg-blue-600">
-                    {isSubmitting ? 'Submitting...' : 'Submit Request'}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Search and Filter */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="address" className="text-sm font-medium text-gray-700">{t('address') || 'Business Address'}</Label>
                 <Input
-                  placeholder="Search businesses, services, or areas..."
-                  className="pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  id="address"
+                  placeholder={t('addressPlaceholder') || "123 Main St, Pune"}
+                  value={promotionData.address}
+                  onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
+                  required
+                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="md:w-64">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {BUSINESS_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="grid gap-2">
+                <Label htmlFor="description" className="text-sm font-medium text-gray-700">{t('description') || 'Description'}</Label>
+                <Textarea
+                  id="description"
+                  placeholder={t('descriptionPlaceholder') || "Tell us more about your business..."}
+                  value={promotionData.description}
+                  onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
+                  rows={4}
+                  className="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+              <DialogFooter className="pt-4">
+                <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg transition-all">
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <Zap className="animate-spin mr-2 h-5 w-5" /> {t('submitting') || 'Submitting...'}
+                    </span>
+                  ) : (
+                    t('submitRequest') || 'Submit Request'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Search & Filter - Magazine Style */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
+        <div className="lg:col-span-3 relative">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            placeholder={t('searchBusinesses') || "Search elite firms, services, or locations..."}
+            className="h-16 pl-16 rounded-[24px] bg-white border-gray-100 shadow-sm font-bold text-lg focus:ring-4 focus:ring-blue-100 outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="h-16 rounded-[24px] bg-white border-gray-100 shadow-sm font-black px-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="rounded-[24px] border-none shadow-2xl">
+            {BUSINESS_CATEGORIES.map((cat) => (
+              <SelectItem key={cat} value={cat} className="font-bold py-3">
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
         {filteredBusinesses.map((business) => (
-          <Card key={business.id} className="overflow-hidden hover:shadow-2xl transition-all border-2 hover:border-blue-600 cursor-pointer">
-            {/* Rectangle Image on Top */}
-            {/* Rectangle Image on Top with Premium Blur Effect */}
-            <div className="relative aspect-video w-full overflow-hidden bg-gray-100 group">
-              {/* 1. Blurred Background Layer */}
-              <div
-                className="absolute inset-0 bg-cover bg-center blur-xl opacity-50 scale-110"
-                style={{
-                  backgroundImage: `url(${business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'})`
-                }}
-              />
-
-              {/* 2. Main Image Layer - Centered & Contained */}
-              <img
-                src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0]}
+          <div
+            key={business.id}
+            className="premium-card rounded-[40px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+            onClick={() => {
+              setSelectedBusiness(business)
+              setCurrentView('business-detail')
+            }}
+          >
+            <div className="relative aspect-[16/10] overflow-hidden bg-gray-50 border-b border-gray-50">
+              <Image
+                src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'}
                 alt={business.name}
-                className="relative w-full h-full object-contain z-10 transition-transform duration-500 group-hover:scale-105"
-                onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'; }}
+                fill
+                className="object-contain group-hover:scale-110 transition-transform duration-[2000ms]"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
-
-              {/* Gradient Overlay for Text Readability (Optional, adds depth) */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-20 pointer-events-none" />
-
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               {business.featured && (
-                <Badge className="absolute top-3 right-3 z-30 bg-gradient-to-r from-yellow-600 to-orange-600 shadow-sm">
-                  FEATURED
+                <Badge className="absolute top-6 left-6 bg-blue-600 text-white border-none px-4 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl">
+                  {t('featured') || 'PREMIUM'}
                 </Badge>
               )}
+              <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span className="text-[10px] font-black text-gray-900">{business.rating}</span>
+                <span className="w-1 h-1 rounded-full bg-gray-200" />
+                <span className="text-[10px] font-bold text-gray-400">{business.reviewCount}</span>
+              </div>
             </div>
 
-            {/* Content Below Image */}
-            <CardContent className="p-5 space-y-3">
-              {/* Title */}
-              <div>
-                <h3 className="font-bold text-lg mb-1">{business.name}</h3>
-                <Badge variant="outline">{business.category}</Badge>
+            <div className="p-10 flex-1 flex flex-col">
+              <div className="flex items-center gap-3 mb-6">
+                <Badge className="bg-gray-100 text-blue-600 border-none font-black text-[10px] tracking-widest px-4 py-1">
+                  {business.category}
+                </Badge>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <MapPin className="w-3 h-3" /> {business.area || 'City Area'}
+                </div>
               </div>
 
-              {/* Description */}
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {business.description}
+              <h3 className="font-heading font-black text-2xl mb-4 leading-tight group-hover:text-blue-600 transition-colors tracking-tighter italic">
+                {business.name}
+              </h3>
+
+              <p className="text-gray-500 text-sm line-clamp-2 mb-8 flex-1 leading-relaxed">
+                {business.description || 'Exclusive local partner of StarNews India...'}
               </p>
 
-              {/* Rating */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-semibold">{business.rating}</span>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  ({business.reviewCount} reviews)
-                </span>
-              </div>
-
-              {/* Address & Phone */}
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  <span className="line-clamp-2">{business.address}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span>{business.phone}</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSelectedBusiness(business)
-                    setCurrentView('business-detail')
-                  }}
+              <div className="pt-8 border-t border-gray-50 mt-auto flex items-center justify-between">
+                <a
+                  href={`tel:${business.phone}`}
+                  className="flex items-center gap-3 text-blue-600 font-black text-xs group-hover:gap-4 transition-all"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  View Details
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href={`tel:${business.phone?.replace(/\s/g, '')}`}>
-                    <Phone className="h-4 w-4" />
-                  </a>
-                </Button>
+                  <Phone className="w-4 h-4" /> {business.phone}
+                </a>
+                <ChevronRight className="w-5 h-5 text-gray-200 group-hover:text-blue-600 group-hover:translate-x-2 transition-all" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 

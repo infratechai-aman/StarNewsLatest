@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin } from 'lucide-react'
+import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap } from 'lucide-react'
+import Image from 'next/image'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const ROLES = { REPORTER: 'reporter', SUPER_ADMIN: 'super_admin', ADVERTISER: 'advertiser' }
@@ -149,12 +150,15 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <img
-                src="/images/star-news-india-logo.png"
-                alt="Star News India"
-                className="h-[80px] w-auto object-contain transition-transform group-hover:scale-105"
-                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.05))' }}
-              />
+              <div className="relative h-[80px] w-[200px]">
+                <Image
+                  src="/images/star-news-india-logo.png"
+                  alt="Star News India"
+                  fill
+                  className="object-contain transition-transform group-hover:scale-105"
+                  priority
+                />
+              </div>
             </div>
 
             <div className="flex flex-col items-end gap-3">
@@ -261,7 +265,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 onClick={() => setCurrentView('city')}
                 className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'city' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
               >
-                City
+                {t('cityNews')}
               </Button>
               <Button
                 variant="ghost"
@@ -362,11 +366,14 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Center: Logo */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
-            <img
-              src="/images/star-news-india-logo.png"
-              alt="Star News"
-              className="h-10 w-auto object-contain"
-            />
+            <div className="relative h-10 w-32">
+              <Image
+                src="/images/star-news-india-logo.png"
+                alt="Star News"
+                fill
+                className="object-contain"
+              />
+            </div>
           </div>
 
           {/* Right: Search & Language */}
@@ -397,7 +404,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <button onClick={() => setCurrentView('home')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('home')}</button>
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
             <button onClick={() => setCurrentView('enewspaper')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('eNewspaper')}</button>
-            <button onClick={() => handleCategoryClick('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>City</button>
+            <button onClick={() => setCurrentView('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('cityNews')}</button>
             <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
           </div>
         </div>

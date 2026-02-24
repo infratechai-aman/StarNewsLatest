@@ -55,15 +55,15 @@ const BreakingNewsTicker = () => {
   const tickerText = ticker.text + ' • '
 
   return (
-    <div className="bg-gradient-to-r from-red-800 via-red-600 to-red-800 text-white py-1.5 overflow-hidden sticky top-0 lg:top-auto z-40 shadow-md">
-      <div className="container flex items-center gap-3">
-        <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-sm shrink-0 backdrop-blur-md border border-white/10 shadow-sm">
-          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse"></div>
-          <span className="font-bold text-[10px] md:text-xs uppercase tracking-widest">{t('breakingNews')}</span>
+    <div className="bg-black text-white py-1 overflow-hidden sticky top-0 lg:top-auto z-40 border-b border-gray-800">
+      <div className="container mx-auto px-4 flex items-center gap-6">
+        <div className="flex items-center gap-3 bg-red-600 px-4 py-1.5 rounded-full shrink-0 shadow-lg shadow-red-900/20">
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+          <span className="font-black text-[10px] uppercase tracking-widest">{t('breakingNews') || 'BREAKING'}</span>
         </div>
         <div className="overflow-hidden flex-1">
           <div className="ticker-wrapper" key={tickerKey}>
-            <div className="ticker-content animate-ticker whitespace-nowrap">
+            <div className="ticker-content animate-ticker whitespace-nowrap font-bold text-xs uppercase tracking-tight text-gray-300">
               {tickerText}{tickerText}{tickerText}
             </div>
           </div>

@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Newspaper } from 'lucide-react'
+import { Eye, Newspaper, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -27,7 +28,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   // Setters
   const setArticles = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, articles: data })) : setLocalNewsArticles(data)
   const setCategories = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, categories: data })) : setLocalCategoryList(data)
-  const setSelectedCat = (cat) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, selectedCategory: cat })) : setLocalSelectedCategory(cat)
+  const setSelectedCategory = (cat) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, selectedCategory: cat })) : setLocalSelectedCategory(cat)
   const setLoaded = (status) => setNewsPageState && setNewsPageState(prev => ({ ...prev, loaded: status }))
 
   useEffect(() => {
@@ -115,51 +116,79 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">{t('allNews')}</h1>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-48"><SelectValue placeholder={t('allCategories')} /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('allCategories')}</SelectItem>
-            {categoriesData.map((cat) => (<SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>))}
+      <div className="mag-section-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
+        <h1 className="text-5xl font-heading font-black tracking-tighter italic">
+          {t('allNews')}
+        </h1>
+        <Select value={currentCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-56 h-12 bg-white/50 backdrop-blur-sm border-gray-200 rounded-full px-6 font-bold shadow-sm">
+            <SelectValue placeholder={t('allCategories')} />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-gray-100 shadow-2xl">
+            <SelectItem value="all" className="font-bold">{t('allCategories')}</SelectItem>
+            {categoriesData.map((cat) => (
+              <SelectItem key={cat.id} value={cat.slug} className="font-bold">{cat.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {articles.map((article) => (
-          <Card key={article.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full" onClick={() => viewArticle(article)}>
-            <div className="relative h-48 overflow-hidden">
-              {/* Updated image logic to match HomePage (thumbnails/placeholders) */}
-              <img
+          <div
+            key={article.id}
+            className="premium-card rounded-[32px] overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+            onClick={() => viewArticle(article)}
+          >
+            <div className="relative aspect-[16/10] overflow-hidden">
+              <Image
                 src={
                   (article.thumbnails && article.thumbnails[0]) ||
                   article.thumbnailUrl ||
                   article.mainImage ||
                   '/placeholder-news.svg'
                 }
-                alt={article.title}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                alt={getLocalizedText(article.title, language) || article.title}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
-              {article.genre && <Badge className="absolute top-2 left-2 bg-blue-600">{article.genre}</Badge>}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              {article.genre && (
+                <Badge className="absolute top-4 left-4 bg-red-600 text-white border-none px-3 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl">
+                  {article.genre}
+                </Badge>
+              )}
             </div>
-            <CardContent className="p-4 flex-1 flex flex-col">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="text-xs">{t('news')}</Badge>
-                {article.featured && <Badge variant="default" className="text-xs">{t('featured')}</Badge>}
-              </div>
-              <h2 className="text-lg font-bold mb-2 line-clamp-2 hover:text-primary">{getLocalizedText(article.title, language) || article.title}</h2>
-              <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">{getLocalizedText(article.content, language)?.replace(/<[^>]*>/g, '').substring(0, 100) || article.metaDescription || 'Read the full article...'}</p>
-              <div className="flex items-center justify-between mt-auto pt-4 border-t">
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{new Date(article.createdAt).toLocaleDateString()}</span>
-                  <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{article.views || 0}</span>
+
+            <div className="p-8 flex-1 flex flex-col">
+              <div className="flex items-center gap-3 mb-4">
+                <Badge className="bg-gray-100 text-red-600 border-none font-black text-[10px] tracking-widest px-3">
+                  {getLocalizedText(article.category, language) || t('news')}
+                </Badge>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <Eye className="w-3 h-3" /> {article.views || 0}
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 px-2">{t('read')}</Button>
               </div>
-            </CardContent>
-          </Card>
+
+              <h3 className="font-heading font-black text-2xl mb-4 leading-tight group-hover:text-red-700 transition-colors tracking-tight line-clamp-2">
+                {getLocalizedText(article.title, language) || article.title}
+              </h3>
+
+              <p className="text-gray-500 text-sm line-clamp-3 mb-6 flex-1 leading-relaxed">
+                {getLocalizedText(article.content, language)?.replace(/<[^>]*>/g, '').substring(0, 150) || article.metaDescription || 'Read the full story on StarNews...'}
+              </p>
+
+              <div className="flex items-center justify-between pt-6 border-t border-gray-50 mt-auto">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                  {new Date(article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+                <span className="font-black text-red-600 text-xs flex items-center gap-2 group-hover:translate-x-2 transition-transform">
+                  {t('read') || 'READ MORE'} <ChevronRight className="w-4 h-4" />
+                </span>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
