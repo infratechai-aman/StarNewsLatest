@@ -330,7 +330,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const setSportsNews = (data) => { } // No-op since we don't store sportsNews in lifted state but keep function signature if used
 
   // Local UI state
-  const [visibleMoreStories, setVisibleMoreStories] = useState(15) // Show 15 initially
+  const [visibleMoreStories, setVisibleMoreStories] = useState(18) // Show 18 initially (divisible by 2, 3, 6)
   const [loadingMoreStories, setLoadingMoreStories] = useState(false)
 
   // Promotion Form State
@@ -675,8 +675,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             </h2>
             <div className="h-px flex-1 bg-gray-100 mx-8"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-            {cleanLatestNews.slice(0, 8).map((item) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cleanLatestNews.slice(0, 6).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
@@ -855,16 +855,16 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
       </a>
 
-      {/* Sidebar and Main Layout Wrapper for bottom sections */}
-      <div className="hidden lg:grid grid-cols-12 gap-12 container mx-auto px-4 mt-20">
-        <div className="lg:col-span-9 space-y-12">
+      {/* Bottom News Grid - Full Width, No Sidebar */}
+      <div className="hidden lg:block container mx-auto px-4 mt-20">
+        <div className="space-y-12">
           <div className="mag-section-header mb-8 flex items-center justify-between">
             <h2 className="text-4xl font-heading font-black tracking-tighter">
               {t('moreStories') || 'More Stories'}
             </h2>
             <div className="h-px flex-1 bg-gray-100 mx-8"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {oldNews.slice(0, visibleMoreStories).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
@@ -880,22 +880,6 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </Button>
             </div>
           )}
-        </div>
-        <div className="lg:col-span-3 space-y-8">
-          <BusinessAdWidget
-            settings={businessAdSettings}
-            t={t}
-            onClick={() => setPromotionOpen(true)}
-          />
-          <SubscribeWidget />
-          <ContactWidget t={t} />
-          <div className="sticky top-20">
-            <StickyAdWidget
-              settings={articleAdSettings}
-              t={t}
-              onClick={() => articleAdSettings.sticky?.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')}
-            />
-          </div>
         </div>
       </div>
 
