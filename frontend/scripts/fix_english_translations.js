@@ -53,8 +53,27 @@ async function fixEnglishTranslations() {
             const enText = data.content.en;
             if (isHindi(enText)) {
                 console.log(`[${doc.id}] Fixing Content (Hindi found in EN).`);
-                // Process content chunks if very large, but translateText handles standard limits
                 updateData.content = await translateText(enText, 'hi');
+                needsUpdate = true;
+            }
+        }
+
+        // Check Short Description
+        if (typeof data.shortDescription === 'object' && data.shortDescription !== null) {
+            const enText = data.shortDescription.en;
+            if (isHindi(enText)) {
+                console.log(`[${doc.id}] Fixing Short Description (Hindi found in EN).`);
+                updateData.shortDescription = await translateText(enText, 'hi');
+                needsUpdate = true;
+            }
+        }
+
+        // Check Meta Description
+        if (typeof data.metaDescription === 'object' && data.metaDescription !== null) {
+            const enText = data.metaDescription.en;
+            if (isHindi(enText)) {
+                console.log(`[${doc.id}] Fixing Meta Description (Hindi found in EN).`);
+                updateData.metaDescription = await translateText(enText, 'hi');
                 needsUpdate = true;
             }
         }

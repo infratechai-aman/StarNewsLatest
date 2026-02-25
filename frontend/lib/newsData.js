@@ -22,12 +22,16 @@ export const getLocalizedText = (obj, lang = 'en') => {
         result = obj[lang] || obj.en || obj.mr || obj.hi || '';
     }
 
-    // Clean CDATA and common scraper junk
+    // Clean CDATA, common scraper junk, and raw HTML tags
     if (typeof result === 'string') {
         result = result
             .replace(/<!\[CDATA\[/gi, '')
             .replace(/\]\]>/gi, '')
-            .split('Source link')[0] // Optional: strip source links if consistent
+            .replace(/<p>/gi, '')
+            .replace(/<\/p>/gi, '\n')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]*>?/gm, '') // Strip remaining HTML tags
+            .split('Source link')[0]
             .trim();
     }
 
