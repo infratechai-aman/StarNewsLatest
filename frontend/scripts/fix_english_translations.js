@@ -52,30 +52,42 @@ async function fixEnglishTranslations() {
         if (typeof data.content === 'object' && data.content !== null) {
             const enText = data.content.en;
             if (isHindi(enText)) {
-                console.log(`[${doc.id}] Fixing Content (Hindi found in EN).`);
+                console.log(`[${doc.id}] Fixing Content (Hindi found in EN object).`);
                 updateData.content = await translateText(enText, 'hi');
                 needsUpdate = true;
             }
+        } else if (typeof data.content === 'string' && isHindi(data.content)) {
+            console.log(`[${doc.id}] Fixing Content (String to Object).`);
+            updateData.content = await translateText(data.content, 'hi');
+            needsUpdate = true;
         }
 
         // Check Short Description
         if (typeof data.shortDescription === 'object' && data.shortDescription !== null) {
             const enText = data.shortDescription.en;
             if (isHindi(enText)) {
-                console.log(`[${doc.id}] Fixing Short Description (Hindi found in EN).`);
+                console.log(`[${doc.id}] Fixing Short Description (Hindi found in EN object).`);
                 updateData.shortDescription = await translateText(enText, 'hi');
                 needsUpdate = true;
             }
+        } else if (typeof data.shortDescription === 'string' && isHindi(data.shortDescription)) {
+            console.log(`[${doc.id}] Fixing Short Description (String to Object).`);
+            updateData.shortDescription = await translateText(data.shortDescription, 'hi');
+            needsUpdate = true;
         }
 
         // Check Meta Description
         if (typeof data.metaDescription === 'object' && data.metaDescription !== null) {
             const enText = data.metaDescription.en;
             if (isHindi(enText)) {
-                console.log(`[${doc.id}] Fixing Meta Description (Hindi found in EN).`);
+                console.log(`[${doc.id}] Fixing Meta Description (Hindi found in EN object).`);
                 updateData.metaDescription = await translateText(enText, 'hi');
                 needsUpdate = true;
             }
+        } else if (typeof data.metaDescription === 'string' && isHindi(data.metaDescription)) {
+            console.log(`[${doc.id}] Fixing Meta Description (String to Object).`);
+            updateData.metaDescription = await translateText(data.metaDescription, 'hi');
+            needsUpdate = true;
         }
 
         if (needsUpdate) {
