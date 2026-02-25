@@ -1,0 +1,13 @@
+--- ARTICLE ADDITION REPORT ---
+
+Postgres (news_articles): 77 articles
+Recent in Postgres:
+- Parliament Passes Landmark Education Bill 10 (Mon Jan 26 2026 07:43:41 GMT+0530 (India Standard Time))
+- PM Inaugurates New Infrastructure Project 9 (Mon Jan 26 2026 07:43:41 GMT+0530 (India Standard Time))
+- Diplomatic Talks Yield Positive Results at Summit 8 (Mon Jan 26 2026 07:43:41 GMT+0530 (India Standard Time))
+
+Firestore (news_articles): 41 articles
+Recent in Firestore:
+- 'He grabbed me and started kissing': Kanpur woman who bit off man's tongue alleges assault india news (2026-02-24T21:25:59.417Z)
+- ‘Only three people have done it’: India at pinnacle of human spaceflight, says ‘Papa Bravo Nair’ |Special | india news (2026-02-24T21:25:55.268Z)
+- No time limit for governors, no endless delays: Supreme Court explains President's reference opinion explainer news (2026-02-02T07:49:24.000Z)
