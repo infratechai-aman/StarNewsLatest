@@ -16,10 +16,12 @@ const decodeHTMLEntities = (text) => {
 export const getLocalizedText = (obj, lang = 'en') => {
     if (!obj) return '';
     let result = '';
-    if (typeof obj === 'string') {
-        result = obj;
-    } else if (typeof obj === 'object' && obj !== null) {
+
+    if (typeof obj === 'object' && obj !== null) {
+        // Prefer the requested language
         result = obj[lang] || obj.en || obj.mr || obj.hi || '';
+    } else if (typeof obj === 'string') {
+        result = obj;
     }
 
     // Clean CDATA, common scraper junk, and raw HTML tags

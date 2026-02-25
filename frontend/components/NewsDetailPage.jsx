@@ -142,7 +142,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               {category}
             </Badge>
 
-            <h1 className="text-5xl md:text-8xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter drop-shadow-sm">
+            <h1 className="text-4xl md:text-7xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter drop-shadow-sm">
               {title}
             </h1>
           </div>
@@ -218,7 +218,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           {(article.metaDescription || article.shortDescription) && (
             <div className="relative p-12 bg-gray-50 rounded-[40px] border-l-[12px] border-red-600 shadow-sm overflow-hidden">
               <Quote className="absolute top-8 right-10 w-20 h-20 text-red-600/5 rotate-12" />
-              <p className="text-3xl font-heading font-black text-gray-900 leading-tight tracking-tight italic relative z-10">
+              <p className="text-2xl font-heading font-black text-gray-900 leading-tight tracking-tight italic relative z-10">
                 {getLocalizedText(article.metaDescription || article.shortDescription, language)}
               </p>
             </div>
