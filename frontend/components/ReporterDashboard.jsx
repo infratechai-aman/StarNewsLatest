@@ -61,10 +61,14 @@ const ReporterDashboard = ({ user, onLogout }) => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      setTicker(data.ticker)
-      setTickerText(data.ticker?.text || '')
+      if (res.ok) {
+        setTicker(data.ticker)
+        setTickerText(data.ticker?.text || '')
+      } else {
+        console.error('Ticker fetch error:', res.status, data)
+      }
     } catch (err) {
-      // console.error('Failed to fetch ticker:', err)
+      console.error('Failed to fetch ticker:', err)
     }
   }
 
@@ -74,9 +78,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      setMyNews(data.articles || [])
+      if (res.ok) {
+        setMyNews(data.articles || [])
+      } else {
+        console.error('News fetch error:', res.status, data)
+      }
     } catch (err) {
-      // console.error('Failed to fetch news:', err)
+      console.error('Failed to fetch news:', err)
     }
   }
 
@@ -86,9 +94,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      setMyPapers(data.papers || [])
+      if (res.ok) {
+        setMyPapers(data.papers || [])
+      } else {
+        console.error('E-newspaper fetch error:', res.status, data)
+      }
     } catch (err) {
-      // console.error('Failed to fetch e-newspapers:', err)
+      console.error('Failed to fetch e-newspapers:', err)
     }
   }
 
