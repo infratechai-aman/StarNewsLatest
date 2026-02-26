@@ -13,12 +13,34 @@ export default function ReporterPage() {
     const [loginData, setLoginData] = useState({ email: '', password: '' })
 
     useEffect(() => {
+        // Migration: purge old invalid 'reporterToken' from previous sessions
+        const legacyToken = localStorage.getItem('reporterToken')
+        if (legacyToken) {
+            localStorage.removeItem('reporterToken')
+            // Don't trust the old token — force re-login
+        }
+
         const token = localStorage.getItem('token')
         const savedUser = localStorage.getItem('reporterUser')
-        if (token && savedUser) {
-            setUser(JSON.parse(savedUser))
-            setIsLoggedIn(true)
+
+        // Basic JWT validation: a valid Firebase ID token has 3 dot-separated parts
+        const isValidJWT = token && token.split('.').length === 3
+
+        if (isValidJWT && savedUser) {
+            try {
+                setUser(JSON.parse(savedUser))
+                setIsLoggedIn(true)
+            } catch (e) {
+                // Corrupted user data, force re-login
+                localStorage.removeItem('token')
+                localStorage.removeItem('reporterUser')
+            }
+        } else if (token && !isValidJWT) {
+            // Token is malformed, clear it
+            localStorage.removeItem('token')
+            localStorage.removeItem('reporterUser')
         }
+
         setLoading(false)
     }, [])
 
