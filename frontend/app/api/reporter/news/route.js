@@ -20,23 +20,34 @@ export async function GET(request) {
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();
         const role = userDoc.exists ? userDoc.data().role : null;
         if (role !== 'reporter' && role !== 'super_admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+            return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
         }
 
-        const snapshot = await db.collection('news_articles')
-            .where('authorId', '==', decodedUser.uid)
-            .orderBy('createdAt', 'desc')
-            .get();
-
-        const articles = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id
-        }));
+        let articles = [];
+        try {
+            // Primary Strategy: Server-side sort (Requires Index)
+            const snapshot = await db.collection('news_articles')
+                .where('authorId', '==', decodedUser.uid)
+                .orderBy('createdAt', 'desc')
+                .get();
+            articles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        } catch (indexError) {
+            // Fallback Strategy: In-memory sort (No index required)
+            if (indexError.message.includes('index') || indexError.message.includes('FAILED_PRECONDITION')) {
+                const snapshot = await db.collection('news_articles')
+                    .where('authorId', '==', decodedUser.uid)
+                    .get();
+                articles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else {
+                throw indexError;
+            }
+        }
 
         return NextResponse.json({ articles });
     } catch (error) {
-        // console.error('Error fetching reporter news:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const status = error.code?.startsWith('auth/') ? 401 : 500;
+        return NextResponse.json({ error: error.message }, { status });
     }
 }
 
@@ -69,7 +80,6 @@ export async function POST(request) {
 
         // Resolve Category
         let finalCategoryId = categoryId || category;
-        // Simple validation...
 
         const newArticle = {
             title: translatedTitle,
@@ -98,7 +108,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
-        // console.error('Error submitting reporter news:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const status = error.code?.startsWith('auth/') ? 401 : 500;
+        return NextResponse.json({ error: error.message }, { status });
     }
 }

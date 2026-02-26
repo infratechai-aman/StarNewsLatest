@@ -38,18 +38,28 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const snapshot = await db.collection('enewspapers')
-            .orderBy('createdAt', 'desc')
-            .get();
-
-        const papers = snapshot.docs.map(doc => ({
-            ...doc.data(),
-            id: doc.id
-        }));
+        let papers = [];
+        try {
+            // Primary Strategy: Server-side sort (Requires Index)
+            const snapshot = await db.collection('enewspapers')
+                .orderBy('createdAt', 'desc')
+                .get();
+            papers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        } catch (indexError) {
+            // Fallback Strategy: In-memory sort (No index required)
+            if (indexError.message.includes('index') || indexError.message.includes('FAILED_PRECONDITION')) {
+                const snapshot = await db.collection('enewspapers').get();
+                papers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+                papers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            } else {
+                throw indexError;
+            }
+        }
 
         return NextResponse.json({ papers });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const status = error.code?.startsWith('auth/') ? 401 : 500;
+        return NextResponse.json({ error: error.message }, { status });
     }
 }
 
@@ -90,6 +100,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        const status = error.code?.startsWith('auth/') ? 401 : 500;
+        return NextResponse.json({ error: error.message }, { status });
     }
 }
