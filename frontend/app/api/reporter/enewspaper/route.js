@@ -45,7 +45,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {
-        console.error('Error creating enewspaper:', error);
+        // console.error('Error creating enewspaper:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
