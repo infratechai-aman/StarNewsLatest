@@ -38,7 +38,7 @@ export async function GET(request) {
             totalBusinesses: businessCount.data().count
         });
     } catch (error) {
-        console.error('Error fetching stats:', error);
+        // console.error('Error fetching stats:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

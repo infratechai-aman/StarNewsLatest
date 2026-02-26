@@ -56,7 +56,7 @@ export async function GET(request) {
         });
 
     } catch (error) {
-        console.error('Error fetching pending ticker:', error);
+        // console.error('Error fetching pending ticker:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -87,7 +87,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error updating pending ticker:', error);
+        // console.error('Error updating pending ticker:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -34,7 +34,7 @@ export async function GET(request) {
 
         return NextResponse.json(businesses);
     } catch (error) {
-        console.error('Error fetching admin businesses:', error);
+        // console.error('Error fetching admin businesses:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -81,7 +81,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newBusiness });
     } catch (error) {
-        console.error('Error creating business:', error);
+        // console.error('Error creating business:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

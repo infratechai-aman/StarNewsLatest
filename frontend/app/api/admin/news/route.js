@@ -89,7 +89,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
-        console.error('Error creating admin news:', error);
+        // console.error('Error creating admin news:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

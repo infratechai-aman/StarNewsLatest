@@ -64,7 +64,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       setTicker(data.ticker)
       setTickerText(data.ticker?.text || '')
     } catch (err) {
-      console.error('Failed to fetch ticker:', err)
+      // console.error('Failed to fetch ticker:', err)
     }
   }
 
@@ -76,7 +76,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       const data = await res.json()
       setMyNews(data.articles || [])
     } catch (err) {
-      console.error('Failed to fetch news:', err)
+      // console.error('Failed to fetch news:', err)
     }
   }
 
@@ -88,7 +88,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       const data = await res.json()
       setMyPapers(data.papers || [])
     } catch (err) {
-      console.error('Failed to fetch e-newspapers:', err)
+      // console.error('Failed to fetch e-newspapers:', err)
     }
   }
 
@@ -123,7 +123,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         alert('Failed to save: ' + (data.error || 'Unknown error'))
       }
     } catch (err) {
-      console.error('Failed to save ticker:', err)
+      // console.error('Failed to save ticker:', err)
       alert('Failed to save ticker: ' + err.message)
     } finally {
       setSavingTicker(false)
@@ -172,7 +172,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         setActiveTab('my-news')
       }
     } catch (err) {
-      console.error('Failed to submit news:', err)
+      // console.error('Failed to submit news:', err)
     }
   }
 
@@ -248,7 +248,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         setTimeout(() => setPaperSaved(false), 3000)
       }
     } catch (err) {
-      console.error('Failed to upload e-newspaper:', err)
+      // console.error('Failed to upload e-newspaper:', err)
       alert(err.message || 'Failed to upload')
     } finally {
       setSavingPaper(false)
@@ -265,7 +265,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       })
       await fetchMyPapers()
     } catch (err) {
-      console.error('Failed to delete:', err)
+      // console.error('Failed to delete:', err)
     }
   }
 

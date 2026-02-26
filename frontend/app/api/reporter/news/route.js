@@ -50,7 +50,7 @@ export async function GET(request) {
 
         return NextResponse.json({ articles });
     } catch (error) {
-        console.error('Error fetching reporter news:', error);
+        // console.error('Error fetching reporter news:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -112,7 +112,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
-        console.error('Error submitting reporter news:', error);
+        // console.error('Error submitting reporter news:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

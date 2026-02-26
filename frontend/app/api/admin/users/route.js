@@ -35,7 +35,7 @@ export async function GET(request) {
 
         return NextResponse.json(users);
     } catch (error) {
-        console.error('Error fetching admin users:', error);
+        // console.error('Error fetching admin users:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

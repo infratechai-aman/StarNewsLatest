@@ -178,7 +178,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await admin.getPending()
       setPendingData(data)
     } catch (error) {
-      console.error('Failed to load pending data:', error)
+      // console.error('Failed to load pending data:', error)
     } finally {
       setRefreshing(false)
     }
@@ -190,7 +190,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await news.getAll({ limit: 5 })
       setApprovedNews(data.articles || [])
     } catch (error) {
-      console.error('Failed to load approved news:', error)
+      // console.error('Failed to load approved news:', error)
     }
   }
 
@@ -352,7 +352,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await admin.getBusinesses()
       setAllBusinesses(data || [])
     } catch (error) {
-      console.error('Failed to load businesses:', error)
+      // console.error('Failed to load businesses:', error)
     }
   }
 
@@ -361,7 +361,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await admin.getClassifieds()
       setAllClassifieds(data || [])
     } catch (error) {
-      console.error('Failed to load classifieds:', error)
+      // console.error('Failed to load classifieds:', error)
     }
   }
 
@@ -370,7 +370,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await admin.getNews()
       setAllNews(data || [])
     } catch (error) {
-      console.error('Failed to load news:', error)
+      // console.error('Failed to load news:', error)
     }
   }
 
@@ -383,7 +383,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await res.json()
       setAllEnewspapers(data.papers || [])
     } catch (error) {
-      console.error('Failed to load e-newspapers:', error)
+      // console.error('Failed to load e-newspapers:', error)
     }
   }
 
@@ -392,7 +392,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await admin.getSidebarAd()
       setSidebarAdSettings(data || { enabled: true, imageUrl: '', linkUrl: '', whatsappNumber: '', title: '' })
     } catch (error) {
-      console.error('Failed to load sidebar ad:', error)
+      // console.error('Failed to load sidebar ad:', error)
     }
   }
 
@@ -407,7 +407,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await res.json()
       setReporterApplications(data.applications || [])
     } catch (error) {
-      console.error('Failed to load reporter applications:', error)
+      // console.error('Failed to load reporter applications:', error)
     } finally {
       setLoadingReporterApps(false)
     }
@@ -462,7 +462,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await res.json()
       setAllReporters(data.reporters || [])
     } catch (error) {
-      console.error('Failed to load reporters:', error)
+      // console.error('Failed to load reporters:', error)
     } finally {
       setLoadingAllReporters(false)
     }
@@ -479,7 +479,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await res.json()
       if (res.ok) setBusinessPromotions(data.promotions || [])
     } catch (error) {
-      console.error('Failed to load business promotions:', error)
+      // console.error('Failed to load business promotions:', error)
     } finally {
       setLoadingPromotions(false)
     }
@@ -523,7 +523,7 @@ const AdminDashboard = ({ user, toast }) => {
         toast({ title: 'Operation failed', variant: 'destructive' })
       }
     } catch (error) {
-      console.error('Promotion action error:', error)
+      // console.error('Promotion action error:', error)
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } finally {
       setLoading(false)
@@ -562,7 +562,7 @@ const AdminDashboard = ({ user, toast }) => {
       const data = await res.json()
       setPendingTicker(data.ticker)
     } catch (error) {
-      console.error('Failed to load pending ticker:', error)
+      // console.error('Failed to load pending ticker:', error)
     } finally {
       setLoadingPendingTicker(false)
     }
@@ -616,7 +616,7 @@ const AdminDashboard = ({ user, toast }) => {
         })
       }
     } catch (error) {
-      console.error('Failed to load breaking news:', error)
+      // console.error('Failed to load breaking news:', error)
     } finally {
       setLoading(false)
     }

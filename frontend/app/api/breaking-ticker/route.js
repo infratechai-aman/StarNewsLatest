@@ -28,7 +28,7 @@ export async function GET(request) {
             updatedAt: t.updatedAt
         });
     } catch (error) {
-        console.error('Error fetching ticker:', error);
+        // console.error('Error fetching ticker:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -41,7 +41,7 @@ export async function POST(request) {
         const token = authHeader?.split(' ')[1];
 
         if (!token || token === 'null' || token === 'undefined') {
-            console.error('[TickerAPI] No valid token provided in header');
+            // console.error('[TickerAPI] No valid token provided in header');
             return NextResponse.json({ error: 'Auth token missing' }, { status: 401 });
         }
 
@@ -49,7 +49,7 @@ export async function POST(request) {
         try {
             decodedUser = await auth.verifyIdToken(token);
         } catch (authError) {
-            console.error('[TickerAPI] Token verification failed:', authError.message);
+            // console.error('[TickerAPI] Token verification failed:', authError.message);
             // Return 401 instead of crashing or let it throw 500
             return NextResponse.json({
                 error: 'Authentication failed: ' + authError.message,
@@ -61,7 +61,7 @@ export async function POST(request) {
         const role = userDoc.exists ? userDoc.data().role : null;
 
         if (role !== 'super_admin' && role !== 'reporter') {
-            console.error(`[TickerAPI] Access denied for role: ${role}`);
+            // console.error(`[TickerAPI] Access denied for role: ${role}`);
             return NextResponse.json({ error: 'Unauthorized: Admin or Reporter role required' }, { status: 403 });
         }
 
@@ -77,7 +77,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('[TickerAPI] POST Error:', error);
+        // console.error('[TickerAPI] POST Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -23,7 +23,7 @@ export async function GET(request) {
         }
         return NextResponse.json({ ticker: null });
     } catch (error) {
-        console.error('Reporter breaking ticker GET error:', error);
+        // console.error('Reporter breaking ticker GET error:', error);
         return NextResponse.json({ ticker: null, error: error.message }, { status: 500 });
     }
 }
@@ -56,7 +56,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, ticker: updateData });
     } catch (error) {
-        console.error('Reporter breaking ticker PUT error:', error);
+        // console.error('Reporter breaking ticker PUT error:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
