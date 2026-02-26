@@ -80,7 +80,7 @@ const getApp = () => {
                 clientEmail,
                 privateKey,
             }),
-            storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+            storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
         });
     } catch (error) {
         console.error('[FirebaseAdmin] Initialization Failed:', error.message);
