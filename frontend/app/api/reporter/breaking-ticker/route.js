@@ -44,13 +44,29 @@ export async function PUT(request) {
 
         const texts = text.includes('•') ? text.split('•').map(t => t.trim()).filter(t => t) : [text.trim()];
 
+        // Check role (need to add auth verify here or trust middleware if any)
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+        const decodedUser = token ? await (async () => { try { return await auth.verifyIdToken(token); } catch (e) { return null; } })() : null;
+        let role = 'reporter'; // Default for this endpoint
+        if (decodedUser) {
+            const userDoc = await db.collection('users').doc(decodedUser.uid).get();
+            role = userDoc.exists ? userDoc.data().role : 'reporter';
+        }
+
         const updateData = {
-            text: text.trim(),
-            texts,
-            enabled: true,
-            status: 'active',
             updatedAt: new Date().toISOString()
         };
+
+        if (role === 'super_admin') {
+            updateData.text = text.trim();
+            updateData.texts = texts;
+            updateData.enabled = true;
+            updateData.status = 'active';
+        } else {
+            updateData.pendingText = text.trim();
+            updateData.pendingStatus = 'pending';
+        }
 
         await db.collection('breaking_ticker').doc('main').set(updateData, { merge: true });
 

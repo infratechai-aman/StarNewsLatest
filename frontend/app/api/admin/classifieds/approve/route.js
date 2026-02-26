@@ -47,7 +47,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, status });
     } catch (error) {
-        console.error('Error approving classified:', error);
+        // console.error('Error approving classified:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

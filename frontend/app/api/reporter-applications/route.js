@@ -52,7 +52,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'Application submitted successfully', id: newDocRef.id });
     } catch (error) {
-        console.error('Reporter application POST error:', error);
+        // console.error('Reporter application POST error:', error);
         return NextResponse.json({ error: 'Failed to submit application' }, { status: 500 });
     }
 }
@@ -79,7 +79,7 @@ export async function GET(request) {
 
         return NextResponse.json({ applications });
     } catch (error) {
-        console.error('Reporter applications GET error:', error);
+        // console.error('Reporter applications GET error:', error);
         return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
     }
 }
@@ -113,7 +113,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true, message: 'Application updated' });
     } catch (error) {
-        console.error('Reporter application PUT error:', error);
+        // console.error('Reporter application PUT error:', error);
         return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });
     }
 }
@@ -143,7 +143,7 @@ export async function DELETE(request) {
 
         return NextResponse.json({ success: true, message: 'Application deleted' });
     } catch (error) {
-        console.error('Reporter application DELETE error:', error);
+        // console.error('Reporter application DELETE error:', error);
         return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });
     }
 }

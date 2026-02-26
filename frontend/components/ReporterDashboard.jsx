@@ -119,6 +119,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
         setIsEditingTicker(false)
         setTickerSaved(true)
         setTimeout(() => setTickerSaved(false), 3000)
+        const msg = (user?.role === 'super_admin') ? 'Ticker updated successfully!' : 'Ticker submitted for approval!';
+        alert(msg)
       } else {
         alert('Failed to save: ' + (data.error || 'Unknown error'))
       }

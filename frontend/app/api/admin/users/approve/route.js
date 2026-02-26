@@ -46,7 +46,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, status });
     } catch (error) {
-        console.error('Error approving user:', error);
+        // console.error('Error approving user:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

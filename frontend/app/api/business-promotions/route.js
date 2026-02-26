@@ -40,7 +40,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPromo });
     } catch (error) {
-        console.error('Error submitting promotion:', error);
+        // console.error('Error submitting promotion:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -62,7 +62,7 @@ export async function GET(request) {
         const promotions = snapshot.docs.map(doc => doc.data());
         return NextResponse.json(promotions);
     } catch (error) {
-        console.error('Error fetching promotions:', error);
+        // console.error('Error fetching promotions:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -91,7 +91,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error updating promotion:', error);
+        // console.error('Error updating promotion:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
@@ -117,7 +117,7 @@ export async function DELETE(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting promotion:', error);
+        // console.error('Error deleting promotion:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -39,7 +39,7 @@ export async function PUT(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error rejecting ticker:', error);
+        // console.error('Error rejecting ticker:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

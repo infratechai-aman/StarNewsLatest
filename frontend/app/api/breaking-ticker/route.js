@@ -68,12 +68,21 @@ export async function POST(request) {
         const body = await request.json();
         const { enabled, texts } = body;
 
-        await db.collection('breaking_ticker').doc('main').set({
-            text: texts?.[0] || '',
-            texts: texts || [],
-            status: enabled ? 'active' : 'inactive',
+        const updateData = {
             updatedAt: new Date().toISOString()
-        }, { merge: true });
+        };
+
+        if (role === 'super_admin') {
+            updateData.text = texts?.[0] || '';
+            updateData.texts = texts || [];
+            updateData.status = enabled ? 'active' : 'inactive';
+        } else {
+            // Reporter: only update pending fields
+            updateData.pendingText = texts?.[0] || '';
+            updateData.pendingStatus = 'pending';
+        }
+
+        await db.collection('breaking_ticker').doc('main').set(updateData, { merge: true });
 
         return NextResponse.json({ success: true });
     } catch (error) {
