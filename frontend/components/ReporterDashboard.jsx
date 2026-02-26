@@ -146,6 +146,12 @@ const ReporterDashboard = ({ user, onLogout }) => {
         if (!imageStr || !imageStr.startsWith('data:image')) return imageStr
 
         try {
+          // Check size - rough estimate from base64 length
+          const sizeInBytes = (imageStr.length * 3) / 4;
+          if (sizeInBytes > 4.5 * 1024 * 1024) {
+            throw new Error("Image too large (max 4.5MB). Please use a smaller image.")
+          }
+
           // Convert base64 to blob
           const base64Part = imageStr.split(',')[1]
           const mimeStr = imageStr.split(',')[0].split(':')[1].split(';')[0]
@@ -166,11 +172,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
           if (uploadRes.ok) {
             const uploadData = await uploadRes.json()
             return uploadData.url
+          } else {
+            const errData = await uploadRes.json().catch(() => ({}));
+            throw new Error(errData.error || `Upload failed with status ${uploadRes.status}`)
           }
-          return imageStr
         } catch (err) {
-          // console.error('Upload failed, using original string:', err)
-          return imageStr
+          toast({ title: 'Image Upload Error', description: err.message, variant: 'destructive' })
+          throw err // Re-throw to stop the submission process
         }
       }
 

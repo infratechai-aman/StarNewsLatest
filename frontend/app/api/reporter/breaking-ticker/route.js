@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 
 export async function GET(request) {
+    const auth = getAuth();
     try {
         const db = getDb();
         if (!db) {
@@ -31,6 +32,7 @@ export async function GET(request) {
 export async function PUT(request) {
     try {
         const db = getDb();
+        const auth = getAuth();
         if (!db) {
             return NextResponse.json({ success: false, error: 'Database connection failed' }, { status: 503 });
         }

@@ -1,3 +1,7 @@
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { NextResponse } from 'next/server';
+import { translateText } from '@/lib/translation';
+
 // GET: My Submitted News
 export async function GET(request) {
     const db = getDb();
