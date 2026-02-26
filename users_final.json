@@ -1,0 +1,35 @@
+[
+  {
+    "id": "54f30c77-333e-4507-a774-e7ac56e91658",
+    "email": "aman@starnewsreporter.com",
+    "name": "Aman Thalukdar",
+    "role": "reporter",
+    "status": "active",
+    "phone": "7028033763",
+    "address": "",
+    "createdAt": "2026-01-26T01:05:51.913Z",
+    "updatedAt": "2026-01-26T01:05:51.913Z"
+  },
+  {
+    "id": "dc51d99a-58bc-4219-b8cd-0bf75660b4c1",
+    "email": "riyaz@starnews.com",
+    "name": "StarNews Admin",
+    "role": "super_admin",
+    "status": "active",
+    "phone": "",
+    "address": "",
+    "createdAt": "2026-01-25T23:18:53.421Z",
+    "updatedAt": "2026-01-26T02:23:37.866Z"
+  },
+  {
+    "id": "f902dd1c-ada6-4bef-b1e2-6275f106823b",
+    "email": "aman@reporterStarNews",
+    "name": "Aman Reporter",
+    "role": "reporter",
+    "status": "active",
+    "phone": "",
+    "address": "",
+    "createdAt": "2026-01-25T23:27:29.630Z",
+    "updatedAt": "2026-01-25T23:27:29.630Z"
+  }
+]

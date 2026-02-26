@@ -41,3 +41,39 @@ export async function GET(request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+// POST: Upload E-Newspaper (Admin)
+export async function POST(request) {
+    try {
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await hasRole(token, ['super_admin']))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { title, pdfUrl, thumbnailUrl, publishDate, active } = body;
+
+        if (!title || !pdfUrl) {
+            return NextResponse.json({ error: 'Title and PDF URL are required' }, { status: 400 });
+        }
+
+        const newPaper = {
+            title,
+            pdfUrl,
+            thumbnailUrl: thumbnailUrl || '',
+            publishDate: publishDate || new Date().toISOString().split('T')[0],
+            active: active !== false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const docRef = await db.collection('enewspapers').add(newPaper);
+        await docRef.update({ id: docRef.id });
+
+        return NextResponse.json({ id: docRef.id, ...newPaper });
+    } catch (error) {
+        console.error('Error uploading enewspaper:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

@@ -14,8 +14,8 @@ async function isSuperAdmin(token) {
     }
 }
 
-// DELETE: Delete Reporter (Admin)
-export async function DELETE(request, { params }) {
+// PUT: Reject Pending Ticker
+export async function PUT(request) {
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -24,27 +24,22 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const id = params.id;
+        const docRef = db.collection('breaking_ticker').doc('main');
+        const doc = await docRef.get();
 
-        // Check if user is actually a reporter
-        const userDoc = await db.collection('users').doc(id).get();
-        if (!userDoc.exists || userDoc.data().role !== 'reporter') {
-            return NextResponse.json({ error: 'User is not a reporter' }, { status: 400 });
+        if (!doc.exists) {
+            return NextResponse.json({ error: 'Ticker not found' }, { status: 404 });
         }
 
-        // 1. Delete from Firestore
-        await db.collection('users').doc(id).delete();
-
-        // 2. Delete from Firebase Auth
-        try {
-            await auth.deleteUser(id);
-        } catch (authErr) {
-            console.warn('Reporter deleted from DB but failed in Auth:', authErr.message);
-        }
+        await docRef.update({
+            pendingText: '',
+            pendingStatus: 'rejected',
+            updatedAt: new Date().toISOString()
+        });
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting reporter:', error);
+        console.error('Error rejecting ticker:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

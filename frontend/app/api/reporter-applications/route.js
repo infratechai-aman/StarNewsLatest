@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/firebaseAdmin';
+import { getDb, auth as adminAuth } from '@/lib/firebaseAdmin';
+
+async function isSuperAdmin(token) {
+    if (!token) return false;
+    try {
+        const decodedUser = await adminAuth.verifyIdToken(token);
+        const userDoc = await getDb().collection('users').doc(decodedUser.uid).get();
+        return userDoc.exists && userDoc.data().role === 'super_admin';
+    } catch (e) {
+        return false;
+    }
+}
 
 export async function POST(request) {
     try {
@@ -49,8 +60,10 @@ export async function POST(request) {
 export async function GET(request) {
     try {
         const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
         const db = getDb();
@@ -74,8 +87,10 @@ export async function GET(request) {
 export async function PUT(request) {
     try {
         const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
         const db = getDb();
@@ -106,8 +121,10 @@ export async function PUT(request) {
 export async function DELETE(request) {
     try {
         const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
         const db = getDb();

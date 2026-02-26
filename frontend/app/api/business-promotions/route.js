@@ -66,3 +66,58 @@ export async function GET(request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+// PUT: Update Promotion Status (Admin)
+export async function PUT(request) {
+    try {
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { id, status, adminNote } = body;
+
+        if (!id || !status) {
+            return NextResponse.json({ error: 'ID and status are required' }, { status: 400 });
+        }
+
+        await db.collection('business_promotions').doc(id).update({
+            status,
+            adminNote: adminNote || '',
+            updatedAt: new Date().toISOString()
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error updating promotion:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+// DELETE: Remove Promotion Request (Admin)
+export async function DELETE(request) {
+    try {
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        await db.collection('business_promotions').doc(id).delete();
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting promotion:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
