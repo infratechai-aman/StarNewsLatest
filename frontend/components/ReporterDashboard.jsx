@@ -53,7 +53,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
     showOnHome: true
   })
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('reporterToken') : ''
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : ''
 
   const fetchTicker = async () => {
     try {

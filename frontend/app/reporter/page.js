@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import ReporterDashboard from '@/components/ReporterDashboard'
 
+import { auth } from '@/lib/api'
+
 export default function ReporterPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [user, setUser] = useState(null)
@@ -11,7 +13,7 @@ export default function ReporterPage() {
     const [loginData, setLoginData] = useState({ email: '', password: '' })
 
     useEffect(() => {
-        const token = localStorage.getItem('reporterToken')
+        const token = localStorage.getItem('token')
         const savedUser = localStorage.getItem('reporterUser')
         if (token && savedUser) {
             setUser(JSON.parse(savedUser))
@@ -25,34 +27,31 @@ export default function ReporterPage() {
         setError('')
         setLoading(true)
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(loginData)
+            const response = await auth.login({
+                email: loginData.email,
+                password: loginData.password
             })
-            const data = await res.json()
-            if (!res.ok) {
-                setError(data.error || 'Login failed')
-                setLoading(false)
-                return
-            }
-            if (data.user.role !== 'reporter') {
+
+            if (response.user.role !== 'reporter' && response.user.role !== 'super_admin') {
                 setError('Access denied. Reporter credentials required.')
                 setLoading(false)
                 return
             }
-            localStorage.setItem('reporterToken', data.token)
-            localStorage.setItem('reporterUser', JSON.stringify(data.user))
-            setUser(data.user)
+
+            // Standardize on the 'token' key used by the rest of the app
+            localStorage.setItem('token', response.token)
+            localStorage.setItem('reporterUser', JSON.stringify(response.user))
+
+            setUser(response.user)
             setIsLoggedIn(true)
         } catch (err) {
-            setError('Network error. Please try again.')
+            setError(err.message || 'Login failed. Please check your credentials.')
         }
         setLoading(false)
     }
 
     const handleLogout = () => {
-        localStorage.removeItem('reporterToken')
+        localStorage.removeItem('token')
         localStorage.removeItem('reporterUser')
         setUser(null)
         setIsLoggedIn(false)
