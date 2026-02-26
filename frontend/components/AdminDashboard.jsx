@@ -602,9 +602,30 @@ const AdminDashboard = ({ user, toast }) => {
     }
   }
 
+  // Load current live ticker
+  const loadBreakingNews = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/breaking-ticker')
+      const data = await res.json()
+      if (res.ok) {
+        setBreakingNews({
+          enabled: data.enabled,
+          text: data.text || '',
+          articleIds: [] // We don't easily know which IDs map to these texts without searching
+        })
+      }
+    } catch (error) {
+      console.error('Failed to load breaking news:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Load data on tab change
   useEffect(() => {
     if (activeTab === 'overview') loadPendingTicker()
+    if (activeTab === 'breaking') loadBreakingNews()
     if (activeTab === 'businesses') loadAllBusinesses()
     if (activeTab === 'classifieds') loadAllClassifieds()
     if (activeTab === 'manage-news') loadAllNews()
@@ -1305,32 +1326,34 @@ const AdminDashboard = ({ user, toast }) => {
                     onClick={async () => {
                       setLoading(true)
                       try {
-                        const token = localStorage.getItem('token')
+                        const payload = {
+                          enabled: breakingNews.enabled,
+                          texts: breakingNews.text
+                            ? [breakingNews.text, ...breakingNews.articleIds.map(id => {
+                              const article = approvedNews.find(a => a.id === id)
+                              return article ? getTextValue(article.title) : null
+                            }).filter(Boolean)]
+                            : breakingNews.articleIds.map(id => {
+                              const article = approvedNews.find(a => a.id === id)
+                              return article ? getTextValue(article.title) : null
+                            }).filter(Boolean)
+                        }
+
+                        // Use the consolidated api utility
                         const res = await fetch('/api/breaking-ticker', {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
                           },
-                          body: JSON.stringify({
-                            enabled: breakingNews.enabled,
-                            // Convert articleIds to texts (article titles)
-                            texts: breakingNews.text
-                              ? [breakingNews.text, ...breakingNews.articleIds.map(id => {
-                                const article = approvedNews.find(a => a.id === id)
-                                return article ? getTextValue(article.title) : null
-                              }).filter(Boolean)]
-                              : breakingNews.articleIds.map(id => {
-                                const article = approvedNews.find(a => a.id === id)
-                                return article ? getTextValue(article.title) : null
-                              }).filter(Boolean)
-                          })
+                          body: JSON.stringify(payload)
                         })
+
                         if (res.ok) {
                           toast({ title: 'Breaking News Settings Saved!', description: 'The ticker will update on page refresh.' })
                         } else {
                           const data = await res.json()
-                          toast({ title: 'Save Failed', description: data.error || 'Unknown error', variant: 'destructive' })
+                          throw new Error(data.error || 'Failed to save')
                         }
                       } catch (error) {
                         toast({ title: 'Save Failed', description: error.message, variant: 'destructive' })
