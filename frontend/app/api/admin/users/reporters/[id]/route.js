@@ -1,27 +1,37 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
-
 // DELETE: Delete Reporter (Admin)
 export async function DELETE(request, { params }) {
+    const db = getDb();
+    const auth = getAuth();
+
+    if (!db || !auth) {
+        return NextResponse.json({ error: 'Firebase services not available' }, { status: 503 });
+    }
+
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
-        if (!(await isSuperAdmin(token))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        if (!token) return NextResponse.json({ error: 'No auth token provided' }, { status: 401 });
+
+        let decodedUser;
+        try {
+            decodedUser = await auth.verifyIdToken(token);
+        } catch (tokenError) {
+            console.error('Token verification failed:', tokenError.code, tokenError.message);
+            return NextResponse.json({
+                error: 'Invalid authentication token. Please log out, log back in, and try again.',
+                code: tokenError.code
+            }, { status: 401 });
+        }
+
+        const adminDoc = await db.collection('users').doc(decodedUser.uid).get();
+        if (!adminDoc.exists || adminDoc.data().role !== 'super_admin') {
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
         const id = params.id;
@@ -45,6 +55,7 @@ export async function DELETE(request, { params }) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting reporter:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error.message, code: error.code || 'UNKNOWN' }, { status: 500 });
     }
 }
+

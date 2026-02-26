@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server'
-import { auth, db } from '@/lib/firebaseAdmin'
+import { getAuth, getDb } from '@/lib/firebaseAdmin'
 import { ROLES } from '@/lib/auth'
 
 export async function POST(request) {
+    const auth = getAuth();
+    const db = getDb();
+
+    if (!auth || !db) {
+        return NextResponse.json({ error: 'Firebase services not available' }, { status: 503 });
+    }
+
     try {
         const body = await request.json()
         const { email, password, name, role = ROLES.REGISTERED } = body

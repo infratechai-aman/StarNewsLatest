@@ -1,19 +1,38 @@
-import { auth, db } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 // Create Reporter (Admin)
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
+
+    if (!db || !auth) {
+        return NextResponse.json({ error: 'Firebase services not available' }, { status: 503 });
+    }
+
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        if (!token) {
+            return NextResponse.json({ error: 'No auth token provided' }, { status: 401 });
+        }
 
-        const decodedAdmin = await auth.verifyIdToken(token);
+        let decodedAdmin;
+        try {
+            decodedAdmin = await auth.verifyIdToken(token);
+        } catch (tokenError) {
+            console.error('Token verification failed:', tokenError.code, tokenError.message);
+            return NextResponse.json({
+                error: 'Invalid authentication token. Please log out, log back in, and try again.',
+                code: tokenError.code || 'auth/invalid-token'
+            }, { status: 401 });
+        }
+
         const adminDoc = await db.collection('users').doc(decodedAdmin.uid).get();
 
         if (!adminDoc.exists || adminDoc.data().role !== 'super_admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -50,6 +69,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error creating reporter:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: error.message, code: error.code || 'UNKNOWN' }, { status: 500 });
     }
 }
