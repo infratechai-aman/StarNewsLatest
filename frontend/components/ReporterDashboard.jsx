@@ -8,55 +8,53 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Radio, Newspaper, LogOut, Edit, Trash2, Clock, X, MessageSquare, AlertTriangle, Check, FileText, Upload, File } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
-// Auto-compress images to <= 500KB using Canvas API
-const compressImage = (file, maxSizeKB = 500, maxWidth = 1200) => {
+// Fast auto-compress images to <= 500KB using Canvas API
+const compressImage = (file, maxSizeKB = 500, maxWidth = 900) => {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = document.createElement('canvas')
-        let width = img.width
-        let height = img.height
+    // Use createImageBitmap for faster decoding (no FileReader needed for the image)
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let width = img.width
+      let height = img.height
 
-        // Scale down if wider than maxWidth
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width)
-          width = maxWidth
-        }
+      // Scale down to maxWidth (smaller = faster compression + smaller file)
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width)
+        width = maxWidth
+      }
 
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext('2d')
-        ctx.drawImage(img, 0, 0, width, height)
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
 
-        // Iteratively reduce quality until under maxSizeKB
-        let quality = 0.85
-        let result = canvas.toDataURL('image/jpeg', quality)
+      // Smart single-pass: estimate quality based on pixel count
+      const pixels = width * height
+      let quality = 0.7
+      if (pixels > 500000) quality = 0.5       // > 500K pixels
+      else if (pixels > 200000) quality = 0.6  // > 200K pixels
 
-        while (result.length > maxSizeKB * 1024 * 1.37 && quality > 0.1) {
-          quality -= 0.1
-          result = canvas.toDataURL('image/jpeg', quality)
-        }
+      const result = canvas.toDataURL('image/jpeg', quality)
 
-        // If still too big, scale down further
-        if (result.length > maxSizeKB * 1024 * 1.37) {
-          const scale = 0.6
-          canvas.width = Math.round(width * scale)
-          canvas.height = Math.round(height * scale)
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-          result = canvas.toDataURL('image/jpeg', 0.7)
-        }
-
+      // One retry at lower quality if still too big
+      if (result.length > maxSizeKB * 1370) {
+        const retry = canvas.toDataURL('image/jpeg', 0.3)
+        resolve(retry)
+      } else {
         resolve(result)
       }
-      img.onerror = () => reject(new Error('Failed to load image'))
-      img.src = e.target.result
     }
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Failed to load image'))
+    }
+    img.src = url
   })
 }
+
 
 const ReporterDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('submit-news')
