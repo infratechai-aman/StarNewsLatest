@@ -14,7 +14,7 @@ async function isSuperAdmin(token) {
     }
 }
 
-// POST: Approve or Reject Classified
+// POST: Approve or Reject News
 export async function POST(request) {
     try {
         const authHeader = request.headers.get('authorization');
@@ -25,29 +25,35 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { classifiedId, action } = body;
+        const { articleId, action, reason } = body;
 
-        if (!classifiedId || !action) {
-            return NextResponse.json({ error: 'Classified ID and action are required' }, { status: 400 });
+        if (!articleId || !action) {
+            return NextResponse.json({ error: 'Article ID and action are required' }, { status: 400 });
         }
 
-        const docRef = db.collection('classified_ads').doc(classifiedId);
+        const docRef = db.collection('news_articles').doc(articleId);
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            return NextResponse.json({ error: 'Classified not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Article not found' }, { status: 404 });
         }
 
         const status = action === 'approve' ? 'approved' : 'rejected';
-        await docRef.update({
+        const updateData = {
             approvalStatus: status,
-            active: status === 'approved',
+            adminResponse: reason || '',
             updatedAt: new Date().toISOString()
-        });
+        };
+
+        if (status === 'approved') {
+            updateData.publishedAt = new Date().toISOString();
+        }
+
+        await docRef.update(updateData);
 
         return NextResponse.json({ success: true, status });
     } catch (error) {
-        console.error('Error approving classified:', error);
+        console.error('Error approving news:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

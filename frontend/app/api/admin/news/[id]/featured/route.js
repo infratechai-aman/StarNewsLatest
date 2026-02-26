@@ -14,7 +14,7 @@ async function isSuperAdmin(token) {
     }
 }
 
-// POST: Toggle Classified Status (Admin)
+// POST: Toggle News Featured Status (Admin)
 export async function POST(request, { params }) {
     try {
         const authHeader = request.headers.get('authorization');
@@ -25,19 +25,19 @@ export async function POST(request, { params }) {
         }
 
         const id = params.id;
-        const docRef = db.collection('classified_ads').doc(id);
+        const docRef = db.collection('news_articles').doc(id);
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            return NextResponse.json({ error: 'Classified not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Article not found' }, { status: 404 });
         }
 
-        const newStatus = !doc.data().active;
-        await docRef.update({ active: newStatus });
+        const newStatus = !doc.data().featured;
+        await docRef.update({ featured: newStatus });
 
-        return NextResponse.json({ success: true, enabled: newStatus });
+        return NextResponse.json({ success: true, featured: newStatus });
     } catch (error) {
-        console.error('Error toggling admin classified:', error);
+        console.error('Error toggling admin news featured status:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -37,3 +37,44 @@ export async function GET(request) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+// POST: Create Classified (Admin)
+export async function POST(request) {
+    try {
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
+        if (!(await isSuperAdmin(token))) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const body = await request.json();
+        const { title, description, category, price, contact, city, images, status } = body;
+
+        if (!title) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+        }
+
+        const newAd = {
+            title,
+            description: description || '',
+            category: category || '',
+            price: price || '',
+            contact: contact || '',
+            city: city || '',
+            images: images || [],
+            status: status || 'approved',
+            approvalStatus: 'approved',
+            active: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const docRef = await db.collection('classified_ads').add(newAd);
+        await docRef.update({ id: docRef.id });
+
+        return NextResponse.json({ id: docRef.id, ...newAd });
+    } catch (error) {
+        console.error('Error creating admin classified:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}

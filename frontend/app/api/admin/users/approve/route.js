@@ -14,8 +14,8 @@ async function isSuperAdmin(token) {
     }
 }
 
-// POST: Toggle Classified Status (Admin)
-export async function POST(request, { params }) {
+// POST: Approve or Activate User
+export async function POST(request) {
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -24,20 +24,29 @@ export async function POST(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const id = params.id;
-        const docRef = db.collection('classified_ads').doc(id);
+        const body = await request.json();
+        const { userId, action } = body;
+
+        if (!userId || !action) {
+            return NextResponse.json({ error: 'User ID and action are required' }, { status: 400 });
+        }
+
+        const docRef = db.collection('users').doc(userId);
         const doc = await docRef.get();
 
         if (!doc.exists) {
-            return NextResponse.json({ error: 'Classified not found' }, { status: 404 });
+            return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        const newStatus = !doc.data().active;
-        await docRef.update({ active: newStatus });
+        const status = action === 'approve' ? 'active' : 'inactive';
+        await docRef.update({
+            status: status,
+            updatedAt: new Date().toISOString()
+        });
 
-        return NextResponse.json({ success: true, enabled: newStatus });
+        return NextResponse.json({ success: true, status });
     } catch (error) {
-        console.error('Error toggling admin classified:', error);
+        console.error('Error approving user:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

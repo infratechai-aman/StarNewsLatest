@@ -1,8 +1,10 @@
 import { db, auth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 async function isSuperAdmin(token) {
-    if (!token) return false;
+    if (!token || !db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();
@@ -12,8 +14,8 @@ async function isSuperAdmin(token) {
     }
 }
 
-// PUT: Update Classified (Admin)
-export async function PUT(request, { params }) {
+// GET: Layout settings
+export async function GET(request) {
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -22,23 +24,16 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const id = params.id;
-        const body = await request.json();
-
-        await db.collection('classified_ads').doc(id).update({
-            ...body,
-            updatedAt: new Date().toISOString()
-        });
-
-        return NextResponse.json({ success: true });
+        const doc = await db.collection('settings').doc('layout').get();
+        return NextResponse.json(doc.exists ? doc.data() : { header: {}, footer: {} });
     } catch (error) {
-        console.error('Error updating classified:', error);
+        console.error('Error fetching layout:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-// DELETE: Delete Classified
-export async function DELETE(request, { params }) {
+// PUT: Update Layout
+export async function PUT(request) {
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -47,11 +42,12 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const id = params.id;
-        await db.collection('classified_ads').doc(id).delete();
+        const body = await request.json();
+        await db.collection('settings').doc('layout').set(body, { merge: true });
+
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting classified:', error);
+        console.error('Error updating layout:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
