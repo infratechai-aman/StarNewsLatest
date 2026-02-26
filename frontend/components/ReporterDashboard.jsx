@@ -189,7 +189,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
             throw new Error(errData.error || `Upload failed with status ${uploadRes.status}`)
           }
         } catch (err) {
-          toast({ title: 'Image Upload Error', description: err.message, variant: 'destructive' })
+          console.error('Image Upload Error:', err.message)
           throw err // Re-throw to stop the submission process
         }
       }

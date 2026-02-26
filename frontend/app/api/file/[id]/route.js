@@ -1,9 +1,15 @@
-import { db } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request, { params }) {
+    const db = getDb();
+
+    if (!db) {
+        return new NextResponse('Database not available', { status: 503 });
+    }
+
     try {
         const id = params.id;
         if (!id) {
@@ -35,3 +41,4 @@ export async function GET(request, { params }) {
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 }
+
