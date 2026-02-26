@@ -75,9 +75,11 @@ export async function POST(request) {
         const body = await request.json();
         const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, authorName, thumbnailUrl, featured } = body;
 
-        // Auto-translate Title and Content
-        const translatedTitle = await translateText(title);
-        const translatedContent = await translateText(content);
+        // Auto-translate Title and Content (parallel for speed)
+        const [translatedTitle, translatedContent] = await Promise.all([
+            translateText(title),
+            translateText(content)
+        ]);
 
         // Resolve Category
         let finalCategoryId = categoryId || category;
