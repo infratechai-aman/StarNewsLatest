@@ -1,9 +1,12 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 // Helper for Role check
 async function hasRole(token, allowedRoles) {
     if (!token) return false;
+    const db = getDb();
+    const auth = getAuth();
+    if (!db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();
@@ -13,8 +16,50 @@ async function hasRole(token, allowedRoles) {
     }
 }
 
+// GET: My E-Newspapers
+export async function GET(request) {
+    const db = getDb();
+    const auth = getAuth();
+    if (!db || !auth) {
+        return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 });
+    }
+    try {
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+
+        const decodedUser = await auth.verifyIdToken(token);
+
+        // Basic check - either reporter or admin
+        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
+        const role = userDoc.exists ? userDoc.data().role : null;
+        if (role !== 'reporter' && role !== 'super_admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        const snapshot = await db.collection('enewspapers')
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        const papers = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+        }));
+
+        return NextResponse.json({ papers });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
 // POST: Create E-Newspaper (Reporter/Admin)
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
+    if (!db || !auth) {
+        return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 });
+    }
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -45,7 +90,6 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {
-        // console.error('Error creating enewspaper:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

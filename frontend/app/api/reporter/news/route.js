@@ -1,27 +1,8 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
-import { NextResponse } from 'next/server';
-import { translateText } from '@/lib/translation';
-
-// Helper for Role check
-async function canManageNews(token) {
-    if (!token) return false;
-    const db = getDb();
-    const auth = getAuth();
-    if (!db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        const role = userDoc.exists ? userDoc.data().role : null;
-        return role === 'reporter' || role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
-
 // GET: My Submitted News
 export async function GET(request) {
     const db = getDb();
-    if (!db) {
+    const auth = getAuth();
+    if (!db || !auth) {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }
     try {
@@ -56,15 +37,16 @@ export async function GET(request) {
 }
 
 // POST: Submit News for Review
-// Note: This duplicates some logic from /api/news POST, but enforces 'pending' status
 export async function POST(request) {
     const db = getDb();
-    if (!db) {
+    const auth = getAuth();
+    if (!db || !auth) {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         const decodedUser = await auth.verifyIdToken(token);
 
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();

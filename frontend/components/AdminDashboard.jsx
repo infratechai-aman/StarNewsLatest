@@ -809,6 +809,40 @@ const AdminDashboard = ({ user, toast }) => {
     }
     try {
       setLoading(true)
+
+      // Helper function to upload image if it's base64 or a blob
+      const uploadIfNeeded = async (imageStr) => {
+        if (!imageStr || !imageStr.startsWith('data:image')) return imageStr
+
+        try {
+          // Convert base64 to blob
+          const response = await fetch(imageStr)
+          const blob = await response.blob()
+          const mimeStr = imageStr.split(',')[0].split(':')[1].split(';')[0]
+
+          const formData = new FormData()
+          formData.append('file', blob, `image.${mimeStr.split('/')[1]}`)
+
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json()
+            return uploadData.url
+          }
+          return imageStr // Fallback
+        } catch (err) {
+          return imageStr
+        }
+      }
+
+      // Upload images first if they are base64
+      const mainImageUrl = await uploadIfNeeded(newsForm.mainImage)
+      const currentThumbs = newsForm.thumbnails || (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : [])
+      const uploadedThumbs = await Promise.all(currentThumbs.map(thumb => uploadIfNeeded(thumb)))
+
       // Map form fields to API expected fields
       const payload = {
         title: newsForm.title,
@@ -816,17 +850,18 @@ const AdminDashboard = ({ user, toast }) => {
         categoryId: newsForm.category,
         category: newsForm.category,
         city: newsForm.city || '',
-        mainImage: newsForm.mainImage || '',
+        mainImage: mainImageUrl || '',
         metaDescription: newsForm.metaDescription || '',
         videoUrl: newsForm.youtubeUrl || '',
         youtubeUrl: newsForm.youtubeUrl || '',
-        thumbnails: newsForm.thumbnails || [],
-        thumbnailUrl: newsForm.thumbnails?.[0] || '',
+        thumbnails: uploadedThumbs.filter(Boolean),
+        thumbnailUrl: uploadedThumbs[0] || '',
         tags: newsForm.tags ? newsForm.tags.split(',').map(t => t.trim()) : [],
         featured: newsForm.featured || false,
         showOnHome: newsForm.showOnHome !== false,
-        authorName: newsForm.authorName || ''
+        authorName: newsForm.authorName || 'Admin'
       }
+
       if (editingNews) {
         await admin.updateNews(editingNews.id, payload)
         toast({ title: 'News Updated' })
@@ -3780,12 +3815,16 @@ const AdminDashboard = ({ user, toast }) => {
                     <Input
                       placeholder="Add new thumbnail URL"
                       className="flex-1"
-                      value=""
+                      value={newThumbInput || ''}
                       onChange={(e) => {
                         const val = e.target.value
-                        if (val) {
-                          const newThumbs = [...(newsForm.thumbnails || []), val]
+                        setNewThumbInput(val)
+                      }}
+                      onBlur={() => {
+                        if (newThumbInput) {
+                          const newThumbs = [...(newsForm.thumbnails || []), newThumbInput]
                           setNewsForm({ ...newsForm, thumbnails: newThumbs, thumbnailUrl: newThumbs[0] })
+                          setNewThumbInput('')
                         }
                       }}
                     />
@@ -3794,7 +3833,7 @@ const AdminDashboard = ({ user, toast }) => {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (file) {
                             const reader = new FileReader()

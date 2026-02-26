@@ -135,9 +135,51 @@ const ReporterDashboard = ({ user, onLogout }) => {
   const handleSubmitNews = async (e) => {
     e.preventDefault()
     if (!newsFormData.title.trim() || !newsFormData.content.trim() || !newsFormData.categoryId) return
+
+    setLoading(true) // Reuse loading state for submission
     try {
       const url = editingNewsItem ? `/api/reporter/news/${editingNewsItem.id}` : '/api/reporter/news'
       const method = editingNewsItem ? 'PUT' : 'POST'
+
+      // Helper function to upload image if it's base64
+      const uploadIfNeeded = async (imageStr) => {
+        if (!imageStr || !imageStr.startsWith('data:image')) return imageStr
+
+        try {
+          // Convert base64 to blob
+          const base64Part = imageStr.split(',')[1]
+          const mimeStr = imageStr.split(',')[0].split(':')[1].split(';')[0]
+          const byteChars = atob(base64Part)
+          const byteNums = new Array(byteChars.length)
+          for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i)
+          const byteArray = new Uint8Array(byteNums)
+          const blob = new Blob([byteArray], { type: mimeStr })
+
+          const formData = new FormData()
+          formData.append('file', blob, `image.${mimeStr.split('/')[1]}`)
+
+          const uploadRes = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (uploadRes.ok) {
+            const uploadData = await uploadRes.json()
+            return uploadData.url
+          }
+          return imageStr
+        } catch (err) {
+          // console.error('Upload failed, using original string:', err)
+          return imageStr
+        }
+      }
+
+      // Upload images first if they are base64 to avoid 413 Payload Too Large
+      const [mainImageUrl, secondImageUrl, thumbnailUrl] = await Promise.all([
+        uploadIfNeeded(newsFormData.mainImage),
+        uploadIfNeeded(newsFormData.secondImage),
+        uploadIfNeeded(newsFormData.thumbnailUrl)
+      ])
 
       // Prepare payload with all fields
       const payload = {
@@ -146,11 +188,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
         categoryId: newsFormData.categoryId,
         category: newsFormData.categoryId,
         city: newsFormData.city,
-        mainImage: newsFormData.mainImage,
-        galleryImages: newsFormData.secondImage ? [newsFormData.secondImage] : [],
+        mainImage: mainImageUrl,
+        galleryImages: secondImageUrl ? [secondImageUrl] : [],
         youtubeUrl: newsFormData.youtubeUrl,
-        videoUrl: newsFormData.youtubeUrl, // API uses videoUrl
-        thumbnailUrl: newsFormData.thumbnailUrl,
+        videoUrl: newsFormData.youtubeUrl,
+        thumbnailUrl: thumbnailUrl,
         metaDescription: newsFormData.metaDescription,
         tags: newsFormData.tags ? newsFormData.tags.split(',').map(t => t.trim()) : [],
         featured: newsFormData.featured,
@@ -163,7 +205,9 @@ const ReporterDashboard = ({ user, onLogout }) => {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       })
+
       if (res.ok) {
+        alert(editingNewsItem ? 'News updated successfully!' : 'News submitted for review!')
         await fetchMyNews()
         setEditingNewsItem(null)
         setNewsFormData({
@@ -172,9 +216,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
           featured: false, showOnHome: true, authorName: ''
         })
         setActiveTab('my-news')
+      } else {
+        const errorData = await res.json()
+        alert('Failed to submit: ' + (errorData.error || 'Unknown error'))
       }
     } catch (err) {
       // console.error('Failed to submit news:', err)
+      alert('Error: ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -640,7 +690,10 @@ const ReporterDashboard = ({ user, onLogout }) => {
           {/* MY SUBMISSIONS TAB */}
           <TabsContent value="my-news">
             <Card>
-              <CardHeader><CardTitle>My Submissions</CardTitle></CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>My Submissions</CardTitle>
+                <Button variant="outline" size="sm" onClick={fetchMyNews}>Refresh</Button>
+              </CardHeader>
               <CardContent>
                 {myNews.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No submissions yet.</p>
@@ -660,15 +713,26 @@ const ReporterDashboard = ({ user, onLogout }) => {
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            {(article.approvalStatus === 'pending' || article.approvalStatus === 'rejected') && (
-                              <Button size="sm" variant="outline" className="text-blue-600" onClick={(e) => { e.stopPropagation(); handleEditNews(article) }}>
-                                <Edit className="h-4 w-4" />
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="flex items-center gap-2">
+                              {(article.approvalStatus === 'pending' || article.approvalStatus === 'rejected') && (
+                                <Button size="sm" variant="outline" className="text-blue-600 h-8 w-8 p-0" onClick={(e) => { e.stopPropagation(); handleEditNews(article) }}>
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button size="sm" variant="outline" className="text-red-600 h-8 w-8 p-0" onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm('Delete this article?')) {
+                                  await fetch(`/api/reporter/news/${article.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                                  fetchMyNews();
+                                }
+                              }}>
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
-                            <Badge className={article.approvalStatus === 'approved' ? 'bg-green-600' : article.approvalStatus === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'}>
-                              {article.approvalStatus}
-                            </Badge>
+                              <Badge className={article.approvalStatus === 'approved' ? 'bg-green-600' : article.approvalStatus === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'}>
+                                {article.approvalStatus}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
                       </div>
