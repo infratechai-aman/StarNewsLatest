@@ -40,14 +40,29 @@ export async function POST(request) {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        if (!token || token === 'null' || token === 'undefined') {
+            console.error('[TickerAPI] No valid token provided in header');
+            return NextResponse.json({ error: 'Auth token missing' }, { status: 401 });
+        }
 
-        const decodedUser = await auth.verifyIdToken(token);
+        let decodedUser;
+        try {
+            decodedUser = await auth.verifyIdToken(token);
+        } catch (authError) {
+            console.error('[TickerAPI] Token verification failed:', authError.message);
+            // Return 401 instead of crashing or let it throw 500
+            return NextResponse.json({
+                error: 'Authentication failed: ' + authError.message,
+                hint: 'Try logging out and logging in again'
+            }, { status: 401 });
+        }
+
         const userDoc = await db.collection('users').doc(decodedUser.uid).get();
         const role = userDoc.exists ? userDoc.data().role : null;
 
         if (role !== 'super_admin' && role !== 'reporter') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+            console.error(`[TickerAPI] Access denied for role: ${role}`);
+            return NextResponse.json({ error: 'Unauthorized: Admin or Reporter role required' }, { status: 403 });
         }
 
         const body = await request.json();
@@ -62,7 +77,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error updating ticker:', error);
+        console.error('[TickerAPI] POST Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

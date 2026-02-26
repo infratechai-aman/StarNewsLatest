@@ -1326,6 +1326,13 @@ const AdminDashboard = ({ user, toast }) => {
                     onClick={async () => {
                       setLoading(true)
                       try {
+                        let token = localStorage.getItem('token') || localStorage.getItem('reporterToken')
+
+                        // Safety check for common null/undefined string issues
+                        if (!token || token === 'null' || token === 'undefined') {
+                          throw new Error('No authentication token found. Please log out and log in again.')
+                        }
+
                         const payload = {
                           enabled: breakingNews.enabled,
                           texts: breakingNews.text
@@ -1344,7 +1351,7 @@ const AdminDashboard = ({ user, toast }) => {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            'Authorization': `Bearer ${token}`
                           },
                           body: JSON.stringify(payload)
                         })
