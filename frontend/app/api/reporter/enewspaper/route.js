@@ -46,20 +46,20 @@ export async function GET(request) {
                 .get();
             papers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         } catch (indexError) {
+            console.warn('Indexing fallback triggered for reporter enewspapers');
             // Fallback Strategy: In-memory sort (No index required)
-            if (indexError.message.includes('index') || indexError.message.includes('FAILED_PRECONDITION')) {
-                const snapshot = await db.collection('enewspapers').get();
-                papers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
-                papers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            } else {
-                throw indexError;
-            }
+            const snapshot = await db.collection('enewspapers').get();
+            papers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+            papers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
 
         return NextResponse.json({ papers });
     } catch (error) {
-        const status = error.code?.startsWith('auth/') ? 401 : 500;
-        return NextResponse.json({ error: error.message }, { status });
+        console.error('Reporter enewspaper GET error:', error);
+        return NextResponse.json({
+            error: error.message,
+            code: error.code || 'UNKNOWN'
+        }, { status: 500 });
     }
 }
 
@@ -100,7 +100,10 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {
-        const status = error.code?.startsWith('auth/') ? 401 : 500;
-        return NextResponse.json({ error: error.message }, { status });
+        console.error('Reporter enewspaper POST error:', error);
+        return NextResponse.json({
+            error: error.message,
+            code: error.code || 'UNKNOWN'
+        }, { status: 500 });
     }
 }
