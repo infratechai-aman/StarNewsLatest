@@ -1,4 +1,4 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 async function isSuperAdmin(token) {
@@ -14,6 +14,9 @@ async function isSuperAdmin(token) {
 
 // PUT: Update Business
 export async function PUT(request, { params }) {
+    const db = getDb();
+    const auth = getAuth();
+
     try {
         const start = Date.now();
         const authHeader = request.headers.get('authorization');
@@ -42,6 +45,9 @@ export async function PUT(request, { params }) {
 
 // DELETE: Delete Business
 export async function DELETE(request, { params }) {
+    const db = getDb();
+    const auth = getAuth();
+
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

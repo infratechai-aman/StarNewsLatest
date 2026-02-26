@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebaseAdmin'
+import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 
 export async function GET() {
+    const db = getDb();
     try {
         const snapshot = await db.collection('news_categories')
             .where('active', '==', true)
@@ -24,6 +25,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    const db = getDb();
     try {
         const user = await getCurrentUser(request)
         if (!isSuperAdmin(user)) {

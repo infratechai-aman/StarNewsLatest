@@ -1,10 +1,11 @@
-import { db } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 // GET: List active E-Newspapers (Public)
 export async function GET(request) {
+    const db = getDb();
     try {
         if (!db) {
             return NextResponse.json({ papers: [] });

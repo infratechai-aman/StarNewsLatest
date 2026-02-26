@@ -1,9 +1,9 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token) {
+async function isSuperAdmin(token, db, auth) {
     if (!token || !db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
@@ -16,11 +16,13 @@ async function isSuperAdmin(token) {
 
 // POST: Approve or Reject Business
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
-        if (!(await isSuperAdmin(token))) {
+        if (!(await isSuperAdmin(token, db, auth))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 

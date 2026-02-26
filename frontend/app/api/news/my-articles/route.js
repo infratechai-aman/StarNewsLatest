@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebaseAdmin'
+import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, ROLES } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
+    const db = getDb();
     try {
         const user = await getCurrentUser(request)
 

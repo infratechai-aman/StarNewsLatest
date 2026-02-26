@@ -1,4 +1,4 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 // Helper for Admin check
@@ -15,6 +15,8 @@ async function isSuperAdmin(token) {
 
 // POST: Submit Promotion (Public)
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const body = await request.json();
         const { businessName, ownerName, phone, email, address, description } = body;
@@ -47,6 +49,8 @@ export async function POST(request) {
 
 // GET: List Promotions (Admin)
 export async function GET(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -68,6 +72,8 @@ export async function GET(request) {
 }
 // PUT: Update Promotion Status (Admin)
 export async function PUT(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -98,6 +104,8 @@ export async function PUT(request) {
 
 // DELETE: Remove Promotion Request (Admin)
 export async function DELETE(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

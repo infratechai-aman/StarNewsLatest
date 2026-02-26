@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +11,7 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 
 // GET: List active businesses (Public)
 export async function GET(request) {
+    const db = getDb();
     try {
         if (!db) {
             console.error('Firestore DB not initialized in Business API');

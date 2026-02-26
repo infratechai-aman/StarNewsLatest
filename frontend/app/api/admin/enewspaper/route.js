@@ -1,4 +1,4 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -16,6 +16,8 @@ async function hasRole(token, allowedRoles) {
 
 // GET: List all E-Newspapers (Admin)
 export async function GET(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -43,6 +45,8 @@ export async function GET(request) {
 }
 // POST: Upload E-Newspaper (Admin)
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

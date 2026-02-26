@@ -1,8 +1,9 @@
-import { db } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 // POST: Submit Classified Ad (Public)
 export async function POST(request) {
+    const db = getDb();
     try {
         const body = await request.json();
         const { title, description, category, price, contactName, contactPhone, contactEmail, location, images } = body;

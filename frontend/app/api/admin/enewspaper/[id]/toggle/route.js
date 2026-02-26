@@ -1,4 +1,4 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 // POST: Toggle E-Newspaper Active Status (Admin only, or Reporter?)
@@ -15,6 +15,9 @@ async function isSuperAdmin(token) {
 }
 
 export async function POST(request, { params }) {
+    const db = getDb();
+    const auth = getAuth();
+
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

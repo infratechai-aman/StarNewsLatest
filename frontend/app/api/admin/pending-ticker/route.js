@@ -1,9 +1,9 @@
-import { db, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token) {
+async function isSuperAdmin(token, db, auth) {
     if (!token || !db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
@@ -16,6 +16,8 @@ async function isSuperAdmin(token) {
 
 // GET: Admin Pending Ticker (For Review)
 export async function GET(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
@@ -62,6 +64,8 @@ export async function GET(request) {
 }
 // POST: Update Breaking Ticker (Admin/Reporter)
 export async function POST(request) {
+    const db = getDb();
+    const auth = getAuth();
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
