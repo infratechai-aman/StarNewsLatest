@@ -8,6 +8,56 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Radio, Newspaper, LogOut, Edit, Trash2, Clock, X, MessageSquare, AlertTriangle, Check, FileText, Upload, File } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
+// Auto-compress images to <= 500KB using Canvas API
+const compressImage = (file, maxSizeKB = 500, maxWidth = 1200) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        let width = img.width
+        let height = img.height
+
+        // Scale down if wider than maxWidth
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width)
+          width = maxWidth
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Iteratively reduce quality until under maxSizeKB
+        let quality = 0.85
+        let result = canvas.toDataURL('image/jpeg', quality)
+
+        while (result.length > maxSizeKB * 1024 * 1.37 && quality > 0.1) {
+          quality -= 0.1
+          result = canvas.toDataURL('image/jpeg', quality)
+        }
+
+        // If still too big, scale down further
+        if (result.length > maxSizeKB * 1024 * 1.37) {
+          const scale = 0.6
+          canvas.width = Math.round(width * scale)
+          canvas.height = Math.round(height * scale)
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          result = canvas.toDataURL('image/jpeg', 0.7)
+        }
+
+        resolve(result)
+      }
+      img.onerror = () => reject(new Error('Failed to load image'))
+      img.src = e.target.result
+    }
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
 const ReporterDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('submit-news')
   const [myNews, setMyNews] = useState([])
@@ -509,14 +559,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (file) {
-                              const reader = new FileReader()
-                              reader.onload = (event) => {
-                                setNewsFormData({ ...newsFormData, mainImage: event.target.result })
+                              try {
+                                const compressed = await compressImage(file)
+                                setNewsFormData(prev => ({ ...prev, mainImage: compressed }))
+                              } catch (err) {
+                                alert('Failed to process image: ' + err.message)
                               }
-                              reader.readAsDataURL(file)
                             }
                           }}
                         />
@@ -544,14 +595,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (file) {
-                              const reader = new FileReader()
-                              reader.onload = (event) => {
-                                setNewsFormData({ ...newsFormData, secondImage: event.target.result })
+                              try {
+                                const compressed = await compressImage(file)
+                                setNewsFormData(prev => ({ ...prev, secondImage: compressed }))
+                              } catch (err) {
+                                alert('Failed to process image: ' + err.message)
                               }
-                              reader.readAsDataURL(file)
                             }
                           }}
                         />
@@ -591,14 +643,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={(e) => {
+                          onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (file) {
-                              const reader = new FileReader()
-                              reader.onload = (event) => {
-                                setNewsFormData({ ...newsFormData, thumbnailUrl: event.target.result })
+                              try {
+                                const compressed = await compressImage(file, 300, 800)
+                                setNewsFormData(prev => ({ ...prev, thumbnailUrl: compressed }))
+                              } catch (err) {
+                                alert('Failed to process image: ' + err.message)
                               }
-                              reader.readAsDataURL(file)
                             }
                           }}
                         />
