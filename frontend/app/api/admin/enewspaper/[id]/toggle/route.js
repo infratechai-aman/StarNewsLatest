@@ -18,9 +18,6 @@ export async function POST(request, { params }) {
     const db = getDb();
     const auth = getAuth();
 
-    const db = getDb();
-    const auth = getAuth();
-
     try {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];

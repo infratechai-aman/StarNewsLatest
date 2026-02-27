@@ -17,9 +17,6 @@ export async function PUT(request, { params }) {
     const db = getDb();
     const auth = getAuth();
 
-    const db = getDb();
-    const auth = getAuth();
-
     try {
         const start = Date.now();
         const authHeader = request.headers.get('authorization');
@@ -48,9 +45,6 @@ export async function PUT(request, { params }) {
 
 // DELETE: Delete Business
 export async function DELETE(request, { params }) {
-    const db = getDb();
-    const auth = getAuth();
-
     const db = getDb();
     const auth = getAuth();
 
