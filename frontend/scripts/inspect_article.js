@@ -19,20 +19,41 @@ const db = admin.firestore();
 
 async function inspect() {
     try {
-        const snapshot = await db.collection('news_articles')
-            .where('authorId', '==', 'system-scraper-aajtak')
-            .limit(1)
+        console.log('--- ALL RECENT ARTICLES ---');
+        const allSnap = await db.collection('news_articles')
+            .orderBy('createdAt', 'desc')
+            .limit(10)
             .get();
 
-        if (snapshot.empty) {
-            console.log('No articles found from AajTak scraper.');
-            process.exit(0);
+        allSnap.forEach(doc => {
+            const data = doc.data();
+            console.log(`ID: ${doc.id}`);
+            console.log(`  Title: ${data.title?.en || data.title?.hi || data.title}`);
+            console.log(`  Status: ${data.approvalStatus}`);
+            console.log(`  Active: ${data.active} (${typeof data.active})`);
+            console.log(`  Created: ${data.createdAt}`);
+            console.log(`  Published: ${data.publishedAt}`);
+            console.log('---');
+        });
+
+        console.log('\n--- ATTEMPTING PRODUCTION QUERY ---');
+        try {
+            const prodSnap = await db.collection('news_articles')
+                .where('approvalStatus', '==', 'approved')
+                .where('active', '==', true)
+                .orderBy('publishedAt', 'desc')
+                .limit(10)
+                .get();
+
+            console.log(`Found ${prodSnap.size} approved/active articles.`);
+            prodSnap.forEach(doc => {
+                const data = doc.data();
+                console.log(`ID: ${doc.id} | Title: ${data.title?.en || data.title?.hi || data.title} | Pub: ${data.publishedAt}`);
+            });
+        } catch (e) {
+            console.error('PROD QUERY FAILED:', e.message);
         }
 
-        const doc = snapshot.docs[0];
-        console.log('--- ARTICLE INSPECTION ---');
-        console.log('ID:', doc.id);
-        console.log(JSON.stringify(doc.data(), null, 2));
         process.exit(0);
     } catch (e) {
         console.error('Error:', e.message);

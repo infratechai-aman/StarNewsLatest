@@ -1,4 +1,4 @@
-import { auth, db } from './firebaseAdmin'
+import { getAuth, getDb } from './firebaseAdmin'
 import { cookies } from 'next/headers'
 
 // Single Admin Enforcement - HARDCODED (Can be moved to Firestore later)
@@ -15,6 +15,14 @@ export const ROLES = {
 
 // Get current user from request headers or cookies
 export async function getCurrentUser(request) {
+  const auth = getAuth();
+  const db = getDb();
+
+  if (!auth || !db) {
+    console.error('Firebase services not available in getCurrentUser');
+    return null;
+  }
+
   try {
     // Try to get token from Authorization header first
     const authHeader = request.headers.get('authorization')

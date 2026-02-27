@@ -27,6 +27,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    const db = getDb();
     if (!db) {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }

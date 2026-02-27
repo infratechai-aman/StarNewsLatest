@@ -389,8 +389,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       const response = await news.getAll({ limit: 100 })
       let articles = response.articles || []
 
-      // Sort articles by date (newest first)
-      articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      // Sort articles by date (newest first, prefer publishedAt)
+      articles.sort((a, b) => {
+        const dateA = new Date(a.publishedAt || a.createdAt)
+        const dateB = new Date(b.publishedAt || b.createdAt)
+        return dateB - dateA
+      })
 
       // Featured news goes to top 6 boxes
       const featured = articles.filter(a => a.featured)

@@ -19,44 +19,30 @@ const db = admin.firestore();
 
 async function findRecent() {
     try {
-        console.log('Querying for articles with author system-scraper-aajtak...');
+        console.log('--- SEARCHING FOR RECENTLY APPROVED ARTICLES ---');
+        // This query matches what the API is supposed to do
         const snapshot = await db.collection('news_articles')
-            .where('authorId', '==', 'system-scraper-aajtak')
-            .orderBy('createdAt', 'desc')
-            .limit(1)
+            .where('approvalStatus', '==', 'approved')
+            .where('active', '==', true)
+            .orderBy('publishedAt', 'desc')
+            .limit(5)
             .get();
 
-        if (snapshot.empty) {
-            console.log('No recent articles found from scraper.');
-            // Try different authorId or just recent
-            const snap2 = await db.collection('news_articles')
-                .orderBy('createdAt', 'desc')
-                .limit(5)
-                .get();
-            console.log('Latest 5 articles in DB:');
-            snap2.forEach(doc => {
-                const data = doc.data();
-                console.log(`- ID: ${doc.id} | TITLE: ${JSON.stringify(data.title)} | AUTH: ${data.authorId}`);
-            });
-            process.exit(0);
-        }
+        console.log(`Found ${snapshot.size} articles.`);
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            console.log(`ID: ${doc.id}`);
+            console.log(`  Title: ${data.title?.en || data.title?.hi || data.title}`);
+            console.log(`  PublishedAt: ${data.publishedAt}`);
+            console.log(`  CreatedAt: ${data.createdAt}`);
+            console.log(`  Featured: ${data.featured}`);
+            console.log('---');
+        });
 
-        const doc = snapshot.docs[0];
-        console.log('--- LATEST SCRAPED ARTICLE ---');
-        console.log(JSON.stringify(doc.data(), null, 2));
         process.exit(0);
     } catch (e) {
         console.error('Error:', e.message);
-        // It likely failed because of index. Re-run without order
-        const snapshot = await db.collection('news_articles')
-            .where('authorId', '==', 'system-scraper-aajtak')
-            .limit(1)
-            .get();
-        if (!snapshot.empty) {
-            console.log('--- LATEST SCRAPED ARTICLE (No order) ---');
-            console.log(JSON.stringify(snapshot.docs[0].data(), null, 2));
-        }
-        process.exit(0);
+        process.exit(1);
     }
 }
 findRecent();

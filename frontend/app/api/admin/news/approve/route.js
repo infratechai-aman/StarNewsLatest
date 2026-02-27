@@ -43,6 +43,7 @@ export async function POST(request) {
         const status = action === 'approve' ? 'approved' : 'rejected';
         const updateData = {
             approvalStatus: status,
+            active: status === 'approved' ? true : doc.data().active, // Force active on approval
             adminResponse: reason || '',
             updatedAt: new Date().toISOString()
         };
