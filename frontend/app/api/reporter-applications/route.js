@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, auth as adminAuth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 
 async function isSuperAdmin(token, db, auth) {
     if (!token || !db || !auth) return false;
@@ -69,7 +69,6 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const db = getDb();
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
@@ -78,7 +77,7 @@ export async function GET(request) {
             .orderBy('submittedAt', 'desc')
             .get();
 
-        const applications = snapshot.docs.map(doc => doc.data());
+        const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         return NextResponse.json({ applications });
     } catch (error) {
@@ -89,6 +88,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
     const db = getDb();
+    const auth = getAuth();
 
     try {
         const authHeader = request.headers.get('authorization');
@@ -98,7 +98,6 @@ export async function PUT(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const db = getDb();
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
@@ -125,6 +124,7 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
     const db = getDb();
+    const auth = getAuth();
 
     try {
         const authHeader = request.headers.get('authorization');
@@ -134,7 +134,6 @@ export async function DELETE(request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        const db = getDb();
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }

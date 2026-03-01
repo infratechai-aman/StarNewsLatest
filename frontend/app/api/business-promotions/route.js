@@ -63,7 +63,7 @@ export async function GET(request) {
             .orderBy('submittedAt', 'desc')
             .get();
 
-        const promotions = snapshot.docs.map(doc => doc.data());
+        const promotions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         return NextResponse.json(promotions);
     } catch (error) {
         // console.error('Error fetching promotions:', error);
