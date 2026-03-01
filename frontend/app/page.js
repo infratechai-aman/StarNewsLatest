@@ -126,6 +126,22 @@ const App = () => {
     )
   }
 
+  // Dashboard views should render without main site chrome (Header, Footer, Ticker)
+  const isDashboardView = ['admin-dashboard', 'reporter-dashboard', 'advertiser-dashboard'].includes(currentView)
+
+  // Render dashboard views as full-screen standalone pages
+  if (isDashboardView) {
+    return (
+      <LanguageProvider>
+        <div className="min-h-screen bg-background">
+          {currentView === 'reporter-dashboard' && user?.role === ROLES.REPORTER && <ReporterDashboard user={user} toast={toast} />}
+          {currentView === 'admin-dashboard' && user?.role === ROLES.SUPER_ADMIN && <AdminDashboard user={user} toast={toast} />}
+          {currentView === 'advertiser-dashboard' && user?.role === ROLES.ADVERTISER && <AdvertiserDashboard user={user} toast={toast} />}
+        </div>
+      </LanguageProvider>
+    )
+  }
+
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-background">
@@ -156,9 +172,6 @@ const App = () => {
           {currentView === 'login' && <LoginPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
           {currentView === 'register' && <RegisterPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
           {currentView === 'force-password-change' && user?.requirePasswordChange && <ForcePasswordChange user={user} setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-          {currentView === 'reporter-dashboard' && user?.role === ROLES.REPORTER && <ReporterDashboard user={user} toast={toast} />}
-          {currentView === 'admin-dashboard' && user?.role === ROLES.SUPER_ADMIN && <AdminDashboard user={user} toast={toast} />}
-          {currentView === 'advertiser-dashboard' && user?.role === ROLES.ADVERTISER && <AdvertiserDashboard user={user} toast={toast} />}
         </main>
 
         <Footer setCurrentView={setCurrentView} />
