@@ -682,8 +682,6 @@ const AdminDashboard = ({ user, toast }) => {
       googleMapsLink: business.googleMapsLink || '',
       address: business.address || '',
       area: business.area || '',
-      address: business.address || '',
-      area: business.area || '',
       images: business.images || [],
       coverImage: business.cover_image || business.coverImage || ''
     })

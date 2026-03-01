@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function hasRole(token, allowedRoles) {
+async function hasRole(token, db, auth, allowedRoles) {
     if (!token || !db || !auth) return false;
     try {
         const decodedUser = await auth.verifyIdToken(token);
@@ -23,7 +23,7 @@ export async function GET(request) {
         const token = authHeader?.split(' ')[1];
 
         // Allow Reporter too as they might check history
-        if (!(await hasRole(token, ['super_admin', 'reporter']))) {
+        if (!(await hasRole(token, db, auth, ['super_admin', 'reporter']))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
@@ -32,6 +32,7 @@ export async function GET(request) {
             .get();
 
         const papers = snapshot.docs.map(doc => ({
+            id: doc.id,
             ...doc.data(),
             pdfUrl: doc.data().pdfUrl,
             thumbnailUrl: doc.data().thumbnailUrl
@@ -51,7 +52,7 @@ export async function POST(request) {
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
-        if (!(await hasRole(token, ['super_admin']))) {
+        if (!(await hasRole(token, db, auth, ['super_admin']))) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 

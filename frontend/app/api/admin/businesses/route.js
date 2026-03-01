@@ -30,6 +30,7 @@ export async function GET(request) {
             .get();
 
         const businesses = snapshot.docs.map(doc => ({
+            id: doc.id,
             ...doc.data(),
             enabled: doc.data().active
         }));

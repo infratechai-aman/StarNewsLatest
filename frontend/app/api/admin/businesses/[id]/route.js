@@ -18,7 +18,6 @@ export async function PUT(request, { params }) {
     const auth = getAuth();
 
     try {
-        const start = Date.now();
         const authHeader = request.headers.get('authorization');
         const token = authHeader?.split(' ')[1];
 
@@ -28,13 +27,12 @@ export async function PUT(request, { params }) {
 
         const id = params.id;
         const body = await request.json();
-        const { name, category, description, phone, email, website, address, city, image, coverImage, images } = body;
 
-        await db.collection('businesses').doc(id).update({
-            name, category, description, phone, email, website, address, city, image, coverImage,
-            images: images || [],
-            updatedAt: new Date().toISOString()
-        });
+        const updateData = { ...body, updatedAt: new Date().toISOString() };
+        delete updateData.id;
+        delete updateData.createdAt;
+
+        await db.collection('businesses').doc(id).update(updateData);
 
         return NextResponse.json({ success: true });
     } catch (error) {
