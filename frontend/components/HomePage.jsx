@@ -86,14 +86,14 @@ const NewsBox = ({ item, onClick, language }) => {
 
   const getValidImages = () => {
     const imgList = []
-    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image'))
+    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/api/'))
 
+    // Priority: mainImage first (most reliable from API), then thumbnailUrl, galleryImages, then legacy fields
+    if (isValidUrl(item.mainImage)) imgList.push(item.mainImage)
+    if (isValidUrl(item.thumbnailUrl) && !imgList.includes(item.thumbnailUrl)) imgList.push(item.thumbnailUrl)
+    if (item.galleryImages?.length) item.galleryImages.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
     if (item.thumbnails?.length) item.thumbnails.forEach(t => isValidUrl(t) && !imgList.includes(t) && imgList.push(t))
-    if (!imgList.length && item.images?.length) item.images.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
-    if (!imgList.length) {
-      if (isValidUrl(item.thumbnailUrl)) imgList.push(item.thumbnailUrl)
-      else if (isValidUrl(item.mainImage)) imgList.push(item.mainImage)
-    }
+    if (item.images?.length) item.images.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
     if (!imgList.length) imgList.push('/placeholder-news.svg')
     return imgList
   }

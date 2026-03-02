@@ -224,38 +224,92 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             </div>
           )}
 
-          {/* Article Body */}
+          {/* Article Body with Inline Gallery Images */}
           <div className="prose prose-2xl max-w-none text-gray-800 leading-[1.8] magazine-body font-serif selection:bg-red-100">
-            <div
-              className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
-          </div>
+            {(() => {
+              const galleryImgs = article.galleryImages && article.galleryImages.length > 0 ? article.galleryImages : []
 
-          {/* Gallery Sections */}
-          {article.galleryImages && article.galleryImages.length > 0 && (
-            <div className="mt-20 pt-20 border-t border-gray-100">
-              <div className="flex items-center gap-6 mb-12">
-                <h3 className="text-xs font-black uppercase tracking-[0.4em] text-gray-400">
-                  {t('photoGallery') || 'Visual Evidence'}
-                </h3>
-                <div className="h-px flex-1 bg-gray-100"></div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-                {article.galleryImages.map((img, idx) => (
-                  <div key={idx} className="relative h-72 rounded-[32px] overflow-hidden shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-700 cursor-zoom-in group border-4 border-white">
-                    <Image
-                      src={img}
-                      alt={`Gallery ${idx + 1}`}
-                      fill
-                      className="object-cover"
+              if (galleryImgs.length === 0) {
+                // No gallery images — render content normally
+                return (
+                  <div
+                    className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                )
+              }
+
+              // Split content into paragraphs to insert images inline
+              // Split on </p> tags while keeping the tags
+              const parts = content ? content.split(/(<\/p>)/i) : ['']
+              const paragraphs = []
+              for (let i = 0; i < parts.length; i += 2) {
+                const text = parts[i] + (parts[i + 1] || '')
+                if (text.trim()) paragraphs.push(text)
+              }
+
+              // If we can't split meaningfully, just put images after first chunk
+              if (paragraphs.length <= 1) {
+                return (
+                  <>
+                    <div
+                      className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                      dangerouslySetInnerHTML={{ __html: content }}
                     />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="my-12 space-y-8">
+                      {galleryImgs.map((img, idx) => (
+                        <div key={idx} className="relative w-full rounded-[32px] overflow-hidden shadow-xl border-4 border-white" style={{ aspectRatio: '16/10' }}>
+                          <Image
+                            src={img}
+                            alt={`${title} - Image ${idx + 2}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )
+              }
+
+              // Insert gallery images after the first paragraph
+              const insertAfterIdx = Math.min(0, paragraphs.length - 1)
+              const firstPart = paragraphs.slice(0, insertAfterIdx + 1).join('')
+              const secondPart = paragraphs.slice(insertAfterIdx + 1).join('')
+
+              return (
+                <>
+                  {/* First part of the article */}
+                  <div
+                    className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                    dangerouslySetInnerHTML={{ __html: firstPart }}
+                  />
+
+                  {/* Inline Gallery Images */}
+                  <div className="my-12 space-y-8">
+                    {galleryImgs.map((img, idx) => (
+                      <div key={idx} className="relative w-full rounded-[32px] overflow-hidden shadow-xl border-4 border-white" style={{ aspectRatio: '16/10' }}>
+                        <Image
+                          src={img}
+                          alt={`${title} - Image ${idx + 2}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+
+                  {/* Rest of the article */}
+                  {secondPart && (
+                    <div
+                      className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                      dangerouslySetInnerHTML={{ __html: secondPart }}
+                    />
+                  )}
+                </>
+              )
+            })()}
+          </div>
         </article>
 
         {/* Right Sidebar */}
