@@ -742,8 +742,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           </div>
         </div>
 
-        {/* Mobile Ads Block 2 - Article Banner Only */}
+        {/* Mobile Ads Block 2 - Other Ads */}
         <div className="px-4 mt-6 space-y-4">
+          {businessAdSettings?.enabled && (
+            <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
+          )}
           {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
             <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
               <CardContent className="p-0 aspect-[21/9] relative">
@@ -751,6 +754,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
               </CardContent>
             </Card>
+          )}
+          {articleAdSettings?.sticky?.enabled && (
+            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
           )}
           <SubscribeWidget />
         </div>
