@@ -615,6 +615,143 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   return (
     <div className="space-y-4" key={newsKey}>
 
+      {/* --- PREMIUM MOBILE VIEW (Top of DOM) --- */}
+      <div className="lg:hidden space-y-6 mb-10 mt-4">
+        {/* Mobile Featured Carousel / Hero */}
+        <div className="px-4">
+          <div className="mag-section-header mb-4">
+            <h2 className="text-3xl font-heading font-black tracking-tighter flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+              {t('featured') || 'Featured News'}
+            </h2>
+          </div>
+
+          <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
+            {cleanMainNews.slice(0, 5).map((item, idx) => (
+              <div
+                key={item.id}
+                onClick={() => handleNewsClick(item)}
+                className="relative min-w-[85vw] sm:min-w-[340px] aspect-[4/5] sm:aspect-square rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border border-gray-100"
+              >
+                <Image
+                  src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                  alt={getLocalizedText(item.title, language) || 'News Image'}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10"></div>
+                <div className="absolute bottom-0 left-0 p-6 w-full">
+                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl">
+                    {idx === 0 ? (t('topStory') || 'Top Story') : (getTranslatedCategory(item.category, t, language) || 'Featured')}
+                  </Badge>
+                  <h3 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-2xl">
+                    {getLocalizedText(item.title, language)}
+                  </h3>
+                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold">
+                    <Clock className="w-3.5 h-3.5 text-red-500" />
+                    {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Ads Block 1 - Rotating Sidebar Ads */}
+        <div className="px-4">
+          {sidebarAdSettings?.enabled && sidebarAdSettings.items?.length > 0 ? (
+            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl) window.open(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length].destinationUrl, '_blank') }}>
+              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
+                <Image
+                  src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'}
+                  alt="Advertisement"
+                  fill
+                  className="object-cover transition-opacity duration-1000"
+                />
+                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {sidebarAdSettings.items.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
+              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
+                <Image src={adImages[currentAdIndex % adImages.length] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {adImages.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % adImages.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        <div className="px-4 mt-8">
+          <div className="mag-section-header mb-6">
+            <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>
+          </div>
+          <div className="space-y-4">
+            {cleanMainNews.slice(5, 15).map((item, index) => {
+              const title = getLocalizedText(item.title, language)
+              const category = getTranslatedCategory(item.category, t, language)
+              const isAdPosition = index === 3;
+
+              return (
+                <div key={item.id} className="space-y-4">
+                  {isAdPosition && businessAdSettings?.enabled && (
+                    <div className="py-2">
+                      <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
+                    </div>
+                  )}
+                  <div onClick={() => handleNewsClick(item)} className="p-3 bg-white rounded-2xl flex gap-4 items-center active:scale-[0.98] transition-all cursor-pointer border border-gray-100 shadow-sm">
+                    <div className="relative w-28 h-28 shrink-0 rounded-[14px] overflow-hidden bg-gray-50 border border-gray-100">
+                      <Image
+                        src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                        alt={title || 'Thumbnail'}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{category}</span>
+                      </div>
+                      <h3 className="font-heading font-bold text-[15px] leading-[1.3] text-gray-900 line-clamp-3">
+                        {title}
+                      </h3>
+                      <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Ads Block 2 - Article Banner + Sticky Ad */}
+        <div className="px-4 mt-6 space-y-4">
+          {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
+            <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
+              <CardContent className="p-0 aspect-[21/9] relative">
+                <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
+                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
+              </CardContent>
+            </Card>
+          )}
+          {articleAdSettings?.sticky?.enabled && (
+            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
+          )}
+          <SubscribeWidget />
+        </div>
+      </div>
+
       {/* PREMIUM AD BANNER */}
       {premiumAdSettings.enabled && (
         <div className="z-40 relative overflow-hidden rounded-2xl bg-gradient-to-r from-gray-900 via-red-900 to-gray-900 shadow-2xl premium-ad-banner mb-8 mx-auto max-w-7xl h-32 md:h-40">
@@ -993,184 +1130,50 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </section>
       )}
 
-      {/* --- PREMIUM MOBILE VIEW --- */}
-      <div className="lg:hidden space-y-6 mb-10 -mx-4">
-        {/* Mobile Featured Carousel / Hero */}
-        <div className="px-4">
-          <div className="mag-section-header mb-4">
-            <h2 className="text-3xl font-heading font-black tracking-tighter flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
-              {t('featured') || 'Featured News'}
-            </h2>
+      <div className="hidden lg:block">
+
+        {/* Floating WhatsApp Button */}
+        <a
+          href="https://wa.me/917020873300"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform"
+        >
+          <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
+            Need help? <span className="text-green-600 underline">Chat with us</span>
           </div>
-
-          <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
-            {cleanMainNews.slice(0, 5).map((item, idx) => (
-              <div
-                key={item.id}
-                onClick={() => handleNewsClick(item)}
-                className="relative min-w-[85vw] sm:min-w-[340px] aspect-[4/5] sm:aspect-square rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border border-gray-100"
-              >
-                <Image
-                  src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                  alt={getLocalizedText(item.title, language) || 'News Image'}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10"></div>
-                <div className="absolute bottom-0 left-0 p-6 w-full">
-                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl">
-                    {idx === 0 ? (t('topStory') || 'Top Story') : (getTranslatedCategory(item.category, t, language) || 'Featured')}
-                  </Badge>
-                  <h3 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-2xl">
-                    {getLocalizedText(item.title, language)}
-                  </h3>
-                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold">
-                    <Clock className="w-3.5 h-3.5 text-red-500" />
-                    {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
+            <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
           </div>
-        </div>
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
+        </a>
 
-        {/* Mobile Ads Block 1 - Rotating Sidebar Ads */}
-        <div className="px-4">
-          {sidebarAdSettings?.enabled && sidebarAdSettings.items?.length > 0 ? (
-            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl) window.open(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length].destinationUrl, '_blank') }}>
-              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
-                <Image
-                  src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'}
-                  alt="Advertisement"
-                  fill
-                  className="object-cover transition-opacity duration-1000"
-                />
-                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {sidebarAdSettings.items.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
-              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
-                <Image src={adImages[currentAdIndex % adImages.length] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {adImages.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % adImages.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <div className="px-4 mt-8">
-          <div className="mag-section-header mb-6">
-            <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>
-          </div>
-          <div className="space-y-4">
-            {cleanMainNews.slice(5, 15).map((item, index) => {
-              const title = getLocalizedText(item.title, language)
-              const category = getTranslatedCategory(item.category, t, language)
-              const isAdPosition = index === 3;
-
-              return (
-                <div key={item.id} className="space-y-4">
-                  {isAdPosition && businessAdSettings?.enabled && (
-                    <div className="py-2">
-                      <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
-                    </div>
-                  )}
-                  <div onClick={() => handleNewsClick(item)} className="p-3 bg-white rounded-2xl flex gap-4 items-center active:scale-[0.98] transition-all cursor-pointer border border-gray-100 shadow-sm">
-                    <div className="relative w-28 h-28 shrink-0 rounded-[14px] overflow-hidden bg-gray-50 border border-gray-100">
-                      <Image
-                        src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                        alt={title || 'Thumbnail'}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{category}</span>
-                      </div>
-                      <h3 className="font-heading font-bold text-[15px] leading-[1.3] text-gray-900 line-clamp-3">
-                        {title}
-                      </h3>
-                      <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Mobile Ads Block 2 - Article Banner + Sticky Ad */}
-        <div className="px-4 mt-6 space-y-4">
-          {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
-            <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
-              <CardContent className="p-0 aspect-[21/9] relative">
-                <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
-                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
-              </CardContent>
-            </Card>
-          )}
-          {articleAdSettings?.sticky?.enabled && (
-            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
-          )}
-          <SubscribeWidget />
-        </div>
-      </div>
-
-      {/* Floating WhatsApp Button */}
-      <a
-        href="https://wa.me/917020873300"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform"
-      >
-        <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
-          Need help? <span className="text-green-600 underline">Chat with us</span>
-        </div>
-        <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
-          <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
-        </div>
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
-      </a>
-
-      {/* Bottom News Grid - Full Width, No Sidebar */}
-      <div className="hidden lg:block container mx-auto px-4 mt-20">
-        <div className="space-y-12">
-          <div className="mag-section-header mb-8 flex items-center justify-between">
-            <h2 className="text-4xl font-heading font-black tracking-tighter">
-              {t('moreStories') || 'More Stories'}
-            </h2>
-            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {oldNews.slice(0, visibleMoreStories).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-            ))}
-          </div>
-          {oldNews.length > visibleMoreStories && (
-            <div className="flex justify-center pt-8">
-              <Button
-                variant="outline"
-                className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
-                onClick={() => setVisibleMoreStories(prev => prev + 12)}
-              >
-                {t('loadMore') || 'LOAD MORE STORIES'}
-              </Button>
+        {/* Bottom News Grid - Full Width, No Sidebar */}
+        <div className="container mx-auto px-4 mt-20">
+          <div className="space-y-12">
+            <div className="mag-section-header mb-8 flex items-center justify-between">
+              <h2 className="text-4xl font-heading font-black tracking-tighter">
+                {t('moreStories') || 'More Stories'}
+              </h2>
+              <div className="h-px flex-1 bg-gray-100 mx-8"></div>
             </div>
-          )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {oldNews.slice(0, visibleMoreStories).map((item) => (
+                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+              ))}
+            </div>
+            {oldNews.length > visibleMoreStories && (
+              <div className="flex justify-center pt-8">
+                <Button
+                  variant="outline"
+                  className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
+                  onClick={() => setVisibleMoreStories(prev => prev + 12)}
+                >
+                  {t('loadMore') || 'LOAD MORE STORIES'}
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
