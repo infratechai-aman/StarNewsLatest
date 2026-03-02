@@ -299,9 +299,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const [newsKey, setNewsKey] = useState(0)
 
   // Admin content settings
+  // Admin content settings
   const [premiumAdSettings, setPremiumAdSettings] = useState({ enabled: true, imageUrl: '', linkUrl: '', title: '' })
-  const [sidebarAdSettings, setSidebarAdSettings] = useState({ enabled: true, imageUrl: '', linkUrl: '' })
-  const [articleAdSettings, setArticleAdSettings] = useState({ sticky: { enabled: true, imageUrl: '', linkUrl: '', title: 'Premium Ad Space' } })
+  const [sidebarAdSettings, setSidebarAdSettings] = useState({ enabled: true, items: [] })
+  const [articleAdSettings, setArticleAdSettings] = useState({
+    banner: { enabled: true, imageUrl: '', linkUrl: '', title: 'Advertise Your Business' },
+    sticky: { enabled: true, imageUrl: '', linkUrl: '', title: 'Premium Ad Space' }
+  })
   const [businessAdSettings, setBusinessAdSettings] = useState({ enabled: true, imageUrl: '', linkUrl: '', title: 'BUSINESS', subtitle: 'Advertisement', buttonText: 'POST YOUR AD' })
   const [trendingSettings, setTrendingSettings] = useState({ enabled: true, newsIds: [] })
 
@@ -789,7 +793,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <div
                   key={item.id}
                   onClick={() => handleNewsClick(item)}
-                  className={`premium-card cursor-pointer rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[300px] border border-white/5 ${idx === 0 ? 'bento-item-large md:h-[632px]' : idx === 1 ? 'bento-item-wide' : ''}`}
+                  className={`premium-card cursor-pointer rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[300px] border border-white/5 ${idx === 0 ? 'lg:bento-item-large lg:h-[632px] h-[400px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
                 >
                   <Image
                     src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
@@ -797,8 +801,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     fill
                     className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 p-6 w-full">
-                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-4xl' : 'text-xl md:text-2xl'}`}>
+                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
                       {getLocalizedText(item.title, language)}
                     </h3>
                   </div>
@@ -1030,19 +1035,38 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           </div>
         </div>
 
-        {/* Mobile Ads Block 1 */}
+        {/* Mobile Ads Block 1 - Rotating Sidebar Ads */}
         <div className="px-4">
-          <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
-            <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
-              <Image src={adImages[currentAdIndex] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-              <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
-              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                {adImages.map((_, idx) => (
-                  <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentAdIndex ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {sidebarAdSettings?.enabled && sidebarAdSettings.items?.length > 0 ? (
+            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl) window.open(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length].destinationUrl, '_blank') }}>
+              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
+                <Image
+                  src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'}
+                  alt="Advertisement"
+                  fill
+                  className="object-cover transition-opacity duration-1000"
+                />
+                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {sidebarAdSettings.items.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
+              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
+                <Image src={adImages[currentAdIndex % adImages.length] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                  {adImages.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % adImages.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="px-4 mt-8">
@@ -1089,10 +1113,18 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           </div>
         </div>
 
-        {/* Mobile Ads Block 2 */}
+        {/* Mobile Ads Block 2 - Article Banner + Sticky Ad */}
         <div className="px-4 mt-6 space-y-4">
+          {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
+            <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
+              <CardContent className="p-0 aspect-[21/9] relative">
+                <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
+                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
+              </CardContent>
+            </Card>
+          )}
           {articleAdSettings?.sticky?.enabled && (
-            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => { }} />
+            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
           )}
           <SubscribeWidget />
         </div>
