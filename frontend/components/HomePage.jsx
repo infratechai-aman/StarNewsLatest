@@ -875,7 +875,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* BUSINESS SECTION - Restored Vibrant Blue Aesthetic */}
       {cleanBusinessNews.length > 0 && (
-        <React.Fragment>
+        <>
           {/* Mobile Ad Block: Right Before Business Section */}
           <div className="lg:hidden px-4 mb-6">
             {businessAdSettings?.enabled && (
@@ -946,7 +946,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             )}
             <SubscribeWidget />
           </div>
-        </React.Fragment>
+        </>
       )}
 
       {/* POLITICS & NATIONAL */}

@@ -158,6 +158,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                   muted
                   playsInline
                   className="w-full h-full object-contain transition-transform group-hover:scale-105 pointer-events-none"
+                  style={{ filter: 'url(#remove-green)' }}
                 />
               </div>
             </div>
@@ -375,6 +376,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 muted
                 playsInline
                 className="w-full h-full object-contain pointer-events-none"
+                style={{ filter: 'url(#remove-green)' }}
               />
             </div>
           </div>

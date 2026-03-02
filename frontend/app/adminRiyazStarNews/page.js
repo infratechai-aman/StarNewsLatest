@@ -85,7 +85,7 @@ export default function AdminLoginPage() {
                 <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white py-4 px-6 shadow-lg">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <video src="/StarNewsLogo.mp4" autoPlay loop muted playsInline className="h-12 w-auto object-contain pointer-events-none" />
+                            <video src="/StarNewsLogo.mp4" autoPlay loop muted playsInline className="h-12 w-auto object-contain pointer-events-none" style={{ filter: 'url(#remove-green)' }} />
                         </div>
                         <Button
                             variant="outline"
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
             <Card className="w-full max-w-md border-gray-700 bg-gray-800/50 backdrop-blur">
                 <CardHeader className="text-center">
                     <div className="mx-auto mb-4">
-                        <video src="/StarNewsLogo.mp4" autoPlay loop muted playsInline className="mx-auto mb-2 object-contain pointer-events-none" style={{ height: '70px', width: 'auto' }} />
+                        <video src="/StarNewsLogo.mp4" autoPlay loop muted playsInline className="mx-auto mb-2 object-contain pointer-events-none" style={{ height: '70px', width: 'auto', filter: 'url(#remove-green)' }} />
                     </div>
                     <CardTitle className="text-2xl font-bold text-white">StarNews Admin</CardTitle>
                     <CardDescription className="text-gray-400">

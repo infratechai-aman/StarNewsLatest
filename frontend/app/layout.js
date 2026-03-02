@@ -19,6 +19,17 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       </head>
       <body className="font-sans antialiased">
+        <svg width="0" height="0" className="absolute pointer-events-none">
+          <filter id="remove-green" colorInterpolationFilters="sRGB">
+            <feColorMatrix
+              type="matrix"
+              values="1 0 0 0 0
+                      0 1 0 0 0
+                      0 0 1 0 0
+                      1.5 -2.5 1.5 1 0"
+            />
+          </filter>
+        </svg>
         {children}
         <Toaster />
       </body>
