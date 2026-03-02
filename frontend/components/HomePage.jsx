@@ -742,24 +742,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           </div>
         </div>
 
-        {/* Mobile Ads Block 2 - Other Ads */}
-        <div className="px-4 mt-6 space-y-4">
-          {businessAdSettings?.enabled && (
-            <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
-          )}
-          {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
-            <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
-              <CardContent className="p-0 aspect-[21/9] relative">
-                <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
-                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
-              </CardContent>
-            </Card>
-          )}
-          {articleAdSettings?.sticky?.enabled && (
-            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
-          )}
-          <SubscribeWidget />
-        </div>
+        {/* (Mobile Ads Block 2 was here - now moved to sandwich the Business & Economy block) */}
       </div>
 
       {/* PREMIUM AD BANNER WAS HERE */}
@@ -892,55 +875,78 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* BUSINESS SECTION - Restored Vibrant Blue Aesthetic */}
       {cleanBusinessNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
-          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white py-10 px-0 md:px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-blue-900/20">
-            <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
-
-            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left px-5 md:px-0">
-              <div className="max-w-2xl flex flex-col items-center md:items-start">
-                <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-                  {t('marketIntelligence') || 'Market Intelligence'}
-                </Badge>
-                <h2 className="font-heading font-black text-5xl md:text-8xl leading-[0.9] tracking-tighter">
-                  {t('business') || 'Business'} & <br />
-                  <span className="text-blue-400 italic font-serif glow-text-blue">{t('economy') || 'Economy'}</span>
-                </h2>
-              </div>
-              <Button
-                variant="outline"
-                className="text-white border-blue-500/30 bg-blue-600/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group shadow-lg shadow-blue-900/20"
-                onClick={() => handleCategoryClick('business')}
-              >
-                {t('fullDirectory') || 'FULL DIRECTORY'} <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
-
-            <div className="bento-magazine relative z-10 gap-1 md:gap-8 -mx-5 md:mx-0 pt-6 md:pt-0">
-              {cleanBusinessNews.slice(0, 5).map((item, idx) => (
-                <div
-                  key={item.id}
-                  onClick={() => handleNewsClick(item)}
-                  className={`premium-card cursor-pointer rounded-none md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[calc(100dvh-104px)] md:h-[300px] border-y md:border border-white/10 ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
-                >
-                  <Image
-                    src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                    alt={getLocalizedText(item.title, language)}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6 w-full">
-                    <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
-                      {getLocalizedText(item.title, language)}
-                    </h3>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <React.Fragment>
+          {/* Mobile Ad Block: Right Before Business Section */}
+          <div className="lg:hidden px-4 mb-6">
+            {businessAdSettings?.enabled && (
+              <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
+            )}
           </div>
-        </section>
+
+          <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
+            <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white py-10 px-0 md:px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-blue-900/20">
+              <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
+              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+              <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left px-5 md:px-0">
+                <div className="max-w-2xl flex flex-col items-center md:items-start">
+                  <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+                    {t('marketIntelligence') || 'Market Intelligence'}
+                  </Badge>
+                  <h2 className="font-heading font-black text-5xl md:text-8xl leading-[0.9] tracking-tighter">
+                    {t('business') || 'Business'} & <br />
+                    <span className="text-blue-400 italic font-serif glow-text-blue">{t('economy') || 'Economy'}</span>
+                  </h2>
+                </div>
+                <Button
+                  variant="outline"
+                  className="text-white border-blue-500/30 bg-blue-600/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group shadow-lg shadow-blue-900/20"
+                  onClick={() => handleCategoryClick('business')}
+                >
+                  {t('fullDirectory') || 'FULL DIRECTORY'} <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+
+              <div className="bento-magazine relative z-10 gap-1 md:gap-8 -mx-5 md:mx-0 pt-6 md:pt-0">
+                {cleanBusinessNews.slice(0, 5).map((item, idx) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleNewsClick(item)}
+                    className={`premium-card cursor-pointer rounded-none md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[calc(100dvh-104px)] md:h-[300px] border-y md:border border-white/10 ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
+                  >
+                    <Image
+                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                      alt={getLocalizedText(item.title, language)}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-6 w-full">
+                      <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
+                        {getLocalizedText(item.title, language)}
+                      </h3>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+          <div className="lg:hidden px-4 mb-10 space-y-4">
+            {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
+              <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
+                <CardContent className="p-0 aspect-[21/9] relative">
+                  <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
+                  <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
+                </CardContent>
+              </Card>
+            )}
+            {articleAdSettings?.sticky?.enabled && (
+              <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => articleAdSettings.sticky.linkUrl && window.open(articleAdSettings.sticky.linkUrl, '_blank')} />
+            )}
+            <SubscribeWidget />
+          </div>
+        </React.Fragment>
       )}
 
       {/* POLITICS & NATIONAL */}
@@ -1166,15 +1172,15 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       </div>
       <style jsx>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          display: inline-block;
-          animation: marquee 30s linear infinite;
-        }
-      `}</style>
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              display: inline-block;
+              animation: marquee 30s linear infinite;
+            }
+          `}</style>
     </div>
   );
 }
