@@ -53,6 +53,11 @@ const App = () => {
     businessNews: [],
     nationNews: [],
     entertainmentNews: [],
+    crimeNews: [],
+    sportsNews: [],
+    educationNews: [],
+    healthNews: [],
+    technologyNews: [],
     oldNews: [],
     loaded: false
   })

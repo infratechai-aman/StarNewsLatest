@@ -57,7 +57,9 @@ const getTranslatedCategory = (cat, t, language) => {
     'Crime': 'crime',
     'City News': 'cityNews',
     'Jobs': 'jobs',
-    'Trending': 'trending'
+    'Trending': 'trending',
+    'Murder': 'crime',
+    'General': 'general'
   }
 
   const key = map[cat] || cat.toLowerCase()
@@ -311,23 +313,27 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const businessNews = newsData?.businessNews || []
   const nationNews = newsData?.nationNews || []
   const entertainmentNews = newsData?.entertainmentNews || []
+  const crimeNews = newsData?.crimeNews || []
+  const sportsNews = newsData?.sportsNews || []
+  const educationNews = newsData?.educationNews || []
+  const healthNews = newsData?.healthNews || []
+  const technologyNews = newsData?.technologyNews || []
   const oldNews = newsData?.oldNews || []
 
   // Derived collections for specific sections
   const latestNews = oldNews.slice(0, 10)
-  const topEducationNews = oldNews.filter(a => {
-    const cat = typeof a.category === 'string' ? a.category : (a.category?.en || '')
-    return cat.toLowerCase().includes('education')
-  })
 
-  // Helpers to update parent state safely
   const setMainNewsBoxes = (data) => setNewsData && setNewsData(prev => ({ ...prev, mainNewsBoxes: data }))
   const setTrendingNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, trendingNews: data }))
   const setBusinessNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, businessNews: data }))
   const setNationNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, nationNews: data }))
   const setEntertainmentNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, entertainmentNews: data }))
   const setOldNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, oldNews: data }))
-  const setSportsNews = (data) => { } // No-op since we don't store sportsNews in lifted state but keep function signature if used
+  const setCrimeNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, crimeNews: data }))
+  const setSportsNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, sportsNews: data }))
+  const setEducationNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, educationNews: data }))
+  const setHealthNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, healthNews: data }))
+  const setTechnologyNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, technologyNews: data }))
 
   // Local UI state
   const [visibleMoreStories, setVisibleMoreStories] = useState(18) // Show 18 initially (divisible by 2, 3, 6)
@@ -433,18 +439,53 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         nationalCategories.includes(normalizeCategory(a.category || a.categoryId))
       ).slice(0, 5)
 
-      // Entertainment / Sports -> Entertainment section
-      const entertainmentCategories = ['entertainment', 'sports', 'bollywood', 'movies', 'music']
+      // Entertainment -> Entertainment section (separated from Sports)
+      const entertainmentCategories = ['entertainment', 'bollywood', 'movies', 'music']
       const entertainmentFiltered = remaining.filter(a =>
         entertainmentCategories.includes(normalizeCategory(a.category || a.categoryId))
       ).slice(0, 5)
 
-      // Old News: All remaining articles not in category sections
+      // Crime / Murder -> Crime section
+      const crimeCategories = ['crime', 'murder']
+      const crimeFiltered = remaining.filter(a =>
+        crimeCategories.includes(normalizeCategory(a.category || a.categoryId))
+      ).slice(0, 5)
+
+      // Sports -> Sports section
+      const sportsCategories = ['sports']
+      const sportsFiltered = remaining.filter(a =>
+        sportsCategories.includes(normalizeCategory(a.category || a.categoryId))
+      ).slice(0, 5)
+
+      // Education -> Education section
+      const educationCategories = ['education']
+      const educationFiltered = remaining.filter(a =>
+        educationCategories.includes(normalizeCategory(a.category || a.categoryId))
+      ).slice(0, 5)
+
+      // Health -> Health section
+      const healthCategories = ['health']
+      const healthFiltered = remaining.filter(a =>
+        healthCategories.includes(normalizeCategory(a.category || a.categoryId))
+      ).slice(0, 5)
+
+      // Technology -> Technology section
+      const technologyCategories = ['technology', 'tech']
+      const technologyFiltered = remaining.filter(a =>
+        technologyCategories.includes(normalizeCategory(a.category || a.categoryId))
+      ).slice(0, 5)
+
+      // Old News: All remaining articles not in any category section
       const usedIds = new Set([
         ...politicsNews.map(a => a.id),
         ...businessNewsFiltered.map(a => a.id),
         ...nationNewsFiltered.map(a => a.id),
-        ...entertainmentFiltered.map(a => a.id)
+        ...entertainmentFiltered.map(a => a.id),
+        ...crimeFiltered.map(a => a.id),
+        ...sportsFiltered.map(a => a.id),
+        ...educationFiltered.map(a => a.id),
+        ...healthFiltered.map(a => a.id),
+        ...technologyFiltered.map(a => a.id)
       ])
       const oldNewsFiltered = remaining.filter(a => !usedIds.has(a.id))
 
@@ -457,6 +498,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           businessNews: businessNewsFiltered,
           nationNews: nationNewsFiltered,
           entertainmentNews: entertainmentFiltered,
+          crimeNews: crimeFiltered,
+          sportsNews: sportsFiltered,
+          educationNews: educationFiltered,
+          healthNews: healthFiltered,
+          technologyNews: technologyFiltered,
           oldNews: oldNewsFiltered,
           loaded: true
         }))
@@ -467,6 +513,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         setBusinessNews(businessNewsFiltered)
         setNationNews(nationNewsFiltered)
         setEntertainmentNews(entertainmentFiltered)
+        setCrimeNews(crimeFiltered)
+        setSportsNews(sportsFiltered)
+        setEducationNews(educationFiltered)
+        setHealthNews(healthFiltered)
+        setTechnologyNews(technologyFiltered)
         setOldNews(oldNewsFiltered)
       }
 
@@ -549,6 +600,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const cleanBusinessNews = filterNews(businessNews)
   const cleanNationNews = filterNews(nationNews)
   const cleanEntertainmentNews = filterNews(entertainmentNews)
+  const cleanCrimeNews = filterNews(crimeNews)
+  const cleanSportsNews = filterNews(sportsNews)
+  const cleanEducationNews = filterNews(educationNews)
+  const cleanHealthNews = filterNews(healthNews)
+  const cleanTechnologyNews = filterNews(technologyNews)
   const cleanLatestNews = filterNews(latestNews)
 
   return (
@@ -772,7 +828,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div>
               <div className="mag-section-header text-2xl mb-8">{t('dailyDigest') || 'The Daily Digest'}</div>
               <div className="space-y-10">
-                {topEducationNews.slice(0, 4).map(item => (
+                {cleanEducationNews.slice(0, 4).map(item => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-l-4 border-red-600 pl-8 transition-all hover:bg-gray-50 py-2">
                     <span className="text-sm font-black text-red-600 mb-2 block">{t('quickBrief') || 'Quick Brief'}</span>
                     <h4 className="font-heading font-black text-xl leading-tight group-hover:text-red-700 transition-colors tracking-tight">{getLocalizedText(item.title, language)}</h4>
@@ -790,6 +846,124 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <p className="text-gray-500 text-sm mb-8 leading-relaxed">{t('premiumPlacementDesc') || 'Reach our exclusive audience of millions with high-impact editorial placements.'}</p>
               <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>{t('getInTouch') || 'GET IN TOUCH'}</Button>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* CRIME SECTION */}
+      {cleanCrimeNews.length > 0 && (
+        <section className="mb-10 container mx-auto px-6">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
+              <span className="text-red-700">Crime</span> & Justice
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+            <Button variant="outline" className="rounded-full font-black" onClick={() => handleCategoryClick('crime')}>
+              View All <ChevronRight className="ml-1 w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cleanCrimeNews.slice(0, 3).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* SPORTS SECTION */}
+      {cleanSportsNews.length > 0 && (
+        <section className="mb-10 container mx-auto px-4 lg:px-6">
+          <div className="relative bg-gradient-to-br from-[#0d3320] to-[#061a10] text-white p-8 lg:p-12 rounded-[48px] overflow-hidden shadow-2xl border border-green-900/20">
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
+            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8 relative z-10">
+              <div className="max-w-2xl">
+                <Badge className="bg-green-600/30 text-green-300 border border-green-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">
+                  Live Updates
+                </Badge>
+                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">
+                  Sports <br />
+                  <span className="text-green-400 italic font-serif">Arena</span>
+                </h2>
+              </div>
+              <Button
+                variant="outline"
+                className="text-white border-green-500/30 bg-green-600/10 hover:bg-green-600 hover:border-green-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group"
+                onClick={() => handleCategoryClick('sports')}
+              >
+                ALL SPORTS <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-10">
+              {cleanSportsNews.slice(0, 3).map((item) => (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="premium-card cursor-pointer rounded-[24px] overflow-hidden relative group h-[280px] border border-white/10">
+                  <Image src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+                  <div className="absolute bottom-0 left-0 p-5 w-full">
+                    <h3 className="font-heading font-black text-xl leading-tight group-hover:text-green-300 transition-colors tracking-tight text-white">{getLocalizedText(item.title, language)}</h3>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* EDUCATION SECTION */}
+      {cleanEducationNews.length > 0 && (
+        <section className="mb-10 container mx-auto px-6">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
+              <span className="text-blue-600">Education</span> & Learning
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+            <Button variant="outline" className="rounded-full font-black" onClick={() => handleCategoryClick('education')}>
+              View All <ChevronRight className="ml-1 w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cleanEducationNews.slice(0, 3).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* HEALTH SECTION */}
+      {cleanHealthNews.length > 0 && (
+        <section className="mb-10 container mx-auto px-6">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
+              <span className="text-emerald-600">Health</span> & Wellness
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+            <Button variant="outline" className="rounded-full font-black" onClick={() => handleCategoryClick('health')}>
+              View All <ChevronRight className="ml-1 w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cleanHealthNews.slice(0, 3).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* TECHNOLOGY SECTION */}
+      {cleanTechnologyNews.length > 0 && (
+        <section className="mb-10 container mx-auto px-6">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
+              <span className="text-purple-600">Technology</span> & Innovation
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+            <Button variant="outline" className="rounded-full font-black" onClick={() => handleCategoryClick('technology')}>
+              View All <ChevronRight className="ml-1 w-4 h-4" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {cleanTechnologyNews.slice(0, 3).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
           </div>
         </section>
       )}

@@ -1,4 +1,4 @@
-import { getDb, auth } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
@@ -21,10 +21,14 @@ export async function GET(request) {
             return NextResponse.json({ enabled: false, text: '', texts: [] });
         }
 
+        // Join all texts so multiple selected articles all appear in the ticker
+        const allTexts = t.texts && t.texts.length > 0 ? t.texts : (t.text ? [t.text] : []);
+        const joinedText = allTexts.filter(Boolean).join(' • ');
+
         return NextResponse.json({
             enabled: true,
-            text: t.text,
-            texts: t.texts || [],
+            text: joinedText || t.text || '',
+            texts: allTexts,
             updatedAt: t.updatedAt
         });
     } catch (error) {
@@ -45,6 +49,7 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Auth token missing' }, { status: 401 });
         }
 
+        const auth = getAuth();
         let decodedUser;
         try {
             decodedUser = await auth.verifyIdToken(token);

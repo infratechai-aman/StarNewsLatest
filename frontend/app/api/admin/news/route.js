@@ -56,7 +56,7 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, featured, showOnHome, authorName } = body;
+        const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, featured, showOnHome, authorName, thumbnailUrl, thumbnails } = body;
 
         if (!title || !content) {
             return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
@@ -78,6 +78,8 @@ export async function POST(request) {
             youtubeUrl: youtubeUrl || videoUrl || '',
             tags: tags || [],
             metaDescription: metaDescription || '',
+            thumbnailUrl: thumbnailUrl || mainImage || '',
+            thumbnails: thumbnails || (thumbnailUrl ? [thumbnailUrl] : []),
             featured: featured || false,
             showOnHome: showOnHome !== false,
             authorName: authorName || 'Admin',
