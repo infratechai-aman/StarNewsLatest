@@ -151,12 +151,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
               <div className="relative h-[80px] w-[200px]">
-                <Image
-                  src="/images/star-news-india-logo.png"
-                  alt="Star News India"
-                  fill
-                  className="object-contain transition-transform group-hover:scale-105"
-                  priority
+                <video
+                  src="/StarNewsLogo.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain transition-transform group-hover:scale-105 pointer-events-none"
                 />
               </div>
             </div>
@@ -367,11 +368,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           {/* Center: Logo */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
             <div className="relative h-10 w-32">
-              <Image
-                src="/images/star-news-india-logo.png"
-                alt="Star News"
-                fill
-                className="object-contain"
+              <video
+                src="/StarNewsLogo.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-contain pointer-events-none"
               />
             </div>
           </div>
