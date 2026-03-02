@@ -8,8 +8,8 @@ const defaultSettings = {
     // Premium Ad Banner (Top)
     premiumAd: {
         enabled: true,
-        imageUrl: '',
-        linkUrl: '',
+        imageUrl: 'https://picsum.photos/seed/ad1/1200/200',
+        linkUrl: '#',
         title: 'Premium Advertisement Space',
         altText: 'Advertisement'
     },
@@ -17,7 +17,12 @@ const defaultSettings = {
     // Sidebar Ad - Each item has its own image and destination URL
     sidebarAd: {
         enabled: true,
-        items: [] // Array of { imageUrl: '', destinationUrl: '' }
+        items: [
+            { imageUrl: 'https://picsum.photos/seed/ad2/600/600', destinationUrl: '#' },
+            { imageUrl: 'https://picsum.photos/seed/ad3/600/600', destinationUrl: '#' },
+            { imageUrl: 'https://picsum.photos/seed/ad4/600/600', destinationUrl: '#' },
+            { imageUrl: 'https://picsum.photos/seed/ad8/600/600', destinationUrl: '#' }
+        ]
     },
 
     // Article Page Sidebar Ads (News Detail Page)
@@ -25,15 +30,15 @@ const defaultSettings = {
         // Article Ad Banner (Pink/Purple gradient - "Advertise Your Business")
         banner: {
             enabled: true,
-            imageUrl: '',
-            linkUrl: '',
+            imageUrl: 'https://picsum.photos/seed/ad5/1200/200',
+            linkUrl: '#',
             title: 'Advertise Your Business'
         },
         // Article Sticky Ad (Bottom sticky - "Premium Ad Space")
         sticky: {
             enabled: true,
-            imageUrl: '',
-            linkUrl: '',
+            imageUrl: 'https://picsum.photos/seed/ad6/400/400',
+            linkUrl: '#',
             title: 'Premium Ad Space'
         }
     },
@@ -48,8 +53,8 @@ const defaultSettings = {
     // Business Sidebar Ad (Homepage - BUSINESS Advertisement)
     businessAd: {
         enabled: true,
-        imageUrl: '',
-        linkUrl: '',
+        imageUrl: 'https://picsum.photos/seed/ad7/600/300',
+        linkUrl: '#',
         title: 'BUSINESS',
         subtitle: 'Advertisement',
         buttonText: 'POST YOUR AD'
@@ -104,10 +109,10 @@ export const getPremiumAdSettings = async () => {
     try {
         const res = await fetch('/api/ads/premium')
         const data = await res.json()
-        return data.enabled ? data : { enabled: false, imageUrl: '', linkUrl: '', title: '' }
+        return (data.enabled && data.imageUrl) ? data : defaultSettings.premiumAd
     } catch (error) {
         console.error('Error fetching premium ad settings:', error)
-        return { enabled: false, imageUrl: '', linkUrl: '', title: '' }
+        return defaultSettings.premiumAd
     }
 }
 
@@ -132,6 +137,9 @@ export const savePremiumAdSettings = async (adSettings) => {
 // Sidebar Ad helpers
 export const getSidebarAdSettings = () => {
     const settings = getContentSettings()
+    if (!settings.sidebarAd?.items || settings.sidebarAd.items.length === 0) {
+        return defaultSettings.sidebarAd
+    }
     return settings.sidebarAd
 }
 
@@ -160,10 +168,10 @@ export const saveSidebarAdSettings = async (adSettings) => {
 // Article Page Sidebar Ad helpers
 export const getArticleAdSettings = () => {
     const settings = getContentSettings()
-    return settings.articleAd || {
-        banner: { enabled: true, imageUrl: '', linkUrl: '', title: 'Advertise Your Business' },
-        sticky: { enabled: true, imageUrl: '', linkUrl: '', title: 'Premium Ad Space' }
-    }
+    const adSettings = settings.articleAd || {};
+    if (!adSettings.banner?.imageUrl) adSettings.banner = defaultSettings.articleAd.banner;
+    if (!adSettings.sticky?.imageUrl) adSettings.sticky = defaultSettings.articleAd.sticky;
+    return adSettings;
 }
 
 export const saveArticleAdSettings = (adSettings) => {
@@ -175,14 +183,10 @@ export const saveArticleAdSettings = (adSettings) => {
 // Business Sidebar Ad helpers (Homepage - "BUSINESS Advertisement")
 export const getBusinessAdSettings = () => {
     const settings = getContentSettings()
-    return settings.businessAd || {
-        enabled: true,
-        imageUrl: '',
-        linkUrl: '',
-        title: 'BUSINESS',
-        subtitle: 'Advertisement',
-        buttonText: 'POST YOUR AD'
+    if (!settings.businessAd || !settings.businessAd.imageUrl) {
+        return defaultSettings.businessAd
     }
+    return settings.businessAd
 }
 
 export const saveBusinessAdSettings = (adSettings) => {

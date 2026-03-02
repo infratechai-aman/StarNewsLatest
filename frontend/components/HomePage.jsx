@@ -30,14 +30,6 @@ const WhatsAppIcon = ({ className }) => (
 )
 
 
-// Right side advertisement images
-const adImages = [
-  '/placeholder-news.svg',
-  '/placeholder-news.svg',
-  '/placeholder-news.svg',
-  '/placeholder-news.svg',
-]
-
 // Helper to map DB category names to translation keys
 const getTranslatedCategory = (cat, t, language) => {
   if (!cat) return ''
@@ -103,10 +95,10 @@ const NewsBox = ({ item, onClick, language }) => {
 
   return (
     <div
-      className="premium-card group cursor-pointer overflow-hidden rounded-xl bg-white border border-gray-100"
+      className="premium-card group cursor-pointer overflow-hidden bg-white border-b md:border md:rounded-xl border-gray-100"
       onClick={() => onClick(item)}
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-gray-50">
+      <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-gray-50">
         {images.map((img, index) => (
           <Image
             key={index}
@@ -117,22 +109,22 @@ const NewsBox = ({ item, onClick, language }) => {
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         ))}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         {category && (
-          <Badge className="absolute top-3 left-3 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white border-none px-2 py-0.5 shadow-sm">
+          <Badge className="absolute top-4 left-4 md:top-3 md:left-3 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white border-none px-3 md:px-2 py-1 md:py-0.5 shadow-sm">
             {category}
           </Badge>
         )}
       </div>
-      <div className="p-4">
-        <h3 className="font-heading font-extrabold text-base md:text-lg leading-[1.2] line-clamp-2 group-hover:text-red-600 transition-colors tracking-tight text-gray-900">
+      <div className="p-5 md:p-4">
+        <h3 className="font-heading font-black text-2xl md:text-lg md:font-extrabold leading-[1.2] line-clamp-3 md:line-clamp-2 group-hover:text-red-600 transition-colors tracking-tight text-gray-900">
           {title}
         </h3>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-            <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+        <div className="mt-4 md:mt-3 flex items-center justify-between">
+          <span className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
           </span>
-          <span className="text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Read Full Story →</span>
+          <span className="text-[11px] md:text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Read Full Story →</span>
         </div>
       </div>
     </div>
@@ -571,13 +563,14 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   // Advertisement rotation
   useEffect(() => {
-    if (adImages.length > 1) {
+    const items = sidebarAdSettings?.items || []
+    if (items.length > 1) {
       const adTimer = setInterval(() => {
-        setCurrentAdIndex((prev) => (prev + 1) % adImages.length)
+        setCurrentAdIndex((prev) => (prev + 1) % items.length)
       }, 5000)
       return () => clearInterval(adTimer)
     }
-  }, [])
+  }, [sidebarAdSettings])
 
   // Click handler for news items - push browser history for back button support
   const handleNewsClick = (article) => {
@@ -676,19 +669,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 </div>
               </CardContent>
             </Card>
-          ) : (
-            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
-              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
-                <Image src={adImages[currentAdIndex % adImages.length] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {adImages.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % adImages.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          ) : null}
         </div>
 
         <div className="px-4 mt-8">
@@ -839,17 +820,25 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             </div>
 
             {/* Sliding Ads / Banner */}
-            <Card className="overflow-hidden border border-gray-100 shadow-xl cursor-pointer rounded-[32px]">
-              <CardContent className="p-0 aspect-[4/3] relative bg-gray-100">
-                <Image src={adImages[currentAdIndex] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                <Badge className="absolute top-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1.5 backdrop-blur-sm border-none uppercase tracking-widest">{t('advertisement') || 'Advertisement'}</Badge>
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                  {adImages.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentAdIndex ? 'bg-white w-6' : 'bg-white/50 w-2'}`} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (
+              <Card
+                className="overflow-hidden border border-gray-100 shadow-xl cursor-pointer rounded-[32px]"
+                onClick={() => {
+                  const url = sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl;
+                  if (url) window.open(url, '_blank')
+                }}
+              >
+                <CardContent className="p-0 aspect-[4/3] relative bg-gray-100">
+                  <Image src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                  <Badge className="absolute top-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1.5 backdrop-blur-sm border-none uppercase tracking-widest">{t('advertisement') || 'Advertisement'}</Badge>
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                    {sidebarAdSettings.items.map((_, idx) => (
+                      <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-6' : 'bg-white/50 w-2'}`} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="premium-card bg-white rounded-[32px] border border-gray-100 p-8 shadow-xl overflow-hidden relative">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-400"></div>
@@ -900,18 +889,18 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* BUSINESS SECTION - Restored Vibrant Blue Aesthetic */}
       {cleanBusinessNews.length > 0 && (
-        <section className="mb-10 container mx-auto px-4 lg:px-6">
-          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white p-8 lg:p-12 rounded-[48px] overflow-hidden shadow-2xl border border-blue-900/20">
+        <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
+          <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white py-12 px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-blue-900/20">
             <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8 relative z-10">
-              <div className="max-w-2xl">
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left">
+              <div className="max-w-2xl flex flex-col items-center md:items-start">
                 <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                   {t('marketIntelligence') || 'Market Intelligence'}
                 </Badge>
-                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">
+                <h2 className="font-heading font-black text-5xl md:text-8xl leading-[0.9] tracking-tighter">
                   {t('business') || 'Business'} & <br />
                   <span className="text-blue-400 italic font-serif glow-text-blue">{t('economy') || 'Economy'}</span>
                 </h2>
@@ -1034,11 +1023,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* SPORTS SECTION */}
       {cleanSportsNews.length > 0 && (
-        <section className="mb-10 container mx-auto px-4 lg:px-6">
-          <div className="relative bg-gradient-to-br from-[#0d3320] to-[#061a10] text-white p-8 lg:p-12 rounded-[48px] overflow-hidden shadow-2xl border border-green-900/20">
+        <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
+          <div className="relative bg-gradient-to-br from-[#0d3320] to-[#061a10] text-white py-12 px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-green-900/20">
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
-            <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-8 relative z-10">
-              <div className="max-w-2xl">
+            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left">
+              <div className="max-w-2xl flex flex-col items-center md:items-start">
                 <Badge className="bg-green-600/30 text-green-300 border border-green-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">
                   Live Updates
                 </Badge>
@@ -1130,53 +1119,49 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </section>
       )}
 
-      <div className="hidden lg:block">
+      {/* Floating WhatsApp Button */}
+      <a
+        href="https://wa.me/917020873300"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform hidden lg:block"
+      >
+        <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
+          Need help? <span className="text-green-600 underline">Chat with us</span>
+        </div>
+        <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
+          <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
+        </div>
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
+      </a>
 
-        {/* Floating WhatsApp Button */}
-        <a
-          href="https://wa.me/917020873300"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform"
-        >
-          <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
-            Need help? <span className="text-green-600 underline">Chat with us</span>
+      {/* Bottom News Grid - Full Width, No Sidebar */}
+      <div className="container mx-auto px-4 mt-20">
+        <div className="space-y-12">
+          <div className="mag-section-header mb-8 flex items-center justify-between">
+            <h2 className="text-4xl font-heading font-black tracking-tighter">
+              {t('moreStories') || 'More Stories'}
+            </h2>
+            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
           </div>
-          <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
-            <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {oldNews.slice(0, visibleMoreStories).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
           </div>
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
-        </a>
-
-        {/* Bottom News Grid - Full Width, No Sidebar */}
-        <div className="container mx-auto px-4 mt-20">
-          <div className="space-y-12">
-            <div className="mag-section-header mb-8 flex items-center justify-between">
-              <h2 className="text-4xl font-heading font-black tracking-tighter">
-                {t('moreStories') || 'More Stories'}
-              </h2>
-              <div className="h-px flex-1 bg-gray-100 mx-8"></div>
+          {oldNews.length > visibleMoreStories && (
+            <div className="flex justify-center pt-8">
+              <Button
+                variant="outline"
+                className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
+                onClick={() => setVisibleMoreStories(prev => prev + 12)}
+              >
+                {t('loadMore') || 'LOAD MORE STORIES'}
+              </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {oldNews.slice(0, visibleMoreStories).map((item) => (
-                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-              ))}
-            </div>
-            {oldNews.length > visibleMoreStories && (
-              <div className="flex justify-center pt-8">
-                <Button
-                  variant="outline"
-                  className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
-                  onClick={() => setVisibleMoreStories(prev => prev + 12)}
-                >
-                  {t('loadMore') || 'LOAD MORE STORIES'}
-                </Button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
-
       <style jsx>{`
         @keyframes marquee {
           0% { transform: translateX(0); }
