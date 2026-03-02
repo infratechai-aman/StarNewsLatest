@@ -35,6 +35,7 @@ const adImages = [
   '/placeholder-news.svg',
   '/placeholder-news.svg',
   '/placeholder-news.svg',
+  '/placeholder-news.svg',
 ]
 
 // Helper to map DB category names to translation keys
@@ -696,6 +697,19 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </div>
             </div>
 
+            {/* Sliding Ads / Banner */}
+            <Card className="overflow-hidden border border-gray-100 shadow-xl cursor-pointer rounded-[32px]">
+              <CardContent className="p-0 aspect-[4/3] relative bg-gray-100">
+                <Image src={adImages[currentAdIndex] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                <Badge className="absolute top-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1.5 backdrop-blur-sm border-none uppercase tracking-widest">{t('advertisement') || 'Advertisement'}</Badge>
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                  {adImages.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentAdIndex ? 'bg-white w-6' : 'bg-white/50 w-2'}`} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="premium-card bg-white rounded-[32px] border border-gray-100 p-8 shadow-xl overflow-hidden relative">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-400"></div>
               <h3 className="font-heading font-black text-3xl mb-8 flex items-center gap-4">
@@ -837,7 +851,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </div>
             </div>
 
-            <div className="sponsored-card bg-gray-50 rounded-[40px] p-8 border border-gray-100 flex flex-col items-center text-center">
+            <div className="sponsored-card bg-gray-50 rounded-[40px] p-8 border border-gray-100 flex flex-col items-center text-center mb-8">
               <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">{t('sponsored') || 'Sponsored'}</Badge>
               <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-6">
                 <Shield className="w-8 h-8 text-red-600" />
@@ -846,6 +860,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <p className="text-gray-500 text-sm mb-8 leading-relaxed">{t('premiumPlacementDesc') || 'Reach our exclusive audience of millions with high-impact editorial placements.'}</p>
               <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>{t('getInTouch') || 'GET IN TOUCH'}</Button>
             </div>
+
+            {businessAdSettings?.enabled && (
+              <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
+            )}
+
+            <SubscribeWidget />
           </div>
         </section>
       )}
@@ -968,53 +988,114 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </section>
       )}
 
-      {/* --- PREMIUM MOBILE VIEW (NYT Inspired) --- */}
-      <div className="lg:hidden space-y-0 -mx-4 mb-10">
-        <div className="px-6 mb-10">
-          <div className="mag-section-header">
-            <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>
+      {/* --- PREMIUM MOBILE VIEW --- */}
+      <div className="lg:hidden space-y-6 mb-10 -mx-4">
+        {/* Mobile Featured Carousel / Hero */}
+        <div className="px-4">
+          <div className="mag-section-header mb-4">
+            <h2 className="text-3xl font-heading font-black tracking-tighter flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+              {t('featured') || 'Featured News'}
+            </h2>
           </div>
-        </div>
-        {cleanMainNews.slice(0, 15).map((item, index) => {
-          const title = getLocalizedText(item.title, language)
-          const category = getTranslatedCategory(item.category, t, language)
-          const isLarge = index === 0
 
-          if (isLarge) {
-            return (
-              <div key={item.id} onClick={() => handleNewsClick(item)} className="relative aspect-[16/10] w-full mb-10 cursor-pointer group">
-                <Image src={item.mainImage || '/placeholder-news.svg'} alt={title} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                <div className="absolute bottom-0 left-0 p-8">
-                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] shadow-2xl tracking-[0.2em]">{t('topStory') || 'Top Story'}</Badge>
-                  <h2 className="text-3xl font-heading font-black text-white leading-[1.1] drop-shadow-2xl tracking-tighter italic">{title}</h2>
-                </div>
-              </div>
-            )
-          }
-
-          return (
-            <div key={item.id} onClick={() => handleNewsClick(item)} className="nyt-list-item px-4 flex gap-4 items-start active:bg-gray-50 transition-colors cursor-pointer">
-              <div className="flex-1 space-y-1.5 py-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600">{category}</span>
-                  <span className="text-[10px] text-gray-400 font-bold">• {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
-                </div>
-                <h3 className="font-heading font-black text-[17px] leading-[1.2] text-gray-900 line-clamp-3">
-                  {title}
-                </h3>
-              </div>
-              <div className="relative w-24 h-24 shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 shadow-sm mt-1">
+          <div className="flex overflow-x-auto pb-4 gap-4 snap-x snap-mandatory scrollbar-hide -mx-4 px-4">
+            {cleanMainNews.slice(0, 5).map((item, idx) => (
+              <div
+                key={item.id}
+                onClick={() => handleNewsClick(item)}
+                className="relative min-w-[85vw] sm:min-w-[340px] aspect-[4/5] sm:aspect-square rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border border-gray-100"
+              >
                 <Image
-                  src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                  alt={title}
+                  src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                  alt={getLocalizedText(item.title, language) || 'News Image'}
                   fill
                   className="object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10"></div>
+                <div className="absolute bottom-0 left-0 p-6 w-full">
+                  <Badge className="bg-red-600 text-white border-none mb-4 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl">
+                    {idx === 0 ? (t('topStory') || 'Top Story') : (getTranslatedCategory(item.category, t, language) || 'Featured')}
+                  </Badge>
+                  <h3 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-2xl">
+                    {getLocalizedText(item.title, language)}
+                  </h3>
+                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold">
+                    <Clock className="w-3.5 h-3.5 text-red-500" />
+                    {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Ads Block 1 */}
+        <div className="px-4">
+          <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { }}>
+            <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
+              <Image src={adImages[currentAdIndex] || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+              <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                {adImages.map((_, idx) => (
+                  <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentAdIndex ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="px-4 mt-8">
+          <div className="mag-section-header mb-6">
+            <h2 className="text-2xl font-heading font-black tracking-tighter italic">{t('todaysHeadlines') || "Today's Headlines"}</h2>
+          </div>
+          <div className="space-y-4">
+            {cleanMainNews.slice(5, 15).map((item, index) => {
+              const title = getLocalizedText(item.title, language)
+              const category = getTranslatedCategory(item.category, t, language)
+              const isAdPosition = index === 3;
+
+              return (
+                <div key={item.id} className="space-y-4">
+                  {isAdPosition && businessAdSettings?.enabled && (
+                    <div className="py-2">
+                      <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
+                    </div>
+                  )}
+                  <div onClick={() => handleNewsClick(item)} className="p-3 bg-white rounded-2xl flex gap-4 items-center active:scale-[0.98] transition-all cursor-pointer border border-gray-100 shadow-sm">
+                    <div className="relative w-28 h-28 shrink-0 rounded-[14px] overflow-hidden bg-gray-50 border border-gray-100">
+                      <Image
+                        src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                        alt={title || 'Thumbnail'}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{category}</span>
+                      </div>
+                      <h3 className="font-heading font-bold text-[15px] leading-[1.3] text-gray-900 line-clamp-3">
+                        {title}
+                      </h3>
+                      <div className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Ads Block 2 */}
+        <div className="px-4 mt-6 space-y-4">
+          {articleAdSettings?.sticky?.enabled && (
+            <StickyAdWidget settings={articleAdSettings} t={t} onClick={() => { }} />
+          )}
+          <SubscribeWidget />
+        </div>
       </div>
 
       {/* Floating WhatsApp Button */}
