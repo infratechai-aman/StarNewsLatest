@@ -15,9 +15,10 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         let animationFrameId;
 
-        // Ensure video is playing
+        // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
+                video.playbackRate = 2.0; // Play at 2x speed for faster, 60fps-like animation
                 if (video.paused) {
                     await video.play();
                 }
