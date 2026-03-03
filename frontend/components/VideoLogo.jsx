@@ -18,7 +18,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
-                video.playbackRate = 2.0; // Play at 2x speed for faster, 60fps-like animation
+                video.playbackRate = 2.5; // Faster playback for 60fps feel
                 if (video.paused) {
                     await video.play();
                 }
@@ -30,15 +30,25 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
 
         const processFrame = () => {
             if (video && !video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
-                // Match canvas size to video size
-                if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth;
-                if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
+                // OPTIMIZATION: Process canvas at a much smaller resolution to avoid 1080p pixel-loop lag (ensures 60fps)
+                const MAX_WIDTH = 500;
+                let calcWidth = video.videoWidth;
+                let calcHeight = video.videoHeight;
 
-                // Draw current video frame to canvas
-                ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                if (calcWidth > MAX_WIDTH) {
+                    const ratio = MAX_WIDTH / calcWidth;
+                    calcWidth = MAX_WIDTH;
+                    calcHeight = Math.floor(calcHeight * ratio);
+                }
+
+                if (canvas.width !== calcWidth) canvas.width = calcWidth;
+                if (canvas.height !== calcHeight) canvas.height = calcHeight;
+
+                // Draw current video frame to canvas at scaled resolution
+                ctx.drawImage(video, 0, 0, calcWidth, calcHeight);
 
                 // Extract pixel data
-                const frame = ctx.getImageData(0, 0, video.videoWidth, video.videoHeight);
+                const frame = ctx.getImageData(0, 0, calcWidth, calcHeight);
                 const data = frame.data;
                 const length = data.length;
 
@@ -50,17 +60,14 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
 
                     // Identify green pixels: high green value, significantly higher than red and blue
                     if (g > 80 && g > r * 1.2 && g > b * 1.2) {
-                        // Calculate how "green" the pixel is for anti-aliasing edges
                         const maxColor = Math.max(r, b);
                         const diff = g - maxColor;
 
                         if (diff > 40) {
                             data[i + 3] = 0; // fully transparent
                         } else {
-                            // semi-transparent blending for smoother edges
-                            data[i + 3] = 255 - (diff * 6);
-                            // remove color spill 
-                            data[i + 1] = maxColor;
+                            data[i + 3] = 255 - (diff * 6); // smooth edges
+                            data[i + 1] = maxColor; // remove green spill
                         }
                     }
                 }
@@ -68,7 +75,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
                 // Put modified pixel data back
                 ctx.putImageData(frame, 0, 0);
             }
-            // Keep looping regardless of current state to catch when video starts playing
+            // Ask browser for next frame (runs up to 60fps)
             animationFrameId = requestAnimationFrame(processFrame);
         };
 
