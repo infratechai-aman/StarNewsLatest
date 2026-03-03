@@ -1154,11 +1154,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="h-px flex-1 bg-gray-100 mx-8"></div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {oldNews.slice(0, visibleMoreStories).map((item) => (
+            {oldNews.slice(6, visibleMoreStories + 6).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
-          {oldNews.length > visibleMoreStories && (
+          {oldNews.length > visibleMoreStories + 6 && (
             <div className="flex justify-center pt-8">
               <Button
                 variant="outline"

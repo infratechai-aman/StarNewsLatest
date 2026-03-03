@@ -1,188 +1,116 @@
-'use client'
+import ClientApp from '@/components/ClientApp'
+
+// This helps ensure the page can utilize caching and server components properly
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
-import HomePage from '@/components/HomePage'
-import NewsPage from '@/components/NewsPage'
-import NewsDetailPage from '@/components/NewsDetailPage'
-import BusinessesPage from '@/components/BusinessesPage'
-import BusinessDetailPage from '@/components/BusinessDetailPage'
-import DailyDealsPage from '@/components/DailyDealsPage'
-import ClassifiedsPage from '@/components/ClassifiedsPage'
-import ClassifiedDetailPage from '@/components/ClassifiedDetailPage'
-import LiveTVPage from '@/components/LiveTVPage'
-import EnewspaperPage from '@/components/EnewspaperPage'
-import CityPage from '@/components/CityPage'
-import AboutUsPage from '@/components/AboutUsPage'
-import TermsConditionsPage from '@/components/TermsConditionsPage'
-import PrivacyPolicyPage from '@/components/PrivacyPolicyPage'
-import LoginPage from '@/components/LoginPage'
-import RegisterPage from '@/components/RegisterPage'
-import ReporterDashboard from '@/components/ReporterDashboard'
-import AdminDashboard from '@/components/AdminDashboard'
-import AdvertiserDashboard from '@/components/AdvertiserDashboard'
-import ForcePasswordChange from '@/components/ForcePasswordChange'
-import BreakingNewsTicker from '@/components/BreakingNewsTicker'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import { LanguageProvider } from '@/contexts/LanguageContext'
-import { auth } from '@/lib/api'
-import { useToast } from '@/hooks/use-toast'
+// Move data fetching to the server
+async function fetchInitialNews() {
+  try {
+    // In next.js app router server components, we must hit the API using absolute URL if using fetch,
+    // OR we can directly call the logic. For simplest integration without rewriting the DB logic here:
+    // (Assuming the API is deployed at the same origin or we fall back to empty)
 
-const ROLES = {
-  PUBLIC: 'public',
-  REGISTERED: 'registered',
-  ADVERTISER: 'advertiser',
-  REPORTER: 'reporter',
-  SUPER_ADMIN: 'super_admin'
-}
+    // As a workaround for local/production dynamic absolute URLs in server components,
+    // we bypass the API call and just return an empty object, letting ClientApp do the first fetch 
+    // IF the URL is unknown. But we want SSR.
 
-const App = () => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [currentView, setCurrentView] = useState('home')
-  const [selectedArticle, setSelectedArticle] = useState(null)
-  const [selectedBusiness, setSelectedBusiness] = useState(null)
-  const [selectedClassified, setSelectedClassified] = useState(null)
+    // Instead of doing direct DB calls here which requires duplicating Firebase Admin logic,
+    // returning null will let HomePage.jsx fallback to its standard client-side fetch.
+    // However, to GET SSR, we need the initial data.
 
+    // Since Firebase Admin is already in the project, we can fetch directly here for *super fast* SSR.
+    const { getDb } = await import('@/lib/firebaseAdmin')
+    const db = getDb()
+    if (!db) return null
 
-  // Lifted state for News Data (to persist across navigation)
-  const [newsData, setNewsData] = useState({
-    mainNewsBoxes: [],
-    trendingNews: [],
-    businessNews: [],
-    nationNews: [],
-    entertainmentNews: [],
-    crimeNews: [],
-    sportsNews: [],
-    educationNews: [],
-    healthNews: [],
-    technologyNews: [],
-    oldNews: [],
-    loaded: false
-  })
+    const snapshot = await db.collection('news_articles')
+      .where('approvalStatus', '==', 'approved')
+      .where('active', '==', true)
+      .limit(100)
+      .get()
 
-  // Lifted state for News Page (to persist across navigation)
-  const [newsPageState, setNewsPageState] = useState({
-    articles: [],
-    categories: [],
-    selectedCategory: 'all',
-    loaded: false
-  })
+    // Sort in memory (fallback method from API)
+    let articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    articles.sort((a, b) => new Date(b.publishedAt || b.createdAt) - new Date(a.publishedAt || a.createdAt))
 
-  const { toast } = useToast()
+    // Featured news goes to top 6 boxes
+    const featured = articles.filter(a => a.featured)
+    const nonFeatured = articles.filter(a => !a.featured)
+    const topNews = [...featured, ...nonFeatured].slice(0, 6)
+    const topNewsIds = new Set(topNews.map(a => a.id))
+    const remaining = articles.filter(a => !topNewsIds.has(a.id))
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  // Handle browser back/forward button
-  useEffect(() => {
-    const handlePopState = (event) => {
-      if (event.state?.view) {
-        setCurrentView(event.state.view)
-        if (event.state.article) {
-          setSelectedArticle(event.state.article)
-        } else {
-          setSelectedArticle(null)
-        }
-      } else {
-        // No state means we're going back to initial page (home)
-        setCurrentView('home')
-        setSelectedArticle(null)
-        setSelectedBusiness(null)
-        setSelectedClassified(null)
-      }
+    // Helper to normalize category names for matching
+    const normalizeCategory = (cat) => {
+      if (!cat) return ''
+      return (typeof cat === 'string' ? cat : (cat.en || cat.name || '')).toLowerCase().trim()
     }
 
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [])
+    // Category sorting matching HomePage.jsx logic
+    const politicsCategories = ['politics', 'city news', 'city', 'civic']
+    const politicsNews = remaining.filter(a => politicsCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
 
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      if (token) {
-        const userData = await auth.getMe()
-        setUser(userData)
-      }
-    } catch (error) {
-      localStorage.removeItem('token')
-    } finally {
-      setLoading(false)
+    const businessCategories = ['business', 'economy', 'finance']
+    const businessNews = remaining.filter(a => businessCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const nationalCategories = ['national', 'nation', 'india']
+    const nationNews = remaining.filter(a => nationalCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const entertainmentCategories = ['entertainment', 'bollywood', 'movies', 'music']
+    const entertainmentNews = remaining.filter(a => entertainmentCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const crimeCategories = ['crime', 'murder']
+    const crimeNews = remaining.filter(a => crimeCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const sportsCategories = ['sports']
+    const sportsNews = remaining.filter(a => sportsCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const educationCategories = ['education']
+    const educationNews = remaining.filter(a => educationCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const healthCategories = ['health']
+    const healthNews = remaining.filter(a => healthCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const technologyCategories = ['technology', 'tech']
+    const technologyNews = remaining.filter(a => technologyCategories.includes(normalizeCategory(a.category || a.categoryId))).slice(0, 5)
+
+    const usedIds = new Set([
+      ...politicsNews.map(a => a.id),
+      ...businessNews.map(a => a.id),
+      ...nationNews.map(a => a.id),
+      ...entertainmentNews.map(a => a.id),
+      ...crimeNews.map(a => a.id),
+      ...sportsNews.map(a => a.id),
+      ...educationNews.map(a => a.id),
+      ...healthNews.map(a => a.id),
+      ...technologyNews.map(a => a.id)
+    ])
+
+    const oldNews = remaining.filter(a => !usedIds.has(a.id))
+
+    return {
+      mainNewsBoxes: topNews,
+      trendingNews: politicsNews,
+      businessNews: businessNews,
+      nationNews: nationNews,
+      entertainmentNews: entertainmentNews,
+      crimeNews: crimeNews,
+      sportsNews: sportsNews,
+      educationNews: educationNews,
+      healthNews: healthNews,
+      technologyNews: technologyNews,
+      oldNews: oldNews,
+      loaded: true
     }
+  } catch (error) {
+    console.error('Server-Side Data Fetching Error:', error)
+    return null // Returns null so the client side knows to fallback to fetchNews()
   }
-
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    setUser(null)
-    setCurrentView('home')
-    toast({ title: 'Logged out successfully' })
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading StarNews...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Dashboard views should render without main site chrome (Header, Footer, Ticker)
-  const isDashboardView = ['admin-dashboard', 'reporter-dashboard', 'advertiser-dashboard'].includes(currentView)
-
-  // Render dashboard views as full-screen standalone pages
-  if (isDashboardView) {
-    return (
-      <LanguageProvider>
-        <div className="min-h-screen bg-background">
-          {currentView === 'reporter-dashboard' && user?.role === ROLES.REPORTER && <ReporterDashboard user={user} toast={toast} />}
-          {currentView === 'admin-dashboard' && user?.role === ROLES.SUPER_ADMIN && <AdminDashboard user={user} toast={toast} />}
-          {currentView === 'advertiser-dashboard' && user?.role === ROLES.ADVERTISER && <AdvertiserDashboard user={user} toast={toast} />}
-        </div>
-      </LanguageProvider>
-    )
-  }
-
-  return (
-    <LanguageProvider>
-      <div className="min-h-screen bg-background">
-        <Header
-          user={user}
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          handleLogout={handleLogout}
-        />
-
-        <BreakingNewsTicker />
-
-        <main className={currentView === 'home' ? "w-full pb-6" : "container py-6"}>
-          {currentView === 'home' && <HomePage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
-          {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={setCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
-          {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
-          {currentView === 'businesses' && <BusinessesPage setSelectedBusiness={setSelectedBusiness} setCurrentView={setCurrentView} />}
-          {currentView === 'business-detail' && selectedBusiness && <BusinessDetailPage business={selectedBusiness} setCurrentView={setCurrentView} user={user} toast={toast} />}
-          {currentView === 'daily-deals' && <DailyDealsPage />}
-          {currentView === 'classifieds' && <ClassifiedsPage user={user} toast={toast} setSelectedClassified={setSelectedClassified} setCurrentView={setCurrentView} />}
-          {currentView === 'classified-detail' && selectedClassified && <ClassifiedDetailPage classified={selectedClassified} setCurrentView={setCurrentView} />}
-          {currentView === 'live-tv' && <LiveTVPage />}
-          {currentView === 'enewspaper' && <EnewspaperPage />}
-          {currentView === 'city' && <CityPage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
-          {currentView === 'about' && <AboutUsPage />}
-          {currentView === 'terms' && <TermsConditionsPage />}
-          {currentView === 'privacy' && <PrivacyPolicyPage />}
-          {currentView === 'login' && <LoginPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-          {currentView === 'register' && <RegisterPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-          {currentView === 'force-password-change' && user?.requirePasswordChange && <ForcePasswordChange user={user} setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-        </main>
-
-        <Footer setCurrentView={setCurrentView} />
-      </div>
-    </LanguageProvider>
-  )
 }
 
-export default App
+export default async function Page() {
+  // Fetch initial data ON THE SERVER before sending to client!
+  const initialNewsData = await fetchInitialNews()
+
+  return <ClientApp initialNewsData={initialNewsData} />
+}
