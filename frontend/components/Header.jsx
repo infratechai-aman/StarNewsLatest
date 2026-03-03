@@ -150,16 +150,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="relative h-[80px] w-[200px]">
-                <video
-                  src="/StarNewsLogo.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-contain transition-transform group-hover:scale-105 pointer-events-none"
-                  style={{ filter: 'url(#remove-green)' }}
-                />
+              <div className="flex-shrink-0 h-20 md:h-24 w-auto group cursor-pointer relative z-20">
+                <Image src="/images/star-news-india-logo.png" alt="Star News" width={240} height={96} className="h-[80px] w-auto md:h-[96px] object-contain transition-transform group-hover:scale-105 pointer-events-none lg:w-[240px]" priority />
               </div>
             </div>
 
@@ -368,16 +360,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Center: Logo */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
-            <div className="relative h-10 w-32">
-              <video
-                src="/StarNewsLogo.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-contain pointer-events-none"
-                style={{ filter: 'url(#remove-green)' }}
-              />
+            <div className="flex-shrink-0 w-56 h-14 relative cursor-pointer z-50">
+              <Image src="/images/star-news-india-logo.png" alt="Star News" width={224} height={56} className="w-[224px] h-[56px] object-contain pointer-events-none" priority />
             </div>
           </div>
 

@@ -95,7 +95,7 @@ const NewsBox = ({ item, onClick, language }) => {
 
   return (
     <div
-      className="premium-card group cursor-pointer overflow-hidden bg-white border-y md:border md:rounded-xl border-gray-100 -mt-px md:mt-0"
+      className="premium-card group cursor-pointer overflow-hidden bg-white border border-gray-200/60 shadow-sm hover:shadow-md rounded-xl md:rounded-2xl transition-all duration-300 mb-4 md:mb-0"
       onClick={() => onClick(item)}
     >
       <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-gray-50">
@@ -145,7 +145,7 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
 
   return (
     <Card
-      className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group border hover:border-${accentColor}-500`}
+      className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group border border-gray-200/60 rounded-xl md:rounded-2xl hover:border-${accentColor}-500 shadow-sm mb-4 md:mb-0`}
       onClick={() => onClick(item)}
     >
       <div className="relative h-40 overflow-hidden">
@@ -908,12 +908,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 </Button>
               </div>
 
-              <div className="bento-magazine relative z-10 gap-1 md:gap-8 -mx-5 md:mx-0 pt-6 md:pt-0">
+              <div className="bento-magazine relative z-10 gap-4 md:gap-8 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
                 {cleanBusinessNews.slice(0, 5).map((item, idx) => (
                   <div
                     key={item.id}
                     onClick={() => handleNewsClick(item)}
-                    className={`premium-card cursor-pointer rounded-none md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[calc(100dvh-104px)] md:h-[300px] border-y md:border border-white/10 ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
+                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[calc(100dvh-104px)] md:h-[300px] border border-white/20 shadow-lg ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
                   >
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
@@ -1053,9 +1053,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 ALL SPORTS <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-8 relative z-10 -mx-5 md:mx-0 pt-6 md:pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 relative z-10 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
               {cleanSportsNews.slice(0, 3).map((item) => (
-                <div key={item.id} onClick={() => handleNewsClick(item)} className="premium-card cursor-pointer rounded-none md:rounded-[24px] overflow-hidden relative group h-[calc(100dvh-104px)] md:h-[280px] border-y md:border border-white/10">
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="premium-card cursor-pointer rounded-2xl md:rounded-[24px] overflow-hidden relative group h-[calc(100dvh-104px)] md:h-[280px] border border-white/20 shadow-lg">
                   <Image src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-5 w-full">
