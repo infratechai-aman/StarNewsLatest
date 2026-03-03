@@ -29,7 +29,9 @@ export async function GET(request) {
 
         if (isDefaultQuery && newsCache.data && (Date.now() - newsCache.lastFetch < CACHE_TTL)) {
             // Return cached data
-            return NextResponse.json(newsCache.data);
+            const response = NextResponse.json(newsCache.data);
+            response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
+            return response;
         }
 
         const limit = parseInt(limitParam || '20')

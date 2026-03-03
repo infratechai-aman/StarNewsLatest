@@ -556,8 +556,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       setTrendingSettings(getTrendingSettings())
     }
     loadSettings()
-    // Refresh premium ad every 30 seconds for live updates
-    const interval = setInterval(loadSettings, 30000)
+    // Refresh premium ad every 5 minutes for live updates to save database reads
+    const interval = setInterval(loadSettings, 300000)
     return () => clearInterval(interval)
   }, [])
 
