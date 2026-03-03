@@ -395,6 +395,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
             <button onClick={() => setCurrentView('enewspaper')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('eNewspaper')}</button>
             <button onClick={() => setCurrentView('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('cityNews')}</button>
+            <button onClick={() => setCurrentView('classifieds')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('classified')}</button>
             <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
           </div>
         </div>

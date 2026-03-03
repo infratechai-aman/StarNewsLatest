@@ -650,7 +650,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <div
                 key={item.id}
                 onClick={() => handleNewsClick(item)}
-                className="relative w-full flex-shrink-0 min-w-full sm:min-w-[340px] h-[calc(100dvh-104px)] sm:h-auto sm:aspect-square rounded-none sm:rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border-y sm:border border-gray-100"
+                className="relative w-full flex-shrink-0 min-w-full sm:min-w-[340px] h-[75dvh] sm:h-auto sm:aspect-square rounded-none sm:rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border-y sm:border border-gray-100"
               >
                 <Image
                   src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
