@@ -1,7 +1,7 @@
 import ClientApp from '@/components/ClientApp'
 
-// This helps ensure the page can utilize caching and server components properly
-export const dynamic = 'force-dynamic'
+// This enables Incremental Static Regeneration (ISR) to severely limit DB reads
+export const revalidate = 60 // Rebuild page at most every 60 seconds
 
 // Move data fetching to the server
 async function fetchInitialNews() {
@@ -30,7 +30,17 @@ async function fetchInitialNews() {
       .get()
 
     // Sort in memory (fallback method from API)
-    let articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    let articles = snapshot.docs.map(doc => {
+      const data = doc.data()
+      // Serialize Firebase Timestamps for Next.js Server Components
+      if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate().toISOString()
+      if (data.publishedAt?.toDate) data.publishedAt = data.publishedAt.toDate().toISOString()
+      if (data.updatedAt?.toDate) data.updatedAt = data.updatedAt.toDate().toISOString()
+
+      return { id: doc.id, ...data }
+    })
+
+    // Sort after serialization
     articles.sort((a, b) => new Date(b.publishedAt || b.createdAt) - new Date(a.publishedAt || a.createdAt))
 
     // Featured news goes to top 6 boxes
