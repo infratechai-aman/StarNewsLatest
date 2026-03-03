@@ -2041,8 +2041,65 @@ const AdminDashboard = ({ user, toast }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Image URLs (comma separated, up to 8)</Label>
-                      <Textarea value={classifiedForm.images?.join(', ') || ''} onChange={(e) => setClassifiedForm({ ...classifiedForm, images: e.target.value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 8) })} placeholder="https://image1.jpg, https://image2.jpg" rows={2} />
+                      <Label>Images (up to 8)</Label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
+                          const imgUrl = classifiedForm.images?.[index] || ''
+                          return (
+                            <div key={index} className="relative border-2 border-dashed border-gray-300 rounded-lg h-20 flex items-center justify-center overflow-hidden bg-gray-50 hover:border-blue-400 transition-colors">
+                              {imgUrl ? (
+                                <>
+                                  <img src={imgUrl} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-bl p-0.5 text-xs hover:bg-red-600"
+                                    onClick={() => {
+                                      const newImages = [...(classifiedForm.images || [])]
+                                      newImages[index] = ''
+                                      setClassifiedForm({ ...classifiedForm, images: newImages.filter(Boolean) })
+                                    }}
+                                  >✕</button>
+                                </>
+                              ) : (
+                                <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500">
+                                  <Upload className="h-5 w-5 mb-1" />
+                                  <span className="text-[10px]">{index + 1}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0]
+                                      if (!file) return
+                                      if (file.size > 5 * 1024 * 1024) {
+                                        toast({ title: 'Image must be under 5MB', variant: 'destructive' })
+                                        return
+                                      }
+                                      try {
+                                        const formData = new FormData()
+                                        formData.append('file', file)
+                                        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                                        const data = await res.json()
+                                        if (res.ok) {
+                                          const newImages = [...(classifiedForm.images || [])]
+                                          newImages[index] = data.url
+                                          setClassifiedForm({ ...classifiedForm, images: newImages })
+                                          toast({ title: `Image ${index + 1} uploaded!` })
+                                        } else {
+                                          toast({ title: 'Upload failed', variant: 'destructive' })
+                                        }
+                                      } catch (err) {
+                                        toast({ title: 'Upload failed', variant: 'destructive' })
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Click each slot to upload an image. Max 5MB per image.</p>
                     </div>
                   </div>
                   <DialogFooter>
