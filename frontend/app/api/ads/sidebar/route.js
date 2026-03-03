@@ -2,19 +2,37 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 
+let sidebarAdCache = { data: null, lastFetch: 0 };
+const CACHE_TTL = 60 * 1000; // 1 minute
+
 export async function GET() {
     const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    }
     try {
+        if (sidebarAdCache.data && (Date.now() - sidebarAdCache.lastFetch < CACHE_TTL)) {
+            return NextResponse.json(sidebarAdCache.data, {
+                headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+            });
+        }
+
         const doc = await db.collection('site_settings').doc('sidebar_ad').get()
+        let responseData = { enabled: false, items: [] };
 
         if (doc.exists) {
             const data = doc.data()
-            return NextResponse.json({
+            responseData = {
                 enabled: data.enabled,
                 items: data.items || []
-            })
+            };
         }
-        return NextResponse.json({ enabled: false, items: [] })
+
+        sidebarAdCache = { data: responseData, lastFetch: Date.now() };
+
+        return NextResponse.json(responseData, {
+            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+        });
     } catch (error) {
         console.error('Ads Sidebar GET Error:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
