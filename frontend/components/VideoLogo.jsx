@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 
-export default function VideoLogo({ className = "", style = {} }) {
+export default function VideoLogo({ className = "", style = {}, videoSrc = "/StarNewsLogo.mp4" }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
@@ -85,7 +85,7 @@ export default function VideoLogo({ className = "", style = {} }) {
         <div className={`relative ${className}`} style={style}>
             <video
                 ref={videoRef}
-                src="/LatestLogo.mp4?v=3"
+                src={videoSrc}
                 autoPlay
                 loop
                 muted

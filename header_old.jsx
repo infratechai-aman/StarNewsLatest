@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap } from 'lucide-react'
 import Image from 'next/image'
-import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const ROLES = { REPORTER: 'reporter', SUPER_ADMIN: 'super_admin', ADVERTISER: 'advertiser' }
@@ -151,8 +150,16 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-6">
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-20 md:h-24 w-[240px] group cursor-pointer relative z-20">
-                <VideoLogo className="h-full w-full transition-transform group-hover:scale-105" />
+              <div className="relative h-[80px] w-[200px]">
+                <video
+                  src="/StarNewsLogo.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-contain transition-transform group-hover:scale-105 pointer-events-none"
+                  style={{ filter: 'url(#remove-green)' }}
+                />
               </div>
             </div>
 
@@ -361,8 +368,16 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Center: Logo */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-56 h-14 relative cursor-pointer z-50">
-              <VideoLogo className="w-full h-full" />
+            <div className="relative h-10 w-32">
+              <video
+                src="/StarNewsLogo.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-contain pointer-events-none"
+                style={{ filter: 'url(#remove-green)' }}
+              />
             </div>
           </div>
 
