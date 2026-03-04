@@ -18,7 +18,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Sta
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
-                video.playbackRate = 1.5; // Adjusted playback speed based on user feedback
+                video.playbackRate = 2.0; // Adjusted playback speed based on user feedback
                 if (video.paused) {
                     await video.play();
                 }
