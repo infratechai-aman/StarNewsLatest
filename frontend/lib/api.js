@@ -163,6 +163,10 @@ export const admin = {
   getSidebarAd: () => apiRequest('/ads/sidebar'),
   updateSidebarAd: (data) => apiRequest('/ads/sidebar', { method: 'POST', body: JSON.stringify(data) }),
 
+  // Live TV Management
+  getLiveTV: () => apiRequest('/admin/live-tv'),
+  updateLiveTV: (data) => apiRequest('/admin/live-tv', { method: 'PUT', body: JSON.stringify(data) }),
+
   // Layout (legacy)
   getLayout: () => apiRequest('/admin/layout'),
   updateLayout: (data) => apiRequest('/admin/layout', { method: 'PUT', body: JSON.stringify(data) }),

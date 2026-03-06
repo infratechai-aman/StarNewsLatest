@@ -24,7 +24,7 @@ import {
   Building2, Tag, Users, FileText, Settings, Eye, Check, X,
   Edit, Trash2, Plus, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
@@ -139,6 +139,14 @@ const AdminDashboard = ({ user, toast }) => {
   const [enewspaperPdfPreview, setEnewspaperPdfPreview] = useState(null)
   const [uploadingEnewspaper, setUploadingEnewspaper] = useState(false)
   const enewspaperFileInputRef = useRef(null)
+
+  // Live TV State
+  const [liveTVConfig, setLiveTVConfig] = useState({
+    enabled: false, streams: [], primaryStreamId: null
+  })
+  const [liveTVForm, setLiveTVForm] = useState({ title: '', url: '', isLive: false })
+  const [loadingLiveTV, setLoadingLiveTV] = useState(false)
+  const [editingStream, setEditingStream] = useState(null)
 
   // Ad image upload state
   const [uploadingPremiumAd, setUploadingPremiumAd] = useState(false)
@@ -637,7 +645,105 @@ const AdminDashboard = ({ user, toast }) => {
       loadSidebarAd()
       loadBusinessPromotions()
     }
+    if (activeTab === 'live-tv') loadLiveTVConfig()
   }, [activeTab])
+
+  // ===== LIVE TV Handlers =====
+  const loadLiveTVConfig = async () => {
+    try {
+      setLoadingLiveTV(true)
+      const data = await admin.getLiveTV()
+      setLiveTVConfig(data || { enabled: false, streams: [], primaryStreamId: null })
+    } catch (error) {
+      // console.error('Failed to load live TV config:', error)
+    } finally {
+      setLoadingLiveTV(false)
+    }
+  }
+
+  const handleSaveLiveTVConfig = async (config) => {
+    try {
+      setLoadingLiveTV(true)
+      await admin.updateLiveTV(config)
+      setLiveTVConfig(config)
+      toast({ title: 'Live TV Settings Saved' })
+    } catch (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' })
+    } finally {
+      setLoadingLiveTV(false)
+    }
+  }
+
+  const handleAddStream = () => {
+    if (!liveTVForm.title || !liveTVForm.url) {
+      toast({ title: 'Title and YouTube URL are required', variant: 'destructive' })
+      return
+    }
+    const newStream = {
+      id: editingStream ? editingStream.id : crypto.randomUUID(),
+      title: liveTVForm.title,
+      url: liveTVForm.url,
+      isLive: liveTVForm.isLive,
+      isActive: true,
+      order: editingStream ? editingStream.order : (liveTVConfig.streams?.length || 0) + 1,
+      addedAt: editingStream ? editingStream.addedAt : new Date().toISOString()
+    }
+    let updatedStreams
+    if (editingStream) {
+      updatedStreams = liveTVConfig.streams.map(s => s.id === editingStream.id ? newStream : s)
+    } else {
+      updatedStreams = [...(liveTVConfig.streams || []), newStream]
+    }
+    const newConfig = {
+      ...liveTVConfig,
+      streams: updatedStreams,
+      primaryStreamId: liveTVConfig.primaryStreamId || newStream.id
+    }
+    handleSaveLiveTVConfig(newConfig)
+    setLiveTVForm({ title: '', url: '', isLive: false })
+    setEditingStream(null)
+  }
+
+  const handleDeleteStream = (streamId) => {
+    if (!confirm('Delete this stream?')) return
+    const updatedStreams = liveTVConfig.streams.filter(s => s.id !== streamId)
+    const newConfig = {
+      ...liveTVConfig,
+      streams: updatedStreams,
+      primaryStreamId: liveTVConfig.primaryStreamId === streamId
+        ? (updatedStreams[0]?.id || null)
+        : liveTVConfig.primaryStreamId
+    }
+    handleSaveLiveTVConfig(newConfig)
+  }
+
+  const handleToggleStreamLive = (streamId) => {
+    const updatedStreams = liveTVConfig.streams.map(s =>
+      s.id === streamId ? { ...s, isLive: !s.isLive } : s
+    )
+    handleSaveLiveTVConfig({ ...liveTVConfig, streams: updatedStreams })
+  }
+
+  const handleToggleStreamActive = (streamId) => {
+    const updatedStreams = liveTVConfig.streams.map(s =>
+      s.id === streamId ? { ...s, isActive: !s.isActive } : s
+    )
+    handleSaveLiveTVConfig({ ...liveTVConfig, streams: updatedStreams })
+  }
+
+  const handleSetPrimaryStream = (streamId) => {
+    handleSaveLiveTVConfig({ ...liveTVConfig, primaryStreamId: streamId })
+  }
+
+  const handleEditStream = (stream) => {
+    setEditingStream(stream)
+    setLiveTVForm({ title: stream.title, url: stream.url, isLive: stream.isLive })
+  }
+
+  const handleCancelEditStream = () => {
+    setEditingStream(null)
+    setLiveTVForm({ title: '', url: '', isLive: false })
+  }
 
   // ===== BUSINESS CRUD Handlers =====
   const resetBusinessForm = () => {
@@ -1095,7 +1201,7 @@ const AdminDashboard = ({ user, toast }) => {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5 lg:grid-cols-10 gap-1 h-auto p-1">
+        <TabsList className="grid grid-cols-5 lg:grid-cols-11 gap-1 h-auto p-1">
           <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
             <LayoutDashboard className="h-3 w-3" />
             <span className="hidden sm:inline">Overview</span>
@@ -1137,6 +1243,10 @@ const AdminDashboard = ({ user, toast }) => {
           <TabsTrigger value="enewspaper" className="flex items-center gap-1 text-xs">
             <FileText className="h-3 w-3" />
             <span className="hidden sm:inline">E-Paper</span>
+          </TabsTrigger>
+          <TabsTrigger value="live-tv" className="flex items-center gap-1 text-xs bg-red-50">
+            <Video className="h-3 w-3 text-red-600" />
+            <span className="hidden sm:inline text-red-700">Live TV</span>
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-1 text-xs">
             <Monitor className="h-3 w-3" />
@@ -3790,6 +3900,173 @@ const AdminDashboard = ({ user, toast }) => {
             </CardContent>
           </Card>
         </TabsContent >
+
+        {/* ===== LIVE TV TAB ===== */}
+        <TabsContent value="live-tv" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Video className="h-5 w-5 text-red-600" />
+                    Live TV Management
+                  </CardTitle>
+                  <CardDescription>Manage your live streams and video replays</CardDescription>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium">{liveTVConfig.enabled ? 'Enabled' : 'Disabled'}</span>
+                  <Switch
+                    checked={liveTVConfig.enabled}
+                    onCheckedChange={(checked) => handleSaveLiveTVConfig({ ...liveTVConfig, enabled: checked })}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Add/Edit Stream Form */}
+              <Card className="border-dashed border-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">
+                    {editingStream ? '✏️ Edit Stream' : '➕ Add New Stream'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Stream Title *</Label>
+                      <Input
+                        value={liveTVForm.title}
+                        onChange={(e) => setLiveTVForm({ ...liveTVForm, title: e.target.value })}
+                        placeholder="e.g. Star News 24/7 Live"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>YouTube URL *</Label>
+                      <Input
+                        value={liveTVForm.url}
+                        onChange={(e) => setLiveTVForm({ ...liveTVForm, url: e.target.value })}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={liveTVForm.isLive}
+                        onCheckedChange={(checked) => setLiveTVForm({ ...liveTVForm, isLive: checked })}
+                      />
+                      <Label className="flex items-center gap-1.5">
+                        {liveTVForm.isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+                        {liveTVForm.isLive ? '🔴 Mark as LIVE' : 'Mark as Live'}
+                      </Label>
+                    </div>
+                    <div className="flex gap-2">
+                      {editingStream && (
+                        <Button variant="outline" onClick={handleCancelEditStream}>Cancel</Button>
+                      )}
+                      <Button onClick={handleAddStream} disabled={loadingLiveTV} className="bg-red-600 hover:bg-red-700">
+                        <Plus className="h-4 w-4 mr-1" />
+                        {editingStream ? 'Update Stream' : 'Add Stream'}
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Streams List */}
+              {loadingLiveTV ? (
+                <div className="text-center py-8 text-muted-foreground">Loading streams...</div>
+              ) : (liveTVConfig.streams || []).length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Video className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>No streams added yet. Add your first YouTube stream above!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">All Streams ({liveTVConfig.streams.length})</h3>
+                  {(liveTVConfig.streams || []).map((stream) => (
+                    <Card key={stream.id} className={`transition-all ${liveTVConfig.primaryStreamId === stream.id ? 'border-red-500 border-2 bg-red-50/50' : 'border'
+                      } ${!stream.isActive ? 'opacity-50' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold truncate">{stream.title}</h4>
+                              {stream.isLive && (
+                                <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                  LIVE
+                                </Badge>
+                              )}
+                              {liveTVConfig.primaryStreamId === stream.id && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-500 text-red-600">
+                                  ★ PRIMARY
+                                </Badge>
+                              )}
+                              {!stream.isActive && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  HIDDEN
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">{stream.url}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Added: {new Date(stream.addedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              size="sm"
+                              variant={stream.isLive ? 'destructive' : 'outline'}
+                              className="h-7 text-xs px-2"
+                              onClick={() => handleToggleStreamLive(stream.id)}
+                            >
+                              {stream.isLive ? '🔴 Live' : '⚪ Not Live'}
+                            </Button>
+                            {liveTVConfig.primaryStreamId !== stream.id && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs px-2"
+                                onClick={() => handleSetPrimaryStream(stream.id)}
+                              >
+                                ★ Set Primary
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs px-2"
+                              onClick={() => handleToggleStreamActive(stream.id)}
+                            >
+                              {stream.isActive ? <Eye className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs px-2"
+                              onClick={() => handleEditStream(stream)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="h-7 text-xs px-2"
+                              onClick={() => handleDeleteStream(stream.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
 
       </Tabs >

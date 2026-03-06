@@ -160,7 +160,7 @@ const ClientApp = ({ initialNewsData }) => {
                     {currentView === 'daily-deals' && <DailyDealsPage />}
                     {currentView === 'classifieds' && <ClassifiedsPage user={user} toast={toast} setSelectedClassified={setSelectedClassified} setCurrentView={setCurrentView} />}
                     {currentView === 'classified-detail' && selectedClassified && <ClassifiedDetailPage classified={selectedClassified} setCurrentView={setCurrentView} />}
-                    {currentView === 'live-tv' && <LiveTVPage />}
+                    {currentView === 'live-tv' && <LiveTVPage setCurrentView={setCurrentView} />}
                     {currentView === 'enewspaper' && <EnewspaperPage />}
                     {currentView === 'city' && <CityPage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
                     {currentView === 'about' && <AboutUsPage />}

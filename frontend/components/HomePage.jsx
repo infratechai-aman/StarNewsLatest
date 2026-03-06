@@ -289,6 +289,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const [currentAdIndex, setCurrentAdIndex] = useState(0)
   const [loading, setLoading] = useState(!newsData?.loaded)
   const [newsKey, setNewsKey] = useState(0)
+  const [liveStream, setLiveStream] = useState(null)
 
   // Admin content settings
   // Admin content settings
@@ -561,6 +562,28 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
     return () => clearInterval(interval)
   }, [])
 
+  // Fetch live TV status for LIVE NOW banner
+  useEffect(() => {
+    const checkLiveStatus = async () => {
+      try {
+        const res = await fetch('/api/live-tv')
+        const data = await res.json()
+        if (data?.enabled && data?.streams?.length > 0) {
+          const live = data.streams.find(s => s.isLive)
+          setLiveStream(live || null)
+        } else {
+          setLiveStream(null)
+        }
+      } catch (e) {
+        // silently fail
+      }
+    }
+    checkLiveStatus()
+    // Refresh every 60 seconds
+    const liveInterval = setInterval(checkLiveStatus, 60000)
+    return () => clearInterval(liveInterval)
+  }, [])
+
   // Advertisement rotation
   useEffect(() => {
     const items = sidebarAdSettings?.items || []
@@ -607,6 +630,35 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   return (
     <div className="space-y-0 md:space-y-4" key={newsKey}>
+
+      {/* LIVE NOW BANNER */}
+      {liveStream && (
+        <div
+          className="cursor-pointer group"
+          onClick={() => {
+            window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv')
+            setCurrentView('live-tv')
+          }}
+        >
+          <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white py-3 px-4 md:px-6 flex items-center justify-between gap-3 md:rounded-xl md:mx-auto md:max-w-7xl mt-3 md:mt-4 shadow-lg hover:shadow-xl transition-all group-hover:from-red-800 group-hover:via-red-700 group-hover:to-red-800">
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full shrink-0">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                LIVE
+              </span>
+              <span className="font-bold text-sm md:text-base truncate">
+                {liveStream.title}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="hidden md:inline text-white/80 text-sm font-medium">Watch Now</span>
+              <svg className="w-5 h-5 text-white group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PREMIUM AD BANNER - ABSOLUTE TOP */}
       {premiumAdSettings?.enabled && (
