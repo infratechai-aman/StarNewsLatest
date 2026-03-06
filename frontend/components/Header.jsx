@@ -276,6 +276,14 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               >
                 {t('businessDirectory')}
               </Button>
+              <Button
+                variant="ghost"
+                onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv') }}
+                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'live-tv' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+              >
+                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse mr-1.5" />
+                Live TV
+              </Button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -397,6 +405,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <button onClick={() => setCurrentView('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('cityNews')}</button>
             <button onClick={() => setCurrentView('classifieds')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('classified')}</button>
             <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
+            <button onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv') }} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all flex items-center gap-1.5 ${currentView === 'live-tv' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />Live TV
+            </button>
           </div>
         </div>
 
@@ -428,6 +439,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('classifieds'); setMobileMenuOpen(false) }}><Tag className="mr-3 h-5 w-5" />{t('classified')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('businesses'); setMobileMenuOpen(false) }}><Building2 className="mr-3 h-5 w-5" />{t('businessDirectory')}</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv'); setMobileMenuOpen(false) }}>
+                  <span className="mr-3 flex items-center justify-center h-5 w-5"><span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" /></span>Live TV
+                </Button>
 
                 <div className="my-2"></div>
                 <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-center" onClick={() => { setPromoteDialogOpen(true); setMobileMenuOpen(false) }}>
