@@ -261,7 +261,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                             )}
                           </div>
                           <h4 className="text-white/80 group-hover:text-white font-semibold text-sm line-clamp-2 leading-snug transition-colors">
-                            {article.title}
+                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
                           </h4>
                           <p className="text-white/25 text-[10px] mt-1.5">
                             {article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
@@ -405,7 +405,9 @@ const LiveTVPage = ({ setCurrentView }) => {
                       <div className="flex items-start gap-3">
                         <span className="text-red-600/60 font-black text-lg leading-none shrink-0 mt-0.5">{idx + 1}.</span>
                         <div className="min-w-0">
-                          <h5 className="text-white/60 group-hover:text-white/90 font-medium text-[13px] line-clamp-2 leading-snug transition-colors">{article.title}</h5>
+                          <h5 className="text-white/60 group-hover:text-white/90 font-medium text-[13px] line-clamp-2 leading-snug transition-colors">
+                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
+                          </h5>
                           <span className="text-[10px] text-white/20 mt-1 block">
                             {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
                           </span>
