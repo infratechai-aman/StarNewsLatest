@@ -255,7 +255,9 @@ const LiveTVPage = ({ setCurrentView }) => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
                             {article.category && (
-                              <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{article.category}</span>
+                              <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
+                                {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
+                              </span>
                             )}
                           </div>
                           <h4 className="text-white/80 group-hover:text-white font-semibold text-sm line-clamp-2 leading-snug transition-colors">
@@ -305,8 +307,8 @@ const LiveTVPage = ({ setCurrentView }) => {
                     <div
                       key={stream.id}
                       className={`group cursor-pointer rounded-xl p-2.5 transition-all duration-200 flex gap-3 items-start ${isActive
-                          ? 'bg-red-600/20 border border-red-500/40 shadow-lg shadow-red-900/10'
-                          : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.07] hover:border-white/10'
+                        ? 'bg-red-600/20 border border-red-500/40 shadow-lg shadow-red-900/10'
+                        : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.07] hover:border-white/10'
                         }`}
                       onClick={() => switchStream(stream.id)}
                     >
@@ -404,7 +406,9 @@ const LiveTVPage = ({ setCurrentView }) => {
                         <span className="text-red-600/60 font-black text-lg leading-none shrink-0 mt-0.5">{idx + 1}.</span>
                         <div className="min-w-0">
                           <h5 className="text-white/60 group-hover:text-white/90 font-medium text-[13px] line-clamp-2 leading-snug transition-colors">{article.title}</h5>
-                          <span className="text-[10px] text-white/20 mt-1 block">{article.category}</span>
+                          <span className="text-[10px] text-white/20 mt-1 block">
+                            {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
+                          </span>
                         </div>
                       </div>
                     </div>
