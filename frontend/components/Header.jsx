@@ -165,7 +165,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             {/* LEFT: Logo with subtle white box */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
               <div className="flex-shrink-0 h-20 md:h-[88px] w-[320px] md:w-[380px] rounded-md shadow-md p-0 group cursor-pointer relative z-20 border-2 border-white overflow-hidden">
-                <VideoLogo className="h-full w-full transition-transform group-hover:scale-105" />
+                <VideoLogo className="h-full w-full scale-[1.8] transition-transform group-hover:scale-[1.9]" />
               </div>
             </div>
 
