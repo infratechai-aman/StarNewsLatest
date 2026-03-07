@@ -148,29 +148,31 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
     <>
       {/* --- PREMIUM DESKTOP HEADER --- */}
       <div className="hidden lg:block bg-white border-b border-gray-100 relative overflow-hidden">
-        {/* Horizontal Red Strip - centered vertically behind the logo */}
+        {/* Red gradient strip - from left edge to just before social media icons, with slanted right edge */}
         <div
-          className="absolute left-0 right-0 bg-gradient-to-r from-red-700 via-red-600 to-red-600 z-0"
+          className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 z-0"
           style={{
-            top: '50%',
-            transform: 'translateY(-50%)',
-            height: '55px'
+            width: 'calc(100% - 320px)',
+            clipPath: 'polygon(0 0, 100% 0, calc(100% - 50px) 100%, 0 100%)'
           }}
-        />
+        >
+          {/* Subtle glossy shine overlay for premium look */}
+          <div className="absolute inset-0 opacity-[0.07]" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
+        </div>
 
         <div className="container mx-auto px-4 relative z-20">
-          <div className="flex items-center justify-center py-6">
-            {/* Centered 3D Logo */}
+          <div className="flex items-center justify-between py-4">
+            {/* LEFT: Logo with subtle white box */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-28 md:h-32 w-[320px] group cursor-pointer relative z-20">
-                <VideoLogo className="h-full w-full transition-transform group-hover:scale-105 drop-shadow-lg" />
+              <div className="flex-shrink-0 h-24 md:h-28 w-[280px] bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-1.5 group cursor-pointer relative z-20 border border-white/50">
+                <VideoLogo className="h-full w-full transition-transform group-hover:scale-105" />
               </div>
             </div>
 
-            {/* Social Media & Profile - absolute positioned on right */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-end gap-3 z-20">
+            {/* RIGHT: Social Media & Profile on white background */}
+            <div className="flex flex-col items-end gap-3 z-20">
               <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-                <div className="flex items-center gap-4 border-r pr-6 border-gray-100">
+                <div className="flex items-center gap-4 border-r pr-6 border-gray-200">
                   <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[#1877F2] transition-colors"><FacebookIcon /></a>
                   <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition-colors"><WhatsAppIcon /></a>
                   <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-[#E4405F] transition-colors"><InstagramIcon /></a>
@@ -371,29 +373,31 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden">
-        {/* Top White Bar: Main Navigation */}
-        <div className="bg-white text-gray-900 border-b border-gray-100 flex items-center justify-between px-4 h-16 sticky top-0 z-50">
+        {/* Top Red Bar: Main Navigation */}
+        <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-500 text-white border-b border-red-800 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
+          {/* Glossy shine overlay */}
+          <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
 
           {/* Left: Hamburger Menu */}
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
-            <Menu className="h-6 w-6 text-gray-900" />
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors active:scale-95 relative z-10">
+            <Menu className="h-6 w-6 text-white" />
           </button>
 
-          {/* Center: Logo */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-72 h-20 relative cursor-pointer z-50">
+          {/* Center: Logo with subtle white box */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1 z-10" onClick={() => setCurrentView('home')}>
+            <div className="flex-shrink-0 w-60 h-16 bg-white/90 backdrop-blur-sm rounded-md shadow-md p-1 relative cursor-pointer z-50 border border-white/50">
               <VideoLogo className="w-full h-full" />
             </div>
           </div>
 
           {/* Right: Search & Language */}
-          <div className="flex items-center gap-1">
-            <button onClick={() => setCurrentView('search')} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
-              <Search className="h-5 w-5 text-gray-900" />
+          <div className="flex items-center gap-1 relative z-10">
+            <button onClick={() => setCurrentView('search')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <Search className="h-5 w-5 text-white" />
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-full bg-gray-900 text-white ml-1">
+                <button className="text-[10px] font-black w-8 h-8 flex items-center justify-center rounded-full bg-white text-red-700 ml-1 shadow-sm">
                   {language.toUpperCase()}
                 </button>
               </DropdownMenuTrigger>
