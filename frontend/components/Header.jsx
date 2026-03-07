@@ -152,7 +152,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         <div
           className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 z-0"
           style={{
-            width: 'calc(100% - 320px)',
+            width: 'calc(100% - 420px)',
             clipPath: 'polygon(0 0, 100% 0, calc(100% - 50px) 100%, 0 100%)'
           }}
         >
