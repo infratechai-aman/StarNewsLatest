@@ -148,27 +148,27 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
     <>
       {/* --- PREMIUM DESKTOP HEADER --- */}
       <div className="hidden lg:block bg-white border-b border-gray-100 relative overflow-hidden">
-        {/* Slanted Premium Red Background Box */}
+        {/* Horizontal Red Strip - centered vertically behind the logo */}
         <div
-          className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-700 to-red-600 z-10 hidden lg:block"
+          className="absolute left-0 right-0 bg-gradient-to-r from-red-700 via-red-600 to-red-600 z-0"
           style={{
-            width: 'calc(100% - 400px)', // Stops before the social icons and right side content
-            clipPath: 'polygon(0 0, 100% 0, calc(100% - 60px) 100%, 0 100%)' // Applies the slanted edge
+            top: '50%',
+            transform: 'translateY(-50%)',
+            height: '55px'
           }}
-        >
-          {/* Subtle noise or texture for premium look (optional optical effect) */}
-          <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1px)', backgroundSize: '4px 4px' }}></div>
-        </div>
+        />
 
         <div className="container mx-auto px-4 relative z-20">
-          <div className="flex items-center justify-between py-6">
+          <div className="flex items-center justify-center py-6">
+            {/* Centered 3D Logo */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
               <div className="flex-shrink-0 h-28 md:h-32 w-[320px] group cursor-pointer relative z-20">
                 <VideoLogo className="h-full w-full transition-transform group-hover:scale-105 drop-shadow-lg" />
               </div>
             </div>
 
-            <div className="flex flex-col items-end gap-3 z-20 bg-white/10 backdrop-blur-sm p-2 rounded-xl lg:bg-transparent lg:backdrop-blur-none lg:p-0">
+            {/* Social Media & Profile - absolute positioned on right */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-end gap-3 z-20">
               <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
                 <div className="flex items-center gap-4 border-r pr-6 border-gray-100">
                   <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[#1877F2] transition-colors"><FacebookIcon /></a>
