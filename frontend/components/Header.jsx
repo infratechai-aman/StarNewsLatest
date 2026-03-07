@@ -164,7 +164,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           <div className="flex items-center justify-between py-4">
             {/* LEFT: Logo with subtle white box */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-28 md:h-32 w-[300px] md:w-[350px] rounded-md shadow-md p-0 group cursor-pointer relative z-20 border-2 border-white overflow-hidden">
+              <div className="flex-shrink-0 h-20 md:h-[88px] w-[320px] md:w-[380px] rounded-md shadow-md p-0 group cursor-pointer relative z-20 border-2 border-white overflow-hidden">
                 <VideoLogo className="h-full w-full transition-transform group-hover:scale-105" />
               </div>
             </div>
