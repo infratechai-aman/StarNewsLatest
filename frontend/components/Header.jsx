@@ -152,7 +152,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         <div
           className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 z-0"
           style={{
-            width: 'calc(100% - 420px)',
+            width: '55%',
             clipPath: 'polygon(0 0, 100% 0, calc(100% - 50px) 100%, 0 100%)'
           }}
         >
@@ -164,7 +164,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           <div className="flex items-center justify-between py-4">
             {/* LEFT: Logo with subtle white box */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-16 md:h-20 w-[200px] md:w-[230px] bg-white/95 backdrop-blur-sm rounded-md shadow-md p-1 group cursor-pointer relative z-20 border border-gray-100">
+              <div className="flex-shrink-0 h-20 md:h-24 w-[240px] md:w-[270px] bg-white/95 backdrop-blur-sm rounded-md shadow-md p-[3px] group cursor-pointer relative z-20 border border-gray-100">
                 <VideoLogo className="h-full w-full transition-transform group-hover:scale-105" />
               </div>
             </div>
