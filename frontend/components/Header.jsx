@@ -201,7 +201,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {user ? (
+                {user && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -220,10 +220,6 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                ) : (
-                  <Button variant="outline" size="sm" className="font-bold border-2" onClick={() => setCurrentView('login')}>
-                    Sign In
-                  </Button>
                 )}
               </div>
             </div>
