@@ -383,10 +383,10 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <Menu className="h-6 w-6 text-white" />
           </button>
 
-          {/* Center: Logo with subtle white box */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer pt-1 z-10" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-48 h-14 bg-white/95 backdrop-blur-sm rounded-md shadow-md p-0.5 relative cursor-pointer z-50 border border-white/50">
-              <VideoLogo className="w-full h-full" />
+          {/* Center: Logo with tight border */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" onClick={() => setCurrentView('home')}>
+            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-0 relative cursor-pointer z-50 border-2 border-white overflow-hidden">
+              <VideoLogo className="w-full h-full scale-[1.8]" />
             </div>
           </div>
 
