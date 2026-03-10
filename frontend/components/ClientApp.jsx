@@ -151,7 +151,7 @@ const ClientApp = ({ initialNewsData }) => {
 
                 <BreakingNewsTicker />
 
-                <main className={currentView === 'home' ? "w-full pb-6" : "container py-6"}>
+                <main className={['home', 'live-tv'].includes(currentView) ? "w-full pb-6" : "container py-6"}>
                     {currentView === 'home' && <HomePage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
                     {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={setCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
                     {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}

@@ -64,17 +64,10 @@ const LiveTVPage = ({ setCurrentView }) => {
             <div className="h-4 w-24 bg-white/20 rounded animate-pulse" />
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 pt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
-            <div className="space-y-4">
-              <div className="aspect-video bg-white/5 rounded-xl animate-pulse" />
-              <div className="h-20 bg-white/5 rounded-xl animate-pulse" />
-            </div>
-            <div className="space-y-3">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />
-              ))}
-            </div>
+        <div className="max-w-7xl mx-auto px-0 lg:px-4 pt-0 lg:pt-6">
+          <div className="space-y-4">
+            <div className="aspect-video bg-white/5 rounded-none lg:rounded-xl animate-pulse" />
+            <div className="h-20 bg-white/5 rounded-none lg:rounded-xl animate-pulse mx-0 lg:mx-0" />
           </div>
         </div>
       </div>
@@ -108,41 +101,41 @@ const LiveTVPage = ({ setCurrentView }) => {
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
 
       {/* ====== TOP BRANDING BAR ====== */}
-      <div className="bg-gradient-to-r from-red-800 via-red-600 to-red-800 py-3 px-4 shadow-lg shadow-red-900/30">
+      <div className="bg-gradient-to-r from-red-800 via-red-600 to-red-800 py-2.5 lg:py-3 px-3 lg:px-4 shadow-lg shadow-red-900/30">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-3 w-3">
+          <div className="flex items-center gap-2 lg:gap-3">
+            <span className="relative flex h-2.5 w-2.5 lg:h-3 lg:w-3">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 lg:h-3 lg:w-3 bg-white" />
             </span>
-            <span className="text-white font-black text-sm tracking-[0.2em] uppercase">Star News Live</span>
+            <span className="text-white font-black text-xs lg:text-sm tracking-[0.15em] lg:tracking-[0.2em] uppercase">Star News Live</span>
             {hasLiveStreams && (
-              <Badge className="bg-white/20 text-white border-none text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ml-2">
+              <Badge className="bg-white/20 text-white border-none text-[9px] lg:text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ml-1">
                 ON AIR
               </Badge>
             )}
           </div>
-          <span className="text-white/60 text-xs hidden sm:block font-medium" suppressHydrationWarning>
+          <span className="text-white/60 text-[10px] lg:text-xs hidden sm:block font-medium" suppressHydrationWarning>
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
         </div>
       </div>
 
       {/* ====== MAIN CONTENT ====== */}
-      <div className="max-w-7xl mx-auto px-4 pt-6 pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+      <div className="max-w-7xl mx-auto px-0 lg:px-4 pt-0 lg:pt-6 pb-6 lg:pb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0 lg:gap-6">
 
           {/* ====== LEFT COLUMN: Player + News ====== */}
-          <div className="space-y-6">
+          <div className="space-y-0 lg:space-y-6">
 
-            {/* Video Player */}
-            <div className="relative rounded-2xl overflow-hidden bg-black shadow-[0_0_80px_rgba(220,38,38,0.12)] ring-1 ring-white/10">
+            {/* Video Player — Full width on mobile, no border radius */}
+            <div className="relative rounded-none lg:rounded-2xl overflow-hidden bg-black shadow-[0_0_80px_rgba(220,38,38,0.12)] ring-0 lg:ring-1 ring-white/10">
               {activeStream?.isLive && (
-                <div className="absolute top-4 left-4 z-20">
-                  <span className="flex items-center gap-2 bg-red-600 text-white text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-lg shadow-lg shadow-red-600/40">
-                    <span className="relative flex h-2 w-2">
+                <div className="absolute top-3 left-3 lg:top-4 lg:left-4 z-20">
+                  <span className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] lg:text-xs font-black uppercase tracking-widest px-3 lg:px-4 py-1 lg:py-1.5 rounded-lg shadow-lg shadow-red-600/40">
+                    <span className="relative flex h-1.5 w-1.5 lg:h-2 lg:w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 lg:h-2 lg:w-2 bg-white" />
                     </span>
                     LIVE
                   </span>
@@ -167,53 +160,53 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
             </div>
 
-            {/* Stream Info */}
-            <div className="bg-gradient-to-r from-white/[0.06] to-white/[0.03] border border-white/10 rounded-xl p-5 backdrop-blur-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
+            {/* Stream Info — Glassmorphism card */}
+            <div className="mx-3 lg:mx-0 mt-3 lg:mt-0 bg-gradient-to-r from-white/[0.08] to-white/[0.04] border border-white/10 rounded-2xl p-4 lg:p-5 backdrop-blur-xl">
+              <div className="flex items-start justify-between gap-3 lg:gap-4">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     {activeStream?.isLive ? (
-                      <Badge className="bg-red-600 text-white border-none text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 flex items-center gap-1.5">
+                      <Badge className="bg-red-600 text-white border-none text-[9px] lg:text-[10px] font-black uppercase tracking-wider px-2 lg:px-2.5 py-0.5 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />LIVE
                       </Badge>
                     ) : (
-                      <Badge className="bg-white/10 text-white/60 border-white/20 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5">REPLAY</Badge>
+                      <Badge className="bg-white/10 text-white/60 border-white/20 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider px-2 lg:px-2.5 py-0.5">REPLAY</Badge>
                     )}
                   </div>
-                  <h2 className="text-white font-bold text-xl md:text-2xl leading-tight">{activeStream?.title}</h2>
-                  <p className="text-white/30 text-sm mt-1.5" suppressHydrationWarning>
+                  <h2 className="text-white font-bold text-lg lg:text-xl leading-tight">{activeStream?.title}</h2>
+                  <p className="text-white/30 text-xs lg:text-sm mt-1" suppressHydrationWarning>
                     {activeStream?.isLive ? '🔴 Streaming live now' : `Added ${new Date(activeStream?.addedAt).toLocaleDateString('en-IN')}`}
                   </p>
                 </div>
                 <a href={activeStream?.url} target="_blank" rel="noopener noreferrer"
-                  className="shrink-0 bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-5 py-3 rounded-lg transition-all hover:shadow-lg hover:shadow-red-600/20 flex items-center gap-2 whitespace-nowrap">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#fff" /></svg>
+                  className="shrink-0 bg-red-600 hover:bg-red-700 text-white text-[10px] lg:text-xs font-bold px-3 lg:px-5 py-2 lg:py-3 rounded-xl transition-all hover:shadow-lg hover:shadow-red-600/20 flex items-center gap-1.5 lg:gap-2 whitespace-nowrap">
+                  <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#fff" /></svg>
                   YouTube
                 </a>
               </div>
             </div>
 
-            {/* ====== ADVERTISEMENT BANNER ====== */}
+            {/* ====== ADVERTISEMENT BANNER (Single rotating — NO DUPLICATE) ====== */}
             {sidebarAds.length > 0 && currentAd && (
-              <div className="relative overflow-hidden rounded-xl">
+              <div className="mx-3 lg:mx-0 mt-4 lg:mt-0 relative overflow-hidden rounded-2xl">
                 <a href={currentAd.destinationUrl || '#'} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="relative bg-gradient-to-r from-red-900/40 to-gray-900/40 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="relative bg-gradient-to-r from-red-900/30 to-gray-900/30 border border-white/10 rounded-2xl overflow-hidden">
                     <div className="absolute top-2 right-2 z-10">
-                      <span className="text-[9px] text-white/30 font-bold uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded">Ad</span>
+                      <span className="text-[8px] text-white/30 font-bold uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded-full">Ad</span>
                     </div>
                     <img
                       src={currentAd.imageUrl}
                       alt="Advertisement"
-                      className="w-full h-auto max-h-[200px] object-contain mx-auto transition-transform hover:scale-[1.02]"
+                      className="w-full h-auto max-h-[180px] lg:max-h-[200px] object-contain mx-auto transition-transform hover:scale-[1.02]"
                     />
                   </div>
                 </a>
                 {/* Ad dots indicator */}
                 {sidebarAds.length > 1 && (
-                  <div className="flex justify-center gap-1.5 mt-2">
+                  <div className="flex justify-center gap-1.5 mt-2.5">
                     {sidebarAds.map((_, i) => (
                       <button key={i} onClick={() => setAdIndex(i)}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === adIndex ? 'bg-red-500 w-4' : 'bg-white/20 hover:bg-white/40'}`} />
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === adIndex ? 'bg-red-500 w-6' : 'bg-white/20 hover:bg-white/40 w-1.5'}`} />
                     ))}
                   </div>
                 )}
@@ -222,14 +215,59 @@ const LiveTVPage = ({ setCurrentView }) => {
 
             {/* ====== LATEST NEWS SECTION ====== */}
             {newsArticles.length > 0 && (
-              <div className="space-y-4 mt-2">
+              <div className="px-3 lg:px-0 mt-5 lg:mt-0 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-7 bg-red-600 rounded-full" />
-                  <h3 className="text-white font-black text-lg uppercase tracking-wider">Latest News</h3>
-                  <div className="flex-1 h-px bg-white/10" />
+                  <div className="w-1 h-7 bg-gradient-to-b from-red-500 to-red-700 rounded-full" />
+                  <h3 className="text-white font-black text-base lg:text-lg uppercase tracking-wider">Latest News</h3>
+                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Mobile: Horizontal scroll cards | Desktop: 2-col grid */}
+                <div className="lg:hidden">
+                  <div className="flex gap-3 overflow-x-auto pb-3 -mx-3 px-3 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+                    {newsArticles.slice(0, 8).map((article, idx) => (
+                      <div
+                        key={article.id || idx}
+                        className="snap-start shrink-0 w-[75vw] max-w-[300px] group cursor-pointer bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                        onClick={() => {
+                          if (setCurrentView) {
+                            window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
+                            setCurrentView('news-detail')
+                          }
+                        }}
+                      >
+                        {(article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image) && (
+                          <div className="relative w-full h-36 overflow-hidden">
+                            <img
+                              src={article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image}
+                              alt={typeof article.title === 'string' ? article.title : 'News'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                            {article.category && (
+                              <span className="absolute bottom-2 left-2 text-[9px] font-bold text-white bg-red-600/90 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                                {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div className="p-3">
+                          <h4 className="text-white/90 font-semibold text-sm line-clamp-2 leading-snug">
+                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
+                          </h4>
+                          <p className="text-white/25 text-[10px] mt-2 flex items-center gap-1" suppressHydrationWarning>
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            {article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Desktop: 2-col grid (unchanged) */}
+                <div className="hidden lg:grid grid-cols-2 gap-4">
                   {newsArticles.slice(0, 6).map((article, idx) => (
                     <div
                       key={article.id || idx}
@@ -242,11 +280,11 @@ const LiveTVPage = ({ setCurrentView }) => {
                       }}
                     >
                       <div className="flex gap-3 p-3">
-                        {(article.imageUrl || article.image) && (
+                        {(article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image) && (
                           <div className="shrink-0 w-28 h-20 rounded-lg overflow-hidden bg-white/5">
                             <img
-                              src={article.imageUrl || article.image}
-                              alt={article.title}
+                              src={article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image}
+                              alt={typeof article.title === 'string' ? article.title : 'News'}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                               onError={(e) => e.target.style.display = 'none'}
                             />
@@ -286,8 +324,8 @@ const LiveTVPage = ({ setCurrentView }) => {
             )}
           </div>
 
-          {/* ====== RIGHT SIDEBAR ====== */}
-          <div className="space-y-5">
+          {/* ====== RIGHT SIDEBAR (Desktop Only) ====== */}
+          <div className="hidden lg:block space-y-5">
 
             {/* Stream Playlist */}
             <div className="space-y-3">
@@ -362,7 +400,7 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
             </div>
 
-            {/* ====== SIDEBAR ADS (same 4 scrolling ads) ====== */}
+            {/* ====== SIDEBAR ADS (Desktop only — NOT duplicated) ====== */}
             {sidebarAds.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
@@ -383,7 +421,7 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
             )}
 
-            {/* ====== MORE NEWS IN SIDEBAR ====== */}
+            {/* ====== MORE NEWS IN SIDEBAR (Desktop only) ====== */}
             {newsArticles.length > 6 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
@@ -419,19 +457,76 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
             )}
           </div>
+
+          {/* ====== MOBILE: Stream Switcher (If multiple streams) ====== */}
+          {config.streams.length > 1 && (
+            <div className="lg:hidden px-3 mt-5">
+              <div className="flex items-center gap-2 mb-3">
+                <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                <h3 className="text-white/70 font-bold text-xs uppercase tracking-wider">Other Streams</h3>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+                {config.streams.map((stream) => {
+                  const thumbId = extractYouTubeId(stream.url)
+                  const isActive = stream.id === activeStreamId
+                  return (
+                    <div
+                      key={stream.id}
+                      className={`snap-start shrink-0 w-[140px] cursor-pointer rounded-xl overflow-hidden transition-all duration-200 border ${isActive
+                        ? 'border-red-500/50 ring-2 ring-red-500/20 shadow-lg shadow-red-900/20'
+                        : 'border-white/[0.06] active:scale-95'
+                        }`}
+                      onClick={() => switchStream(stream.id)}
+                    >
+                      <div className="relative aspect-video bg-gray-800">
+                        {thumbId ? (
+                          <img src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} alt={stream.title}
+                            className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
+                          </div>
+                        )}
+                        {isActive && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="flex items-center gap-0.5">
+                              {[0, 150, 300, 450].map((d, i) => (
+                                <div key={d} className="w-0.5 bg-red-500 rounded-full animate-pulse" style={{ height: `${[14, 18, 12, 16][i]}px`, animationDelay: `${d}ms` }} />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {stream.isLive && (
+                          <div className="absolute top-1 left-1">
+                            <span className="flex items-center gap-0.5 bg-red-600 text-[6px] font-black text-white uppercase px-1 py-0.5 rounded">
+                              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />LIVE
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-2 bg-white/[0.04]">
+                        <p className={`text-[10px] font-semibold line-clamp-1 ${isActive ? 'text-red-400' : 'text-white/60'}`}>{stream.title}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* ====== BOTTOM BAR ====== */}
-      <div className="border-t border-white/5 bg-black/40 py-4 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <span className="text-white/25 text-xs flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+      <div className="border-t border-white/5 bg-black/40 py-3 lg:py-4 px-3 lg:px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 lg:gap-3 text-center sm:text-left">
+          <span className="text-white/25 text-[10px] lg:text-xs flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
             Star News Live TV — Your trusted source for breaking news
           </span>
           <a href="https://youtube.com/@starnewsindialive" target="_blank" rel="noopener noreferrer"
             className="text-white/25 hover:text-red-500 transition-colors">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /></svg>
+            <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /></svg>
           </a>
         </div>
       </div>
