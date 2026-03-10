@@ -465,7 +465,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
                 <div className="my-2 border-t border-gray-100"></div>
 
-                {user ? (
+                {user && (
                   <div className="px-2 py-2 bg-gray-50 rounded-lg mx-2">
                     <div className="flex items-center gap-3 mb-3">
                       <Avatar className="h-10 w-10"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-100 text-red-600">{user.name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
@@ -476,12 +476,6 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                     </div>
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50" onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />{t('logout')}
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="px-2">
-                    <Button variant="default" className="w-full bg-red-600 hover:bg-red-700 text-white shadow-md" onClick={() => { setCurrentView('login'); setMobileMenuOpen(false) }}>
-                      Login / Register
                     </Button>
                   </div>
                 )}

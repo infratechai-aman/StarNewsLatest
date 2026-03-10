@@ -1,24 +1,30 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Newspaper, ChevronRight } from 'lucide-react'
+import { Eye, Newspaper, ChevronRight, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
 
+const ARTICLES_PER_PAGE = 30
+
 const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPageState }) => {
   const { t, language } = useLanguage()
-  // Use props if available, else local state (fallback)
   const [newsArticles, setLocalNewsArticles] = useState([])
   const [categoryList, setLocalCategoryList] = useState([])
   const [selectedCategory, setLocalSelectedCategory] = useState('all')
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Track the last fetched category to know when to re-fetch
+  const lastFetchedCategory = useRef(null)
 
   // Derived state
   const articles = newsPageState?.articles?.length > 0 ? newsPageState.articles : newsArticles
@@ -28,19 +34,19 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   // Setters
   const setArticles = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, articles: data })) : setLocalNewsArticles(data)
   const setCategories = (data) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, categories: data })) : setLocalCategoryList(data)
-  const setSelectedCategory = (cat) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, selectedCategory: cat })) : setLocalSelectedCategory(cat)
+  const setSelectedCategoryState = (cat) => setNewsPageState ? setNewsPageState(prev => ({ ...prev, selectedCategory: cat })) : setLocalSelectedCategory(cat)
   const setLoaded = (status) => setNewsPageState && setNewsPageState(prev => ({ ...prev, loaded: status }))
 
   useEffect(() => {
     const storedCategory = localStorage.getItem('selectedCategory')
     if (storedCategory) {
-      setSelectedCategory(storedCategory)
+      setSelectedCategoryState(storedCategory)
       localStorage.removeItem('selectedCategory')
     }
     const handleCategoryChange = () => {
       const newCategory = localStorage.getItem('selectedCategory')
       if (newCategory) {
-        setSelectedCategory(newCategory)
+        setSelectedCategoryState(newCategory)
         localStorage.removeItem('selectedCategory')
       }
     }
@@ -49,26 +55,27 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   }, [])
 
   useEffect(() => {
-    // If loaded and category hasn't changed from what's in state, skip fetch
-    if (newsPageState?.loaded && newsPageState.selectedCategory === currentCategory) {
+    // Only skip fetch if we already fetched this exact category
+    if (newsPageState?.loaded && lastFetchedCategory.current === currentCategory) {
       setLoading(false)
       return
     }
 
-    // If not loaded or category changed, fetch
     const fetchData = async () => {
       setLoading(true)
+      setVisibleCount(ARTICLES_PER_PAGE) // Reset pagination on category change
       await loadCategories()
       await loadNews()
       setLoading(false)
+      lastFetchedCategory.current = currentCategory
       if (setNewsPageState) setLoaded(true)
     }
     fetchData()
-  }, [currentCategory]) // Trigger on category change
+  }, [currentCategory])
 
   const loadCategories = async () => {
     try {
-      if (newsPageState?.categories?.length > 0) return // Skip if already loaded
+      if (newsPageState?.categories?.length > 0) return
       const data = await categories.getAll()
       setCategories(data || [])
     } catch (error) {
@@ -81,8 +88,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
       const cats = newsPageState?.categories?.length > 0 ? newsPageState.categories : await categories.getAll()
       let params = {}
       if (currentCategory !== 'all' && currentCategory !== 'trending' && currentCategory !== 'special') {
-        const cat = cats.find(c => c.slug === currentCategory)
-        if (cat) params.category = cat.id
+        // Send slug directly — the API supports slug-based lookup
+        params.category = currentCategory
       } else if (currentCategory === 'trending') {
         params.featured = true
       }
@@ -94,6 +101,20 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
     }
   }
 
+  const handleCategoryChange = (cat) => {
+    setSelectedCategoryState(cat)
+    setVisibleCount(ARTICLES_PER_PAGE)
+  }
+
+  const handleShowMore = () => {
+    setLoadingMore(true)
+    // Small delay for smooth UX
+    setTimeout(() => {
+      setVisibleCount(prev => prev + ARTICLES_PER_PAGE)
+      setLoadingMore(false)
+    }, 300)
+  }
+
   const viewArticle = (article) => {
     setSelectedArticle(article)
     setCurrentView('news-detail')
@@ -101,13 +122,16 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
 
   if (loading) return <div className="text-center py-12">Loading news...</div>
 
+  const visibleArticles = articles.slice(0, visibleCount)
+  const hasMore = visibleCount < articles.length
+
   return (
     <div className="space-y-6">
       <div className="mag-section-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
         <h1 className="text-5xl font-heading font-black tracking-tighter italic">
           {t('allNews')}
         </h1>
-        <Select value={currentCategory} onValueChange={setSelectedCategory}>
+        <Select value={currentCategory} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-56 h-12 bg-white/50 backdrop-blur-sm border-gray-200 rounded-full px-6 font-bold shadow-sm">
             <SelectValue placeholder={t('allCategories')} />
           </SelectTrigger>
@@ -120,8 +144,20 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         </Select>
       </div>
 
+      {/* Article count indicator */}
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <span>
+          Showing <strong className="text-gray-800">{visibleArticles.length}</strong> of <strong className="text-gray-800">{articles.length}</strong> articles
+          {currentCategory !== 'all' && (
+            <span className="ml-2 inline-flex items-center">
+              in <Badge className="ml-1.5 bg-red-100 text-red-700 border-none font-bold text-xs capitalize">{currentCategory}</Badge>
+            </span>
+          )}
+        </span>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {articles.map((article) => (
+        {visibleArticles.map((article) => (
           <div
             key={article.id}
             className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
@@ -182,6 +218,28 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
           </div>
         ))}
       </div>
+
+      {/* Show More Button */}
+      {hasMore && (
+        <div className="flex justify-center pt-8 pb-4">
+          <Button
+            onClick={handleShowMore}
+            disabled={loadingMore}
+            className="bg-red-600 hover:bg-red-700 text-white font-bold text-sm px-10 py-6 rounded-full shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 disabled:opacity-60"
+          >
+            {loadingMore ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Show More News ({articles.length - visibleCount} remaining)
+              </>
+            )}
+          </Button>
+        </div>
+      )}
 
       {articles.length === 0 && (
         <Card><CardContent className="py-12 text-center"><Newspaper className="h-12 w-12 mx-auto mb-4 text-muted-foreground" /><p className="text-muted-foreground">{t('noResults')}</p></CardContent></Card>
