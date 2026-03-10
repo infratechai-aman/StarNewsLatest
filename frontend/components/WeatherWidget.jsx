@@ -28,7 +28,7 @@ const WeatherWidget = () => {
             <div className="flex justify-between items-start relative z-10 mb-6">
                 <div>
                     <h3 className="text-2xl font-black tracking-tight">{weather.location}</h3>
-                    <p className="text-sm text-sky-100 font-medium opacity-80">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</p>
+                    <p className="text-sm text-sky-100 font-medium opacity-80" suppressHydrationWarning>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</p>
                 </div>
                 <CloudSun className="w-12 h-12 text-yellow-300 drop-shadow-lg" />
             </div>

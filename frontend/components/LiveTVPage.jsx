@@ -122,7 +122,7 @@ const LiveTVPage = ({ setCurrentView }) => {
               </Badge>
             )}
           </div>
-          <span className="text-white/60 text-xs hidden sm:block font-medium">
+          <span className="text-white/60 text-xs hidden sm:block font-medium" suppressHydrationWarning>
             {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
         </div>
@@ -181,7 +181,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                     )}
                   </div>
                   <h2 className="text-white font-bold text-xl md:text-2xl leading-tight">{activeStream?.title}</h2>
-                  <p className="text-white/30 text-sm mt-1.5">
+                  <p className="text-white/30 text-sm mt-1.5" suppressHydrationWarning>
                     {activeStream?.isLive ? '🔴 Streaming live now' : `Added ${new Date(activeStream?.addedAt).toLocaleDateString('en-IN')}`}
                   </p>
                 </div>
@@ -263,7 +263,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                           <h4 className="text-white/80 group-hover:text-white font-semibold text-sm line-clamp-2 leading-snug transition-colors">
                             {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
                           </h4>
-                          <p className="text-white/25 text-[10px] mt-1.5">
+                          <p className="text-white/25 text-[10px] mt-1.5" suppressHydrationWarning>
                             {article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
                           </p>
                         </div>
@@ -331,8 +331,8 @@ const LiveTVPage = ({ setCurrentView }) => {
                         {isActive && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <div className="flex items-center gap-0.5">
-                              {[0, 150, 300, 450].map(d => (
-                                <div key={d} className="w-0.5 bg-red-500 rounded-full animate-pulse" style={{ height: `${12 + Math.random() * 10}px`, animationDelay: `${d}ms` }} />
+                              {[0, 150, 300, 450].map((d, i) => (
+                                <div key={d} className="w-0.5 bg-red-500 rounded-full animate-pulse" style={{ height: `${[14, 18, 12, 16][i]}px`, animationDelay: `${d}ms` }} />
                               ))}
                             </div>
                           </div>
@@ -352,7 +352,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                         {stream.isLive ? (
                           <span className="text-[10px] font-bold text-red-400 mt-1 block">Streaming Now</span>
                         ) : (
-                          <span className="text-[10px] text-white/25 mt-1 block">{new Date(stream.addedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                          <span className="text-[10px] text-white/25 mt-1 block" suppressHydrationWarning>{new Date(stream.addedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                         )}
                         {isActive && <span className="text-[9px] text-red-500/50 font-semibold mt-0.5 block">▶ Now Playing</span>}
                       </div>
