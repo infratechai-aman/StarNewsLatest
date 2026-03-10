@@ -24,8 +24,8 @@ export async function GET(request) {
         const pageParam = searchParams.get('page')
 
         // Check if this is a default query (candidate for caching)
-        // Default: no category, no featured, limit 20 (or null), page 1 (or null)
-        const isDefaultQuery = !categoryParam && !featured && (!limitParam || limitParam === '20') && (!pageParam || pageParam === '1');
+        // Default: no category, no featured, limit 100 (or null), page 1 (or null)
+        const isDefaultQuery = !categoryParam && !featured && (!limitParam || limitParam === '100') && (!pageParam || pageParam === '1');
 
         if (isDefaultQuery && newsCache.data && (Date.now() - newsCache.lastFetch < CACHE_TTL)) {
             // Return cached data
@@ -34,7 +34,7 @@ export async function GET(request) {
             return response;
         }
 
-        const limit = parseInt(limitParam || '20')
+        const limit = parseInt(limitParam || '100')
         const page = parseInt(pageParam || '1')
 
         let query = db.collection('news_articles')

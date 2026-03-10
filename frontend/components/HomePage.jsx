@@ -121,7 +121,7 @@ const NewsBox = ({ item, onClick, language }) => {
           {title}
         </h3>
         <div className="mt-4 md:mt-3 flex items-center justify-between">
-          <span className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5">
+          <span className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5" suppressHydrationWarning>
             <Clock className="w-3.5 h-3.5" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
           </span>
           <span className="text-[11px] md:text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Read Full Story →</span>
@@ -164,7 +164,7 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
         <h4 className={`font-bold text-sm line-clamp-2 group-hover:text-${accentColor}-600 transition-colors leading-tight`}>{title}</h4>
         <p className="text-xs text-gray-500 mt-2 flex items-center gap-2 flex-wrap pb-1 leading-snug">
 
-          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString(language === 'mr' ? 'mr-IN' : language === 'hi' ? 'hi-IN' : 'en-IN', { day: 'numeric', month: 'short' })}</span>
+          <span className="flex items-center gap-1" suppressHydrationWarning><Clock className="h-3 w-3" /> {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
           <span className="ml-auto flex items-center gap-1"><Eye className="h-3 w-3" />{item.views || 0}</span>
         </p>
       </CardContent>
@@ -666,9 +666,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <h3 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-2xl">
                     {getLocalizedText(item.title, language)}
                   </h3>
-                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold">
+                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold" suppressHydrationWarning>
                     <Clock className="w-3.5 h-3.5 text-red-500" />
-                    {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : ''}
                   </div>
                 </div>
               </div>
@@ -731,8 +731,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                           {title}
                         </h3>
                       </div>
-                      <div className="text-[10px] text-gray-500 font-bold flex items-center gap-1 mt-2">
-                        <Clock className="w-3 h-3 text-gray-400" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
+                      <div className="text-[10px] text-gray-500 font-bold flex items-center gap-1 mt-2" suppressHydrationWarning>
+                        <Clock className="w-3 h-3 text-gray-400" /> {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : ''}
                       </div>
                     </div>
                   </div>
@@ -777,8 +777,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                       <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
                         <Clock className="w-5 h-5 text-red-500" />
                       </div>
-                      <span className="text-white text-sm font-black uppercase tracking-widest">
-                        {new Date(cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <span className="text-white text-sm font-black uppercase tracking-widest" suppressHydrationWarning>
+                        {cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt ? new Date(cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                       </span>
                     </div>
                     <Button className="bg-white text-black hover:bg-red-600 hover:text-white font-black rounded-full px-10 h-14 transition-all shadow-2xl transform active:scale-95">

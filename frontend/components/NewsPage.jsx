@@ -139,6 +139,10 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder-news.svg';
+                  e.currentTarget.srcset = '';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               {article.genre && (
@@ -167,8 +171,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               </p>
 
               <div className="flex items-center justify-between pt-6 border-t border-gray-50 mt-auto">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
-                  {new Date(article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic" suppressHydrationWarning>
+                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                 </span>
                 <span className="font-black text-red-600 text-xs flex items-center gap-2 group-hover:translate-x-2 transition-transform">
                   {t('read') || 'READ MORE'} <ChevronRight className="w-4 h-4" />
