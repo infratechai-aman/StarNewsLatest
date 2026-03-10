@@ -1,6 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
+import { purgeNewsCache } from '@/lib/newsCache';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,7 @@ export async function PUT(request, { params }) {
         delete updateData.createdAt;
 
         await docRef.update(updateData);
+        purgeNewsCache();
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -76,6 +78,7 @@ export async function DELETE(request, { params }) {
 
         const id = params.id;
         await db.collection('news_articles').doc(id).delete();
+        purgeNewsCache();
 
         return NextResponse.json({ success: true });
     } catch (error) {

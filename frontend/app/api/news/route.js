@@ -2,13 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
 import { translateText } from '@/lib/translation'
-
-// Simple in-memory cache for default news feed
-let newsCache = {
-    data: null,
-    lastFetch: 0
-};
-const CACHE_TTL = 60 * 1000; // 1 minute
+import { getCachedNews, setCachedNews, purgeNewsCache } from '@/lib/newsCache'
 
 export async function GET(request) {
     const db = getDb();
@@ -27,10 +21,11 @@ export async function GET(request) {
         // Default: no category, no featured, limit 100 (or null), page 1 (or null)
         const isDefaultQuery = !categoryParam && !featured && (!limitParam || limitParam === '100') && (!pageParam || pageParam === '1');
 
-        if (isDefaultQuery && newsCache.data && (Date.now() - newsCache.lastFetch < CACHE_TTL)) {
-            // Return cached data
-            const response = NextResponse.json(newsCache.data);
-            response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30');
+        const cached = getCachedNews();
+        if (isDefaultQuery && cached) {
+            // Return cached data (saves Firebase reads!)
+            const response = NextResponse.json(cached);
+            response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
             return response;
         }
 
@@ -129,7 +124,7 @@ export async function GET(request) {
                     limit
                 };
                 if (isDefaultQuery) {
-                    newsCache = { data: responseData, lastFetch: Date.now() };
+                    setCachedNews(responseData);
                 }
                 return NextResponse.json(responseData);
 
@@ -151,10 +146,7 @@ export async function GET(request) {
         };
 
         if (isDefaultQuery) {
-            newsCache = {
-                data: responseData,
-                lastFetch: Date.now()
-            };
+            setCachedNews(responseData);
         }
 
         const response = NextResponse.json(responseData)
@@ -163,7 +155,7 @@ export async function GET(request) {
         // s-maxage=60: Cache on Vercel Edge Network for 60 seconds
         // stale-while-revalidate=30: Serve stale content for up to 30s while revalidating
         if (isDefaultQuery) {
-            response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=30')
+            response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60')
         }
 
         return response
@@ -230,7 +222,7 @@ export async function POST(request) {
         const docRef = await db.collection('news_articles').add(newArticle)
 
         // Invalidate cache
-        newsCache = { data: null, lastFetch: 0 };
+        purgeNewsCache();
 
         return NextResponse.json({
             id: docRef.id,

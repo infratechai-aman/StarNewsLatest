@@ -1,6 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
+import { purgeNewsCache } from '@/lib/newsCache';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,6 +93,7 @@ export async function POST(request) {
         };
 
         const docRef = await db.collection('news_articles').add(newArticle);
+        purgeNewsCache();
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
