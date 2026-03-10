@@ -153,7 +153,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
             onClick={() => viewArticle(article)}
           >
-            <div className="relative aspect-[16/10] overflow-hidden">
+            <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
               <Image
                 src={
                   (article.thumbnails && article.thumbnails[0]) ||
@@ -163,7 +163,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 }
                 alt={(article && article.title) ? (getLocalizedText(article.title, language) || article.title) : 'News Article'}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
+                className="object-contain group-hover:scale-105 transition-transform duration-[2000ms]"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder-news.svg';

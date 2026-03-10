@@ -186,9 +186,9 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
             </div>
 
-            {/* ====== ADVERTISEMENT BANNER (Single rotating — NO DUPLICATE) ====== */}
+            {/* ====== ADVERTISEMENT BANNER (Mobile ONLY — Desktop uses sidebar individual ads) ====== */}
             {sidebarAds.length > 0 && currentAd && (
-              <div className="mx-3 lg:mx-0 mt-4 lg:mt-0 relative overflow-hidden rounded-2xl">
+              <div className="mx-3 lg:hidden mt-4 relative overflow-hidden rounded-2xl">
                 <a href={currentAd.destinationUrl || '#'} target="_blank" rel="noopener noreferrer" className="block">
                   <div className="relative bg-gradient-to-r from-red-900/30 to-gray-900/30 border border-white/10 rounded-2xl overflow-hidden">
                     <div className="absolute top-2 right-2 z-10">
@@ -197,7 +197,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                     <img
                       src={currentAd.imageUrl}
                       alt="Advertisement"
-                      className="w-full h-auto max-h-[180px] lg:max-h-[200px] object-contain mx-auto transition-transform hover:scale-[1.02]"
+                      className="w-full h-auto max-h-[180px] object-contain mx-auto transition-transform hover:scale-[1.02]"
                     />
                   </div>
                 </a>

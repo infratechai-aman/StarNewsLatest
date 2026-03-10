@@ -315,33 +315,37 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         {/* Right Sidebar */}
         <aside className="lg:col-span-4 space-y-12">
           {/* Related Stories */}
-          <div className="bg-gray-50 rounded-[48px] p-10 border border-gray-100">
-            <div className="flex items-center gap-4 mb-10">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 shrink-0">
+          <div className="bg-gradient-to-b from-gray-50 to-white rounded-[36px] p-8 lg:p-10 border border-gray-100 shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 via-red-500 to-orange-400" />
+            <div className="flex items-center gap-4 mb-8">
+              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-800 shrink-0">
                 {t('relatedStories')}
               </h3>
-              <div className="h-px flex-1 bg-gray-200"></div>
+              <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></div>
             </div>
-            <div className="space-y-10">
+            <div className="space-y-6">
               {relatedNews.slice(0, 4).map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-6 group cursor-pointer"
+                  className="flex gap-5 group cursor-pointer p-3 -mx-3 rounded-2xl hover:bg-gray-100/60 transition-all duration-300"
                   onClick={() => handleRelatedClick(item)}
                 >
-                  <div className="relative w-28 h-28 shrink-0 rounded-[28px] overflow-hidden bg-white shadow-md ring-4 ring-white transition-transform group-hover:scale-105 duration-500">
+                  <div className="relative w-32 h-24 shrink-0 rounded-2xl overflow-hidden bg-gray-100 shadow-md ring-1 ring-gray-200/50 transition-transform group-hover:scale-[1.03] duration-500">
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-cover border-none"
+                      className="object-contain border-none"
                     />
                   </div>
-                  <div className="flex-1 py-1 flex flex-col justify-center">
-                    <h4 className="font-heading font-black text-lg leading-tight group-hover:text-red-600 transition-colors tracking-tight line-clamp-2">
+                  <div className="flex-1 py-1 flex flex-col justify-center min-w-0">
+                    <Badge className="bg-red-50 text-red-600 border-none font-bold text-[9px] tracking-wider px-2 py-0.5 w-fit mb-2 uppercase">
+                      {getTranslatedCategory(item.category, language)}
+                    </Badge>
+                    <h4 className="font-heading font-black text-base lg:text-lg leading-tight group-hover:text-red-600 transition-colors tracking-tight line-clamp-2">
                       {getLocalizedText(item.title, language)}
                     </h4>
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-3 flex items-center gap-2">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
                       <Clock className="w-3 h-3 text-red-500" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
                     </p>
                   </div>

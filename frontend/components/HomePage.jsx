@@ -98,14 +98,14 @@ const NewsBox = ({ item, onClick, language }) => {
       className="premium-card group cursor-pointer overflow-hidden bg-white border border-gray-200/60 shadow-sm hover:shadow-md rounded-xl md:rounded-2xl transition-all duration-300 mb-4 md:mb-0"
       onClick={() => onClick(item)}
     >
-      <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-gray-50">
+      <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-gray-100">
         {images.map((img, index) => (
           <Image
             key={index}
             src={img}
             alt={title}
             fill
-            className={`object-cover transition-all duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+            className={`object-contain transition-all duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         ))}
@@ -148,13 +148,13 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
       className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group border border-gray-200/60 rounded-xl md:rounded-2xl hover:border-${accentColor}-500 shadow-sm mb-4 md:mb-0`}
       onClick={() => onClick(item)}
     >
-      <div className="relative h-40 overflow-hidden">
+      <div className="relative h-40 overflow-hidden bg-gray-100">
         <Image
           src={imgSrc}
           alt={title}
           fill
           className="group-hover:scale-105 transition-transform duration-300"
-          style={{ objectFit: 'cover' }}
+          style={{ objectFit: 'contain' }}
           onError={() => setImgSrc('/placeholder-news.svg')}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
@@ -913,17 +913,17 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <div
                     key={item.id}
                     onClick={() => handleNewsClick(item)}
-                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[calc(100dvh-104px)] md:h-[300px] border border-white/20 shadow-lg ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
+                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[280px] md:h-[300px] border border-white/20 shadow-lg ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
                   >
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]"
+                      className="object-contain bg-gray-900 group-hover:scale-105 transition-transform duration-[3000ms]"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-6 w-full">
-                      <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight ${idx === 0 ? 'text-3xl md:text-4xl' : 'text-xl md:text-2xl'}`}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-5 md:p-6 w-full">
+                      <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight line-clamp-3 ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl'}`}>
                         {getLocalizedText(item.title, language)}
                       </h3>
                     </div>
