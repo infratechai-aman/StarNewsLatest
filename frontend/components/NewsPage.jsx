@@ -144,17 +144,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         </Select>
       </div>
 
-      {/* Article count indicator */}
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <span>
-          Showing <strong className="text-gray-800">{visibleArticles.length}</strong> of <strong className="text-gray-800">{articles.length}</strong> articles
-          {currentCategory !== 'all' && (
-            <span className="ml-2 inline-flex items-center">
-              in <Badge className="ml-1.5 bg-red-100 text-red-700 border-none font-bold text-xs capitalize">{currentCategory}</Badge>
-            </span>
-          )}
-        </span>
-      </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {visibleArticles.map((article) => (
@@ -234,7 +224,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               </>
             ) : (
               <>
-                Show More News ({articles.length - visibleCount} remaining)
+                Show More News
               </>
             )}
           </Button>
