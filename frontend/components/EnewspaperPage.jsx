@@ -220,11 +220,19 @@ const EnewspaperPage = () => {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
   }
 
-  // Compute flipbook dimensions
+  // Compute flipbook dimensions — single page, as large as possible
   const flipDimensions = useMemo(() => {
-    if (isFullscreen) return { width: Math.min(600, window.innerWidth / 2 - 40), height: window.innerHeight - 140 }
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return { width: window.innerWidth - 32, height: (window.innerWidth - 32) * 1.4 }
-    return { width: 550, height: 750 }
+    if (typeof window === 'undefined') return { width: 800, height: 1100 }
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    if (isFullscreen) {
+      const h = vh - 120
+      return { width: Math.round(h / 1.4), height: h }
+    }
+    if (vw < 768) return { width: vw - 32, height: Math.round((vw - 32) * 1.4) }
+    // Desktop: fill most of the screen
+    const maxH = Math.min(vh - 180, 1000)
+    return { width: Math.round(maxH / 1.4), height: maxH }
   }, [isFullscreen])
 
   // ─── Loading skeleton ───
@@ -361,11 +369,11 @@ const EnewspaperPage = () => {
               ref={flipBookRef}
               width={flipDimensions.width}
               height={flipDimensions.height}
-              size="stretch"
+              size="fixed"
               minWidth={300}
-              maxWidth={700}
+              maxWidth={1200}
               minHeight={400}
-              maxHeight={900}
+              maxHeight={1400}
               showCover={true}
               mobileScrollSupport={false}
               onFlip={onFlip}
@@ -374,9 +382,9 @@ const EnewspaperPage = () => {
               startPage={0}
               drawShadow={true}
               flippingTime={800}
-              usePortrait={typeof window !== 'undefined' && window.innerWidth < 768}
+              usePortrait={true}
               startZIndex={0}
-              autoSize={true}
+              autoSize={false}
               maxShadowOpacity={0.5}
               showPageCorners={true}
               disableFlipByClick={false}
