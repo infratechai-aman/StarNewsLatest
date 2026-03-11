@@ -89,13 +89,14 @@ const EnewspaperPage = () => {
       setFlipBookReady(false)
 
       try {
-        const pdfjsLib = await import('pdfjs-dist')
+        const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
-        // Use local worker copied to public folder
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
+        // Disable worker — runs on main thread, perfectly reliable
+        pdfjsLib.GlobalWorkerOptions.workerSrc = ''
 
         const loadingTask = pdfjsLib.getDocument({
           url: selectedPaper.pdfUrl,
+          isEvalSupported: false,
         })
 
         const pdf = await loadingTask.promise
