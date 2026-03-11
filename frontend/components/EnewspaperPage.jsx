@@ -238,10 +238,10 @@ const EnewspaperPage = () => {
   // ─── Loading skeleton ───
   if (loading) {
     return (
-      <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8">
+      <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8 bg-[#0a0a0a] min-h-screen">
         <div className="animate-pulse">
-          <div className="h-14 bg-slate-100 rounded-xl mb-4" />
-          <div className="h-[700px] bg-slate-100 rounded-[24px]" />
+          <div className="h-14 bg-gray-800 rounded-xl mb-4" />
+          <div className="h-[700px] bg-gray-800/50 rounded-[24px]" />
         </div>
       </div>
     )
@@ -250,20 +250,20 @@ const EnewspaperPage = () => {
   // ─── Empty state ───
   if (newspapers.length === 0) {
     return (
-      <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8">
-        <div className="text-center py-24 bg-gradient-to-br from-slate-50 to-gray-50 rounded-[32px] border border-dashed border-gray-200">
-          <FileText className="h-16 w-16 mx-auto mb-6 text-gray-200" />
-          <h3 className="text-xl font-heading font-black text-gray-400 mb-2">{t('noEpapers') || 'No editions available'}</h3>
-          <p className="text-sm text-gray-400">{t('checkBackLater') || 'Check back later for the latest edition.'}</p>
+      <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8 bg-[#0a0a0a] min-h-screen">
+        <div className="text-center py-24 bg-gray-900 rounded-[32px] border border-dashed border-gray-700">
+          <FileText className="h-16 w-16 mx-auto mb-6 text-gray-600" />
+          <h3 className="text-xl font-heading font-black text-gray-400 mb-2">{t('noEpapers') || 'No E-Newspapers Available'}</h3>
+          <p className="text-sm text-gray-500">{t('checkBackLater') || 'Check back later for new editions'}</p>
         </div>
       </div>
     )
   }
 
-  const dark = isFullscreen
+  const dark = true
 
   return (
-    <div ref={containerRef} className={`${dark ? 'fixed inset-0 z-50 bg-[#0a0a0a]' : ''}`}>
+    <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 z-50' : ''} bg-[#0a0a0a] min-h-screen`}>
       {/* ─── Top Toolbar ─── */}
       <div className={`${dark ? 'bg-[#111] border-b border-gray-800' : 'bg-white border-b border-gray-100 shadow-sm'} px-4 md:px-6 py-2.5`}>
         <div className="flex items-center justify-between max-w-[1920px] mx-auto">
