@@ -91,13 +91,11 @@ const EnewspaperPage = () => {
       try {
         const pdfjsLib = await import('pdfjs-dist')
 
-        // Set worker source
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+        // Use local worker copied to public folder
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
 
         const loadingTask = pdfjsLib.getDocument({
           url: selectedPaper.pdfUrl,
-          cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
-          cMapPacked: true,
         })
 
         const pdf = await loadingTask.promise
