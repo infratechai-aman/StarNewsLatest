@@ -63,7 +63,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 px-4 md:px-8 max-w-[1920px] mx-auto">
             {/* Header / Hero */}
             <div className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-gray-900 via-blue-900 to-black text-white p-16 mb-12 shadow-2xl">
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />

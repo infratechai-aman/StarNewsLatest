@@ -197,7 +197,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 md:px-8 max-w-[1920px] mx-auto">
       <div className="mag-section-header flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-orange-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-orange-100">

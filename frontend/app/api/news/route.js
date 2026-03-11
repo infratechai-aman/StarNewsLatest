@@ -17,12 +17,11 @@ export async function GET(request) {
         const limitParam = searchParams.get('limit')
         const pageParam = searchParams.get('page')
 
-        // Check if this is a default query (candidate for caching)
-        // Default: no category, no featured, limit 100 (or null), page 1 (or null)
-        const isDefaultQuery = !categoryParam && !featured && (!limitParam || limitParam === '500') && (!pageParam || pageParam === '1');
+        // Generate a cache key directly from all search params
+        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '500'}_${pageParam || '1'}`
 
-        const cached = getCachedNews();
-        if (isDefaultQuery && cached) {
+        const cached = getCachedNews(cacheKey);
+        if (cached) {
             // Return cached data (saves Firebase reads!)
             const response = NextResponse.json(cached);
             response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60');
@@ -123,9 +122,7 @@ export async function GET(request) {
                     page,
                     limit
                 };
-                if (isDefaultQuery) {
-                    setCachedNews(responseData);
-                }
+                setCachedNews(cacheKey, responseData);
                 return NextResponse.json(responseData);
 
             } else {
@@ -145,18 +142,14 @@ export async function GET(request) {
             limit
         };
 
-        if (isDefaultQuery) {
-            setCachedNews(responseData);
-        }
+        setCachedNews(cacheKey, responseData);
 
         const response = NextResponse.json(responseData)
 
         // Add Cache-Control headers for Edge Caching
         // s-maxage=60: Cache on Vercel Edge Network for 60 seconds
         // stale-while-revalidate=30: Serve stale content for up to 30s while revalidating
-        if (isDefaultQuery) {
-            response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60')
-        }
+        response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=60')
 
         return response
 

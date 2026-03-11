@@ -126,7 +126,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   const hasMore = visibleCount < articles.length
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 md:px-8 max-w-[1920px] mx-auto">
       <div className="mag-section-header flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
         <h1 className="text-5xl font-heading font-black tracking-tighter italic">
           {t('allNews')}
