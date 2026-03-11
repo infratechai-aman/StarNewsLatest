@@ -56,9 +56,22 @@ const getApp = () => {
         }
     }
 
-    const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const rawKey = process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    let projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID;
+    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    let rawKey = process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+
+    // Support cases where the entire Service Account JSON is pasted into FIREBASE_PRIVATE_KEY
+    if (rawKey && rawKey.trim().startsWith('{')) {
+        try {
+            const parsed = JSON.parse(rawKey);
+            rawKey = parsed.private_key || rawKey;
+            clientEmail = clientEmail || parsed.client_email;
+            projectId = projectId || parsed.project_id;
+            console.log('[FirebaseAdmin] Successfully extracted credentials from JSON string');
+        } catch (e) {
+            console.warn('[FirebaseAdmin] FIREBASE_PRIVATE_KEY looks like JSON but failed to parse');
+        }
+    }
 
     if (!projectId) {
         console.error(`[FirebaseAdmin] Missing Project ID entirely. Cannot initialize.`);
