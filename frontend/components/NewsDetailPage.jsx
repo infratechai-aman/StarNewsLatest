@@ -152,11 +152,16 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             {(article.authorName || article.author?.name) && (
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-red-50/50">
-                  {(article.authorName || article.author?.name)?.charAt(0)}
+                  {(() => {
+                    const name = article.authorName || article.author?.name
+                    return (name === 'Pune Majha News' ? 'StarNews Admin' : name)?.charAt(0)
+                  })()}
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{t('writtenBy') || 'Correspondent'}</p>
-                  <p className="font-heading font-black text-xl text-gray-900 tracking-tight">{article.authorName || article.author.name}</p>
+                  <p className="font-heading font-black text-xl text-gray-900 tracking-tight">
+                    {(article.authorName || article.author?.name) === 'Pune Majha News' ? 'StarNews Admin' : (article.authorName || article.author?.name)}
+                  </p>
                 </div>
               </div>
             )}
