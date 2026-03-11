@@ -8,7 +8,7 @@ export async function GET(request) {
     const db = getDb();
     if (!db) {
         console.error('Database not initialized');
-        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+        return NextResponse.json({ articles: [], total: 0 });
     }
     try {
         const { searchParams } = new URL(request.url)

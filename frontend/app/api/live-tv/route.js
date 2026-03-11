@@ -29,6 +29,6 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Error fetching live TV config:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ enabled: false, streams: [], primaryStreamId: null });
     }
 }

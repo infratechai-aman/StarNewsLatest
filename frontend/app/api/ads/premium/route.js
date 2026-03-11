@@ -8,7 +8,7 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 export async function GET() {
     const db = getDb();
     if (!db) {
-        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
     }
     try {
         if (premiumAdCache.data && (Date.now() - premiumAdCache.lastFetch < CACHE_TTL)) {
@@ -37,7 +37,7 @@ export async function GET() {
         });
     } catch (error) {
         console.error('Ads Premium GET Error:', error)
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' })
     }
 }
 

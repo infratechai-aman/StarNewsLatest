@@ -32,8 +32,8 @@ export async function GET(request) {
             updatedAt: t.updatedAt
         });
     } catch (error) {
-        // console.error('Error fetching ticker:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error fetching ticker:', error);
+        return NextResponse.json({ enabled: false, text: '', texts: [] });
     }
 }
 
