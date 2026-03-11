@@ -60,9 +60,22 @@ const getApp = () => {
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
     const rawKey = process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
-    if (!projectId || !clientEmail || !rawKey) {
-        console.error(`[FirebaseAdmin] Missing credentials. PID:${!!projectId} EMAIL:${!!clientEmail} KEY:${!!rawKey}`);
+    if (!projectId) {
+        console.error(`[FirebaseAdmin] Missing Project ID entirely. Cannot initialize.`);
         return null;
+    }
+
+    if (!clientEmail || !rawKey) {
+        console.warn(`[FirebaseAdmin] Missing private key/email on Vercel. Initializing in Public/Unauthenticated mode.`);
+        try {
+            return admin.initializeApp({
+                projectId,
+                storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+            });
+        } catch (err) {
+            console.error('[FirebaseAdmin] Fallback unauthenticated init failed:', err.message);
+            return null;
+        }
     }
 
     try {
