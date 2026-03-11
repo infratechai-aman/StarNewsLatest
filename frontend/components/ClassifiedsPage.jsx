@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap } from 'lucide-react'
+import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap, ShoppingBag, Sparkles, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import { classifieds as classifiedsApi } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -193,76 +193,105 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   }
 
   if (loading) {
-    return <div className="text-center py-12">Loading classifieds...</div>
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-orange-100 border-t-orange-600 animate-spin" />
+          <ShoppingBag className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-orange-600" />
+        </div>
+        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading marketplace...</p>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 px-4 md:px-8 max-w-[1920px] mx-auto">
-      <div className="mag-section-header flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-orange-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-orange-100">
-            <Tag className="h-10 w-10 text-white" />
-          </div>
-          <div>
-            <h1 className="text-5xl font-heading font-black tracking-tighter italic">{t('classifiedAds') || 'Classified Ads'}</h1>
-            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">
-              {language === 'hi' ? 'खरीदें, बेचें, किराये पर दें और नौकरी पाएं' : language === 'mr' ? 'खरेदी करा, विक्री करा, भाड्याने द्या आणि नोकऱ्या शोधा' : 'Premium Marketplace for Pune'}
+    <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12">
+      {/* Premium Hero Banner */}
+      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-950 via-amber-950 to-black text-white mb-10 shadow-2xl">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')] opacity-10" />
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-orange-600/20 to-transparent hidden md:block" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px]" />
+
+        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 p-8 md:p-12 lg:p-16">
+          <div className="flex-1">
+            <Badge className="bg-orange-600/20 text-orange-400 border border-orange-600/30 mb-6 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.3em] backdrop-blur-md">
+              <Sparkles className="w-3 h-3 mr-2" />
+              {t('marketplace') || 'Marketplace'}
+            </Badge>
+            <h1 className="text-5xl md:text-7xl font-heading font-black leading-[0.9] tracking-tighter mb-6 italic">
+              {t('classifiedAds') || 'Classified'} <span className="text-orange-400">Ads</span>
+            </h1>
+            <p className="text-lg text-gray-400 font-medium leading-relaxed max-w-lg mb-8">
+              {language === 'hi' ? 'खरीदें, बेचें, किराये पर दें और नौकरी पाएं — पुणे का प्रीमियम मार्केटप्लेस' : language === 'mr' ? 'खरेदी करा, विक्री करा, भाड्याने द्या आणि नोकऱ्या शोधा — पुण्याचे प्रीमियम मार्केटप्लेस' : 'Buy, sell, rent, and find jobs — Premium marketplace for Pune and beyond.'}
             </p>
+            <Button
+              className="h-14 rounded-full px-10 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black transition-all shadow-xl shadow-orange-900/30 hover:-translate-y-1 group"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <Plus className="mr-3 h-5 w-5" /> {t('postClassified') || 'Post Your Ad'}
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="flex flex-row md:flex-col gap-4">
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
+              <div className="text-3xl font-black text-orange-400 mb-1">{classifieds.length}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('activeAds') || 'Active Ads'}</div>
+            </div>
+            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
+              <div className="text-3xl font-black text-green-400 mb-1">Free</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('toPost') || 'To Post'}</div>
+            </div>
           </div>
         </div>
-
-        <Button
-          className="h-14 rounded-full px-10 bg-orange-600 hover:bg-black text-white font-black transition-all shadow-xl hover:-translate-y-1"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <Plus className="mr-3 h-5 w-5" /> {t('postClassified') || 'Post Classified'}
-        </Button>
       </div>
 
-      <div className="bg-orange-50/50 border border-orange-100 rounded-[32px] p-6 mb-12 flex items-center gap-4">
+      {/* Info Banner */}
+      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 rounded-[24px] p-5 mb-10 flex items-center gap-4">
         <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
           <Zap className="w-5 h-5 text-orange-600" />
         </div>
-        <p className="text-sm font-bold text-orange-900 leading-relaxed italic">
+        <p className="text-sm font-bold text-orange-900 leading-relaxed">
           <strong>{t('note') || 'Note'}:</strong> {t('classifiedAdminNote') || 'All ads are subject to editorial review before publication.'}
         </p>
       </div>
 
       {/* Classified Ads Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {classifieds.map((ad) => {
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+        {classifieds.map((ad, idx) => {
           const displayPrice = convertToINR(ad.price)
           return (
             <div
               key={ad.id}
-              className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
+              className={`group rounded-[24px] overflow-hidden cursor-pointer border border-gray-100 bg-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full ${idx === 0 ? 'md:col-span-2 md:row-span-1' : ''}`}
               onClick={() => handleContactSeller(ad)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-gray-50">
+              <div className={`relative overflow-hidden bg-gray-50 ${idx === 0 ? 'aspect-[2/1]' : 'aspect-[4/3]'}`}>
                 <Image
                   src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'}
                   alt={ad.title}
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
+                  className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Badge className="absolute top-6 left-6 bg-orange-600 text-white border-none px-4 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Badge className="absolute top-5 left-5 bg-orange-600/90 backdrop-blur-md text-white border-none px-4 py-1.5 font-black uppercase text-[9px] tracking-widest shadow-lg">
                   {ad.category}
                 </Badge>
                 {ad.condition && (
-                  <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
-                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{ad.condition}</span>
+                  <div className="absolute bottom-5 right-5 z-10 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
+                    <span className="text-[9px] font-black text-gray-900 uppercase tracking-widest">{ad.condition}</span>
                   </div>
                 )}
               </div>
 
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="font-heading font-black text-xl mb-4 leading-tight group-hover:text-orange-600 transition-colors tracking-tighter italic line-clamp-2 min-h-[3rem]">
+              <div className="p-5 md:p-6 flex-1 flex flex-col">
+                <h3 className="font-heading font-black text-lg md:text-xl mb-4 leading-tight group-hover:text-orange-600 transition-colors tracking-tight line-clamp-2">
                   {ad.title}
                 </h3>
 
-                <div className="flex items-center gap-1.5 text-2xl font-black text-green-600 mb-6 tracking-tighter">
+                <div className="flex items-center gap-1.5 text-2xl font-black text-green-600 mb-4 tracking-tighter">
                   {displayPrice ? (
                     <>
                       <IndianRupee className="h-5 w-5" />
@@ -273,12 +302,12 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6">
-                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                  <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
                   <span className="truncate">{ad.location}</span>
                 </div>
 
-                <div className="pt-6 border-t border-gray-50 mt-auto flex items-center justify-between">
+                <div className="pt-4 border-t border-gray-50 mt-auto flex items-center justify-between">
                   <span className="font-black text-[10px] text-orange-600 uppercase tracking-widest">{t('viewDetails') || 'View Details'}</span>
                   <ChevronRight className="w-5 h-5 text-gray-200 group-hover:text-orange-600 group-hover:translate-x-2 transition-all" />
                 </div>
