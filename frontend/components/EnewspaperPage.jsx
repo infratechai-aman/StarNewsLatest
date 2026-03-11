@@ -225,8 +225,11 @@ const EnewspaperPage = () => {
     if (typeof window === 'undefined') return { width: 800, height: 1100 }
     const vw = window.innerWidth
 
-    // Mobile stays the same
+    // Mobile (Phones)
     if (vw < 768) return { width: vw - 32, height: Math.round((vw - 32) * 1.4) }
+
+    // Tablets / iPads (768px to 1024px)
+    if (vw <= 1024) return { width: vw - 48, height: Math.round((vw - 48) * 1.414) }
 
     // Desktop & Fullscreen: Make it HUGE by prioritizing width instead of height.
     // Like Times of India, it will fill the screen horizontally and the user will scroll vertically.

@@ -1,10 +1,15 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 // GET: List active E-Newspapers (Public)
 export async function GET(request) {
+    const CACHE_KEY = 'api_enewspaper_active';
+    const cachedData = getCache(CACHE_KEY);
+    if (cachedData) return NextResponse.json(cachedData);
+
     const db = getDb();
     try {
         if (!db) {
@@ -35,8 +40,9 @@ export async function GET(request) {
             // Sort in JS
             papers.sort((a, b) => new Date(b.publishDate || 0) - new Date(a.publishDate || 0));
         }
-
-        return NextResponse.json({ papers });
+        const responseData = { papers };
+        setCache(CACHE_KEY, responseData, 10 * 60 * 1000); // Cache for 10 minutes (these change rarely)
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching enewspapers:', error);
         // Return empty instead of 500 so page still renders

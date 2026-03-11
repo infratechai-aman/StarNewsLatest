@@ -1,6 +1,6 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
-import { purgeNewsCache } from '@/lib/newsCache';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +54,7 @@ export async function POST(request) {
         }
 
         await docRef.update(updateData);
-        purgeNewsCache();
+        purgeCache('news_');
 
         return NextResponse.json({ success: true, status });
     } catch (error) {

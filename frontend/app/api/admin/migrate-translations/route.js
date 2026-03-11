@@ -1,7 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
-import { purgeNewsCache } from '@/lib/newsCache';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 // Allow long execution for migration
@@ -152,7 +152,7 @@ export async function POST(request) {
         }
 
         // Purge news cache so fresh translated data is served
-        purgeNewsCache();
+        purgeCache('news_');
 
         return NextResponse.json({
             message: 'Migration complete!',

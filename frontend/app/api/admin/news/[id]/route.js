@@ -1,7 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
-import { purgeNewsCache } from '@/lib/newsCache';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,7 +54,7 @@ export async function PUT(request, { params }) {
         delete updateData.createdAt;
 
         await docRef.update(updateData);
-        purgeNewsCache();
+        purgeCache('news_');
 
         return NextResponse.json({ success: true });
     } catch (error) {

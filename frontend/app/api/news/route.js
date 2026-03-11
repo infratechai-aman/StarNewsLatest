@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
 import { translateText } from '@/lib/translation'
-import { getCachedNews, setCachedNews, purgeNewsCache } from '@/lib/newsCache'
+import { getCache, setCache } from '@/lib/cache'
 
 export async function GET(request) {
     const db = getDb();
@@ -20,7 +20,7 @@ export async function GET(request) {
         // Generate a cache key directly from all search params
         const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '500'}_${pageParam || '1'}`
 
-        const cached = getCachedNews(cacheKey);
+        const cached = getCache(cacheKey);
         if (cached) {
             // Return cached data (saves Firebase reads!)
             const response = NextResponse.json(cached);
@@ -122,7 +122,7 @@ export async function GET(request) {
                     page,
                     limit
                 };
-                setCachedNews(cacheKey, responseData);
+                setCache(cacheKey, responseData, 5 * 60 * 1000);
                 return NextResponse.json(responseData);
 
             } else {
@@ -215,7 +215,7 @@ export async function POST(request) {
         const docRef = await db.collection('news_articles').add(newArticle)
 
         // Invalidate cache
-        purgeNewsCache();
+        purgeCache('news_');
 
         return NextResponse.json({
             id: docRef.id,

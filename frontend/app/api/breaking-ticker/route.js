@@ -1,10 +1,15 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 // GET: Breaking Ticker
 export async function GET(request) {
+    const CACHE_KEY = 'api_breaking_ticker';
+    const cachedData = getCache(CACHE_KEY);
+    if (cachedData) return NextResponse.json(cachedData);
+
     try {
         const db = getDb();
         if (!db) {
@@ -25,12 +30,15 @@ export async function GET(request) {
         const allTexts = t.texts && t.texts.length > 0 ? t.texts : (t.text ? [t.text] : []);
         const joinedText = allTexts.filter(Boolean).join(' • ');
 
-        return NextResponse.json({
+        const responseData = {
             enabled: true,
             text: joinedText || t.text || '',
             texts: allTexts,
             updatedAt: t.updatedAt
-        });
+        };
+
+        setCache(CACHE_KEY, responseData, 60 * 1000); // 1 minute cache for breaking news
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error('Error fetching ticker:', error);
         return NextResponse.json({ enabled: false, text: '', texts: [] });

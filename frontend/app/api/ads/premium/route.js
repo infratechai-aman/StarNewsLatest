@@ -1,21 +1,23 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
-
-let premiumAdCache = { data: null, lastFetch: 0 };
-const CACHE_TTL = 60 * 1000; // 1 minute
+import { getCache, setCache } from '@/lib/cache'
 
 export async function GET() {
+    const CACHE_KEY = 'api_ads_premium';
+    const cachedData = getCache(CACHE_KEY);
+
+    if (cachedData) {
+        return NextResponse.json(cachedData, {
+            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+        });
+    }
+
     const db = getDb();
     if (!db) {
         return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
     }
     try {
-        if (premiumAdCache.data && (Date.now() - premiumAdCache.lastFetch < CACHE_TTL)) {
-            return NextResponse.json(premiumAdCache.data, {
-                headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
-            });
-        }
 
         const doc = await db.collection('site_settings').doc('premium_ad').get()
         let responseData = { enabled: false, imageUrl: '', linkUrl: '', title: '' };
@@ -30,7 +32,7 @@ export async function GET() {
             };
         }
 
-        premiumAdCache = { data: responseData, lastFetch: Date.now() };
+        setCache(CACHE_KEY, responseData, 60 * 1000); // 1 minute TTL
 
         return NextResponse.json(responseData, {
             headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
