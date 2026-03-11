@@ -121,12 +121,36 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   }
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <div className="relative">
-        <div className="w-16 h-16 rounded-full border-4 border-red-100 border-t-red-600 animate-spin" />
-        <Newspaper className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-red-600" />
+    <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8">
+      <div className="animate-pulse">
+        {/* Hero Skeleton */}
+        <div className="w-full h-[400px] md:h-[480px] bg-slate-100 rounded-[32px] mb-10" />
+        {/* Stats Bar Skeleton */}
+        <div className="flex items-center justify-between mb-8 px-2">
+          <div className="w-32 h-4 bg-slate-100 rounded" />
+          <div className="h-px flex-1 mx-6 bg-slate-50" />
+          <div className="w-24 h-4 bg-slate-100 rounded" />
+        </div>
+        {/* Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <div key={i} className={`flex flex-col h-full border border-slate-100 rounded-[24px] overflow-hidden ${i === 1 ? 'sm:col-span-2 sm:row-span-1' : ''}`}>
+              <div className={`w-full bg-slate-100 ${i === 1 ? 'aspect-[2/1]' : 'aspect-[16/10]'}`} />
+              <div className="p-5 md:p-6 bg-white">
+                <div className="w-16 h-4 bg-slate-100 rounded mb-4" />
+                <div className="w-full h-6 bg-slate-100 rounded mb-2" />
+                <div className="w-3/4 h-6 bg-slate-100 rounded mb-6" />
+                <div className="w-full h-3 bg-slate-100 rounded mb-2" />
+                <div className="w-5/6 h-3 bg-slate-100 rounded mb-6" />
+                <div className="flex justify-between">
+                  <div className="w-16 h-3 bg-slate-100 rounded" />
+                  <div className="w-12 h-3 bg-slate-100 rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <p className="text-sm font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading stories...</p>
     </div>
   )
 

@@ -194,12 +194,31 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="relative">
-          <div className="w-16 h-16 rounded-full border-4 border-orange-100 border-t-orange-600 animate-spin" />
-          <ShoppingBag className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-orange-600" />
+      <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8">
+        <div className="animate-pulse">
+          {/* Hero Skeleton */}
+          <div className="w-full h-[320px] md:h-[400px] bg-slate-100 rounded-[32px] mb-10" />
+          {/* Note Banner Skeleton */}
+          <div className="w-full h-16 bg-slate-50 rounded-[16px] mb-10" />
+          {/* Grid Skeleton */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className={`flex flex-col h-full border border-slate-100 rounded-[24px] overflow-hidden ${i === 1 ? 'md:col-span-2' : ''}`}>
+                <div className={`w-full bg-slate-100 ${i === 1 ? 'aspect-[2/1]' : 'aspect-[4/3]'}`} />
+                <div className="p-5 md:p-6 bg-white">
+                  <div className="w-full h-6 bg-slate-100 rounded mb-2" />
+                  <div className="w-2/3 h-6 bg-slate-100 rounded mb-6" />
+                  <div className="w-24 h-8 bg-slate-100 rounded mb-4" />
+                  <div className="w-32 h-4 bg-slate-100 rounded mb-6" />
+                  <div className="flex justify-between pt-4 border-t border-slate-50">
+                    <div className="w-20 h-3 bg-slate-100 rounded" />
+                    <div className="w-4 h-4 bg-slate-100 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-sm font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading marketplace...</p>
       </div>
     )
   }
@@ -248,12 +267,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       </div>
 
       {/* Info Banner */}
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 rounded-[24px] p-5 mb-10 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-          <Zap className="w-5 h-5 text-orange-600" />
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-10 flex items-start sm:items-center gap-3">
+        <div className="mt-0.5 sm:mt-0 flex-shrink-0">
+          <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
-        <p className="text-sm font-bold text-orange-900 leading-relaxed">
-          <strong>{t('note') || 'Note'}:</strong> {t('classifiedAdminNote') || 'All ads are subject to editorial review before publication.'}
+        <p className="text-sm text-slate-600">
+          <span className="font-semibold text-slate-700">{t('note') || 'Note'}:</span> {t('classifiedAdminNote') || 'All classified ads are reviewed by the editorial team before publication.'}
         </p>
       </div>
 

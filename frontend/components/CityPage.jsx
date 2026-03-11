@@ -56,12 +56,31 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-                <div className="relative">
-                    <div className="w-16 h-16 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
-                    <Globe className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-blue-600" />
+            <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12 pt-8">
+                <div className="animate-pulse">
+                    {/* Hero Skeleton */}
+                    <div className="w-full h-[320px] md:h-[400px] bg-slate-100 rounded-[32px] mb-12" />
+
+                    {/* City Selection Interface Skeleton */}
+                    <div className="grid lg:grid-cols-12 gap-8 mb-12">
+                        <div className="lg:col-span-8">
+                            <div className="bg-white border border-slate-100 rounded-[28px] p-8 md:p-10 h-full">
+                                <div className="w-32 h-4 bg-slate-100 rounded mb-8" />
+                                <div className="flex flex-wrap gap-3">
+                                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                                        <div key={i} className="w-24 h-12 bg-slate-100 rounded-full" />
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="lg:col-span-4">
+                            <div className="bg-slate-50 border border-slate-100 rounded-[28px] p-6 lg:p-10 h-full">
+                                <div className="w-24 h-4 bg-slate-200 rounded mb-6" />
+                                <div className="w-full h-14 bg-white rounded-2xl border border-slate-100" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest animate-pulse">Discovering cities...</p>
             </div>
         )
     }
