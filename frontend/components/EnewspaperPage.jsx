@@ -224,15 +224,14 @@ const EnewspaperPage = () => {
   const flipDimensions = useMemo(() => {
     if (typeof window === 'undefined') return { width: 800, height: 1100 }
     const vw = window.innerWidth
-    const vh = window.innerHeight
-    if (isFullscreen) {
-      const h = vh - 120
-      return { width: Math.round(h / 1.4), height: h }
-    }
+
+    // Mobile stays the same
     if (vw < 768) return { width: vw - 32, height: Math.round((vw - 32) * 1.4) }
-    // Desktop: fill most of the screen
-    const maxH = Math.min(vh - 180, 1000)
-    return { width: Math.round(maxH / 1.4), height: maxH }
+
+    // Desktop & Fullscreen: Make it HUGE by prioritizing width instead of height.
+    // Like Times of India, it will fill the screen horizontally and the user will scroll vertically.
+    const w = isFullscreen ? Math.min(vw - 40, 1600) : Math.min(vw - 80, 1200)
+    return { width: w, height: Math.round(w * 1.414) } // Standard newspaper A-series ratio 1:1.414
   }, [isFullscreen])
 
   // ─── Loading skeleton ───
@@ -327,7 +326,7 @@ const EnewspaperPage = () => {
       </div>
 
       {/* ─── Main Viewer Area ─── */}
-      <div className={`relative flex items-center justify-center ${dark ? 'h-[calc(100vh-100px)]' : 'min-h-[700px] md:min-h-[800px]'} px-4 md:px-8 py-6`}>
+      <div className={`relative flex flex-col items-center pt-8 pb-20 ${dark ? 'min-h-[calc(100vh-100px)]' : 'min-h-[700px] md:min-h-[800px]'} px-4 md:px-8`}>
 
         {/* Left Navigation Arrow */}
         {flipBookReady && currentPage > 0 && (
@@ -371,9 +370,9 @@ const EnewspaperPage = () => {
               height={flipDimensions.height}
               size="fixed"
               minWidth={300}
-              maxWidth={1200}
+              maxWidth={2000}
               minHeight={400}
-              maxHeight={1400}
+              maxHeight={2828}
               showCover={true}
               mobileScrollSupport={false}
               onFlip={onFlip}
