@@ -908,12 +908,17 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 </Button>
               </div>
 
-              <div className="bento-magazine relative z-10 gap-4 md:gap-8 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-8 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
                 {cleanBusinessNews.slice(0, 5).map((item, idx) => (
                   <div
                     key={item.id}
                     onClick={() => handleNewsClick(item)}
-                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[280px] md:h-[300px] border border-white/20 shadow-lg ${idx === 0 ? 'lg:bento-item-large md:h-[632px]' : idx === 1 ? 'lg:bento-item-wide' : ''}`}
+                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[280px] border border-white/20 shadow-lg ${idx === 0
+                        ? 'lg:col-span-2 lg:row-span-2 md:h-[632px]'
+                        : idx === 1
+                          ? 'lg:col-span-2 md:h-[300px]'
+                          : 'lg:col-span-1 md:h-[300px]'
+                      }`}
                   >
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}

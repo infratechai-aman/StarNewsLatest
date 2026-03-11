@@ -191,11 +191,9 @@ code {
    ============================================= */
 
 /* Global image styling for cards and ads */
-.news-card img,
+/* Global image styling for specific generic banners only */
 .ad-banner img,
-.sidebar-ad img,
-[class*="Card"] img,
-[class*="card"] img {
+.sidebar-ad img {
   width: 100%;
   height: 100%;
   object-fit: cover;
