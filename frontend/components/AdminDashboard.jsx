@@ -1215,7 +1215,7 @@ const AdminDashboard = ({ user, toast }) => {
 
           <TabsTrigger value="businesses" className="flex items-center gap-1 text-xs relative">
             <Building2 className="h-3 w-3" />
-            <span className="hidden sm:inline">Business</span>
+            <span className="hidden sm:inline">Bizz</span>
             {pendingData.businesses.length > 0 && (
               <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
                 {pendingData.businesses.length}
@@ -1250,7 +1250,7 @@ const AdminDashboard = ({ user, toast }) => {
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-1 text-xs">
             <Monitor className="h-3 w-3" />
-            <span className="hidden sm:inline">Content</span>
+            <span className="hidden sm:inline">Advertisement</span>
           </TabsTrigger>
 
 
