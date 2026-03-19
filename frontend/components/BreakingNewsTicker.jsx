@@ -61,10 +61,10 @@ const BreakingNewsTicker = () => {
         <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
         <span className="font-black text-white text-[11px] uppercase tracking-[0.15em]">{t('breakingNews') || 'BREAKING'}</span>
         {/* Slant edge */}
-        <div className="absolute -right-3 top-0 bottom-0 w-6 bg-[#E53935]" style={{ clipPath: 'polygon(0 0, 100% 0, 40% 100%, 0 100%)' }} />
+        <div className="absolute -right-[10px] top-0 bottom-0 w-4 bg-[#E53935]" style={{ clipPath: 'polygon(0 0, 100% 0, 0% 100%, 0 100%)' }} />
       </div>
       {/* Right: Black scrolling ticker */}
-      <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-4">
+      <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-5">
         <div className="ticker-wrapper" key={tickerKey}>
           <div className="ticker-content animate-ticker whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
             {tickerText}{tickerText}{tickerText}
