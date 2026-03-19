@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
 import { translateText } from '@/lib/translation'
-import { getCache, setCache } from '@/lib/cache'
+import { getCache, setCache, purgeCache } from '@/lib/cache'
 
 export async function GET(request) {
     const db = getDb();
@@ -142,7 +142,7 @@ export async function GET(request) {
             limit
         };
 
-        setCachedNews(cacheKey, responseData);
+        setCache(cacheKey, responseData, 5 * 60 * 1000);
 
         const response = NextResponse.json(responseData)
 

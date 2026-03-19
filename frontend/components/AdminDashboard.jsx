@@ -3699,7 +3699,7 @@ const AdminDashboard = ({ user, toast }) => {
                           <h3 className="font-semibold text-sm truncate">{getTextValue(article.title)}</h3>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
 
-                            <Badge variant="outline" className="text-xs">{article.category || article.genre || 'Article'}</Badge>
+                            <Badge variant="outline" className="text-xs">{getTextValue(article.category) || article.genre || 'Article'}</Badge>
                             <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
                               Posted By: {article.authorName || 'Reporter'}
                             </span>
@@ -3805,7 +3805,7 @@ const AdminDashboard = ({ user, toast }) => {
                         </div>
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
 
-                          <Badge variant="outline" className="text-xs">{article.category || article.categoryId}</Badge>
+                          <Badge variant="outline" className="text-xs">{getTextValue(article.category) || article.categoryId}</Badge>
                           <Badge className={`text-xs ${article.approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : article.approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                             {article.approvalStatus?.toUpperCase() || 'PENDING'}
                           </Badge>
