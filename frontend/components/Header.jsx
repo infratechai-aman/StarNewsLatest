@@ -148,24 +148,27 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
     <>
       {/* --- PREMIUM DESKTOP HEADER --- */}
       <div className="hidden lg:block bg-white border-b border-gray-100 relative overflow-hidden">
-        {/* Red gradient strip - from left edge to just before social media icons, with slanted right edge */}
+        {/* Dark Top Strip */}
+        <div className="absolute top-0 left-0 w-full h-[8px] bg-[#2f363c] z-30" />
+
+        {/* Red block strip - from left edge to just before social media icons, with slanted right edge */}
         <div
-          className="absolute top-0 bottom-0 left-0 bg-gradient-to-r from-red-700 via-red-600 to-red-500 z-0"
+          className="absolute top-[8px] bottom-0 left-0 bg-[#da251d] z-0"
           style={{
-            width: '67%',
-            clipPath: 'polygon(0 0, 100% 0, calc(100% - 50px) 100%, 0 100%)'
+            width: '66%',
+            clipPath: 'polygon(0 0, 100% 0, calc(100% - 40px) 100%, 0 100%)'
           }}
         >
           {/* Subtle glossy shine overlay for premium look */}
-          <div className="absolute inset-0 opacity-[0.07]" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
+          <div className="absolute inset-0 opacity-[0.05]" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
         </div>
 
-        <div className="container mx-auto px-4 relative z-20">
+        <div className="container mx-auto px-4 relative z-20 pt-[8px]">
           <div className="flex items-center justify-between py-4">
-            {/* LEFT: Logo with subtle white box */}
-            <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-20 md:h-[88px] w-[190px] md:w-[210px] rounded-md shadow-md p-0 group cursor-pointer relative z-20 border-2 border-white overflow-hidden">
-                <VideoLogo className="h-full w-full scale-[1.8] transition-transform group-hover:scale-[1.9]" />
+            {/* LEFT: Logo with outlined rounded border matching reference */}
+            <div className="flex items-center cursor-pointer group ml-1 md:ml-4" onClick={() => setCurrentView('home')}>
+              <div className="flex-shrink-0 h-16 md:h-[65px] w-[180px] md:w-[190px] rounded-[6px] p-0 group cursor-pointer relative z-20 border-[1px] border-white/60 overflow-hidden bg-transparent shadow-sm flex items-center justify-center">
+                <VideoLogo className="h-full w-full scale-[1.75] transition-transform group-hover:scale-[1.85]" />
               </div>
             </div>
 
@@ -227,14 +230,14 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
         </div>
       </div>
 
-      <header className="hidden lg:block bg-white border-b sticky top-0 z-50">
+      <header className="hidden lg:block bg-[#da251d] sticky top-0 z-50 shadow-md">
         <div className="container mx-auto px-4">
           <nav className="flex items-center justify-between h-14">
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 onClick={() => setCurrentView('home')}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'home' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 rounded-[6px] text-white hover:bg-white/20 transition-all ${currentView === 'home' ? 'bg-white/20 shadow-sm' : ''}`}
               >
                 {t('home')}
               </Button>
@@ -242,9 +245,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
-                    className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'news' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                    className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'news' ? 'bg-white/10' : ''}`}
                   >
-                    {t('news')}<ChevronDown className="ml-1 h-3.5 w-3.5 opacity-50" />
+                    {t('news')}<ChevronDown className="ml-1 h-3.5 w-3.5 opacity-80" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-48">
@@ -261,37 +264,37 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               <Button
                 variant="ghost"
                 onClick={() => setCurrentView('enewspaper')}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'enewspaper' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'enewspaper' ? 'bg-white/10' : ''}`}
               >
                 {t('eNewspaper')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setCurrentView('city')}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'city' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'city' ? 'bg-white/10' : ''}`}
               >
                 {t('cityNews')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setCurrentView('classifieds')}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'classifieds' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'classifieds' ? 'bg-white/10' : ''}`}
               >
                 {t('classified')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => setCurrentView('businesses')}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'businesses' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'businesses' ? 'bg-white/10' : ''}`}
               >
                 {t('businessDirectory')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv') }}
-                className={`text-sm font-bold px-4 hover:bg-red-50 hover:text-red-600 transition-all ${currentView === 'live-tv' ? 'text-red-600 bg-red-50 shadow-sm' : 'text-gray-600'}`}
+                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'live-tv' ? 'bg-white/10' : ''}`}
               >
-                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse mr-1.5" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80 mr-2" />
                 Live TV
               </Button>
             </div>
@@ -299,8 +302,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <div className="flex items-center gap-2">
               <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-3 py-1.5 h-8">
-                    <Briefcase className="mr-1.5 h-3.5 w-3.5" />{t('promoteYourBusiness')}
+                  <Button className="bg-white hover:bg-gray-50 text-[#1877F2] font-bold text-[13px] px-3.5 py-1.5 h-8 rounded-md shadow-sm border border-transparent">
+                    <Briefcase className="mr-1.5 h-3.5 w-3.5" />Post your Ad
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
@@ -333,7 +336,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               {/* Join as Reporter Dialog (Desktop) */}
               <Dialog open={reporterDialogOpen} onOpenChange={setReporterDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white font-medium text-sm px-3 py-1.5 h-8">
+                  <Button className="bg-white hover:bg-gray-50 text-[#00b894] font-bold text-[13px] px-3.5 py-1.5 h-8 rounded-md shadow-sm border border-transparent">
                     <UserPlus className="mr-1.5 h-3.5 w-3.5" />{t('joinAsReporter')}
                   </Button>
                 </DialogTrigger>
@@ -370,7 +373,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden">
         {/* Top Red Bar: Main Navigation */}
-        <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-500 text-white border-b border-red-800 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
+        <div className="bg-[#da251d] text-white border-b border-red-800 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
           {/* Glossy shine overlay */}
           <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
 
