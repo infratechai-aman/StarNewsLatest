@@ -146,165 +146,155 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
   return (
     <>
-      {/* --- PREMIUM DESKTOP HEADER --- */}
-      <div className="hidden lg:block bg-white border-b border-gray-100 relative overflow-hidden">
-        {/* Dark Top Strip */}
-        <div className="absolute top-0 left-0 w-full h-[8px] bg-[#2f363c] z-30" />
-
-        {/* Red block strip - from left edge to just before social media icons, with slanted right edge */}
-        <div
-          className="absolute top-[8px] bottom-0 left-0 bg-[#da251d] z-0"
-          style={{
-            width: '66%',
-            clipPath: 'polygon(0 0, 100% 0, calc(100% - 40px) 100%, 0 100%)'
-          }}
-        >
-          {/* Subtle glossy shine overlay for premium look */}
-          <div className="absolute inset-0 opacity-[0.05]" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
-        </div>
-
-        <div className="container mx-auto px-4 relative z-20 pt-[8px]">
-          <div className="flex items-center justify-between py-4">
-            {/* LEFT: Logo with outlined rounded border matching reference */}
-            <div className="flex items-center cursor-pointer group ml-1 md:ml-4" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-16 md:h-[65px] w-[180px] md:w-[190px] rounded-[6px] p-0 group cursor-pointer relative z-20 border-[1px] border-white/60 overflow-hidden bg-transparent shadow-sm flex items-center justify-center">
-                <VideoLogo className="h-full w-full scale-[1.75] transition-transform group-hover:scale-[1.85]" />
+      {/* --- ULTRA PREMIUM DESKTOP HEADER --- */}
+      <div className="hidden lg:block bg-white relative">
+        {/* Clean top banner */}
+        <div className="container mx-auto px-6">
+          <div className="flex items-center justify-between py-3">
+            {/* LEFT: Logo in professional white card */}
+            <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
+              <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100/80 overflow-hidden flex items-center justify-center transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+                <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
               </div>
             </div>
 
-            {/* RIGHT: Social Media & Profile on white background */}
-            <div className="flex flex-col items-end gap-3 z-20">
-              <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-                <div className="flex items-center gap-4 border-r pr-6 border-gray-200">
-                  <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-[#1877F2] transition-colors"><FacebookIcon /></a>
-                  <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition-colors"><WhatsAppIcon /></a>
-                  <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-[#E4405F] transition-colors"><InstagramIcon /></a>
-                  <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors"><YouTubeIcon /></a>
-                </div>
+            {/* RIGHT: Social Media & Profile — clean & refined */}
+            <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
+                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all duration-200"><FacebookIcon /></a>
+                <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#25D366] transition-all duration-200"><WhatsAppIcon /></a>
+                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#E4405F] transition-all duration-200"><InstagramIcon /></a>
+                <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#FF0000] transition-all duration-200"><YouTubeIcon /></a>
+              </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="font-bold tracking-tight hover:bg-gray-50">
-                      <Globe className="h-4 w-4 mr-2" />
-                      {languageOptions.find(l => l.code === language)?.label || 'EN'}
-                      <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {languageOptions.map((lang) => (
-                      <DropdownMenuItem
-                        key={lang.code}
-                        onClick={() => changeLanguage(lang.code)}
-                        className={`flex items-center justify-between ${language === lang.code ? 'bg-gray-50 font-bold' : ''}`}
-                      >
-                        <span>{lang.fullName}</span>
-                        {language === lang.code && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="w-px h-8 bg-gray-200" />
 
-                {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="font-semibold tracking-tight text-gray-600 hover:bg-gray-50 rounded-full px-3">
+                    <Globe className="h-4 w-4 mr-1.5 text-gray-400" />
+                    {languageOptions.find(l => l.code === language)?.label || 'EN'}
+                    <ChevronDown className="h-3 w-3 ml-1 opacity-40" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-gray-100">
+                  {languageOptions.map((lang) => (
+                    <DropdownMenuItem
+                      key={lang.code}
+                      onClick={() => changeLanguage(lang.code)}
+                      className={`flex items-center justify-between rounded-lg ${language === lang.code ? 'bg-red-50 font-bold text-red-600' : ''}`}
+                    >
+                      <span>{lang.fullName}</span>
+                      {language === lang.code && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {user && (
+                <>
+                  <div className="w-px h-8 bg-gray-200" />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                        <Avatar className="h-8 w-8 ring-2 ring-gray-100"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-600 text-white text-xs">{user.name?.[0]}</AvatarFallback></Avatar>
-                        <span className="text-gray-900">{user.name}</span>
+                      <button className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-9 w-9 ring-2 ring-gray-100"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-600 text-white text-xs font-bold">{user.name?.[0]}</AvatarFallback></Avatar>
+                        <span className="text-sm font-semibold text-gray-700">{user.name}</span>
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-gray-100">
                       <DropdownMenuLabel className="flex flex-col">
                         <span className="text-sm font-bold">{user.name}</span>
                         <span className="text-xs text-gray-500">{user.email}</span>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')}><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
+                      {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')} className="rounded-lg"><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 rounded-lg"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                )}
-              </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <header className="hidden lg:block bg-[#da251d] sticky top-0 z-50 shadow-md">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
+      <header className="hidden lg:block bg-[#E53935] sticky top-0 z-50">
+        <div className="container mx-auto px-6">
+          <nav className="flex items-center justify-between h-12">
+            {/* Left: Navigation Links with subtle dividers */}
+            <div className="flex items-center h-full">
+              <button
                 onClick={() => setCurrentView('home')}
-                className={`text-sm font-black px-4 rounded-[6px] text-white hover:bg-white/20 transition-all ${currentView === 'home' ? 'bg-white/20 shadow-sm' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'home' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : 'hover:after:absolute hover:after:bottom-0 hover:after:left-2 hover:after:right-2 hover:after:h-[2px] hover:after:bg-white/40 hover:after:rounded-full'}`}
               >
                 {t('home')}
-              </Button>
+              </button>
+              <div className="w-px h-4 bg-white/20" />
               <DropdownMenu open={allNewsOpen} onOpenChange={setAllNewsOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'news' ? 'bg-white/10' : ''}`}
+                  <button
+                    className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center gap-1 text-white/95 hover:text-white transition-all duration-200 ${currentView === 'news' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
                   >
-                    {t('news')}<ChevronDown className="ml-1 h-3.5 w-3.5 opacity-80" />
-                  </Button>
+                    {t('news')}<ChevronDown className="h-3 w-3 opacity-60" />
+                  </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                  <DropdownMenuItem onClick={() => { setCurrentView('news'); localStorage.removeItem('selectedCategory'); setAllNewsOpen(false) }}>{t('allNews')}</DropdownMenuItem>
+                <DropdownMenuContent className="w-48 rounded-xl shadow-xl border-gray-100 mt-1">
+                  <DropdownMenuItem onClick={() => { setCurrentView('news'); localStorage.removeItem('selectedCategory'); setAllNewsOpen(false) }} className="rounded-lg">{t('allNews')}</DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleCategoryClick('crime')}>{t('crime')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('politics')}>{t('politics')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('education')}>{t('education')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('sports')}>{t('sports')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('entertainment')}>{t('entertainment')}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleCategoryClick('trending')}>{t('trending')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('crime')} className="rounded-lg">{t('crime')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('politics')} className="rounded-lg">{t('politics')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('education')} className="rounded-lg">{t('education')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('sports')} className="rounded-lg">{t('sports')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('entertainment')} className="rounded-lg">{t('entertainment')}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleCategoryClick('trending')} className="rounded-lg">{t('trending')}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                variant="ghost"
+              <div className="w-px h-4 bg-white/20" />
+              <button
                 onClick={() => setCurrentView('enewspaper')}
-                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'enewspaper' ? 'bg-white/10' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'enewspaper' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
                 {t('eNewspaper')}
-              </Button>
-              <Button
-                variant="ghost"
+              </button>
+              <div className="w-px h-4 bg-white/20" />
+              <button
                 onClick={() => setCurrentView('city')}
-                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'city' ? 'bg-white/10' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'city' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
                 {t('cityNews')}
-              </Button>
-              <Button
-                variant="ghost"
+              </button>
+              <div className="w-px h-4 bg-white/20" />
+              <button
                 onClick={() => setCurrentView('classifieds')}
-                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'classifieds' ? 'bg-white/10' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'classifieds' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
                 {t('classified')}
-              </Button>
-              <Button
-                variant="ghost"
+              </button>
+              <div className="w-px h-4 bg-white/20" />
+              <button
                 onClick={() => setCurrentView('businesses')}
-                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'businesses' ? 'bg-white/10' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'businesses' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
                 {t('businessDirectory')}
-              </Button>
-              <Button
-                variant="ghost"
+              </button>
+              <div className="w-px h-4 bg-white/20" />
+              <button
                 onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv') }}
-                className={`text-sm font-black px-4 text-white hover:bg-white/10 transition-all ${currentView === 'live-tv' ? 'bg-white/10' : ''}`}
+                className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center gap-2 text-white/95 hover:text-white transition-all duration-200 ${currentView === 'live-tv' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80 mr-2" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 Live TV
-              </Button>
+              </button>
             </div>
 
+            {/* Right: Action Buttons — clean white pills */}
             <div className="flex items-center gap-2">
               <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-white hover:bg-gray-50 text-[#1877F2] font-bold text-[13px] px-3.5 py-1.5 h-8 rounded-md shadow-sm border border-transparent">
-                    <Briefcase className="mr-1.5 h-3.5 w-3.5" />Post your Ad
-                  </Button>
+                  <button className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md">
+                    <Briefcase className="h-3.5 w-3.5" />{t('promoteYourBusiness')}
+                  </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
@@ -324,7 +314,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingBusiness}>{t('cancel')}</Button>
-                      <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={submittingBusiness}>
+                      <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingBusiness}>
                         {submittingBusiness ? 'Submitting...' : t('submit')}
                       </Button>
                     </DialogFooter>
@@ -332,13 +322,12 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 </DialogContent>
               </Dialog>
 
-
               {/* Join as Reporter Dialog (Desktop) */}
               <Dialog open={reporterDialogOpen} onOpenChange={setReporterDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-white hover:bg-gray-50 text-[#00b894] font-bold text-[13px] px-3.5 py-1.5 h-8 rounded-md shadow-sm border border-transparent">
-                    <UserPlus className="mr-1.5 h-3.5 w-3.5" />{t('joinAsReporter')}
-                  </Button>
+                  <button className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md">
+                    <UserPlus className="h-3.5 w-3.5" />{t('joinAsReporter')}
+                  </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
@@ -358,7 +347,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                     </div>
                     <DialogFooter>
                       <Button type="button" variant="outline" onClick={() => setReporterDialogOpen(false)} disabled={submittingReporter}>Cancel</Button>
-                      <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={submittingReporter}>
+                      <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingReporter}>
                         {submittingReporter ? t('pleaseWait') : t('submitApplication')}
                       </Button>
                     </DialogFooter>
@@ -373,7 +362,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden">
         {/* Top Red Bar: Main Navigation */}
-        <div className="bg-[#da251d] text-white border-b border-red-800 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
+        <div className="bg-[#E53935] text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
           {/* Glossy shine overlay */}
           <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
 
