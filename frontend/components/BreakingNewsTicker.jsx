@@ -55,17 +55,19 @@ const BreakingNewsTicker = () => {
   const tickerText = ticker.text + ' • '
 
   return (
-    <div className="bg-black text-white py-1 overflow-hidden sticky top-0 lg:top-auto z-40 border-b border-gray-800">
-      <div className="container mx-auto px-4 flex items-center gap-6">
-        <div className="flex items-center gap-3 bg-red-600 px-4 py-1.5 rounded-full shrink-0 shadow-lg shadow-red-900/20">
-          <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-          <span className="font-black text-[10px] uppercase tracking-widest">{t('breakingNews') || 'BREAKING'}</span>
-        </div>
-        <div className="overflow-hidden flex-1">
-          <div className="ticker-wrapper" key={tickerKey}>
-            <div className="ticker-content animate-ticker whitespace-nowrap font-bold text-xs uppercase tracking-tight text-gray-300">
-              {tickerText}{tickerText}{tickerText}
-            </div>
+    <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9">
+      {/* Left: Full Red BREAKING label */}
+      <div className="bg-[#E53935] flex items-center gap-2.5 px-5 shrink-0 relative">
+        <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+        <span className="font-black text-white text-[11px] uppercase tracking-[0.15em]">{t('breakingNews') || 'BREAKING'}</span>
+        {/* Slant edge */}
+        <div className="absolute -right-3 top-0 bottom-0 w-6 bg-[#E53935]" style={{ clipPath: 'polygon(0 0, 100% 0, 40% 100%, 0 100%)' }} />
+      </div>
+      {/* Right: Black scrolling ticker */}
+      <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-4">
+        <div className="ticker-wrapper" key={tickerKey}>
+          <div className="ticker-content animate-ticker whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
+            {tickerText}{tickerText}{tickerText}
           </div>
         </div>
       </div>

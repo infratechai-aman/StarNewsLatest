@@ -153,7 +153,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           <div className="flex items-center justify-between py-3">
             {/* LEFT: Logo in professional white card */}
             <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100/80 overflow-hidden flex items-center justify-center transition-shadow hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)]">
+              <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
                 <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
               </div>
             </div>
