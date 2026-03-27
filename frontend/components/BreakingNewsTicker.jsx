@@ -55,16 +55,16 @@ const BreakingNewsTicker = () => {
   const tickerText = ticker.text + ' • '
 
   return (
-    <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9">
-      {/* Left: Full Red BREAKING label */}
-      <div className="bg-[#E53935] flex items-center gap-2.5 px-5 shrink-0 relative">
+    <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9 bg-[#1a1a1a]">
+      {/* Left: Full Red BREAKING label with proper diagonal right edge */}
+      <div
+        className="breaking-label-container bg-[#E53935] flex items-center gap-2.5 pl-4 md:pl-5 pr-6 shrink-0 relative z-10"
+      >
         <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
         <span className="font-black text-white text-[11px] uppercase tracking-[0.15em]">{t('breakingNews') || 'BREAKING'}</span>
-        {/* Slant edge */}
-        <div className="absolute -right-[10px] top-0 bottom-0 w-4 bg-[#E53935]" style={{ clipPath: 'polygon(0 0, 100% 0, 0% 100%, 0 100%)' }} />
       </div>
-      {/* Right: Black scrolling ticker */}
-      <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-5">
+      {/* Right: Black scrolling ticker with matching diagonal left edge */}
+      <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-4 md:pl-5 -ml-[2px]">
         <div className="ticker-wrapper" key={tickerKey}>
           <div className="ticker-content animate-ticker whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
             {tickerText}{tickerText}{tickerText}
@@ -72,6 +72,9 @@ const BreakingNewsTicker = () => {
         </div>
       </div>
       <style jsx>{`
+        .breaking-label-container {
+          clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
+        }
         .ticker-wrapper {
           display: inline-block;
           width: 100%;

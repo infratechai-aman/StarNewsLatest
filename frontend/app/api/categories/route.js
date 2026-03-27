@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
+import { getCache, setCache } from '@/lib/cache';
+
+const CACHE_KEY = 'categories_all';
 
 export async function GET() {
     const db = getDb();
     try {
+        // Check cache first
+        const cachedData = getCache(CACHE_KEY);
+        if (cachedData) return NextResponse.json(cachedData);
+
         const snapshot = await db.collection('news_categories')
             .where('active', '==', true)
             .get()
@@ -16,6 +23,9 @@ export async function GET() {
 
         // Sort in memory to avoid needing a Firestore Composite Index
         categories.sort((a, b) => a.name.localeCompare(b.name));
+
+        // Cache for 5 minutes (categories rarely change)
+        setCache(CACHE_KEY, categories, 5 * 60 * 1000);
 
         return NextResponse.json(categories)
     } catch (error) {

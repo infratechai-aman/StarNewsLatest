@@ -147,75 +147,94 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
   return (
     <>
       {/* --- ULTRA PREMIUM DESKTOP HEADER --- */}
-      <div className="hidden lg:block bg-white relative">
-        {/* Clean top banner */}
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between py-3">
-            {/* LEFT: Logo in professional white card */}
-            <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-              <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
-                <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
+      <div className="hidden lg:block relative">
+        {/* Thin red accent line at the very top */}
+        <div className="h-[3px] bg-gradient-to-r from-[#E53935] via-[#FF5252] to-[#E53935]" />
+
+        {/* Clean top banner with subtle gradient */}
+        <div style={{ background: 'linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)' }}>
+          <div className="container mx-auto px-6">
+            <div className="flex items-center justify-between py-3">
+              {/* LEFT: Logo + Date */}
+              <div className="flex items-center gap-5">
+                <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
+                  <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
+                    <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
+                  </div>
+                </div>
+                {/* Date display */}
+                <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200">
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                  </span>
+                  <span className="text-[13px] font-bold text-gray-700 tracking-tight">
+                    {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* RIGHT: Social Media & Profile — clean & refined */}
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-3">
-                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all duration-200"><FacebookIcon /></a>
-                <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#25D366] transition-all duration-200"><WhatsAppIcon /></a>
-                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#E4405F] transition-all duration-200"><InstagramIcon /></a>
-                <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="w-9 h-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#FF0000] transition-all duration-200"><YouTubeIcon /></a>
+              {/* RIGHT: Social Media & Profile — clean & refined */}
+              <div className="flex items-center gap-5">
+                {/* Social icons in a subtle pill container */}
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5">
+                  <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all duration-200"><FacebookIcon /></a>
+                  <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#25D366] transition-all duration-200"><WhatsAppIcon /></a>
+                  <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#E4405F] transition-all duration-200"><InstagramIcon /></a>
+                  <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#FF0000] transition-all duration-200"><YouTubeIcon /></a>
+                </div>
+
+                <div className="w-px h-8 bg-gray-200" />
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="font-semibold tracking-tight text-gray-600 hover:bg-gray-50 rounded-full px-3">
+                      <Globe className="h-4 w-4 mr-1.5 text-gray-400" />
+                      {languageOptions.find(l => l.code === language)?.label || 'EN'}
+                      <ChevronDown className="h-3 w-3 ml-1 opacity-40" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-gray-100">
+                    {languageOptions.map((lang) => (
+                      <DropdownMenuItem
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className={`flex items-center justify-between rounded-lg ${language === lang.code ? 'bg-red-50 font-bold text-red-600' : ''}`}
+                      >
+                        <span>{lang.fullName}</span>
+                        {language === lang.code && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {user && (
+                  <>
+                    <div className="w-px h-8 bg-gray-200" />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+                          <Avatar className="h-9 w-9 ring-2 ring-gray-100"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-600 text-white text-xs font-bold">{user.name?.[0]}</AvatarFallback></Avatar>
+                          <span className="text-sm font-semibold text-gray-700">{user.name}</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-gray-100">
+                        <DropdownMenuLabel className="flex flex-col">
+                          <span className="text-sm font-bold">{user.name}</span>
+                          <span className="text-xs text-gray-500">{user.email}</span>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')} className="rounded-lg"><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 rounded-lg"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                )}
               </div>
-
-              <div className="w-px h-8 bg-gray-200" />
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="font-semibold tracking-tight text-gray-600 hover:bg-gray-50 rounded-full px-3">
-                    <Globe className="h-4 w-4 mr-1.5 text-gray-400" />
-                    {languageOptions.find(l => l.code === language)?.label || 'EN'}
-                    <ChevronDown className="h-3 w-3 ml-1 opacity-40" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-gray-100">
-                  {languageOptions.map((lang) => (
-                    <DropdownMenuItem
-                      key={lang.code}
-                      onClick={() => changeLanguage(lang.code)}
-                      className={`flex items-center justify-between rounded-lg ${language === lang.code ? 'bg-red-50 font-bold text-red-600' : ''}`}
-                    >
-                      <span>{lang.fullName}</span>
-                      {language === lang.code && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {user && (
-                <>
-                  <div className="w-px h-8 bg-gray-200" />
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
-                        <Avatar className="h-9 w-9 ring-2 ring-gray-100"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-600 text-white text-xs font-bold">{user.name?.[0]}</AvatarFallback></Avatar>
-                        <span className="text-sm font-semibold text-gray-700">{user.name}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl border-gray-100">
-                      <DropdownMenuLabel className="flex flex-col">
-                        <span className="text-sm font-bold">{user.name}</span>
-                        <span className="text-xs text-gray-500">{user.email}</span>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')} className="rounded-lg"><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 rounded-lg"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              )}
             </div>
           </div>
+          {/* Bottom border separator before nav */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
         </div>
       </div>
 
