@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
+import { purgeCache } from '@/lib/cache'
 
 let sidebarAdCache = { data: null, lastFetch: 0 };
 const CACHE_TTL = 60 * 1000; // 1 minute
@@ -56,6 +57,10 @@ export async function POST(request) {
             enabled: enabled !== false,
             updatedAt: new Date().toISOString()
         }, { merge: true })
+
+        // Invalidate both module-level and shared caches
+        sidebarAdCache = { data: null, lastFetch: 0 };
+        purgeCache('sidebar');
 
         return NextResponse.json({ success: true })
     } catch (error) {

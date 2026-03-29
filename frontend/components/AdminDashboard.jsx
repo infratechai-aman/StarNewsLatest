@@ -3216,9 +3216,13 @@ const AdminDashboard = ({ user, toast }) => {
 
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => {
-                      saveSidebarAdSettings(contentSettings.sidebarAd)
-                      toast({ title: 'Sidebar Ad Settings Saved' })
+                    onClick={async () => {
+                      const success = await saveSidebarAdSettings(contentSettings.sidebarAd)
+                      if (success) {
+                        toast({ title: 'Sidebar Ad Settings Saved to Database' })
+                      } else {
+                        toast({ title: 'Error saving settings', variant: 'destructive' })
+                      }
                     }}
                   >
                     Save Sidebar Ad Settings

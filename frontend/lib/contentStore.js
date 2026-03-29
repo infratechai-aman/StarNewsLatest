@@ -119,7 +119,7 @@ export const getPremiumAdSettings = async () => {
 export const savePremiumAdSettings = async (adSettings) => {
     try {
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : ''
-        const res = await fetch('/api/admin/ads/premium', {
+        const res = await fetch('/api/ads/premium', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -134,13 +134,27 @@ export const savePremiumAdSettings = async (adSettings) => {
     }
 }
 
-// Sidebar Ad helpers
-export const getSidebarAdSettings = () => {
-    const settings = getContentSettings()
-    if (!settings.sidebarAd?.items || settings.sidebarAd.items.length === 0) {
+export const getSidebarAdSettings = async () => {
+    try {
+        const res = await fetch('/api/ads/sidebar')
+        const data = await res.json()
+        if (data.enabled !== undefined && data.items && data.items.length > 0) {
+            // Also update localStorage for instant access on next load
+            const settings = getContentSettings()
+            settings.sidebarAd = data
+            saveContentSettings(settings)
+            return data
+        }
+        return defaultSettings.sidebarAd
+    } catch (error) {
+        console.error('Error fetching sidebar ad settings:', error)
+        // Fallback to localStorage
+        const settings = getContentSettings()
+        if (settings.sidebarAd?.items && settings.sidebarAd.items.length > 0) {
+            return settings.sidebarAd
+        }
         return defaultSettings.sidebarAd
     }
-    return settings.sidebarAd
 }
 
 export const saveSidebarAdSettings = async (adSettings) => {
@@ -239,13 +253,13 @@ export const getTrendingNewsIds = () => {
 }
 
 // Check if section should be visible
-export const isPremiumAdVisible = () => {
-    const settings = getPremiumAdSettings()
+export const isPremiumAdVisible = async () => {
+    const settings = await getPremiumAdSettings()
     return settings.enabled
 }
 
-export const isSidebarAdVisible = () => {
-    const settings = getSidebarAdSettings()
+export const isSidebarAdVisible = async () => {
+    const settings = await getSidebarAdSettings()
     return settings.enabled
 }
 

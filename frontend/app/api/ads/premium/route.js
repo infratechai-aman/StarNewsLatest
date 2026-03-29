@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
-import { getCache, setCache } from '@/lib/cache'
+import { getCache, setCache, purgeCache } from '@/lib/cache'
 
 export async function GET() {
     const CACHE_KEY = 'api_ads_premium';
@@ -65,6 +65,9 @@ export async function POST(request) {
             enabled: enabled !== false,
             updatedAt: new Date().toISOString()
         }, { merge: true })
+
+        // Invalidate cache so next GET returns fresh data
+        purgeCache('premium');
 
         return NextResponse.json({ success: true })
     } catch (error) {

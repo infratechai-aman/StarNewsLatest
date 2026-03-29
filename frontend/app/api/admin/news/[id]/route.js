@@ -78,7 +78,7 @@ export async function DELETE(request, { params }) {
 
         const id = params.id;
         await db.collection('news_articles').doc(id).delete();
-        purgeNewsCache();
+        purgeCache('news_');
 
         return NextResponse.json({ success: true });
     } catch (error) {

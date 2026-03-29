@@ -25,8 +25,9 @@ const LiveTVPage = ({ setCurrentView }) => {
     // Parallel fetch for speed
     Promise.all([
       liveTV.get().catch(() => null),
-      fetch('/api/news').then(r => r.json()).catch(() => [])
-    ]).then(([tvData, newsData]) => {
+      fetch('/api/news').then(r => r.json()).catch(() => []),
+      getSidebarAdSettings().catch(() => ({ items: [] }))
+    ]).then(([tvData, newsData, adSettings]) => {
       // Live TV config
       if (tvData) {
         setConfig(tvData)
@@ -35,8 +36,7 @@ const LiveTVPage = ({ setCurrentView }) => {
       // News articles
       const articles = Array.isArray(newsData) ? newsData : (newsData?.articles || newsData?.news || [])
       setNewsArticles(articles.filter(a => a.status === 'approved' || !a.status).slice(0, 12))
-      // Sidebar ads from localStorage
-      const adSettings = getSidebarAdSettings()
+      // Sidebar ads from API
       setSidebarAds(adSettings?.items || [])
       setLoading(false)
     })

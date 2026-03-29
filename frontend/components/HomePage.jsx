@@ -550,7 +550,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
     const loadSettings = async () => {
       const premiumAd = await getPremiumAdSettings()
       setPremiumAdSettings(premiumAd)
-      setSidebarAdSettings(getSidebarAdSettings())
+      setSidebarAdSettings(await getSidebarAdSettings())
       setArticleAdSettings(getArticleAdSettings())
       setBusinessAdSettings(getBusinessAdSettings())
       setTrendingSettings(getTrendingSettings())
