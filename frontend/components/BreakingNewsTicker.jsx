@@ -47,12 +47,7 @@ const BreakingNewsTicker = () => {
     return () => clearInterval(interval)
   }, [loadTicker])
 
-  // Hide if loading or no ticker
-  if (loading || !ticker.enabled || !ticker.text) {
-    return null
-  }
-
-  // Handle dynamic translation
+  // Handle dynamic translation — must be above any conditional return
   useEffect(() => {
     let isMounted = true;
     const updateTranslation = async () => {
@@ -72,6 +67,11 @@ const BreakingNewsTicker = () => {
     updateTranslation();
     return () => { isMounted = false; };
   }, [language, ticker.text]);
+
+  // Hide if loading or no ticker
+  if (loading || !ticker.enabled || !ticker.text) {
+    return null
+  }
 
   // Duplicate text for seamless scrolling
   const tickerContent = translatedText + ' • '

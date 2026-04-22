@@ -107,6 +107,8 @@ const NewsBox = ({ item, onClick, language }) => {
             fill
             className={`object-contain transition-all duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
             sizes="(max-width: 768px) 100vw, 33vw"
+            unoptimized={true}
+            referrerPolicy="no-referrer"
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -157,6 +159,8 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
           style={{ objectFit: 'contain' }}
           onError={() => setImgSrc('/placeholder-news.svg')}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          unoptimized={true}
+          referrerPolicy="no-referrer"
         />
         {category && <Badge className="absolute top-3 left-0 bg-[#cd4a4c] text-white text-[13px] font-bold px-3 py-1 rounded-l-none rounded-r-md shadow-md z-10 border-none tracking-normal capitalize">{category}</Badge>}
       </div>
