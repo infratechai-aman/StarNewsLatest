@@ -159,7 +159,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               <div className="flex items-center gap-5">
                 <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
                   <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
-                    <Image src="/starnews-logo.png" alt="StarNews" fill className="object-contain p-2" priority />
+                    <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
                   </div>
                 </div>
                 {/* Date display */}
@@ -392,8 +392,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Center: Logo with tight border */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-1 relative cursor-pointer z-50 border-2 border-white overflow-hidden bg-white">
-              <Image src="/starnews-logo.png" alt="StarNews" fill className="object-contain" priority />
+            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-0 relative cursor-pointer z-50 border-2 border-white overflow-hidden">
+              <VideoLogo className="w-full h-full scale-[1.8]" />
             </div>
           </div>
 
@@ -441,10 +441,10 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <div className="relative bg-white w-[280px] h-full shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-300">
               <div className="p-5 border-b flex justify-between items-center bg-gray-50">
                 <img
-                  src="/images/logo-icon.png" // Use fallback or icon if ample
+                  src="/starnews-logo.png"
                   onError={(e) => e.target.style.display = 'none'}
-                  alt="Star"
-                  className="h-8 w-auto"
+                  alt="Star News"
+                  className="h-10 w-auto object-contain"
                 />
                 <span className="font-bold text-lg text-gray-900 absolute left-1/2 -translate-x-1/2">Menu</span>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-200 transition-colors"><X className="h-5 w-5 text-gray-600" /></button>
