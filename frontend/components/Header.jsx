@@ -159,15 +159,15 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
               <div className="flex items-center gap-5">
                 <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
                   <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
-                    <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
+                    <Image src="/starnews-logo.png" alt="StarNews" fill className="object-contain p-2" priority />
                   </div>
                 </div>
                 {/* Date display */}
-                <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200">
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200" suppressHydrationWarning>
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider" suppressHydrationWarning>
                     {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
                   </span>
-                  <span className="text-[13px] font-bold text-gray-700 tracking-tight">
+                  <span className="text-[13px] font-bold text-gray-700 tracking-tight" suppressHydrationWarning>
                     {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
@@ -392,8 +392,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Center: Logo with tight border */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-0 relative cursor-pointer z-50 border-2 border-white overflow-hidden">
-              <VideoLogo className="w-full h-full scale-[1.8]" />
+            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-1 relative cursor-pointer z-50 border-2 border-white overflow-hidden bg-white">
+              <Image src="/starnews-logo.png" alt="StarNews" fill className="object-contain" priority />
             </div>
           </div>
 

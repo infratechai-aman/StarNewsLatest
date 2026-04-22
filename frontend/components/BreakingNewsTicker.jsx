@@ -14,6 +14,7 @@ const BreakingNewsTicker = () => {
   const { t } = useLanguage()
   const [tickerKey, setTickerKey] = useState(0)
   const [ticker, setTicker] = useState({ enabled: true, text: DEFAULT_BREAKING_NEWS })
+  const [translatedText, setTranslatedText] = useState(DEFAULT_BREAKING_NEWS)
   const [loading, setLoading] = useState(true)
 
   // Load breaking ticker from API
@@ -51,8 +52,29 @@ const BreakingNewsTicker = () => {
     return null
   }
 
+  // Handle dynamic translation
+  useEffect(() => {
+    let isMounted = true;
+    const updateTranslation = async () => {
+      if (language === 'en') {
+        if (isMounted) setTranslatedText(ticker.text);
+        return;
+      }
+      try {
+        const { translateText } = await import('@/lib/translation');
+        const res = await translateText(ticker.text, 'en');
+        if (isMounted) setTranslatedText(res[language] || ticker.text);
+      } catch (err) {
+        console.error('Translation failed', err);
+        if (isMounted) setTranslatedText(ticker.text);
+      }
+    };
+    updateTranslation();
+    return () => { isMounted = false; };
+  }, [language, ticker.text]);
+
   // Duplicate text for seamless scrolling
-  const tickerText = ticker.text + ' • '
+  const tickerContent = translatedText + ' • '
 
   return (
     <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9 bg-[#1a1a1a]">
@@ -65,9 +87,9 @@ const BreakingNewsTicker = () => {
       </div>
       {/* Right: Black scrolling ticker with matching diagonal left edge */}
       <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-4 md:pl-5 -ml-[2px]">
-        <div className="ticker-wrapper" key={tickerKey}>
+        <div className="ticker-wrapper" key={`${tickerKey}-${language}`}>
           <div className="ticker-content animate-ticker whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
-            {tickerText}{tickerText}{tickerText}
+            {tickerContent}{tickerContent}{tickerContent}
           </div>
         </div>
       </div>
