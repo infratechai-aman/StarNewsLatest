@@ -11,6 +11,7 @@ import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
+import { proxyImageUrl } from '@/lib/imageProxy'
 
 const ARTICLES_PER_PAGE = 30
 
@@ -260,12 +261,12 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
           >
             <div className={`relative overflow-hidden bg-gray-50 ${idx === 0 ? 'aspect-[2/1]' : 'aspect-[16/10]'}`}>
               <Image
-                src={
+                src={proxyImageUrl(
                   (article.thumbnails && article.thumbnails[0]) ||
                   article.thumbnailUrl ||
                   article.mainImage ||
                   '/placeholder-news.svg'
-                }
+                )}
                 alt={(article && article.title) ? (getLocalizedText(article.title, language) || article.title) : 'News Article'}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"

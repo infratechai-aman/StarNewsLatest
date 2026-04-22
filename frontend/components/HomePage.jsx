@@ -9,6 +9,7 @@ import { Eye, Clock, Youtube, User, Shield } from 'lucide-react'
 import { news } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
+import { proxyImageUrl } from '@/lib/imageProxy'
 import {
   getPremiumAdSettings,
   getSidebarAdSettings,
@@ -79,14 +80,14 @@ const NewsBox = ({ item, onClick, language }) => {
 
   const getValidImages = () => {
     const imgList = []
-    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/api/'))
+    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/api/') || url.startsWith('/wp-content/'))
 
     // Priority: mainImage first (most reliable from API), then thumbnailUrl, galleryImages, then legacy fields
-    if (isValidUrl(item.mainImage)) imgList.push(item.mainImage)
-    if (isValidUrl(item.thumbnailUrl) && !imgList.includes(item.thumbnailUrl)) imgList.push(item.thumbnailUrl)
-    if (item.galleryImages?.length) item.galleryImages.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
-    if (item.thumbnails?.length) item.thumbnails.forEach(t => isValidUrl(t) && !imgList.includes(t) && imgList.push(t))
-    if (item.images?.length) item.images.forEach(img => isValidUrl(img) && !imgList.includes(img) && imgList.push(img))
+    if (isValidUrl(item.mainImage)) imgList.push(proxyImageUrl(item.mainImage))
+    if (isValidUrl(item.thumbnailUrl) && !imgList.includes(proxyImageUrl(item.thumbnailUrl))) imgList.push(proxyImageUrl(item.thumbnailUrl))
+    if (item.galleryImages?.length) item.galleryImages.forEach(img => isValidUrl(img) && !imgList.includes(proxyImageUrl(img)) && imgList.push(proxyImageUrl(img)))
+    if (item.thumbnails?.length) item.thumbnails.forEach(t => isValidUrl(t) && !imgList.includes(proxyImageUrl(t)) && imgList.push(proxyImageUrl(t)))
+    if (item.images?.length) item.images.forEach(img => isValidUrl(img) && !imgList.includes(proxyImageUrl(img)) && imgList.push(proxyImageUrl(img)))
     if (!imgList.length) imgList.push('/placeholder-news.svg')
     return imgList
   }
@@ -139,10 +140,10 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
   // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
   const category = getTranslatedCategory(item.category, t, language)
-  const [imgSrc, setImgSrc] = useState(item.mainImage || item.images?.[0] || `https://picsum.photos/600/400?random=${item.id}`)
+  const [imgSrc, setImgSrc] = useState(proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg'))
 
   useEffect(() => {
-    setImgSrc(item.mainImage || item.images?.[0] || `https://picsum.photos/600/400?random=${item.id}`)
+    setImgSrc(proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg'))
   }, [item])
 
   return (
@@ -819,7 +820,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 }}
               >
                 <CardContent className="p-0 aspect-[4/3] relative bg-gray-100">
-                  <Image src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                  <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
                   <Badge className="absolute top-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1.5 backdrop-blur-sm border-none uppercase tracking-widest">{t('advertisement') || 'Advertisement'}</Badge>
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
                     {sidebarAdSettings.items.map((_, idx) => (
@@ -945,7 +946,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             {articleAdSettings?.banner?.enabled && articleAdSettings.banner.imageUrl && (
               <Card className="overflow-hidden border border-gray-100 shadow-md rounded-2xl cursor-pointer" onClick={() => articleAdSettings.banner.linkUrl && window.open(articleAdSettings.banner.linkUrl, '_blank')}>
                 <CardContent className="p-0 aspect-[21/9] relative">
-                  <Image src={articleAdSettings.banner.imageUrl} alt="Banner Ad" fill className="object-cover" />
+                  <Image src={proxyImageUrl(articleAdSettings.banner.imageUrl)} alt="Banner Ad" fill className="object-cover" />
                   <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[8px] px-1.5 py-0.5">{t('advertisement') || 'Advertisement'}</Badge>
                 </CardContent>
               </Card>
@@ -969,7 +970,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="premium-card rounded-none md:rounded-[32px] overflow-hidden cursor-pointer group shadow-none md:shadow-lg border-y md:border border-gray-100 mb-6 md:mb-0">
                   <div className="relative aspect-[21/9] mb-6 md:mb-8 overflow-hidden">
-                    <Image src={cleanPoliticsNews[0].mainImage || '/placeholder-news.svg'} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
+                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
                     <Badge className="absolute top-4 left-4 md:top-6 md:left-6 bg-red-600 text-white border-none px-3 md:px-4 py-1 md:py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">{t('breakingNews') || 'Breaking News'}</Badge>
                   </div>
                   <div className="px-5 md:px-6 pb-6">
@@ -1065,7 +1066,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 relative z-10 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
               {cleanSportsNews.slice(0, 3).map((item) => (
                 <div key={item.id} onClick={() => handleNewsClick(item)} className="premium-card cursor-pointer rounded-2xl md:rounded-[24px] overflow-hidden relative group h-[calc(100dvh-104px)] md:h-[280px] border border-white/20 shadow-lg">
-                  <Image src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
+                  <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 p-5 w-full">
                     <h3 className="font-heading font-black text-xl leading-tight group-hover:text-green-300 transition-colors tracking-tight text-white">{getLocalizedText(item.title, language)}</h3>

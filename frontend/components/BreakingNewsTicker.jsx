@@ -21,6 +21,10 @@ const BreakingNewsTicker = () => {
   const loadTicker = useCallback(async () => {
     try {
       const response = await fetch('/api/breaking-ticker')
+      if (!response.ok) {
+        setTicker({ enabled: true, text: DEFAULT_BREAKING_NEWS })
+        return
+      }
       const data = await response.json()
 
       if (data.enabled && data.text) {
