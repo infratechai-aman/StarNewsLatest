@@ -11,6 +11,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        <meta name="referrer" content="no-referrer" />
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       </head>
       <body className="font-sans antialiased">

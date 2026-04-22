@@ -11,7 +11,7 @@ const DEFAULT_BREAKING_NEWS = [
 ].join(' • ')
 
 const BreakingNewsTicker = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [tickerKey, setTickerKey] = useState(0)
   const [ticker, setTicker] = useState({ enabled: true, text: DEFAULT_BREAKING_NEWS })
   const [translatedText, setTranslatedText] = useState(DEFAULT_BREAKING_NEWS)
