@@ -3078,8 +3078,8 @@ const AdminDashboard = ({ user, toast }) => {
                 <>
                   {/* Numbered Image Cards */}
                   <div className="space-y-4">
-                    <Label className="text-base font-semibold">Sidebar Ad Images (Square • Individual Links)</Label>
-                    <p className="text-sm text-muted-foreground">Each image opens its own destination URL when clicked. Images display as 1:1 squares.</p>
+                    <Label className="text-base font-semibold">Sidebar Ad Images (A4 or Square • Individual Links)</Label>
+                    <p className="text-sm text-muted-foreground">Each image opens its own destination URL when clicked. Images must be uploaded in A4 portrait (3:4 ratio) or Square (1:1 ratio) format.</p>
 
                     <div className="grid grid-cols-2 gap-4">
                       {[0, 1, 2, 3].map((index) => {
@@ -3247,7 +3247,7 @@ const AdminDashboard = ({ user, toast }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-semibold">Article Ad Banner</h4>
-                    <p className="text-sm text-muted-foreground">Pink/purple "Advertise Your Business" banner</p>
+                    <p className="text-sm text-muted-foreground">Pink/purple "Advertise Your Business" banner (Must be A4 portrait or Square format)</p>
                   </div>
                   <Switch
                     checked={contentSettings.articleAd?.banner?.enabled ?? true}
@@ -3334,7 +3334,7 @@ const AdminDashboard = ({ user, toast }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-semibold">Article Sticky Ad</h4>
-                    <p className="text-sm text-muted-foreground">Bottom sticky "Premium Ad Space" banner (300x400)</p>
+                    <p className="text-sm text-muted-foreground">Bottom sticky "Premium Ad Space" banner (Must be A4 portrait or Square format)</p>
                   </div>
                   <Switch
                     checked={contentSettings.articleAd?.sticky?.enabled ?? true}

@@ -278,9 +278,9 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
               {/* Category Badge */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
+              <div className="absolute top-4 left-0 flex items-center gap-2 z-10">
                 {article.genre && (
-                  <Badge className="bg-red-600/90 backdrop-blur-md text-white border-none px-3 py-1 font-black uppercase text-[9px] tracking-widest shadow-lg">
+                  <Badge className="bg-[#cd4a4c] text-white text-[13px] font-bold px-3 py-1 rounded-l-none rounded-r-md shadow-md border-none tracking-normal capitalize">
                     {article.genre}
                   </Badge>
                 )}

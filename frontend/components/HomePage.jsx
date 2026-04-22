@@ -111,7 +111,7 @@ const NewsBox = ({ item, onClick, language }) => {
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         {category && (
-          <Badge className="absolute top-4 left-4 md:top-3 md:left-3 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white border-none px-3 md:px-2 py-1 md:py-0.5 shadow-sm">
+          <Badge className="absolute top-4 left-0 bg-[#cd4a4c] text-white text-[13px] md:text-[14px] font-bold px-3 py-1 md:py-1.5 rounded-l-none rounded-r-md shadow-md z-10 border-none tracking-normal capitalize">
             {category}
           </Badge>
         )}
@@ -158,7 +158,7 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
           onError={() => setImgSrc('/placeholder-news.svg')}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        {category && <Badge className={`absolute top-2 left-2 bg-${accentColor}-600 text-white text-xs font-bold z-10`}>{category}</Badge>}
+        {category && <Badge className="absolute top-3 left-0 bg-[#cd4a4c] text-white text-[13px] font-bold px-3 py-1 rounded-l-none rounded-r-md shadow-md z-10 border-none tracking-normal capitalize">{category}</Badge>}
       </div>
       <CardContent className="p-3">
         <h4 className={`font-bold text-sm line-clamp-2 group-hover:text-${accentColor}-600 transition-colors leading-tight`}>{title}</h4>
