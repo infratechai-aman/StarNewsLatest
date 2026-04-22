@@ -19,6 +19,10 @@ export function setCache(key, data, ttl = DEFAULT_CACHE_TTL) {
     apiCache.set(key, { data, lastFetch: Date.now(), ttl });
 }
 
+export function invalidateCache(key) {
+    apiCache.delete(key);
+}
+
 export function purgeCache(pattern = null) {
     if (!pattern) {
         apiCache.clear();

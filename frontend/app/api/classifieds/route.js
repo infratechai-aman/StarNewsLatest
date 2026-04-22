@@ -24,7 +24,7 @@ export async function GET(request) {
             .orderBy('createdAt', 'desc')
             .get();
 
-        const ads = snapshot.docs.map(doc => doc.data());
+        const ads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Cache for 5 minutes
         setCache(CACHE_KEY, ads, 5 * 60 * 1000);

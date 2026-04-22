@@ -64,7 +64,7 @@ export const news = {
 
 export const categories = {
   getAll: () => apiRequest('/categories'),
-  create: (data) => apiRequest('/categories', { method: 'POST', body: JSON.stringify(data) }),
+  create: (data) => apiRequest('/admin/categories', { method: 'POST', body: JSON.stringify(data) }),
 }
 
 export const businesses = {
