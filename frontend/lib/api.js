@@ -20,8 +20,24 @@ export async function apiRequest(endpoint, options = {}) {
   })
 
   if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.error || 'Request failed')
+    // SECURITY/RELIABILITY: Handle non-JSON error responses (e.g., HTML 502 pages)
+    let errorMessage = `Request failed (${response.status})`
+    try {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorMessage
+      }
+    } catch {
+      // Response body couldn't be parsed — use generic message
+    }
+    throw new Error(errorMessage)
+  }
+
+  // Handle empty responses (e.g., 204 No Content)
+  const contentType = response.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    return {}
   }
 
   return response.json()

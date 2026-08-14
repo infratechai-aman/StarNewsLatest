@@ -18,6 +18,16 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Email, password and name required' }, { status: 400 })
         }
 
+        // Enforce consistent password policy (min 8 chars)
+        if (password.length < 8) {
+            return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+        }
+
+        // Enforce name length limit
+        if (name.length > 100) {
+            return NextResponse.json({ error: 'Name must be under 100 characters' }, { status: 400 })
+        }
+
         // Create user in Firebase Auth
         const userRecord = await auth.createUser({
             email,
@@ -47,10 +57,16 @@ export async function POST(request) {
         })
 
     } catch (error) {
-        console.error('Registration error:', error)
+        console.error('Registration error:', error.code, error.message)
         if (error.code === 'auth/email-already-exists') {
-            return NextResponse.json({ error: 'User already exists' }, { status: 400 })
+            return NextResponse.json({ error: 'User already exists' }, { status: 409 })
         }
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        if (error.code === 'auth/invalid-email') {
+            return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
+        }
+        if (error.code === 'auth/weak-password') {
+            return NextResponse.json({ error: 'Password is too weak. Use at least 6 characters.' }, { status: 400 })
+        }
+        return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
     }
 }

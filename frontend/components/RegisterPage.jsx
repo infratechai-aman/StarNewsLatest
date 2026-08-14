@@ -28,17 +28,17 @@ const RegisterPage = ({ setUser, setCurrentView, toast }) => {
     setLoading(true)
 
     try {
-      const response = await auth.register(formData)
-      localStorage.setItem('token', response.token)
-      setUser(response.user)
+      await auth.register(formData)
       
-      let message = 'Registration successful!'
+      let message = 'Registration successful! Please login with your new account.'
       if (formData.role === ROLES.ADVERTISER) {
-        message = 'Business account created! Your account is pending admin approval to post ads.'
+        message = 'Business account created! Your account is pending admin approval. Please login to continue.'
       }
       
       toast({ title: 'Success!', description: message })
-      setCurrentView('home')
+      // Redirect to login — the register API does not return a token,
+      // so the user must login to get an authenticated session.
+      setCurrentView('login')
     } catch (error) {
       toast({ title: 'Registration failed', description: error.message, variant: 'destructive' })
     } finally {
@@ -50,7 +50,7 @@ const RegisterPage = ({ setUser, setCurrentView, toast }) => {
     <div className="flex items-center justify-center min-h-[80vh]">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Register for Pune Majha</CardTitle>
+          <CardTitle className="text-2xl">Register for StarNews</CardTitle>
           <CardDescription>Create your account to get started</CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,7 +75,7 @@ const RegisterPage = ({ setUser, setCurrentView, toast }) => {
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="••••••••" className="pl-10" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={6}/>
+                <Input id="password" type="password" placeholder="••••••••" className="pl-10" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required minLength={8}/>
               </div>
             </div>
 

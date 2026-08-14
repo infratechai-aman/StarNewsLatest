@@ -1,8 +1,4 @@
 import { getAuth, getDb } from './firebaseAdmin'
-import { cookies } from 'next/headers'
-
-// Single Admin Enforcement - HARDCODED (Can be moved to Firestore later)
-export const ADMIN_USERNAME = 'riyaz@starnews.com'
 
 // User roles
 export const ROLES = {
@@ -13,7 +9,7 @@ export const ROLES = {
   SUPER_ADMIN: 'super_admin'
 }
 
-// Get current user from request headers or cookies
+// Get current user from request headers (token-based only, no cookie fallback)
 export async function getCurrentUser(request) {
   const auth = getAuth();
   const db = getDb();
@@ -24,19 +20,9 @@ export async function getCurrentUser(request) {
   }
 
   try {
-    // Try to get token from Authorization header first
+    // Get token from Authorization header only (no cookie fallback — prevents CSRF)
     const authHeader = request.headers.get('authorization')
-    let token = authHeader?.replace('Bearer ', '')
-
-    // If no header, try cookies (optional fallback)
-    if (!token) {
-      try {
-        const cookieStore = cookies()
-        token = cookieStore.get('token')?.value
-      } catch (cookieError) {
-        // console.log('Cookie access not available')
-      }
-    }
+    const token = authHeader?.replace('Bearer ', '')
 
     if (!token) {
       return null
@@ -50,7 +36,7 @@ export async function getCurrentUser(request) {
     const userDoc = await db.collection('users').doc(uid).get()
 
     if (!userDoc.exists) {
-      // If user authenticated but no doc, return basic info (or handle as error)
+      // If user authenticated but no doc, return basic info
       return {
         userId: uid,
         email: decodedToken.email,
@@ -91,4 +77,113 @@ export function canManageNews(user) {
 // Check if user is Advertiser or Super Admin
 export function canManageAds(user) {
   return hasRole(user, [ROLES.ADVERTISER, ROLES.SUPER_ADMIN])
+}
+
+/**
+ * MIDDLEWARE: Verify that the request is from a super_admin.
+ * Consolidates the token extraction + verification + admin check
+ * that was previously duplicated across 20+ API route files.
+ *
+ * @param {Request} request - The incoming request
+ * @returns {{ user: object } | { error: string, status: number }}
+ *
+ * Usage in route handlers:
+ *   const authResult = await requireSuperAdmin(request);
+ *   if (authResult.error) {
+ *     return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+ *   }
+ *   const user = authResult.user;
+ */
+export async function requireSuperAdmin(request) {
+  const auth = getAuth();
+  const db = getDb();
+
+  if (!auth || !db) {
+    return { error: 'Firebase services not available', status: 503 };
+  }
+
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '');
+
+  if (!token) {
+    return { error: 'Authentication required', status: 401 };
+  }
+
+  try {
+    const decodedToken = await auth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    // Check Firestore for role
+    const userDoc = await db.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { error: 'User not found', status: 403 };
+    }
+
+    const userData = userDoc.data();
+
+    if (userData.role !== ROLES.SUPER_ADMIN) {
+      return { error: 'Forbidden: Admin access required', status: 403 };
+    }
+
+    return {
+      user: {
+        userId: uid,
+        email: decodedToken.email,
+        role: userData.role,
+        ...userData
+      }
+    };
+  } catch (error) {
+    console.error('Admin auth error:', error.code || error.message);
+    return { error: 'Invalid or expired token', status: 401 };
+  }
+}
+
+/**
+ * MIDDLEWARE: Verify that the request is from a reporter or super_admin.
+ */
+export async function requireReporterOrAdmin(request) {
+  const auth = getAuth();
+  const db = getDb();
+
+  if (!auth || !db) {
+    return { error: 'Firebase services not available', status: 503 };
+  }
+
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '');
+
+  if (!token) {
+    return { error: 'Authentication required', status: 401 };
+  }
+
+  try {
+    const decodedToken = await auth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userDoc = await db.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { error: 'User not found', status: 403 };
+    }
+
+    const userData = userDoc.data();
+
+    if (userData.role !== ROLES.SUPER_ADMIN && userData.role !== ROLES.REPORTER) {
+      return { error: 'Forbidden: Reporter or Admin access required', status: 403 };
+    }
+
+    return {
+      user: {
+        userId: uid,
+        email: decodedToken.email,
+        role: userData.role,
+        ...userData
+      }
+    };
+  } catch (error) {
+    console.error('Auth error:', error.code || error.message);
+    return { error: 'Invalid or expired token', status: 401 };
+  }
 }

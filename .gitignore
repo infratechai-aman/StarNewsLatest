@@ -1,7 +1,7 @@
 # Dependencies
 node_modules/
 
-# Environment files
+# Environment files (NEVER commit)
 .env
 .env.local
 .env.*.local
@@ -12,20 +12,22 @@ out/
 build/
 dist/
 
-# Uploads (user content - should be on cloud storage in production)
-uploads/
+# Debug & test artifacts
+debug*.js
+debug*.json
+test_*.js
+test_*.log
+*.log
+npm-debug.log*
 
 # IDE
 .vscode/
 .idea/
+.emergent/
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
 
 # Testing
 coverage/

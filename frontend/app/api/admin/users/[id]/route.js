@@ -1,32 +1,18 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
 
 // PUT: Update User (Admin)
 export async function PUT(request, { params }) {
     const db = getDb();
-    const auth = getAuth();
-
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const id = params.id;
         const body = await request.json();
 
@@ -46,23 +32,18 @@ export async function PUT(request, { params }) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error updating admin user:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 // DELETE: Delete User (Admin)
 export async function DELETE(request, { params }) {
     const db = getDb();
-    const auth = getAuth();
-
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const id = params.id;
 
         // 1. Delete from Firestore
@@ -78,6 +59,6 @@ export async function DELETE(request, { params }) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting admin user:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

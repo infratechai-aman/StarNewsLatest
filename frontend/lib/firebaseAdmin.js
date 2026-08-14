@@ -1,7 +1,6 @@
 import * as admin from 'firebase-admin';
-import path from 'path';
-import fs from 'fs';
-import dotenv from 'dotenv';
+
+// NOTE: dotenv is NOT needed here — Next.js automatically loads .env.local
 
 /** 
  * Extremely Robust Firebase Admin Initialization
@@ -41,20 +40,7 @@ const cleanPrivateKey = (key) => {
 const getApp = () => {
     if (admin.apps.length > 0) return admin.apps[0];
 
-    // Load .env.local from multiple possible root-relative locations
-    const possiblePaths = [
-        path.resolve(process.cwd(), '.env.local'),
-        path.resolve(process.cwd(), 'frontend', '.env.local'),
-        path.join(__dirname, '..', '.env.local'),
-        path.join(__dirname, '..', '..', '.env.local'),
-    ];
-
-    for (const p of possiblePaths) {
-        if (fs.existsSync(p)) {
-            dotenv.config({ path: p });
-            break;
-        }
-    }
+    // Next.js automatically loads .env.local — no manual dotenv needed
 
     let projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID;
     let clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
@@ -94,11 +80,8 @@ const getApp = () => {
     try {
         const privateKey = cleanPrivateKey(rawKey);
 
-        // Diagnostic logging for terminal troubleshooting (no values shown)
-        console.log('[FirebaseAdmin] Attempting Init...');
-        console.log(`- Project ID: ${projectId}`);
-        console.log(`- Private Key Length: ${privateKey.length}`);
-        console.log(`- Key starts with header: ${privateKey.trim().startsWith('-----BEGIN PRIVATE KEY-----')}`);
+        // Diagnostic logging (no sensitive values)
+        console.log(`[FirebaseAdmin] Init: project=${projectId}, keyLen=${privateKey.length}`);
 
         return admin.initializeApp({
             credential: admin.credential.cert({
@@ -132,6 +115,6 @@ export const getStorage = () => {
     return app ? admin.storage() : null;
 };
 
-// Lazy exports for backward compatibility
-export const db = getDb();
-export const auth = getAuth();
+// NOTE: Do NOT export module-level `db` or `auth` constants.
+// They would be evaluated once at import time and could permanently be null
+// if Firebase hasn't initialized yet. Always use getDb() / getAuth() instead.

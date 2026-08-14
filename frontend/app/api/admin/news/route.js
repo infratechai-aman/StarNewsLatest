@@ -1,33 +1,20 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
 import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
 
 // GET: List all news (Admin)
 export async function GET(request) {
     const db = getDb();
-    const auth = getAuth();
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const snapshot = await db.collection('news_articles')
             .orderBy('createdAt', 'desc')
             .get();
@@ -40,27 +27,33 @@ export async function GET(request) {
         return NextResponse.json(news);
     } catch (error) {
         console.error('Error fetching admin news:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 // POST: Create News (Admin - Auto Approved)
 export async function POST(request) {
     const db = getDb();
-    const auth = getAuth();
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const body = await request.json();
         const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, featured, showOnHome, authorName, thumbnailUrl, thumbnails } = body;
 
         if (!title || !content) {
             return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+        }
+
+        // Content size limits
+        const titleStr = typeof title === 'string' ? title : JSON.stringify(title)
+        const contentStr = typeof content === 'string' ? content : JSON.stringify(content)
+        if (titleStr.length > 500) {
+            return NextResponse.json({ error: 'Title must be under 500 characters' }, { status: 400 })
+        }
+        if (contentStr.length > 500000) {
+            return NextResponse.json({ error: 'Content too large (max 500KB)' }, { status: 400 })
         }
 
         // Auto-translate if strings provided
@@ -98,6 +91,6 @@ export async function POST(request) {
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
         // console.error('Error creating admin news:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

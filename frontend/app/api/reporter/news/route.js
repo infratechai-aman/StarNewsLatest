@@ -1,34 +1,24 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
 
 // GET: My Submitted News
 export async function GET(request) {
-    const db = getDb();
-    const auth = getAuth();
-    if (!db || !auth) {
-        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    const authResult = await requireReporterOrAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const db = getDb();
+    if (!db) return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-
-        const decodedUser = await auth.verifyIdToken(token);
-
-        // Verify role too
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        const role = userDoc.exists ? userDoc.data().role : null;
-        if (role !== 'reporter' && role !== 'super_admin') {
-            return NextResponse.json({ error: 'Unauthorized role' }, { status: 403 });
-        }
-
         let articles = [];
         try {
             // Primary Strategy: Server-side sort (Requires Index)
             const snapshot = await db.collection('news_articles')
-                .where('authorId', '==', decodedUser.uid)
+                .where('authorId', '==', authResult.user.userId)
                 .orderBy('createdAt', 'desc')
                 .get();
             articles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
@@ -36,7 +26,7 @@ export async function GET(request) {
             console.warn('Indexing fallback triggered for reporter news');
             // Fallback Strategy: In-memory sort (No index required)
             const snapshot = await db.collection('news_articles')
-                .where('authorId', '==', decodedUser.uid)
+                .where('authorId', '==', authResult.user.userId)
                 .get();
             articles = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
             articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -44,36 +34,35 @@ export async function GET(request) {
 
         return NextResponse.json({ articles });
     } catch (error) {
-        console.error('Reporter news GET error:', error);
-        return NextResponse.json({
-            error: error.message,
-            code: error.code || 'UNKNOWN'
-        }, { status: 500 });
+        console.error('Reporter news GET error:', error.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 // POST: Submit News for Review
 export async function POST(request) {
-    const db = getDb();
-    const auth = getAuth();
-    if (!db || !auth) {
-        return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+    const authResult = await requireReporterOrAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    const db = getDb();
+    if (!db) return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        const decodedUser = await auth.verifyIdToken(token);
-
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        const role = userDoc.exists ? userDoc.data().role : null;
-
-        if (role !== 'reporter' && role !== 'super_admin') {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
         const body = await request.json();
         const { title, content, categoryId, category, city, mainImage, galleryImages, videoUrl, youtubeUrl, tags, metaDescription, authorName, thumbnailUrl, featured } = body;
+
+        // Content size limits
+        if (!title || !content) {
+            return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+        }
+        if (title.length > 500) {
+            return NextResponse.json({ error: 'Title must be under 500 characters' }, { status: 400 });
+        }
+        if (content.length > 500000) {
+            return NextResponse.json({ error: 'Content too large (max 500KB)' }, { status: 400 });
+        }
 
         // Auto-translate Title and Content (parallel for speed)
         const [translatedTitle, translatedContent] = await Promise.all([
@@ -96,11 +85,11 @@ export async function POST(request) {
             youtubeUrl: youtubeUrl || '',
             tags: tags || [],
             metaDescription: metaDescription || '',
-            authorId: decodedUser.uid,
-            authorName: authorName || userDoc.data().name || '',
+            authorId: authResult.user.userId,
+            authorName: authorName || authResult.user.name || '',
             thumbnailUrl: thumbnailUrl || '',
             featured: featured || false,
-            approvalStatus: 'pending', // Force pending
+            approvalStatus: 'pending',
             active: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -111,10 +100,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
-        console.error('Reporter news POST error:', error);
-        return NextResponse.json({
-            error: error.message,
-            code: error.code || 'UNKNOWN'
-        }, { status: 500 });
+        console.error('Reporter news POST error:', error.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

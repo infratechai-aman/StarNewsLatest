@@ -1,16 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
-
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 
 export async function POST(request) {
     try {
@@ -59,16 +49,11 @@ export async function POST(request) {
 
 export async function GET(request) {
     const db = getDb();
-    const auth = getAuth();
-
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
@@ -88,16 +73,11 @@ export async function GET(request) {
 
 export async function PUT(request) {
     const db = getDb();
-    const auth = getAuth();
-
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
@@ -124,16 +104,11 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
     const db = getDb();
-    const auth = getAuth();
-
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         if (!db) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }

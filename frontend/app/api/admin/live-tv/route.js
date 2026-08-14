@@ -1,31 +1,18 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
 
 // GET: Fetch full live TV config (admin - includes inactive streams)
 export async function GET(request) {
     const db = getDb();
-    const auth = getAuth();
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const doc = await db.collection('settings').doc('live_tv_config').get();
 
         if (!doc.exists) {
@@ -39,23 +26,35 @@ export async function GET(request) {
         return NextResponse.json(doc.data());
     } catch (error) {
         console.error('Error fetching live TV config:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
 
 // PUT: Update live TV config
 export async function PUT(request) {
     const db = getDb();
-    const auth = getAuth();
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+        }
+        const body = await request.json();
 
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        // Validate stream limits
+        if (body.streams && body.streams.length > 20) {
+            return NextResponse.json({ error: 'Maximum 20 streams allowed' }, { status: 400 });
         }
 
-        const body = await request.json();
+        // Validate each stream URL is a valid YouTube URL
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+        for (const stream of (body.streams || [])) {
+            if (stream.title && stream.title.length > 100) {
+                return NextResponse.json({ error: 'Stream title must be under 100 characters' }, { status: 400 });
+            }
+            if (stream.url && !youtubeRegex.test(stream.url)) {
+                return NextResponse.json({ error: `Invalid YouTube URL: "${stream.url}". Only YouTube URLs are supported.` }, { status: 400 });
+            }
+        }
 
         // Validate the config structure
         const config = {
@@ -78,6 +77,6 @@ export async function PUT(request) {
         return NextResponse.json({ success: true, config });
     } catch (error) {
         console.error('Error updating live TV config:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

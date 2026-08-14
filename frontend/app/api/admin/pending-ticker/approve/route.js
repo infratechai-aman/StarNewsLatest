@@ -1,31 +1,18 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
 
 // PUT: Approve Pending Ticker
 export async function PUT(request) {
     const db = getDb();
-    const auth = getAuth();
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const authResult = await requireSuperAdmin(request);
+        if (authResult.error) {
+            return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
-
         const docRef = db.collection('breaking_ticker').doc('main');
         const doc = await docRef.get();
 
@@ -48,6 +35,6 @@ export async function PUT(request) {
         return NextResponse.json({ success: true });
     } catch (error) {
         // console.error('Error approving ticker:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

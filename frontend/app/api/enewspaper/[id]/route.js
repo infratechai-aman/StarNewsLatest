@@ -31,6 +31,6 @@ export async function GET(request, { params }) {
         });
     } catch (error) {
         console.error('Error fetching e-newspaper:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

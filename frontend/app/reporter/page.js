@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import ReporterDashboard from '@/components/ReporterDashboard'
 
 import { auth } from '@/lib/api'
+import { useToast } from '@/hooks/use-toast'
 
 export default function ReporterPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -11,37 +12,55 @@ export default function ReporterPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
     const [loginData, setLoginData] = useState({ email: '', password: '' })
+    const { toast } = useToast()
 
     useEffect(() => {
         // Migration: purge old invalid 'reporterToken' from previous sessions
         const legacyToken = localStorage.getItem('reporterToken')
         if (legacyToken) {
             localStorage.removeItem('reporterToken')
-            // Don't trust the old token — force re-login
         }
 
-        const token = localStorage.getItem('token')
-        const savedUser = localStorage.getItem('reporterUser')
+        // Always validate token against server (never trust localStorage alone)
+        const validateSession = async () => {
+            const token = localStorage.getItem('token')
+            
+            // Basic JWT validation: a valid Firebase ID token has 3 dot-separated parts
+            const isValidJWT = token && token.split('.').length === 3
 
-        // Basic JWT validation: a valid Firebase ID token has 3 dot-separated parts
-        const isValidJWT = token && token.split('.').length === 3
+            if (!isValidJWT) {
+                // Token is missing or malformed, force re-login
+                localStorage.removeItem('token')
+                localStorage.removeItem('reporterUser')
+                setLoading(false)
+                return
+            }
 
-        if (isValidJWT && savedUser) {
             try {
-                setUser(JSON.parse(savedUser))
+                // Server-side validation: verify token is still valid and user has reporter role
+                const res = await fetch('/api/auth/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                })
+                if (!res.ok) throw new Error('Invalid session')
+                const userData = await res.json()
+                
+                if (userData.role !== 'reporter' && userData.role !== 'super_admin') {
+                    throw new Error('Not a reporter')
+                }
+                
+                // Update localStorage with fresh server data
+                localStorage.setItem('reporterUser', JSON.stringify(userData))
+                setUser(userData)
                 setIsLoggedIn(true)
             } catch (e) {
-                // Corrupted user data, force re-login
+                // Session invalid — force re-login
                 localStorage.removeItem('token')
                 localStorage.removeItem('reporterUser')
             }
-        } else if (token && !isValidJWT) {
-            // Token is malformed, clear it
-            localStorage.removeItem('token')
-            localStorage.removeItem('reporterUser')
+            setLoading(false)
         }
 
-        setLoading(false)
+        validateSession()
     }, [])
 
     const handleLogin = async (e) => {
@@ -143,5 +162,5 @@ export default function ReporterPage() {
         )
     }
 
-    return <ReporterDashboard user={user} onLogout={handleLogout} />
+    return <ReporterDashboard user={user} toast={toast} onLogout={handleLogout} />
 }

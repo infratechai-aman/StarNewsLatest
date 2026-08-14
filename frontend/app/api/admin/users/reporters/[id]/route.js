@@ -1,10 +1,16 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-// DELETE: Delete Reporter (Admin)
+// DELETE: Delete Reporter (Admin only)
 export async function DELETE(request, { params }) {
+    const authResult = await requireSuperAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const db = getDb();
     const auth = getAuth();
 
@@ -13,27 +19,6 @@ export async function DELETE(request, { params }) {
     }
 
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!token) return NextResponse.json({ error: 'No auth token provided' }, { status: 401 });
-
-        let decodedUser;
-        try {
-            decodedUser = await auth.verifyIdToken(token);
-        } catch (tokenError) {
-            console.error('Token verification failed:', tokenError.code, tokenError.message);
-            return NextResponse.json({
-                error: 'Invalid authentication token. Please log out, log back in, and try again.',
-                code: tokenError.code
-            }, { status: 401 });
-        }
-
-        const adminDoc = await db.collection('users').doc(decodedUser.uid).get();
-        if (!adminDoc.exists || adminDoc.data().role !== 'super_admin') {
-            return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
-        }
-
         const id = params.id;
 
         // Check if user is actually a reporter
@@ -54,8 +39,7 @@ export async function DELETE(request, { params }) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting reporter:', error);
-        return NextResponse.json({ error: error.message, code: error.code || 'UNKNOWN' }, { status: 500 });
+        console.error('Error deleting reporter:', error.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
-

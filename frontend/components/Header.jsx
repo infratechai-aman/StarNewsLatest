@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
 
@@ -284,6 +285,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 {t('cityNews')}
               </button>
               <div className="w-px h-4 bg-white/20" />
+              <a
+                href="/shorts"
+                className="relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200"
+              >
+                Shorts
+              </a>
+              <div className="w-px h-4 bg-white/20" />
               <button
                 onClick={() => setCurrentView('classifieds')}
                 className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'classifieds' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
@@ -399,7 +407,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Right: Search & Language */}
           <div className="flex items-center gap-1 relative z-10">
-            <button onClick={() => setCurrentView('search')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button onClick={() => setCurrentView('news')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
               <Search className="h-5 w-5 text-white" />
             </button>
             <DropdownMenu>
@@ -426,6 +434,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
             <button onClick={() => setCurrentView('enewspaper')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('eNewspaper')}</button>
             <button onClick={() => setCurrentView('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('cityNews')}</button>
+            <a href="/shorts" className="text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all text-gray-500 border-transparent inline-block">Shorts</a>
             <button onClick={() => setCurrentView('classifieds')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('classified')}</button>
             <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
             <button onClick={() => { window.history.pushState({ view: 'live-tv' }, '', '?view=live-tv'); setCurrentView('live-tv') }} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all flex items-center gap-1.5 ${currentView === 'live-tv' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>
@@ -456,6 +465,11 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('news'); setMobileMenuOpen(false) }}><Newspaper className="mr-3 h-5 w-5" />{t('news')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('enewspaper'); setMobileMenuOpen(false) }}><FileText className="mr-3 h-5 w-5" />{t('eNewspaper')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('city'); setMobileMenuOpen(false) }}><MapPin className="mr-3 h-5 w-5" />City News</Button>
+                <a href="/shorts" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600">
+                    <Zap className="mr-3 h-5 w-5" />Shorts
+                  </Button>
+                </a>
 
                 <div className="my-2 border-t border-gray-100"></div>
                 <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Services</div>

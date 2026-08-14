@@ -10,7 +10,6 @@ import { Shield, Eye, EyeOff, Loader2, LogOut } from 'lucide-react'
 import { auth } from '@/lib/api'
 import AdminDashboard from '@/components/AdminDashboard'
 import { useToast } from '@/hooks/use-toast'
-import { Toaster } from '@/components/ui/toaster'
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('')
@@ -102,7 +101,6 @@ export default function AdminLoginPage() {
                 <div className="max-w-7xl mx-auto p-6">
                     <AdminDashboard user={user} toast={toast} />
                 </div>
-                <Toaster />
             </div>
         )
     }

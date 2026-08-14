@@ -27,7 +27,7 @@ export async function GET(request) {
         console.error('Reporter breaking ticker GET error:', error);
         return NextResponse.json({
             ticker: null,
-            error: error.message,
+            error: 'Internal server error',
             code: error.code
         }, { status: 500 });
     }
@@ -81,7 +81,7 @@ export async function PUT(request) {
         console.error('Reporter breaking ticker PUT error:', error);
         return NextResponse.json({
             success: false,
-            error: error.message,
+            error: 'Internal server error',
             code: error.code
         }, { status: 500 });
     }

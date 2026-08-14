@@ -226,6 +226,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
           const uploadRes = await fetch('/api/upload', {
             method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
           })
 
@@ -332,8 +333,9 @@ const ReporterDashboard = ({ user, onLogout }) => {
       const formData = new FormData()
       formData.append('file', pdfFile)
 
-      const uploadRes = await fetch('/api/upload', {
+      const uploadRes = await fetch('/api/upload-large', {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       })
 

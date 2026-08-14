@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import AdminShortsPanel from './AdminShortsPanel';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -203,19 +204,36 @@ const AdminDashboard = ({ user, toast }) => {
     }
   }
 
+  const DEFAULT_NAV_ITEMS = [
+    { id: '1', label: 'Home', path: 'home', order: 1, active: true },
+    { id: '2', label: 'News', path: 'news', order: 2, active: true },
+    { id: '3', label: 'E-Newspaper', path: 'enewspaper', order: 3, active: true },
+    { id: '4', label: 'Classifieds', path: 'classifieds', order: 4, active: true },
+    { id: '5', label: 'Business Directory', path: 'businesses', order: 5, active: true },
+    { id: '6', label: 'Live TV', path: 'live-tv', order: 6, active: true }
+  ]
+
+  const loadNavigation = async () => {
+    try {
+      const data = await admin.getNavigation()
+      if (data && Array.isArray(data.items) && data.items.length > 0) {
+        setNavigationItems(data.items)
+      } else {
+        // Fallback to defaults if API returns nothing
+        setNavigationItems(DEFAULT_NAV_ITEMS)
+      }
+    } catch (error) {
+      // Silently fall back to defaults if API fails
+      setNavigationItems(DEFAULT_NAV_ITEMS)
+    }
+  }
+
   useEffect(() => {
     loadPendingData()
     loadApprovedNews()
-    // Initialize navigation
-    setNavigationItems([
-      { id: '1', label: 'Home', path: 'home', order: 1, active: true },
-      { id: '2', label: 'News', path: 'news', order: 2, active: true },
-      { id: '3', label: 'E-Newspaper', path: 'enewspaper', order: 3, active: true },
-      { id: '4', label: 'Classifieds', path: 'classifieds', order: 4, active: true },
-      { id: '5', label: 'Business Directory', path: 'businesses', order: 5, active: true },
-      { id: '6', label: 'Live TV', path: 'live-tv', order: 6, active: true }
-    ])
+    loadNavigation() // Load navigation from API instead of hardcoding
   }, [])
+
 
   // Handle news approval/rejection
   const handleNewsAction = async (articleId, action, reason = '') => {
@@ -936,6 +954,7 @@ const AdminDashboard = ({ user, toast }) => {
 
           const uploadRes = await fetch('/api/upload', {
             method: 'POST',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
             body: formData
           })
 
@@ -1093,7 +1112,7 @@ const AdminDashboard = ({ user, toast }) => {
       // Upload PDF first
       const formData = new FormData()
       formData.append('file', enewspaperPdfFile)
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+      const uploadRes = await fetch('/api/upload-large', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
       const resText = await uploadRes.text()
 
       let uploadData;
@@ -1112,14 +1131,14 @@ const AdminDashboard = ({ user, toast }) => {
       }
       setUploadingEnewspaper(false)
 
-      // Save e-newspaper record
+      // Save e-newspaper record via admin endpoint (auto-approved)
       const token = localStorage.getItem('token')
-      const res = await fetch('/api/reporter/enewspaper', {
+      const res = await fetch('/api/admin/enewspaper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           title: enewspaperForm.title,
-          editionDate: enewspaperForm.editionDate,
+          publishDate: enewspaperForm.editionDate,
           pdfUrl: uploadData.url,
           thumbnailUrl: enewspaperForm.thumbnailUrl,
           description: enewspaperForm.description
@@ -1239,6 +1258,10 @@ const AdminDashboard = ({ user, toast }) => {
                 {pendingData.users.length}
               </Badge>
             )}
+          </TabsTrigger>
+          <TabsTrigger value="shorts" className="flex items-center gap-1 text-xs">
+            <Video className="h-3 w-3 text-purple-600" />
+            <span className="hidden sm:inline text-purple-700">Shorts</span>
           </TabsTrigger>
           <TabsTrigger value="enewspaper" className="flex items-center gap-1 text-xs">
             <FileText className="h-3 w-3" />
@@ -1612,7 +1635,19 @@ const AdminDashboard = ({ user, toast }) => {
                 ))}
               </div>
 
-              <Button className="w-full">Save Navigation Changes</Button>
+              <Button
+                className="w-full"
+                onClick={async () => {
+                  try {
+                    await admin.updateNavigation({ items: navigationItems })
+                    toast({ title: 'Navigation Saved', description: 'Navigation changes saved successfully.' })
+                  } catch (error) {
+                    toast({ title: 'Save Failed', description: error.message, variant: 'destructive' })
+                  }
+                }}
+              >
+                Save Navigation Changes
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1855,7 +1890,7 @@ const AdminDashboard = ({ user, toast }) => {
                                 try {
                                   const formData = new FormData()
                                   formData.append('file', file)
-                                  const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                                  const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                                   const data = await res.json()
                                   if (res.ok) {
                                     setBusinessForm({ ...businessForm, coverImage: data.url })
@@ -1910,7 +1945,7 @@ const AdminDashboard = ({ user, toast }) => {
                                       try {
                                         const formData = new FormData()
                                         formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                                         const data = await res.json()
                                         if (res.ok) {
                                           const newImages = [...(businessForm.images || [])]
@@ -2188,7 +2223,7 @@ const AdminDashboard = ({ user, toast }) => {
                                       try {
                                         const formData = new FormData()
                                         formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                                         const data = await res.json()
                                         if (res.ok) {
                                           const newImages = [...(classifiedForm.images || [])]
@@ -2231,10 +2266,10 @@ const AdminDashboard = ({ user, toast }) => {
                         <Badge className="bg-green-500">Approved</Badge>
                         Approved Classified Ads
                       </h3>
-                      {allClassifieds.filter(c => c.approval_status === 'approved' || c.approval_status === 'approved').length === 0 ? (
+                      {allClassifieds.filter(c => c.approvalStatus === 'approved').length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">No approved classifieds yet</p>
                       ) : (
-                        allClassifieds.filter(c => c.approval_status === 'approved').map(classified => (
+                        allClassifieds.filter(c => c.approvalStatus === 'approved').map(classified => (
                           <div key={classified.id} className={`border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-green-500 ${classified.enabled === false ? 'bg-gray-100 opacity-60' : ''}`}>
                             <div className="flex items-center gap-4">
                               {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
@@ -2269,10 +2304,10 @@ const AdminDashboard = ({ user, toast }) => {
                         <Badge className="bg-yellow-500">Pending</Badge>
                         Pending Review
                       </h3>
-                      {allClassifieds.filter(c => c.approval_status === 'pending' || !c.approval_status).length === 0 ? (
+                      {allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">No pending classifieds</p>
                       ) : (
-                        allClassifieds.filter(c => c.approval_status === 'pending' || !c.approval_status).map(classified => (
+                        allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).map(classified => (
                           <div key={classified.id} className={`border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-yellow-400 ${classified.enabled === false ? 'bg-gray-100 opacity-60' : ''}`}>
                             <div className="flex items-center gap-4">
                               {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
@@ -2304,10 +2339,10 @@ const AdminDashboard = ({ user, toast }) => {
                         <Badge className="bg-red-500">Rejected</Badge>
                         Rejected Ads
                       </h3>
-                      {allClassifieds.filter(c => c.approval_status === 'rejected').length === 0 ? (
+                      {allClassifieds.filter(c => c.approvalStatus === 'rejected').length === 0 ? (
                         <p className="text-sm text-muted-foreground py-4 text-center">No rejected classifieds</p>
                       ) : (
-                        allClassifieds.filter(c => c.approval_status === 'rejected').map(classified => (
+                        allClassifieds.filter(c => c.approvalStatus === 'rejected').map(classified => (
                           <div key={classified.id} className="border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-red-500 bg-red-50 opacity-70">
                             <div className="flex items-center gap-4">
                               {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
@@ -2648,6 +2683,11 @@ const AdminDashboard = ({ user, toast }) => {
           </Card>
         </TabsContent >
 
+        {/* Shorts Tab */}
+        <TabsContent value="shorts" className="space-y-4">
+          <AdminShortsPanel toast={toast} />
+        </TabsContent>
+
         {/* E-Newspaper Tab */}
         < TabsContent value="enewspaper" className="space-y-4" >
           <Card>
@@ -2779,10 +2819,10 @@ const AdminDashboard = ({ user, toast }) => {
                           <div>
                             <h5 className="font-semibold">{paper.title}</h5>
                             <p className="text-sm text-muted-foreground">
-                              Edition: {new Date(paper.editionDate).toLocaleDateString()}
+                              Edition: {new Date(paper.publishDate || paper.editionDate).toLocaleDateString()}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              By: {paper.uploadedBy} | {new Date(paper.uploadedAt).toLocaleString()}
+                              Uploaded: {new Date(paper.createdAt || paper.uploadedAt).toLocaleString()}
                             </p>
                           </div>
                         </div>
@@ -2976,7 +3016,7 @@ const AdminDashboard = ({ user, toast }) => {
                             try {
                               const formData = new FormData()
                               formData.append('file', file)
-                              const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                              const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                               const data = await res.json()
                               if (res.ok) {
                                 setContentSettings({
@@ -3161,7 +3201,7 @@ const AdminDashboard = ({ user, toast }) => {
                                       try {
                                         const formData = new FormData()
                                         formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                                         const data = await res.json()
                                         if (res.ok) {
                                           const items = [...(contentSettings.sidebarAd?.items || [{}, {}, {}, {}].slice(0, 4))]
@@ -3286,21 +3326,33 @@ const AdminDashboard = ({ user, toast }) => {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0]
-                          if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (event) => {
+                          if (!file) return
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                            return
+                          }
+                          try {
+                            const formData = new FormData()
+                            formData.append('file', file)
+                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
+                            const data = await res.json()
+                            if (res.ok) {
                               const updated = {
                                 ...contentSettings,
                                 articleAd: {
                                   ...contentSettings.articleAd,
-                                  banner: { ...contentSettings.articleAd?.banner, imageUrl: event.target.result }
+                                  banner: { ...contentSettings.articleAd?.banner, imageUrl: data.url }
                                 }
                               }
                               setContentSettings(updated)
+                              toast({ title: 'Article Ad Banner image uploaded!' })
+                            } else {
+                              toast({ title: 'Upload failed', variant: 'destructive' })
                             }
-                            reader.readAsDataURL(file)
+                          } catch (err) {
+                            toast({ title: 'Upload failed', variant: 'destructive' })
                           }
                         }}
                       />
@@ -3373,21 +3425,33 @@ const AdminDashboard = ({ user, toast }) => {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0]
-                          if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (event) => {
+                          if (!file) return
+                          if (file.size > 5 * 1024 * 1024) {
+                            toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                            return
+                          }
+                          try {
+                            const formData = new FormData()
+                            formData.append('file', file)
+                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
+                            const data = await res.json()
+                            if (res.ok) {
                               const updated = {
                                 ...contentSettings,
                                 articleAd: {
                                   ...contentSettings.articleAd,
-                                  sticky: { ...contentSettings.articleAd?.sticky, imageUrl: event.target.result }
+                                  sticky: { ...contentSettings.articleAd?.sticky, imageUrl: data.url }
                                 }
                               }
                               setContentSettings(updated)
+                              toast({ title: 'Article Sticky Ad image uploaded!' })
+                            } else {
+                              toast({ title: 'Upload failed', variant: 'destructive' })
                             }
-                            reader.readAsDataURL(file)
+                          } catch (err) {
+                            toast({ title: 'Upload failed', variant: 'destructive' })
                           }
                         }}
                       />
@@ -3535,7 +3599,7 @@ const AdminDashboard = ({ user, toast }) => {
                           try {
                             const formData = new FormData()
                             formData.append('file', file)
-                            const res = await fetch('/api/upload', { method: 'POST', body: formData })
+                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
                             const data = await res.json()
                             if (res.ok) {
                               setContentSettings({

@@ -1,15 +1,10 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-let businessCache = {
-    data: null,
-    lastFetch: 0
-};
-const CACHE_TTL = 60 * 1000; // 1 minute
-
-// GET: List active businesses (Public)
+// GET: List active businesses (Public) with pagination
 export async function GET(request) {
     const db = getDb();
     try {
@@ -19,11 +14,13 @@ export async function GET(request) {
         }
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
-        const isDefaultQuery = !category;
+        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+        const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
 
-        if (isDefaultQuery && businessCache.data && (Date.now() - businessCache.lastFetch < CACHE_TTL)) {
-            return NextResponse.json(businessCache.data);
-        }
+        // Build cache key
+        const cacheKey = `businesses_c${category || 'all'}_p${page}_l${limit}`;
+        const cached = getCache(cacheKey);
+        if (cached) return NextResponse.json(cached);
 
         let query = db.collection('businesses')
             .where('approvalStatus', '==', 'approved')
@@ -33,7 +30,7 @@ export async function GET(request) {
             query = query.where('category', '==', category);
         }
 
-        const snapshot = await query.get();
+        const snapshot = await query.limit(limit).get();
         let businesses = snapshot.docs.map(doc => ({
             ...doc.data(),
             id: doc.id,
@@ -47,20 +44,12 @@ export async function GET(request) {
             return dateB - dateA;
         });
 
-        if (isDefaultQuery) {
-            businessCache = {
-                data: businesses,
-                lastFetch: Date.now()
-            };
-        }
+        // Cache for 1 minute
+        setCache(cacheKey, businesses, 60 * 1000);
 
         return NextResponse.json(businesses);
     } catch (error) {
-        console.error('Error fetching businesses:', error, error.stack);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error fetching businesses:', error.message);
+        return NextResponse.json({ error: 'Failed to fetch businesses' }, { status: 500 });
     }
 }
-
-// POST: Not rewriting POST here as it was in another file or handled by admin route for creation mainly.
-// However, looking at file list, businesses/route.js seems to be GET only (Public).
-// Admin creation is in api/admin/businesses.

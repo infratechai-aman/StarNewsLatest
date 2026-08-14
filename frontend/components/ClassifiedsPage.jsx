@@ -125,6 +125,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
         formDataUpload.append('file', file)
         const response = await fetch('/api/upload', {
           method: 'POST',
+          headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
           body: formDataUpload
         })
         if (response.ok) {

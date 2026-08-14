@@ -4,6 +4,36 @@ import { getAuth, getDb } from '@/lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * SECURITY: Verify old password by attempting sign-in via Firebase Auth REST API.
+ * This ensures a session hijacker cannot change the password without the current one.
+ */
+async function verifyOldPassword(email, password) {
+    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+    if (!apiKey) {
+        throw new Error('Firebase API key not configured');
+    }
+
+    const response = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                password,
+                returnSecureToken: false,
+            }),
+        }
+    );
+
+    if (!response.ok) {
+        return false;
+    }
+
+    return true;
+}
+
 // POST: Change password for authenticated user
 export async function POST(request) {
     const adminAuth = getAuth();
@@ -42,6 +72,12 @@ export async function POST(request) {
             return NextResponse.json({ error: 'New password must be different from current password' }, { status: 400 });
         }
 
+        // SECURITY: Verify the old password before allowing the change
+        const isOldPasswordValid = await verifyOldPassword(user.email, existingPassword);
+        if (!isOldPasswordValid) {
+            return NextResponse.json({ error: 'Current password is incorrect' }, { status: 400 });
+        }
+
         // Update password in Firebase Auth using Admin SDK
         await adminAuth.updateUser(user.userId, {
             password: newPassword
@@ -75,12 +111,13 @@ export async function POST(request) {
         });
 
     } catch (error) {
-        console.error('Password Change Error:', error);
+        console.error('Password Change Error:', error.code || error.message);
 
         if (error.code === 'auth/weak-password') {
             return NextResponse.json({ error: 'Password is too weak. Please choose a stronger password.' }, { status: 400 });
         }
 
-        return NextResponse.json({ error: error.message || 'Failed to change password' }, { status: 500 });
+        // SECURITY: Don't leak internal error details to the client
+        return NextResponse.json({ error: 'Failed to change password. Please try again.' }, { status: 500 });
     }
 }

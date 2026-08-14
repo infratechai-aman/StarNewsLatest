@@ -1,44 +1,26 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
-
 // GET: Unified Pending List
 export async function GET(request) {
+    const authResult = await requireSuperAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const db = getDb();
-    const auth = getAuth();
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
-        const pendingNews = await db.collection('news_articles')
-            .where('approvalStatus', '==', 'pending').get();
-
-        const pendingBusinesses = await db.collection('businesses')
-            .where('approvalStatus', '==', 'pending').get();
-
-        const pendingClassifieds = await db.collection('classified_ads')
-            .where('approvalStatus', '==', 'pending').get();
-
-        // Users usually don't have approval status in this model, but old logic checked 'status'='pending'
-        // Let's assume users with role=advertiser/reporter might be pending
-        const pendingUsers = await db.collection('users')
-            .where('status', '==', 'pending').get();
+        // Run all pending queries in parallel
+        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers] = await Promise.all([
+            db.collection('news_articles').where('approvalStatus', '==', 'pending').get(),
+            db.collection('businesses').where('approvalStatus', '==', 'pending').get(),
+            db.collection('classified_ads').where('approvalStatus', '==', 'pending').get(),
+            db.collection('users').where('status', '==', 'pending').get()
+        ]);
 
         const mapDocs = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.id }));
 
@@ -46,11 +28,11 @@ export async function GET(request) {
             news: mapDocs(pendingNews),
             businesses: mapDocs(pendingBusinesses),
             classifieds: mapDocs(pendingClassifieds),
-            ads: [], // Sidebar/Premium ads don't have pending status usually
+            ads: [],
             users: mapDocs(pendingUsers)
         });
     } catch (error) {
-        console.error('Error fetching pending items:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error fetching pending items:', error.message);
+        return NextResponse.json({ error: 'Failed to fetch pending items' }, { status: 500 });
     }
 }

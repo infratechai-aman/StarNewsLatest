@@ -1,32 +1,20 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin, requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-async function hasRole(token, db, auth, allowedRoles) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && allowedRoles.includes(userDoc.data().role);
-    } catch (e) {
-        return false;
-    }
-}
-
-// GET: List all E-Newspapers (Admin)
+// GET: List all E-Newspapers (Admin or Reporter)
 export async function GET(request) {
+    // Allow Reporter too as they might check history
+    const authResult = await requireReporterOrAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const db = getDb();
-    const auth = getAuth();
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        // Allow Reporter too as they might check history
-        if (!(await hasRole(token, db, auth, ['super_admin', 'reporter']))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
         const snapshot = await db.collection('enewspapers')
             .orderBy('publishDate', 'desc')
             .get();
@@ -40,22 +28,21 @@ export async function GET(request) {
 
         return NextResponse.json({ papers });
     } catch (error) {
-        console.error('Error fetching admin enewspapers:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error fetching admin enewspapers:', error.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
-// POST: Upload E-Newspaper (Admin)
+
+// POST: Upload E-Newspaper (Admin only)
 export async function POST(request) {
+    const authResult = await requireSuperAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const db = getDb();
-    const auth = getAuth();
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!(await hasRole(token, db, auth, ['super_admin']))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
-
         const body = await request.json();
         const { title, pdfUrl, thumbnailUrl, publishDate, active } = body;
 
@@ -78,7 +65,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {
-        console.error('Error uploading enewspaper:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error uploading enewspaper:', error.message);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

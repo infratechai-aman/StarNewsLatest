@@ -1,4 +1,3 @@
-// Build Trigger: 2026-02-25
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 
@@ -12,7 +11,6 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="referrer" content="no-referrer" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
       </head>
       <body className="font-sans antialiased">
         {children}

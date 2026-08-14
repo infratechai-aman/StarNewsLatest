@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,6 +10,33 @@ import { getLocalizedText, getTranslatedCategory } from '@/lib/newsData'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getArticleAdSettings } from '@/lib/contentStore'
 import { news } from '@/lib/api'
+import DOMPurify from 'dompurify'
+
+/**
+ * SECURITY: Sanitize HTML content to prevent XSS attacks.
+ * Only allows safe formatting tags — strips all scripts, event handlers, and dangerous attributes.
+ */
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: [
+    'p', 'br', 'b', 'i', 'em', 'strong', 'u', 's', 'strike',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code',
+    'span', 'div', 'sub', 'sup', 'hr', 'table', 'thead',
+    'tbody', 'tr', 'th', 'td', 'img', 'figure', 'figcaption',
+  ],
+  ALLOWED_ATTR: [
+    'href', 'target', 'rel', 'src', 'alt', 'width', 'height',
+    'class', 'style', 'title', 'colspan', 'rowspan',
+  ],
+  ALLOW_DATA_ATTR: false,
+  ADD_ATTR: ['target'],
+};
+
+function sanitizeHtml(html) {
+  if (!html) return '';
+  if (typeof window === 'undefined') return html; // SSR fallback
+  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+}
 
 const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   const { language, t } = useLanguage()
@@ -239,7 +266,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 return (
                   <div
                     className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
-                    dangerouslySetInnerHTML={{ __html: content }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 )
               }
@@ -259,7 +286,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   <>
                     <div
                       className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
-                      dangerouslySetInnerHTML={{ __html: content }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                     />
                     <div className="my-12 space-y-8">
                       {galleryImgs.map((img, idx) => (
@@ -278,7 +305,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               }
 
               // Insert gallery images after the first paragraph
-              const insertAfterIdx = Math.min(0, paragraphs.length - 1)
+              const insertAfterIdx = Math.min(1, paragraphs.length - 1)
               const firstPart = paragraphs.slice(0, insertAfterIdx + 1).join('')
               const secondPart = paragraphs.slice(insertAfterIdx + 1).join('')
 
@@ -287,7 +314,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   {/* First part of the article */}
                   <div
                     className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
-                    dangerouslySetInnerHTML={{ __html: firstPart }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(firstPart) }}
                   />
 
                   {/* Inline Gallery Images */}
@@ -308,7 +335,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   {secondPart && (
                     <div
                       className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
-                      dangerouslySetInnerHTML={{ __html: secondPart }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(secondPart) }}
                     />
                   )}
                 </>

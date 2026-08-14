@@ -518,3 +518,44 @@ code {
     transform: translateY(-3px);
   }
 }
+
+/* =============================================
+   SHORTS / REELS — Vertical scroll feed
+   ============================================= */
+
+/* Hide scrollbar on the snap-scroll container */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =============================================
+   BREAKING NEWS TICKER — scrolling animation
+   ============================================= */
+
+.ticker-wrapper {
+  display: inline-block;
+  width: 100%;
+}
+
+.ticker-content {
+  display: inline-block;
+  animation: ticker 40s linear infinite;
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-33.33%);
+  }
+}
+
+.ticker-content:hover {
+  animation-play-state: paused;
+}

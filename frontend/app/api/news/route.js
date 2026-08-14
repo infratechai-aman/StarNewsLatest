@@ -18,7 +18,7 @@ export async function GET(request) {
         const pageParam = searchParams.get('page')
 
         // Generate a cache key directly from all search params
-        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '500'}_${pageParam || '1'}`
+        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '50'}_${pageParam || '1'}`
 
         const cached = getCache(cacheKey);
         if (cached) {
@@ -28,7 +28,7 @@ export async function GET(request) {
             return response;
         }
 
-        const limit = parseInt(limitParam || '500')
+        const limit = parseInt(limitParam || '50')
         const page = parseInt(pageParam || '1')
 
         let query = db.collection('news_articles')
@@ -155,7 +155,7 @@ export async function GET(request) {
 
     } catch (error) {
         console.error('News GET Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to fetch news' }, { status: 500 })
     }
 }
 
@@ -176,6 +176,16 @@ export async function POST(request) {
 
         if (!title || !content || !categoryId) {
             return NextResponse.json({ error: 'Title, content and category required' }, { status: 400 })
+        }
+
+        // Content size limits
+        const titleStr = typeof title === 'string' ? title : JSON.stringify(title)
+        const contentStr = typeof content === 'string' ? content : JSON.stringify(content)
+        if (titleStr.length > 500) {
+            return NextResponse.json({ error: 'Title must be under 500 characters' }, { status: 400 })
+        }
+        if (contentStr.length > 500000) {
+            return NextResponse.json({ error: 'Content too large (max 500KB)' }, { status: 400 })
         }
 
         const approvalStatus = status === 'submit' ? 'pending' : 'draft'
@@ -224,6 +234,6 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('News POST Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to create article' }, { status: 500 })
     }
 }

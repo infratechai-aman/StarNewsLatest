@@ -1,10 +1,11 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-// GET: Breaking Ticker
+// GET: Breaking Ticker (Public — no auth required)
 export async function GET(request) {
     const CACHE_KEY = 'api_breaking_ticker';
     const cachedData = getCache(CACHE_KEY);
@@ -40,46 +41,37 @@ export async function GET(request) {
         setCache(CACHE_KEY, responseData, 60 * 1000); // 1 minute cache for breaking news
         return NextResponse.json(responseData);
     } catch (error) {
-        console.error('Error fetching ticker:', error);
+        console.error('Error fetching ticker:', error.message);
         return NextResponse.json({ enabled: false, text: '', texts: [] });
     }
 }
 
-// POST: Update Breaking Ticker
+// POST: Update Breaking Ticker (requires reporter or admin role)
 export async function POST(request) {
+    // Use centralized auth middleware
+    const authResult = await requireReporterOrAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
+    const db = getDb();
+    const role = authResult.user.role;
+
     try {
-        const db = getDb();
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-
-        if (!token || token === 'null' || token === 'undefined') {
-            // console.error('[TickerAPI] No valid token provided in header');
-            return NextResponse.json({ error: 'Auth token missing' }, { status: 401 });
-        }
-
-        const auth = getAuth();
-        let decodedUser;
-        try {
-            decodedUser = await auth.verifyIdToken(token);
-        } catch (authError) {
-            // console.error('[TickerAPI] Token verification failed:', authError.message);
-            // Return 401 instead of crashing or let it throw 500
-            return NextResponse.json({
-                error: 'Authentication failed: ' + authError.message,
-                hint: 'Try logging out and logging in again'
-            }, { status: 401 });
-        }
-
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        const role = userDoc.exists ? userDoc.data().role : null;
-
-        if (role !== 'super_admin' && role !== 'reporter') {
-            // console.error(`[TickerAPI] Access denied for role: ${role}`);
-            return NextResponse.json({ error: 'Unauthorized: Admin or Reporter role required' }, { status: 403 });
-        }
-
         const body = await request.json();
         const { enabled, texts } = body;
+
+        // Validate ticker content limits
+        if (texts && Array.isArray(texts)) {
+            if (texts.length > 10) {
+                return NextResponse.json({ error: 'Maximum 10 ticker items allowed' }, { status: 400 });
+            }
+            for (const text of texts) {
+                if (typeof text === 'string' && text.length > 500) {
+                    return NextResponse.json({ error: 'Each ticker item must be under 500 characters' }, { status: 400 });
+                }
+            }
+        }
 
         const updateData = {
             updatedAt: new Date().toISOString()
@@ -99,7 +91,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        // console.error('[TickerAPI] POST Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Ticker POST error:', error.message);
+        return NextResponse.json({ error: 'Failed to update ticker' }, { status: 500 });
     }
 }

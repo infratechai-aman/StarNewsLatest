@@ -1,46 +1,44 @@
-import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
-async function isSuperAdmin(token, db, auth) {
-    if (!token || !db || !auth) return false;
-    try {
-        const decodedUser = await auth.verifyIdToken(token);
-        const userDoc = await db.collection('users').doc(decodedUser.uid).get();
-        return userDoc.exists && userDoc.data().role === 'super_admin';
-    } catch (e) {
-        return false;
-    }
-}
-
-// GET: Admin Dashboard Stats
+// GET: Admin Dashboard Stats (with parallel queries + caching)
 export async function GET(request) {
+    const authResult = await requireSuperAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const db = getDb();
-    const auth = getAuth();
+
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
+        // Check cache first
+        const cacheKey = 'admin_stats';
+        const cached = getCache(cacheKey);
+        if (cached) return NextResponse.json(cached);
 
-        if (!(await isSuperAdmin(token, db, auth))) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+        // Run all count queries in parallel for better performance
+        const [newsCount, usersCount, businessCount] = await Promise.all([
+            db.collection('news_articles').count().get(),
+            db.collection('users').count().get(),
+            db.collection('businesses').count().get()
+        ]);
 
-        // Firestore count aggregation is efficient but requires specific index or count() query
-        // For now, simpler approach: use aggregate queries if possible, or just normal size
-        // Note: bucket counts are not available in client SDK easily, need admin query.
-
-        const newsCount = await db.collection('news_articles').count().get();
-        const usersCount = await db.collection('users').count().get();
-        const businessCount = await db.collection('businesses').count().get();
-
-        return NextResponse.json({
+        const stats = {
             totalNews: newsCount.data().count,
             totalUsers: usersCount.data().count,
             totalBusinesses: businessCount.data().count
-        });
+        };
+
+        // Cache for 2 minutes
+        setCache(cacheKey, stats, 2 * 60 * 1000);
+
+        return NextResponse.json(stats);
     } catch (error) {
-        // console.error('Error fetching stats:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Error fetching stats:', error.message);
+        return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
     }
 }

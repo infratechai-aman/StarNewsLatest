@@ -35,7 +35,6 @@ const BreakingNewsTicker = () => {
       }
     } catch (error) {
       console.error('Failed to load breaking ticker:', error)
-      // Use default text on error
       setTicker({ enabled: true, text: DEFAULT_BREAKING_NEWS })
     } finally {
       setLoading(false)
@@ -81,46 +80,22 @@ const BreakingNewsTicker = () => {
   const tickerContent = translatedText + ' • '
 
   return (
+    // NOTE: .ticker-wrapper and .ticker-content animation are defined in globals.css
+    // (previously were in a <style jsx> tag which is NOT supported in App Router)
     <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9 bg-[#1a1a1a]">
-      {/* Left: Full Red BREAKING label with proper diagonal right edge */}
-      <div
-        className="breaking-label-container bg-[#E53935] flex items-center gap-2.5 pl-4 md:pl-5 pr-6 shrink-0 relative z-10"
-      >
+      {/* Left: Full Red BREAKING label with diagonal right edge */}
+      <div className="breaking-label-container bg-[#E53935] flex items-center gap-2.5 pl-4 md:pl-5 pr-6 shrink-0 relative z-10">
         <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
         <span className="font-black text-white text-[11px] uppercase tracking-[0.15em]">{t('breakingNews') || 'BREAKING'}</span>
       </div>
-      {/* Right: Black scrolling ticker with matching diagonal left edge */}
+      {/* Right: Black scrolling ticker */}
       <div className="bg-[#1a1a1a] flex-1 flex items-center overflow-hidden pl-4 md:pl-5 -ml-[2px]">
         <div className="ticker-wrapper" key={`${tickerKey}-${language}`}>
-          <div className="ticker-content animate-ticker whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
+          <div className="ticker-content whitespace-nowrap font-semibold text-[12px] tracking-wide text-gray-200">
             {tickerContent}{tickerContent}{tickerContent}
           </div>
         </div>
       </div>
-      <style jsx>{`
-        .breaking-label-container {
-          clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 100%, 0 100%);
-        }
-        .ticker-wrapper {
-          display: inline-block;
-          width: 100%;
-        }
-        .ticker-content {
-          display: inline-block;
-          animation: ticker 40s linear infinite;
-        }
-        @keyframes ticker {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-33.33%);
-          }
-        }
-        .ticker-content:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
     </div>
   )
 }
