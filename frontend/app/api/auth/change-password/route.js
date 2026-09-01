@@ -98,12 +98,13 @@ export async function POST(request) {
         const updatedUserDoc = await userRef.get();
         const userData = updatedUserDoc.exists ? updatedUserDoc.data() : {};
 
-        // Generate a new token for the user
-        const customToken = await adminAuth.createCustomToken(user.userId);
-
+        // fix(P1-AUTH-02): Do NOT return a custom token.
+        // Custom tokens cannot be verified by verifyIdToken() on the backend.
+        // The user's existing Firebase session ID token remains valid after
+        // password change. The frontend should re-fetch user profile using
+        // the existing token stored in localStorage.
         return NextResponse.json({
             message: 'Password changed successfully',
-            token: customToken,
             user: {
                 ...userData,
                 requirePasswordChange: false

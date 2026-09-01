@@ -13,7 +13,8 @@ const ALLOWED_MIME_TYPES = [
     'image/png',
     'image/gif',
     'image/webp',
-    'image/svg+xml',
+    // fix(P2-SEC-01): SVG removed — SVG can contain embedded JavaScript (XSS vector).
+    // News portals do not require SVG uploads. Use PNG/WebP instead.
     'application/pdf',
 ];
 
@@ -53,11 +54,8 @@ function detectMimeType(buffer) {
     if (buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
         return 'application/pdf';
     }
-    // Check SVG (starts with < and contains <svg)
-    const textStart = buffer.slice(0, 500).toString('utf-8').trim().toLowerCase();
-    if (textStart.startsWith('<?xml') || textStart.startsWith('<svg')) {
-        return 'image/svg+xml';
-    }
+    // fix(P2-SEC-01): SVG detection removed — SVGs are no longer accepted.
+    // SVG is text-based XML that can contain <script> tags (XSS risk when served inline).
 
     return null;
 }
@@ -112,7 +110,7 @@ export async function POST(request) {
 
         if (!detectedMime || !ALLOWED_MIME_TYPES.includes(detectedMime)) {
             return NextResponse.json({
-                error: 'Invalid file type. Only images (JPEG, PNG, GIF, WebP, SVG) and PDFs are allowed.',
+                error: 'Invalid file type. Only images (JPEG, PNG, GIF, WebP) and PDFs are allowed.',
             }, { status: 415 });
         }
 

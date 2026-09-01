@@ -80,7 +80,9 @@ export async function POST(request) {
         if (role === 'super_admin') {
             updateData.text = texts?.[0] || '';
             updateData.texts = texts || [];
-            updateData.status = enabled ? 'active' : 'inactive';
+            // fix: use explicit ternary to handle enabled=false correctly
+            // Previously `enabled ? 'active' : 'inactive'` treated undefined as falsy
+            updateData.status = (enabled !== undefined ? enabled : true) ? 'active' : 'inactive';
         } else {
             // Reporter: only update pending fields
             updateData.pendingText = texts?.[0] || '';

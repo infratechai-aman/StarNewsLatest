@@ -24,7 +24,7 @@ export async function GET(request) {
 
         return NextResponse.json(users);
     } catch (error) {
-        // console.error('Error fetching admin users:', error);
+        console.error('Error fetching admin users:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

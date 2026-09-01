@@ -115,10 +115,7 @@ export async function DELETE(request, { params }) {
     }
     try {
         const user = await getCurrentUser(request)
-        // Only Admin can delete? Or author too? Original said "Emergency: Auth disabled" for admin delete
         if (!hasRole(user, [ROLES.SUPER_ADMIN])) {
-            // Allow author to delete their own?
-            // For now, strict Admin only usually
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
         }
 

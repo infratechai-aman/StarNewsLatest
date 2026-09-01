@@ -94,27 +94,31 @@ export const reviews = {
 }
 
 export const ads = {
-  getAll: (params) => apiRequest(`/ads?${new URLSearchParams(params)}`),
-  create: (data) => apiRequest('/ads', { method: 'POST', body: JSON.stringify(data) }),
-  trackImpression: (adId) => apiRequest('/ads/impression', { method: 'POST', body: JSON.stringify({ adId }) }),
-  trackClick: (adId) => apiRequest('/ads/click', { method: 'POST', body: JSON.stringify({ adId }) }),
+  // fix(P2-API-02/03): Only sidebar and premium sub-routes exist.
+  // /api/ads, /api/ads/impression, /api/ads/click do not exist — removed broken stubs.
+  getSidebar: () => apiRequest('/ads/sidebar'),
 }
 
+// fix(P2-API-02): /api/ad-plans route does not exist in the codebase.
+// Keeping as placeholder — do not call these until the route is created.
 export const adPlans = {
-  getAll: () => apiRequest('/ad-plans'),
-  create: (data) => apiRequest('/ad-plans', { method: 'POST', body: JSON.stringify(data) }),
+  // getAll: () => apiRequest('/ad-plans'),  // ROUTE NOT IMPLEMENTED
+  // create: (data) => apiRequest('/ad-plans', { method: 'POST', body: JSON.stringify(data) }),  // ROUTE NOT IMPLEMENTED
 }
 
 export const classifieds = {
   getAll: (params) => apiRequest(`/classifieds?${new URLSearchParams(params || {})}`),
   getOne: (id) => apiRequest(`/classifieds/${id}`),
   create: (data) => apiRequest('/classifieds', { method: 'POST', body: JSON.stringify(data) }),
-  submit: (data) => apiRequest('/classifieds/submit', { method: 'POST', body: JSON.stringify(data) }),
+  // fix(P2-API-04): Removed classifieds.submit — /api/classifieds/submit route does not exist.
+  // Use classifieds.create() which posts to /api/classifieds (the real, existing handler).
 }
 
 export const liveTV = {
   get: () => apiRequest('/live-tv'),
-  update: (data) => apiRequest('/live-tv', { method: 'PUT', body: JSON.stringify(data) }),
+  // fix(P2-API-01): /api/live-tv has no PUT handler (public, GET only).
+  // Admin live TV update must go through /api/admin/live-tv PUT (use admin.updateLiveTV instead).
+  // update: (data) => apiRequest('/live-tv', { method: 'PUT', ... })  — REMOVED
 }
 
 // Public endpoints

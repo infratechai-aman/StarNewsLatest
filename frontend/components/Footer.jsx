@@ -38,20 +38,20 @@ const Footer = ({ setCurrentView }) => {
               <li><button onClick={() => setCurrentView('home')} className="hover:text-white transition-colors">{t('home')}</button></li>
               <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('cityNews')}</button></li>
               <li><button onClick={() => setCurrentView('about')} className="hover:text-white transition-colors">{t('aboutUs')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('politics')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('sports')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('entertainment')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('politics')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('sports')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('entertainment')}</button></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold text-white mb-4">{t('categories')}</h4>
             <ul className="space-y-2 text-sm">
-              <li><button className="hover:text-white transition-colors">{t('crime')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('education')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('crime')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('education')}</button></li>
               <li><button onClick={() => setCurrentView('classifieds')} className="hover:text-white transition-colors">{t('jobs')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('trending')}</button></li>
-              <li><button className="hover:text-white transition-colors">{t('specialReports')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('trending')}</button></li>
+              <li><button onClick={() => setCurrentView('news')} className="hover:text-white transition-colors">{t('specialReports')}</button></li>
             </ul>
           </div>
 

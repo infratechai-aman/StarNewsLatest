@@ -1,13 +1,8 @@
 import { getAuth, getDb } from './firebaseAdmin'
 
-// User roles
-export const ROLES = {
-  PUBLIC: 'public',
-  REGISTERED: 'registered',
-  ADVERTISER: 'advertiser',
-  REPORTER: 'reporter',
-  SUPER_ADMIN: 'super_admin'
-}
+// fix(P3-FE-02): ROLES moved to lib/roles.js (shared, client-safe).
+// Re-exported here so all existing server-side imports keep working unchanged.
+export { ROLES } from './roles'
 
 // Get current user from request headers (token-based only, no cookie fallback)
 export async function getCurrentUser(request) {

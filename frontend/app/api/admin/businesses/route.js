@@ -2,8 +2,6 @@ import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
-// Helper to check role
-
 // GET: List all businesses (Admin)
 export async function GET(request) {
     const db = getDb();
@@ -24,7 +22,7 @@ export async function GET(request) {
 
         return NextResponse.json(businesses);
     } catch (error) {
-        // console.error('Error fetching admin businesses:', error);
+        console.error('Error fetching admin businesses:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
@@ -64,12 +62,11 @@ export async function POST(request) {
         };
 
         const docRef = await db.collection('businesses').add(newBusiness);
-        // Update with ID
         await docRef.update({ id: docRef.id });
 
         return NextResponse.json({ id: docRef.id, ...newBusiness });
     } catch (error) {
-        // console.error('Error creating business:', error);
+        console.error('Error creating business:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

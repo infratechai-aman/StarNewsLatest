@@ -5,7 +5,9 @@
     "scripts": {
         "dev": "next dev --port 3000",
         "build": "next build",
-        "start": "next start"
+        "start": "next start",
+        "test:api": "node test-workflow.js",
+        "create-admin": "node create-admin.js"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.1.1",

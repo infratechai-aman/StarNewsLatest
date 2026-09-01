@@ -70,8 +70,10 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
                 confirmPassword: formData.confirmPassword
             })
 
-            // Update token and user
-            localStorage.setItem('token', response.token)
+            // fix(P1-AUTH-03): Backend no longer returns a custom token (P1-AUTH-02 fix).
+            // The existing Firebase ID token in localStorage remains valid after
+            // a password change. Simply update the user state with the fresh profile
+            // returned in the response — no new token to store.
             setUser({ ...response.user, requirePasswordChange: false })
 
             toast({

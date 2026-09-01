@@ -4,25 +4,25 @@ const { getFirestore } = require('firebase-admin/firestore');
 require('dotenv').config({ path: '.env.local' });
 
 // Initialize Firebase Admin (mimicking lib/firebaseAdmin.js)
+// Initialize Firebase Admin
+// fix(P1-AUTH-01): Read individual env vars matching .env.local structure
+// instead of FIREBASE_SERVICE_ACCOUNT_KEY (JSON blob) which was never defined.
 if (!getApps().length) {
-    let serviceAccount;
-    try {
-        if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-            serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        }
-    } catch (e) {
-        console.error('Error parsing service account key');
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+    if (!projectId || !clientEmail || !privateKey) {
+        console.error('Missing required env vars: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
         process.exit(1);
     }
-    
-    if (serviceAccount) {
-        initializeApp({
-            credential: cert(serviceAccount)
-        });
-    } else {
-        console.error('No service account key found in .env.local');
-        process.exit(1);
-    }
+
+    // Normalize private key: replace literal \n with real newlines
+    privateKey = privateKey.replace(/\\n/g, '\n');
+
+    initializeApp({
+        credential: cert({ projectId, clientEmail, privateKey })
+    });
 }
 
 const auth = getAuth();

@@ -1,5 +1,7 @@
 const nextConfig = {
-  output: 'standalone',
+  // fix(P2-CONFIG-01): Removed output: 'standalone'.
+  // Vercel deploys Next.js natively — standalone mode conflicts with Vercel's
+  // internal routing and static file serving. Use default (no output setting).
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -34,6 +36,8 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   async headers() {
+    // fix(P3-SEC-01): Use production domain as default instead of undefined/empty
+    // which would make CORS headers absent. CORS_ORIGINS env var overrides this.
     const allowedOrigin = process.env.CORS_ORIGINS || "https://starnewsindia.in";
     return [
       {
@@ -44,7 +48,10 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com",
+              // fix(P3-SEC-02): Removed 'unsafe-eval' from script-src.
+          // 'unsafe-eval' is required only for eval() / Function() — Next.js does not use it in production.
+          // 'unsafe-inline' is kept because Next.js injects inline scripts for hydration (unavoidable without nonces).
+          "script-src 'self' 'unsafe-inline' https://unpkg.com",
               "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",

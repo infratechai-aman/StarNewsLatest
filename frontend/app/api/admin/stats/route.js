@@ -20,17 +20,19 @@ export async function GET(request) {
         const cached = getCache(cacheKey);
         if (cached) return NextResponse.json(cached);
 
-        // Run all count queries in parallel for better performance
-        const [newsCount, usersCount, businessCount] = await Promise.all([
-            db.collection('news_articles').count().get(),
-            db.collection('users').count().get(),
-            db.collection('businesses').count().get()
+        // fix(P1-DB-01): count() is a Firestore billing-tier API — fails on Spark/free plan.
+        // Use select() to fetch only doc IDs (no field data), then count .size.
+        // This works on ALL Firestore plans.
+        const [newsSnap, usersSnap, businessSnap] = await Promise.all([
+            db.collection('news_articles').select().get(),
+            db.collection('users').select().get(),
+            db.collection('businesses').select().get()
         ]);
 
         const stats = {
-            totalNews: newsCount.data().count,
-            totalUsers: usersCount.data().count,
-            totalBusinesses: businessCount.data().count
+            totalNews: newsSnap.size,
+            totalUsers: usersSnap.size,
+            totalBusinesses: businessSnap.size
         };
 
         // Cache for 2 minutes

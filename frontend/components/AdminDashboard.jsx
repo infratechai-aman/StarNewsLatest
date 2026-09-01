@@ -56,7 +56,7 @@ const getTextValue = (value) => {
   return String(value)
 }
 
-const AdminDashboard = ({ user, toast }) => {
+const AdminDashboard = ({ user, toast, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -1212,10 +1212,17 @@ const AdminDashboard = ({ user, toast }) => {
           </h1>
           <p className="text-muted-foreground">Welcome back, {user?.name || 'Admin'}</p>
         </div>
-        <Button onClick={loadPendingData} variant="outline" disabled={refreshing}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={loadPendingData} variant="outline" disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          {onLogout && (
+            <Button onClick={onLogout} variant="destructive" size="sm">
+              Logout
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Main Tabs */}

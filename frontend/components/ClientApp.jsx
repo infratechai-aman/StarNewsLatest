@@ -30,14 +30,10 @@ import { auth } from '@/lib/api'
 import { auth as firebaseClientAuth } from '@/lib/firebase'
 import { onIdTokenChanged, signOut } from 'firebase/auth'
 import { useToast } from '@/hooks/use-toast'
+import { ROLES } from '@/lib/roles'
 
-const ROLES = {
-    PUBLIC: 'public',
-    REGISTERED: 'registered',
-    ADVERTISER: 'advertiser',
-    REPORTER: 'reporter',
-    SUPER_ADMIN: 'super_admin'
-}
+// fix(P3-FE-02): ROLES imported from lib/auth.js — single source of truth.
+// Removed the duplicate local definition that could drift from the backend.
 
 const ClientApp = ({ initialNewsData }) => {
     const [user, setUser] = useState(null)
@@ -128,9 +124,20 @@ const ClientApp = ({ initialNewsData }) => {
                 setUser(userData)
             }
         } catch (error) {
+            // fix(P2-FE-03): Notify user on session expiry instead of silently logging them out
+            const hadToken = !!localStorage.getItem('token')
             localStorage.removeItem('token')
+            if (hadToken) {
+                // Small delay so toast system is mounted
+                setTimeout(() => {
+                    toast({
+                        title: 'Session Expired',
+                        description: 'Your session has expired. Please log in again.',
+                        variant: 'destructive'
+                    })
+                }, 500)
+            }
         } finally {
-            // We are done checking auth
             setLoading(false)
         }
     }
@@ -195,9 +202,9 @@ const ClientApp = ({ initialNewsData }) => {
             <LanguageProvider>
                 <ErrorBoundary fallbackTitle="Dashboard Error" fallbackMessage="The dashboard encountered an error. Please refresh the page.">
                     <div className="min-h-screen bg-background">
-                        {currentView === 'reporter-dashboard' && <ReporterDashboard user={user} toast={toast} />}
-                        {currentView === 'admin-dashboard' && <AdminDashboard user={user} toast={toast} />}
-                        {currentView === 'advertiser-dashboard' && <AdvertiserDashboard user={user} toast={toast} />}
+                        {currentView === 'reporter-dashboard' && <ReporterDashboard user={user} toast={toast} onLogout={handleLogout} />}
+                        {currentView === 'admin-dashboard' && <AdminDashboard user={user} toast={toast} onLogout={handleLogout} />}
+                        {currentView === 'advertiser-dashboard' && <AdvertiserDashboard user={user} toast={toast} onLogout={handleLogout} />}
                     </div>
                 </ErrorBoundary>
             </LanguageProvider>

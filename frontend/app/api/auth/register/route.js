@@ -65,7 +65,8 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid email address' }, { status: 400 })
         }
         if (error.code === 'auth/weak-password') {
-            return NextResponse.json({ error: 'Password is too weak. Use at least 6 characters.' }, { status: 400 })
+            // fix: message now matches the 8-char minimum enforced above
+            return NextResponse.json({ error: 'Password is too weak. Use at least 8 characters with a mix of letters and numbers.' }, { status: 400 })
         }
         return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 500 })
     }

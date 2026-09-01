@@ -77,18 +77,25 @@ export async function GET(request) {
             query = query.where('featured', '==', true)
         }
 
-        // Get Total Count (for pagination)
-        const countQuery = query.count();
-        const countSnapshot = await countQuery.get();
-        const total = countSnapshot.data().count;
+        // fix(P1-DB-01): query.count() is a Firestore billing-tier API — fails on Spark (free) plan.
+        // Strategy: Fetch all matching doc IDs (lightweight — no field data), count them in memory.
+        // This works on ALL Firestore plans and avoids the billing-tier restriction.
+        let total = 0;
+        try {
+            const countSnap = await query.select().get(); // select() fetches IDs only, not full documents
+            total = countSnap.size;
+        } catch (countErr) {
+            // If even select() fails (e.g., no index), fall back to 0 — pagination won't be accurate
+            // but the page will still load instead of returning 500
+            console.warn('Count query failed, pagination total will be inaccurate:', countErr.message);
+            total = 0;
+        }
 
-        // Apply Sorting & Pagination
         // Apply Sorting & Pagination
         // TRY-CATCH for Fallback if Index is missing
         let snapshot;
         try {
             // Primary Strategy: Database Sort (Requires Index)
-            // We clone the query to avoid mutating the fallback base
             let sortedQuery = query.orderBy('publishedAt', 'desc')
                 .limit(limit)
                 .offset((page - 1) * limit);
@@ -99,26 +106,16 @@ export async function GET(request) {
             // Fallback Strategy: In-Memory Sort (No Index Required)
             // ONLY if the error relates to a missing index
             if (err.message.includes('index') || err.message.includes('FAILED_PRECONDITION')) {
-                console.warn('⚠️ FIRESTORE INDED MISSING: Falling back to in-memory sorting. Please create the index for better performance.');
+                console.warn('⚠️ FIRESTORE INDEX MISSING: Falling back to in-memory sorting. Please create the index for better performance.');
 
-                // Fetch WITHOUT orderBy
-                // Note: We might get more docs than needed if we want to sort accurately, 
-                // but for now we just fetch the limit to render *something*.
-                // Ideally we'd fetch all (up to a reasonable max) to sort, but that's expensive.
-                // Compromise: Fetch limit * 2 to get recent-ish items if they naturally come back in insertion order (often true).
+                snapshot = await query.limit(limit).get();
 
-                snapshot = await query.limit(limit).get(); // Raw query without sort
-
-                // Convert to array and sort in memory
                 let tempDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 tempDocs.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
-                // Return explicitly to match structure
-                const articles = tempDocs; // Already mapped
-
                 const responseData = {
-                    articles,
-                    total: total || articles.length, // Fallback total
+                    articles: tempDocs,
+                    total: total || tempDocs.length,
                     page,
                     limit
                 };
@@ -126,7 +123,7 @@ export async function GET(request) {
                 return NextResponse.json(responseData);
 
             } else {
-                throw err; // Re-throw other errors
+                throw err;
             }
         }
 

@@ -22,10 +22,11 @@ export async function GET(request) {
 
         return NextResponse.json(ads);
     } catch (error) {
-        console.error('Error fetching admin classifieds:', error);
+        console.error('Error fetching admin classifieds:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
 // POST: Create Classified (Admin)
 export async function POST(request) {
     const db = getDb();
@@ -61,7 +62,7 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newAd });
     } catch (error) {
-        console.error('Error creating admin classified:', error);
+        console.error('Error creating admin classified:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

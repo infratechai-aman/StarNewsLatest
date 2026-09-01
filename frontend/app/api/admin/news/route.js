@@ -15,8 +15,14 @@ export async function GET(request) {
         if (authResult.error) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
+        // fix(P3-BE-03): Add limit to prevent unbounded query as DB grows.
+        // Supports ?limit=N query param, capped at 500. Defaults to 200.
+        const { searchParams } = new URL(request.url);
+        const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '200')));
+
         const snapshot = await db.collection('news_articles')
             .orderBy('createdAt', 'desc')
+            .limit(limit)
             .get();
 
         const news = snapshot.docs.map(doc => ({
@@ -90,7 +96,8 @@ export async function POST(request) {
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {
-        // console.error('Error creating admin news:', error);
+        // fix(P2-BE-01): Uncommented — errors were previously silently swallowed
+        console.error('Error creating admin news:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
