@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import ShortsVideoPlayer from '@/components/ShortsVideoPlayer';
 import { Loader2, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Play } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const CATEGORIES = ['For You', 'Latest', 'Trending', 'Maharashtra', 'India', 'Politics', 'Business', 'Sports', 'Technology', 'Entertainment', 'More+'];
 

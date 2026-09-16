@@ -8,6 +8,7 @@ import {
   RotateCcw, BookOpen, Loader2, Grid3X3
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
+import Image from 'next/image'
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 const EnewspaperPage = () => {
