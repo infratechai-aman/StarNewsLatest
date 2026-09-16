@@ -11,20 +11,6 @@ export async function GET(request, { params }) {
         return new NextResponse('Database not available', { status: 503 });
     }
 
-    // fix(P2-SEC-02): Require authentication to fetch uploaded files.
-    // Previously this endpoint was completely public — anyone who knew a
-    // Firestore document ID could download any uploaded file with no auth.
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    if (!token || !auth) {
-        return new NextResponse('Authentication required', { status: 401 });
-    }
-    try {
-        await auth.verifyIdToken(token);
-    } catch {
-        return new NextResponse('Invalid or expired token', { status: 401 });
-    }
-
     try {
         const id = params.id;
         if (!id) {
@@ -38,6 +24,21 @@ export async function GET(request, { params }) {
         }
 
         const fileData = doc.data();
+
+        // If explicitly restricted, verify auth token
+        if (fileData.restricted === true) {
+            const authHeader = request.headers.get('authorization');
+            const token = authHeader?.replace('Bearer ', '');
+            if (!token || !auth) {
+                return new NextResponse('Authentication required', { status: 401 });
+            }
+            try {
+                await auth.verifyIdToken(token);
+            } catch {
+                return new NextResponse('Invalid or expired token', { status: 401 });
+            }
+        }
+
         const base64Data = fileData.data;
         const buffer = Buffer.from(base64Data, 'base64');
 
@@ -56,4 +57,3 @@ export async function GET(request, { params }) {
         return new NextResponse('Internal Server Error', { status: 500 });
     }
 }
-

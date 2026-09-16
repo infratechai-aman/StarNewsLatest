@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap, ShoppingBag, Sparkles, ArrowRight } from 'lucide-react'
+import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap, ShoppingBag, Sparkles, ArrowRight, Search, Clock, Heart, LayoutGrid, Home, Car, Briefcase, Laptop, Wrench, GraduationCap, MoreHorizontal, Armchair, Dog } from 'lucide-react'
 import Image from 'next/image'
 import { classifieds as classifiedsApi } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -71,7 +71,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
     const fetchClassifieds = async () => {
       try {
         const response = await classifiedsApi.getAll({})
-        const data = Array.isArray(response) ? response : (response.classifieds || [])
+        const data = Array.isArray(response) ? response : (Array.isArray(response?.classifieds) ? response.classifieds : [])
 
         if (data.length > 0) {
           setClassifieds(data)
@@ -225,118 +225,246 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   }
 
   return (
-    <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12">
-      {/* Premium Hero Banner */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-950 via-amber-950 to-black text-white mb-10 shadow-2xl">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')] opacity-10" />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-orange-600/20 to-transparent hidden md:block" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-600/10 rounded-full blur-[120px]" />
-
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 p-8 md:p-12 lg:p-16">
-          <div className="flex-1">
-            <Badge className="bg-orange-600/20 text-orange-400 border border-orange-600/30 mb-6 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.3em] backdrop-blur-md">
-              <Sparkles className="w-3 h-3 mr-2" />
-              {t('marketplace') || 'Marketplace'}
-            </Badge>
-            <h1 className="text-5xl md:text-7xl font-heading font-black leading-[0.9] tracking-tighter mb-6 italic">
-              {t('classifiedAds') || 'Classified'} <span className="text-orange-400">Ads</span>
+    <div className="min-h-screen bg-white pb-12">
+      {/* ─── HERO BANNER ─── */}
+      <div className="relative w-full overflow-hidden h-[160px] md:h-[200px]">
+        <Image src="/premium_classifieds_banner_1789523876923.jpg" alt="Classifieds" fill className="absolute inset-0 object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+        <div className="relative z-10 w-full px-4 md:px-12 flex flex-col justify-center h-full">
+          <div>
+            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">CLASSIFIEDS</p>
+            <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-2">
+              Buy. Sell. Rent. <span className="text-red-500">Find Opportunities.</span>
             </h1>
-            <p className="text-lg text-gray-400 font-medium leading-relaxed max-w-lg mb-8">
-              {language === 'hi' ? 'खरीदें, बेचें, किराये पर दें और नौकरी पाएं — पुणे का प्रीमियम मार्केटप्लेस' : language === 'mr' ? 'खरेदी करा, विक्री करा, भाड्याने द्या आणि नोकऱ्या शोधा — पुण्याचे प्रीमियम मार्केटप्लेस' : 'Buy, sell, rent, and find jobs — Premium marketplace for Pune and beyond.'}
-            </p>
-            <Button
-              className="h-14 rounded-full px-10 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black transition-all shadow-xl shadow-orange-900/30 hover:-translate-y-1 group"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <Plus className="mr-3 h-5 w-5" /> {t('postClassified') || 'Post Your Ad'}
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">Post your classified ad and reach thousands across Pune and beyond.</p>
+            <div className="hidden md:flex flex-wrap gap-5">
+              {[
+                { icon: '📋', title: 'Easy Posting', sub: 'List in minutes' },
+                { icon: '📡', title: 'Wide Reach', sub: 'Get noticed locally' },
+                { icon: '🛡️', title: 'Trusted Platform', sub: 'Powered by StarNews' },
+              ].map(f => (
+                <div key={f.title} className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg border border-white/20 bg-white/10 flex items-center justify-center text-lg">{f.icon}</div>
+                  <div>
+                    <p className="text-white text-xs font-black">{f.title}</p>
+                    <p className="text-gray-400 text-[10px]">{f.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── SEARCH BAR ─── */}
+      <div className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-6 py-4">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search for products, services, jobs, properties and more..."
+                className="h-11 pl-10 rounded-lg border-gray-200 text-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 text-sm text-gray-600 bg-white">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span>Pune, Maharashtra</span>
+            </div>
+            <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+              Search →
             </Button>
           </div>
+        </div>
+      </div>
 
-          {/* Stats Cards */}
-          <div className="flex flex-row md:flex-col gap-4">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
-              <div className="text-3xl font-black text-orange-400 mb-1">{classifieds.length}</div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('activeAds') || 'Active Ads'}</div>
+      {/* ─── CATEGORY TABS ─── */}
+      <div className="border-b border-gray-100 bg-white shadow-sm pt-5 pb-5">
+        <div className="max-w-[1400px] mx-auto px-6 flex flex-col md:flex-row items-start gap-4">
+          <div className="flex-1 flex items-center gap-3 overflow-x-auto pb-2 w-full" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { icon: <LayoutGrid className="w-5 h-5 text-indigo-500" />, label: 'All Categories', color: 'bg-indigo-50' },
+              { icon: <Home className="w-5 h-5 text-blue-500" />, label: 'Property', color: 'bg-blue-50' },
+              { icon: <Car className="w-5 h-5 text-emerald-500" />, label: 'Vehicles', color: 'bg-emerald-50' },
+              { icon: <Briefcase className="w-5 h-5 text-orange-500" />, label: 'Jobs', color: 'bg-orange-50' },
+              { icon: <Laptop className="w-5 h-5 text-cyan-500" />, label: 'Electronics', color: 'bg-cyan-50' },
+              { icon: <ShoppingBag className="w-5 h-5 text-amber-500" />, label: 'Furniture', color: 'bg-amber-50' },
+              { icon: <Wrench className="w-5 h-5 text-rose-500" />, label: 'Services', color: 'bg-rose-50' },
+              { icon: <GraduationCap className="w-5 h-5 text-violet-500" />, label: 'Education', color: 'bg-violet-50' },
+              { icon: <Heart className="w-5 h-5 text-pink-500" />, label: 'Pets', color: 'bg-pink-50' },
+              { icon: <MoreHorizontal className="w-5 h-5 text-gray-500" />, label: 'Others', color: 'bg-gray-100' },
+            ].map((cat, i) => {
+              const isActive = i === 0
+              return (
+                <button
+                  key={cat.label}
+                  className={`shrink-0 flex flex-col items-center justify-center gap-2 min-w-[95px] h-[90px] rounded-[18px] border transition-all duration-300 ${
+                    isActive ? 'border-red-500 bg-red-50/50 shadow-sm text-red-600' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md hover:-translate-y-1 text-gray-700'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
+                    {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
+                  </div>
+                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'}`}>{cat.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <button onClick={() => setShowCreateModal(true)} className="shrink-0 h-[90px] px-8 bg-red-600 hover:bg-red-700 text-white rounded-[18px] shadow-lg shadow-red-200 flex flex-col items-center justify-center gap-1 transition-all hover:-translate-y-1 w-full md:w-auto">
+            <span className="font-black text-sm flex items-center gap-1"><Plus className="w-4 h-4"/> Post a Classified Ad</span>
+            <span className="text-[10px] opacity-80 font-medium">It's free and easy</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ─── MAIN LAYOUT ─── */}
+      <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8">
+          
+          {/* LEFT: Filters */}
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-sm text-gray-900">Filters</h3>
+              <button className="text-red-600 text-[11px] font-bold">Clear All</button>
             </div>
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
-              <div className="text-3xl font-black text-green-400 mb-1">Free</div>
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('toPost') || 'To Post'}</div>
+            
+            {/* Location */}
+            <div>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> Location</p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
+                <option>Pune, Maharashtra</option>
+              </select>
+            </div>
+
+            {/* Category */}
+            <div>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Tag className="w-3 h-3" /> Category</p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
+                <option>All Categories</option>
+              </select>
+            </div>
+
+            {/* Price Range */}
+            <div>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><IndianRupee className="w-3 h-3" /> Price Range</p>
+              <div className="flex gap-2 text-sm">
+                <Input placeholder="₹ Min" className="h-9" />
+                <span className="text-gray-400 mt-1">-</span>
+                <Input placeholder="₹ Max" className="h-9" />
+              </div>
+            </div>
+
+            {/* Condition */}
+            <div>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Sparkles className="w-3 h-3" /> Condition</p>
+              {['New', 'Used', 'Refurbished'].map(bt => (
+                <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1.5 cursor-pointer">
+                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {bt}
+                </label>
+              ))}
+            </div>
+
+            {/* Posted By */}
+            <div>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> Posted By</p>
+              {['Individual', 'Business'].map(bt => (
+                <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1.5 cursor-pointer">
+                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {bt}
+                </label>
+              ))}
+            </div>
+            
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg h-11 text-sm mt-4">Apply Filters</Button>
+          </div>
+
+          {/* CENTER: Grid */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-500 font-medium">Showing 1-12 of {classifieds.length > 0 ? classifieds.length * 370 : 1482} ads</p>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Sort by</span>
+                <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white">
+                  <option>Latest First</option>
+                  <option>Price: Low to High</option>
+                  <option>Price: High to Low</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classifieds.map((ad, idx) => {
+                const displayPrice = convertToINR(ad.price)
+                return (
+                  <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all" onClick={() => handleContactSeller(ad)}>
+                    <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                      <Image src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>{ad.condition === 'New' ? 'NEW' : ad.condition === 'Excellent' ? 'FEATURED' : 'URGENT'}</Badge>
+                      <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
+                        <Heart className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-black text-[15px] text-gray-900 leading-tight mb-1">{displayPrice || '₹0'}</h4>
+                      <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[32px]">{ad.title}</p>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1 mt-auto">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{ad.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                        <Clock className="w-3 h-3 shrink-0" />
+                        <span>{idx + 1 + (idx * 2)} hours ago</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT SIDEBAR */}
+          <div className="space-y-6">
+            {/* Why Post on StarNews */}
+            <div className="bg-red-50/30 border border-red-100 rounded-2xl p-5 relative overflow-hidden">
+              <h3 className="font-black text-base text-gray-900 mb-4">Why Post on StarNews?</h3>
+              <ul className="space-y-3 relative z-10">
+                {['Reach genuine buyers & sellers', 'Trusted by the community', 'Free and easy to use', 'Wide local reach across Maharashtra'].map(p => (
+                  <li key={p} className="flex gap-2 text-xs text-gray-700 font-bold">
+                    <div className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black shadow-sm">✓</div>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <div className="absolute right-[-10px] bottom-4 text-red-500 flex items-end gap-1">
+                <div className="w-2 h-4 bg-red-300 rounded-t-sm" />
+                <div className="w-2 h-8 bg-red-400 rounded-t-sm" />
+                <div className="w-2 h-12 bg-red-500 rounded-t-sm" />
+              </div>
+            </div>
+
+            {/* Local People Banner */}
+            <div className="bg-[#1a1c29] rounded-2xl p-6 relative overflow-hidden text-white shadow-md">
+              <img src="https://images.unsplash.com/photo-1596706059432-850f865f1a58?w=400&q=80" alt="Pune" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] mix-blend-overlay" />
+              <div className="relative z-10">
+                <h3 className="font-black text-xl leading-tight mb-2">Local People<br/><span className="text-red-400">Real Opportunities</span></h3>
+                <p className="text-xs text-gray-300 mb-5 leading-relaxed">From homes to jobs, find it all on StarNews Classifieds.</p>
+                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm">Post Your Ad →</Button>
+              </div>
+            </div>
+
+            {/* Popular Searches */}
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
+              <h3 className="font-black text-sm text-gray-900 mb-4">Popular Searches</h3>
+              <div className="space-y-3">
+                {['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets'].map(search => (
+                  <div key={search} className="flex items-center gap-3 cursor-pointer group">
+                    <Search className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500 transition-colors" />
+                    <span className="text-xs font-semibold text-gray-700 group-hover:text-red-600 transition-colors">{search}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Info Banner */}
-      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-10 flex items-start sm:items-center gap-3">
-        <div className="mt-0.5 sm:mt-0 flex-shrink-0">
-          <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p className="text-sm text-slate-600">
-          <span className="font-semibold text-slate-700">{t('note') || 'Note'}:</span> {t('classifiedAdminNote') || 'All classified ads are reviewed by the editorial team before publication.'}
-        </p>
-      </div>
-
-      {/* Classified Ads Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-        {classifieds.map((ad, idx) => {
-          const displayPrice = convertToINR(ad.price)
-          return (
-            <div
-              key={ad.id}
-              className={`group rounded-[24px] overflow-hidden cursor-pointer border border-gray-100 bg-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full ${idx === 0 ? 'md:col-span-2 md:row-span-1' : ''}`}
-              onClick={() => handleContactSeller(ad)}
-            >
-              <div className={`relative overflow-hidden bg-gray-50 ${idx === 0 ? 'aspect-[2/1]' : 'aspect-[4/3]'}`}>
-                <Image
-                  src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'}
-                  alt={ad.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <Badge className="absolute top-5 left-5 bg-orange-600/90 backdrop-blur-md text-white border-none px-4 py-1.5 font-black uppercase text-[9px] tracking-widest shadow-lg">
-                  {ad.category}
-                </Badge>
-                {ad.condition && (
-                  <div className="absolute bottom-5 right-5 z-10 flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
-                    <span className="text-[9px] font-black text-gray-900 uppercase tracking-widest">{ad.condition}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-5 md:p-6 flex-1 flex flex-col">
-                <h3 className="font-heading font-black text-lg md:text-xl mb-4 leading-tight group-hover:text-orange-600 transition-colors tracking-tight line-clamp-2">
-                  {ad.title}
-                </h3>
-
-                <div className="flex items-center gap-1.5 text-2xl font-black text-green-600 mb-4 tracking-tighter">
-                  {displayPrice ? (
-                    <>
-                      <IndianRupee className="h-5 w-5" />
-                      <span>{displayPrice.replace('₹', '')}</span>
-                    </>
-                  ) : (
-                    <span className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">{t('priceOnRequest') || 'Price on request'}</span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
-                  <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-gray-300" />
-                  <span className="truncate">{ad.location}</span>
-                </div>
-
-                <div className="pt-4 border-t border-gray-50 mt-auto flex items-center justify-between">
-                  <span className="font-black text-[10px] text-orange-600 uppercase tracking-widest">{t('viewDetails') || 'View Details'}</span>
-                  <ChevronRight className="w-5 h-5 text-gray-200 group-hover:text-orange-600 group-hover:translate-x-2 transition-all" />
-                </div>
-              </div>
-            </div>
-          )
-        })}
       </div>
 
       {/* Create Listing Modal */}

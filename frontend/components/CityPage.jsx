@@ -4,12 +4,28 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, ChevronRight, Eye, Crosshair, Globe, Navigation, Building2 } from 'lucide-react'
+import { MapPin, ChevronRight, Eye, Search, Flame, TrendingUp, PlaySquare, Calendar, Bookmark, MessageSquare, LayoutGrid } from 'lucide-react'
 import Image from 'next/image'
 import { news } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
+import { proxyImageUrl } from '@/lib/imageProxy'
+
+const CITY_ICONS = {
+  Mumbai: '/city_icon_mumbai_1789524759210.jpg',
+  Delhi: '/city_icon_delhi_1789524771933.jpg',
+  Bangalore: '/city_icon_bangalore_1789524786395.jpg',
+  Hyderabad: '/city_icon_hyderabad_1789524800666.jpg',
+  Chennai: '/city_icon_chennai.jpg',
+  Kolkata: '/city_icon_kolkata.jpg',
+  Pune: '/city_icon_pune.jpg',
+  Ahmedabad: '/city_icon_ahmedabad.jpg',
+  Jaipur: '/city_icon_jaipur.jpg',
+  Lucknow: '/city_icon_lucknow.jpg',
+  Surat: '/city_icon_surat.jpg',
+  Nagpur: '/city_icon_nagpur.jpg'
+}
 
 const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     const { language, t } = useLanguage()
@@ -86,180 +102,207 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     }
 
     return (
-        <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12">
-            {/* Premium Hero Banner */}
-            <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-gray-900 via-blue-950 to-black text-white mb-10 shadow-2xl">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-15" />
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-600/15 to-transparent hidden md:block" />
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px]" />
-                <div className="absolute top-10 right-10 w-64 h-64 bg-cyan-500/5 rounded-full blur-[100px]" />
+        <div className="w-full bg-[#f8f9fa] pb-12">
+            {/* Premium Hero Banner (Full Width) */}
+            <div className="relative w-full h-[160px] md:h-[200px] bg-gradient-to-br from-[#1a2b4c] to-[#0a1529] overflow-hidden text-white flex items-center">
+                <div className="absolute inset-0 z-0">
+                    <Image 
+                        src="/city_news_banner_1789524746922.jpg" 
+                        alt="Cityscape" 
+                        fill 
+                        className="object-cover opacity-60 mix-blend-overlay"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0d1629]/90 via-[#0d1629]/70 to-[#0d1629]/80"></div>
+                </div>
 
-                <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 p-8 md:p-12 lg:p-16">
-                    <div className="flex-1">
-                        <Badge className="bg-blue-600/20 text-blue-400 border border-blue-600/30 mb-6 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.3em] backdrop-blur-md">
-                            <Navigation className="w-3 h-3 mr-2" />
-                            {t('hyperLocal') || 'Hyperlocal Updates'}
-                        </Badge>
-                        <h1 className="text-5xl md:text-7xl font-heading font-black leading-[0.9] tracking-tighter mb-6 italic">
-                            {t('selectCityTitle') || 'City'} <span className="text-blue-400">News</span>
+                <div className="relative z-10 w-full px-4 md:px-12 flex flex-col md:flex-row items-center justify-between gap-4 h-full">
+                    <div className="flex-1 mt-6 md:mt-0 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-4 text-gray-300 tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-black">
+                            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                            INDIA'S CITIES. REAL STORIES.
+                        </div>
+                        <h1 className="text-4xl md:text-[80px] font-black leading-none tracking-tighter mb-2 md:mb-4 drop-shadow-lg">
+                            City <span className="text-red-500">News</span>
                         </h1>
-                        <p className="text-lg text-gray-400 font-medium leading-relaxed max-w-lg mb-8">
-                            {t('selectCityDesc') || 'Select your city to get hyper-local news updates, stories, and events happening around you.'}
+                        <p className="hidden md:block text-xl md:text-2xl text-white font-medium mb-4">
+                            Local updates. Bigger perspectives.
                         </p>
-                        <div className="flex items-center gap-4">
-                            <div className="h-px flex-1 bg-white/10 max-w-[200px]" />
-                            <Crosshair className="w-5 h-5 text-blue-500 animate-pulse" />
-                            <div className="h-px w-16 bg-white/10" />
-                        </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex flex-row md:flex-col gap-4">
-                        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
-                            <div className="text-3xl font-black text-blue-400 mb-1">{POPULAR_CITIES.length}</div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Popular Cities</div>
-                        </div>
-                        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-[20px] p-6 text-center min-w-[140px]">
-                            <div className="text-3xl font-black text-cyan-400 mb-1">{allArticles.length}</div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Stories</div>
-                        </div>
+                        <p className="text-xs md:text-base text-gray-300 font-medium max-w-lg leading-relaxed mx-auto md:mx-0">
+                            Explore the latest news, events, developments and stories from your city.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* City Selection Interface */}
-            <div className="grid lg:grid-cols-12 gap-8 mb-12">
-                <div className="lg:col-span-8">
-                    <div className="bg-white p-8 md:p-10 rounded-[28px] shadow-sm border border-gray-100 h-full">
-                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-8 flex items-center gap-3">
-                            <Building2 className="w-4 h-4" /> {t('popularCities') || 'Popular Cities'}
+            <div className="w-full px-4 md:px-12 mt-8">
+                {/* Popular Cities */}
+                <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                            <LayoutGrid className="w-5 h-5 text-red-600" />
+                            Popular Cities
                         </h2>
-                        <div className="flex flex-wrap gap-3">
-                            {POPULAR_CITIES.map(city => (
-                                <Button
-                                    key={city}
-                                    variant={selectedCity === city ? "default" : "outline"}
-                                    className={`rounded-full px-7 h-12 font-black transition-all duration-300 text-sm ${selectedCity === city
-                                        ? 'bg-blue-600 text-white scale-105 shadow-xl shadow-blue-200'
-                                        : 'border-gray-100 hover:border-blue-500 hover:bg-blue-50 text-gray-600'
-                                        }`}
+                        <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
+                            View All Cities <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                    
+                    <div className="flex overflow-x-auto pb-4 hide-scrollbar gap-4 md:gap-6 justify-between px-2">
+                        {POPULAR_CITIES.map(city => {
+                            const isSelected = selectedCity === city || (!selectedCity && city === 'Mumbai')
+                            return (
+                                <div 
+                                    key={city} 
                                     onClick={() => handleCityClick(city)}
+                                    className="flex flex-col items-center gap-3 cursor-pointer group min-w-[80px]"
                                 >
-                                    {city}
-                                </Button>
-                            ))}
-                        </div>
+                                    <div className={`w-20 h-20 rounded-2xl overflow-hidden relative shadow-md transition-all duration-300 p-0.5 ${isSelected ? 'scale-110' : 'bg-transparent border border-gray-200'}`}>
+                                        <div className="w-full h-full relative rounded-[14px] overflow-hidden bg-white">
+                                            <Image 
+                                                src={CITY_ICONS[city] || '/placeholder-news.svg'} 
+                                                alt={city} 
+                                                fill 
+                                                className="object-cover" 
+                                            />
+                                        </div>
+                                    </div>
+                                    <span className={`text-[12px] font-black ${isSelected ? 'text-red-600' : 'text-gray-900'} transition-colors`}>{city}</span>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
 
-                <div className="lg:col-span-4">
-                    <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 p-6 lg:p-10 rounded-[28px] border border-gray-100 h-full flex flex-col justify-center">
-                        <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 mb-6">{t('allCities') || 'All Cities'}</h2>
-                        <div className="relative">
-                            <select
-                                className="w-full h-14 px-6 bg-white border border-gray-100 rounded-2xl font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-blue-100 transition-all outline-none text-sm"
-                                value={selectedCity}
-                                onChange={(e) => setSelectedCity(e.target.value)}
-                            >
-                                <option value="">{t('chooseCity') || 'Choose a city...'}</option>
-                                {INDIAN_CITIES_SORTED.map(city => (
-                                    <option key={city} value={city}>{city}</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <ChevronRight className="w-5 h-5 text-gray-400 rotate-90" />
+                {/* Filters and Search */}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                    <div className="relative w-full md:w-80">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <select
+                            className="block w-full pl-10 pr-10 py-3 text-sm bg-white border border-gray-200 rounded-full font-bold appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-100 shadow-sm"
+                            value={selectedCity}
+                            onChange={(e) => setSelectedCity(e.target.value)}
+                        >
+                            <option value="">Search or select a city...</option>
+                            {INDIAN_CITIES_SORTED.map(city => (
+                                <option key={city} value={city}>{city}</option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <ChevronRight className="h-4 w-4 text-gray-400 rotate-90" />
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="default" className="bg-red-600 hover:bg-red-700 text-white rounded-full px-5 h-10 text-xs font-black shadow-md flex items-center gap-1.5">
+                            <LayoutGrid className="w-3.5 h-3.5" /> Latest
+                        </Button>
+                        <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
+                            <TrendingUp className="w-3.5 h-3.5" /> Trending
+                        </Button>
+                        <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
+                            <Flame className="w-3.5 h-3.5 text-orange-500" /> Most Read
+                        </Button>
+                        <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
+                            <PlaySquare className="w-3.5 h-3.5" /> Videos
+                        </Button>
+                        <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" /> Events
+                        </Button>
+                    </div>
+                </div>
+
+                {/* News Section */}
+                <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <span className="w-1.5 h-6 bg-red-600 rounded-full block"></span>
+                        Latest from {selectedCity || 'Mumbai'}
+                    </h2>
+                    <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
+                        View All {selectedCity || 'Mumbai'} News <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Main Big Article */}
+                    {cityNews.length > 0 && (
+                        <div 
+                            className="lg:col-span-5 relative bg-white rounded-2xl overflow-hidden shadow-md group cursor-pointer"
+                            onClick={() => handleNewsClick(cityNews[0])}
+                            style={{ minHeight: '480px' }}
+                        >
+                            <Image 
+                                src={proxyImageUrl(cityNews[0].mainImage || cityNews[0].images?.[0] || '/placeholder-news.svg')} 
+                                alt={getLocalizedText(cityNews[0].title, language)}
+                                fill 
+                                className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/40 to-transparent"></div>
+                            
+                            <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-md">
+                                {selectedCity || 'MUMBAI'}
+                            </div>
+                            <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded shadow-md flex items-center gap-1">
+                                2 hrs ago
+                            </div>
+                            
+                            <div className="absolute bottom-0 left-0 p-6 w-full">
+                                <h3 className="text-white text-2xl font-black leading-tight mb-3 group-hover:text-red-100 transition-colors">
+                                    {getLocalizedText(cityNews[0].title, language)}
+                                </h3>
+                                <p className="text-gray-300 text-sm line-clamp-3 mb-5 leading-relaxed">
+                                    {getLocalizedText(cityNews[0].content, language)?.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                                </p>
+                                <button className="bg-red-600 hover:bg-red-700 text-white text-[11px] font-black px-4 py-2 rounded-md transition-colors flex items-center gap-1.5 shadow-lg">
+                                    Read More <ChevronRight className="w-3.5 h-3.5" />
+                                </button>
                             </div>
                         </div>
-                        {selectedCity && (
-                            <Button
-                                variant="ghost"
-                                className="mt-4 text-xs font-black text-red-500 hover:bg-red-50"
-                                onClick={() => setSelectedCity('')}
-                            >
-                                {t('clear') || 'RESET SELECTION'}
-                            </Button>
-                        )}
+                    )}
+
+                    {/* Smaller Articles Grid */}
+                    <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {cityNews.slice(1, 5).map((item, idx) => (
+                            <div key={item.id} onClick={() => handleNewsClick(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col border border-gray-100">
+                                <div className="relative h-40 overflow-hidden bg-gray-100">
+                                    <Image 
+                                        src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} 
+                                        alt={getLocalizedText(item.title, language)}
+                                        fill 
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                    />
+                                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
+                                        {selectedCity || 'MUMBAI'}
+                                    </div>
+                                    <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
+                                        {idx + 1 * 4} {idx % 2 === 0 ? 'hrs' : 'days'} ago
+                                    </div>
+                                </div>
+                                <div className="p-4 flex-1 flex flex-col justify-between">
+                                    <h4 className="font-bold text-[15px] leading-tight text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 mb-4">
+                                        {getLocalizedText(item.title, language)}
+                                    </h4>
+                                    <div className="flex items-center justify-between text-gray-500 text-[11px] font-semibold border-t border-gray-50 pt-3">
+                                        <div className="flex items-center gap-4">
+                                            <span className="flex items-center gap-1.5">
+                                                <Eye className="w-3.5 h-3.5" />
+                                                {item.views || (1200 + idx * 300)}{idx === 1 ? 'K' : ''}
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <MessageSquare className="w-3.5 h-3.5" />
+                                                {15 + idx * 5}
+                                            </span>
+                                        </div>
+                                        <Bookmark className="w-4 h-4 hover:text-red-600" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
-
-            {/* City News Display */}
-            {selectedCity ? (
-                <div className="space-y-10">
-                    <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 rounded-[18px] bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-200">
-                            <MapPin className="h-7 w-7 text-white" />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl md:text-4xl font-heading font-black tracking-tighter italic">
-                                {t('newsFrom') || 'News from'} <span className="text-blue-600">{selectedCity}</span>
-                            </h2>
-                            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">Live from the streets</p>
-                        </div>
-                        <div className="h-px flex-1 bg-gradient-to-r from-blue-100 to-transparent hidden md:block ml-6" />
-                    </div>
-
-                    {cityNews.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-                            {cityNews.map((item, idx) => (
-                                <div
-                                    key={item.id}
-                                    className={`group rounded-[24px] overflow-hidden cursor-pointer border border-gray-100 bg-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${idx === 0 ? 'md:col-span-2 md:row-span-1' : ''}`}
-                                    onClick={() => handleNewsClick(item)}
-                                >
-                                    <div className={`relative overflow-hidden bg-gray-50 ${idx === 0 ? 'aspect-[2/1]' : 'aspect-[4/3]'}`}>
-                                        <Image
-                                            src={item.thumbnailUrl || item.mainImage || '/placeholder-news.svg'}
-                                            alt={getLocalizedText(item.title, language)}
-                                            fill
-                                            className="object-cover transition-transform duration-[2000ms] group-hover:scale-105"
-                                            sizes="(max-width: 768px) 100vw, 25vw"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                        <Badge className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-blue-600 border-none font-black text-[9px] tracking-widest uppercase px-3 py-1">
-                                            {selectedCity}
-                                        </Badge>
-                                    </div>
-                                    <div className="p-5 md:p-6">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest" suppressHydrationWarning>
-                                                {new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                            </span>
-                                            <span className="w-1 h-1 rounded-full bg-gray-200" />
-                                            <Eye className="w-3 h-3 text-gray-300" />
-                                        </div>
-                                        <h4 className="font-heading font-black text-lg md:text-xl leading-tight group-hover:text-blue-600 transition-colors tracking-tight line-clamp-2 mb-3">
-                                            {getLocalizedText(item.title, language)}
-                                        </h4>
-                                        <p className="text-gray-400 text-xs line-clamp-2 leading-relaxed mb-4">
-                                            {getLocalizedText(item.metaDescription || item.content, language)?.replace(/<[^>]*>/g, '')?.substring(0, 100)}
-                                        </p>
-                                        <div className="flex items-center text-blue-600 text-[10px] font-black tracking-widest uppercase group-hover:gap-3 transition-all">
-                                            {t('read') || 'FULL STORY'} <ChevronRight className="w-4 h-4" />
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 bg-gradient-to-br from-gray-50 to-blue-50/30 rounded-[32px] border border-dashed border-gray-200">
-                            <MapPin className="h-16 w-16 mx-auto text-gray-200 mb-6 animate-bounce" />
-                            <h3 className="text-xl font-heading font-black text-gray-400 mb-2 uppercase tracking-tighter">{t('noCityNews') || 'No news found'}</h3>
-                            <p className="text-sm text-gray-400 max-w-sm mx-auto">{t('cityNewsTag') || 'Check back later for updates from this city.'}</p>
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <div className="relative overflow-hidden rounded-[32px] border border-blue-50 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-16 md:p-24 text-center">
-                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-100/30 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-100/30 rounded-full blur-3xl" />
-                    <div className="relative z-10">
-                        <MapPin className="h-16 w-16 mx-auto text-blue-200 mb-6" />
-                        <h2 className="text-2xl md:text-3xl font-heading font-black text-blue-900 tracking-tighter mb-4 italic">{t('selectCityPrompt') || 'Select a city to begin'}</h2>
-                        <p className="text-blue-500 font-medium max-w-md mx-auto leading-relaxed">{t('cityPromptDesc') || 'Choose from popular cities above or use the dropdown to find your city.'}</p>
-                    </div>
-                </div>
-            )}
         </div>
     )
 }

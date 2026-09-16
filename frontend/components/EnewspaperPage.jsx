@@ -81,10 +81,16 @@ const EnewspaperPage = () => {
         
         pdfjsLib.GlobalWorkerOptions.workerSrc = `${PDFJS_CDN}/pdf.worker.min.js`
 
-        const loadingTask = pdfjsLib.getDocument({
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+        const docParams = {
           url: selectedPaper.pdfUrl,
           isEvalSupported: false,
-        })
+        }
+        if (token) {
+          docParams.httpHeaders = { Authorization: `Bearer ${token}` }
+        }
+
+        const loadingTask = pdfjsLib.getDocument(docParams)
 
         const pdf = await loadingTask.promise
         setTotalPages(pdf.numPages)
@@ -106,13 +112,18 @@ const EnewspaperPage = () => {
         }
       } catch (err) {
         console.error('Failed to load PDF:', err)
+        // If first paper fails, fallback to second paper if available
+        if (newspapers.length > 1 && selectedPaper?.id === newspapers[0]?.id) {
+          console.log('Falling back to next available edition...')
+          setSelectedPaper(newspapers[1])
+        }
       } finally {
         setPdfLoading(false)
       }
     }
 
     loadPdf()
-  }, [selectedPaper])
+  }, [selectedPaper, newspapers])
 
   // Page navigation
   const goToPage = useCallback((n) => {
@@ -261,97 +272,141 @@ const EnewspaperPage = () => {
   const hasPages = pageImages.length > 0
 
   return (
-    <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 z-50' : ''} bg-[#0d0d0d] min-h-screen flex flex-col`}>
+    <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 z-50' : ''} bg-white min-h-screen flex flex-col`}>
 
-      {/* ═══════ DESKTOP TOOLBAR (hidden on mobile) ═══════ */}
-      <div className="hidden md:block bg-[#141414] border-b border-gray-800 px-6 py-2 shrink-0">
-        <div className="flex items-center justify-between max-w-[1400px] mx-auto gap-3">
-          {/* Left: Branding */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-red-600 flex items-center justify-center">
-              <Newspaper className="h-4 w-4 text-white" />
-            </div>
-            <h1 className="text-sm font-black tracking-tight text-white">
-              StarNews <span className="text-red-500">ePaper</span>
+      {/* ═══════ HERO BANNER ═══════ */}
+      {!isFullscreen && (
+        <div className="relative w-full overflow-hidden h-[160px] md:h-[200px]">
+          <Image src="/enewspaper_banner_1789519347864.jpg" alt="E-Newspaper" fill className="absolute inset-0 object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+          <div className="relative z-10 max-w-[1400px] mx-auto px-4 md:px-6 flex flex-col justify-center h-full">
+            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-3">E-Newspaper</p>
+            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight mb-2">
+              Read the Latest <span className="text-red-500 italic">Edition</span>
             </h1>
-          </div>
-
-          {/* Center: Edition Selector */}
-          <select
-            className="h-9 px-3 pr-8 rounded-lg text-xs font-semibold appearance-none cursor-pointer outline-none bg-gray-800 border border-gray-700 text-white"
-            value={selectedPaper?.id || ''}
-            onChange={(e) => {
-              const paper = newspapers.find(p => p.id === e.target.value)
-              if (paper) setSelectedPaper(paper)
-            }}
-          >
-            {newspapers.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.title} — {getFormattedDate(p.publishDate || p.editionDate)}
-              </option>
-            ))}
-          </select>
-
-          {/* Right: Zoom + Actions */}
-          <div className="flex items-center gap-1">
-            <button onClick={handleZoomOut} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomOut className="w-4 h-4" /></button>
-            <span className="text-[10px] font-bold text-gray-500 min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
-            <button onClick={handleZoomIn} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomIn className="w-4 h-4" /></button>
-            {zoom !== 1 && <button onClick={resetZoom} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><RotateCcw className="w-4 h-4" /></button>}
-            <div className="w-px h-5 bg-gray-700 mx-1" />
-            <button onClick={handleShare} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><Share2 className="w-4 h-4" /></button>
-            <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><Printer className="w-4 h-4" /></button>
-            <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400"><Download className="w-4 h-4" /></button>
-            <button onClick={toggleFullscreen} className="p-2 rounded-lg hover:bg-gray-800 text-gray-400">
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
+            <p className="text-gray-300 text-xs md:text-sm max-w-md mb-3 md:mb-5 hidden sm:block">Your trusted source for in-depth news, analysis and stories from across India.</p>
+            <div className="hidden md:flex flex-wrap gap-6">
+              {[
+                { icon: '📖', title: 'Daily Editions', sub: 'Read anytime, anywhere' },
+                { icon: '📱', title: 'Multi-Device', sub: 'Desktop, tablet, mobile' },
+                { icon: '⬇️', title: 'Download', sub: 'Save for offline reading' },
+              ].map(item => (
+                <div key={item.title} className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-lg border border-white/20 bg-white/10 flex items-center justify-center text-lg">{item.icon}</div>
+                  <div>
+                    <p className="text-white text-xs font-black">{item.title}</p>
+                    <p className="text-gray-400 text-[10px]">{item.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ═══════ MOBILE TOP BAR (edition + download) ═══════ */}
-      <div className="md:hidden bg-[#141414] border-b border-gray-800 px-3 py-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-red-600 flex items-center justify-center shrink-0">
-            <Newspaper className="h-3.5 w-3.5 text-white" />
+      {/* ═══════ MAIN 3-COLUMN LAYOUT ═══════ */}
+      <div className={`flex-1 ${isFullscreen ? 'h-screen fixed inset-0 z-50 bg-[#f8f9fa]' : 'max-w-[1400px] mx-auto w-full px-4 lg:px-6 py-8'} flex flex-col md:flex-row gap-6`}>
+        
+        {/* LEFT SIDEBAR: Calendar & Quick Access (Hidden in fullscreen) */}
+        {!isFullscreen && (
+          <div className="hidden md:flex flex-col w-[260px] shrink-0 gap-6">
+            {/* Calendar Widget */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+                <span className="text-gray-500">📅</span>
+                <h3 className="font-black text-sm text-gray-900">Select Edition</h3>
+              </div>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <button className="text-gray-400 hover:text-gray-900"><ChevronLeft className="w-4 h-4" /></button>
+                  <span className="font-bold text-sm text-gray-900">September 2026</span>
+                  <button className="text-gray-400 hover:text-gray-900"><ChevronRight className="w-4 h-4" /></button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-[11px] mb-2">
+                  {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} className="text-gray-400 font-bold">{d}</div>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
+                  {Array.from({length: 30}, (_,i) => i+1).map(d => (
+                    <button key={d} className={`w-7 h-7 rounded-full flex items-center justify-center mx-auto transition-colors ${d === 16 ? 'bg-red-600 text-white font-bold' : d > 16 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Access List */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
+                <span className="text-gray-500">📄</span>
+                <h3 className="font-black text-sm text-gray-900">Quick Access</h3>
+              </div>
+              <div className="p-2 space-y-1">
+                {[
+                  { name: 'Front Page', pages: 'Page 1', active: true },
+                  { name: 'National', pages: 'Pages 2-4' },
+                  { name: 'Maharashtra', pages: 'Pages 5-7' },
+                  { name: 'City News', pages: 'Pages 8-10' },
+                  { name: 'Business & Economy', pages: 'Pages 11-12' },
+                  { name: 'Sports', pages: 'Pages 13-14' },
+                  { name: 'Entertainment', pages: 'Pages 15-16' },
+                  { name: 'Editorial & Opinion', pages: 'Pages 17-18' },
+                ].map(item => (
+                  <button key={item.name} className={`w-full text-left px-3 py-2 rounded-lg flex flex-col transition-colors ${item.active ? 'bg-red-600 text-white' : 'hover:bg-gray-50 text-gray-700'}`}>
+                    <span className="font-bold text-sm">{item.name}</span>
+                    <span className={`text-[10px] ${item.active ? 'text-red-200' : 'text-gray-500'}`}>{item.pages}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <select
-            className="flex-1 h-8 px-2 pr-6 rounded-lg text-[11px] font-semibold appearance-none outline-none bg-gray-800 border border-gray-700 text-white truncate"
-            value={selectedPaper?.id || ''}
-            onChange={(e) => {
-              const paper = newspapers.find(p => p.id === e.target.value)
-              if (paper) setSelectedPaper(paper)
-            }}
-          >
-            {newspapers.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.title} — {getFormattedDate(p.publishDate || p.editionDate)}
-              </option>
-            ))}
-          </select>
-          <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 shrink-0">
-            <Download className="w-4 h-4" />
-          </button>
-          <button onClick={handleShare} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400 shrink-0">
-            <Share2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        )}
 
-      {/* ═══════ PAGE NUMBER STRIP (desktop) ═══════ */}
-      {totalPages > 0 && (
-        <div className="hidden md:block bg-[#1a1a1a] border-b border-gray-800 px-6 py-2 shrink-0">
-          <div className="max-w-[1400px] mx-auto flex items-center gap-3">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">Pages</span>
-            <div ref={pageStripRef} className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin flex-1 py-1">
-              {Array.from({ length: totalPages }, (_, idx) => (
+        {/* CENTER VIEWER: The main EPaper reading experience */}
+        <div className="flex-1 flex flex-col min-w-0 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white h-[calc(100vh-140px)] md:h-[800px]">
+          
+          {/* Black Toolbar (Inside Viewer) */}
+          <div className="bg-[#1a1a1a] px-4 py-3 flex items-center justify-between shrink-0">
+            {/* Left */}
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded bg-red-600 flex items-center justify-center shrink-0">
+                <Newspaper className="h-4 w-4 text-white" />
+              </div>
+              <h2 className="hidden sm:block text-sm font-black text-white">StarNews <span className="text-red-500">ePaper</span></h2>
+            </div>
+            
+            {/* Center (Title/Edition) */}
+            <div className="hidden lg:flex items-center gap-3 bg-[#2a2a2a] px-5 py-1.5 rounded-full border border-gray-700">
+              <span className="text-[10px] font-black text-gray-400 tracking-wider">COURT ORDER</span>
+              <span className="text-[11px] font-bold text-white">Thu, 9 Apr, 2026</span>
+            </div>
+
+            {/* Right Tools */}
+            <div className="flex items-center gap-1.5">
+              <button onClick={handleZoomOut} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomOut className="w-4 h-4" /></button>
+              <span className="text-[11px] font-bold text-gray-400 min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
+              <button onClick={handleZoomIn} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomIn className="w-4 h-4" /></button>
+              <div className="w-px h-4 bg-gray-700 mx-2" />
+              <button onClick={handleShare} className="hidden sm:block p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Share2 className="w-4 h-4" /></button>
+              <button onClick={handlePrint} className="hidden sm:block p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Printer className="w-4 h-4" /></button>
+              <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Download className="w-4 h-4" /></button>
+              <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400">
+                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Sub-toolbar: Pages Strip */}
+          <div className="bg-[#111] border-t border-[#2a2a2a] px-4 py-2 flex items-center justify-between shrink-0">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider hidden sm:block w-[50px]">PAGES</span>
+            <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-thin px-4 max-w-xl mx-auto">
+              {Array.from({ length: totalPages || 1 }, (_, idx) => (
                 <button
                   key={idx}
-                  data-page={idx}
                   onClick={() => goToPage(idx)}
-                  className={`shrink-0 min-w-[36px] h-9 rounded-lg text-xs font-bold transition-all duration-200 ${
+                  className={`shrink-0 w-8 h-8 rounded-full text-[11px] font-bold transition-all ${
                     currentPage === idx
-                      ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
+                      ? 'bg-red-600 text-white'
                       : idx < pageImages.length
                         ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
                         : 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
@@ -362,181 +417,108 @@ const EnewspaperPage = () => {
                 </button>
               ))}
             </div>
-            <span className="text-[11px] font-bold text-gray-500 shrink-0">{currentPage + 1}/{totalPages}</span>
+            <span className="text-[11px] font-bold text-gray-500 shrink-0 w-[50px] text-right">{currentPage + 1}/{totalPages || 1}</span>
           </div>
-        </div>
-      )}
 
-      {/* ═══════ MAIN VIEWER AREA ═══════ */}
-      <div className="flex-1 relative overflow-hidden flex flex-col">
-
-        {/* Loading overlay */}
-        {pdfLoading && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0d0d0d]/90 backdrop-blur-sm">
-            <div className="w-14 h-14 rounded-full border-4 border-gray-700 border-t-red-500 animate-spin mb-4" />
-            <p className="text-sm font-bold text-gray-400">
-              Loading {pageImages.length}/{totalPages || '...'} pages
-            </p>
-            {totalPages > 0 && (
-              <div className="w-48 h-1.5 bg-gray-800 rounded-full mt-3 overflow-hidden">
-                <div className="h-full bg-red-600 rounded-full transition-all" style={{ width: `${(pageImages.length / totalPages) * 100}%` }} />
+          {/* White Canvas Viewer */}
+          <div className="flex-1 bg-gray-100 relative overflow-hidden flex flex-col" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            
+            {/* Loading Overlay */}
+            {pdfLoading && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-100/90 backdrop-blur-sm">
+                <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin mb-3" />
+                <p className="text-sm font-bold text-gray-800">Loading {pageImages.length}/{totalPages || '...'} pages</p>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Thumbnail Grid Overlay (mobile) */}
-        {showThumbnails && hasPages && (
-          <div className="absolute inset-0 z-40 bg-[#0d0d0d] overflow-auto p-3">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-bold text-sm">All Pages</h3>
-              <button onClick={() => setShowThumbnails(false)} className="text-gray-400 text-xs font-bold px-3 py-1.5 rounded-lg bg-gray-800">Close</button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {pageImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToPage(idx)}
-                  className={`rounded-lg overflow-hidden border-2 ${currentPage === idx ? 'border-red-500' : 'border-gray-700'}`}
-                >
-                  <img src={img} alt={`Page ${idx + 1}`} className="w-full aspect-[3/4] object-cover" draggable={false} />
-                  <div className={`text-[10px] font-bold text-center py-1 ${currentPage === idx ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}>
-                    Page {idx + 1}
+            {/* The PDF Image */}
+            <div className="epaper-viewer flex-1 overflow-auto bg-[#e5e5e5] relative w-full h-full p-4 md:p-8">
+              {hasPages && pageImages[currentPage] ? (
+                <div className="w-full flex justify-center">
+                  <div style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: 'top center', transition: 'transform 0.2s ease' }} className="shadow-2xl">
+                    <img
+                      src={pageImages[currentPage]}
+                      alt={`Page ${currentPage + 1}`}
+                      className="max-w-[1000px] w-full object-contain bg-white"
+                      draggable={false}
+                    />
                   </div>
-                </button>
-              ))}
+                </div>
+              ) : !pdfLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-400 font-bold">Select an edition to read</p>
+                </div>
+              ) : null}
             </div>
+
+            {/* Floating Navigation Arrows */}
+            {hasPages && currentPage > 0 && (
+              <button onClick={prevPage} className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur shadow-xl flex">
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+            )}
+            {hasPages && currentPage < totalPages - 1 && (
+              <button onClick={nextPage} className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur shadow-xl flex">
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
           </div>
-        )}
-
-        {/* Desktop: Left Arrow */}
-        {hasPages && currentPage > 0 && (
-          <button
-            onClick={prevPage}
-            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow-xl border border-white/10 transition-all"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-        )}
-
-        {/* Newspaper Page Image — EDGE-TO-EDGE on mobile, centered on desktop */}
-        <div
-          className="epaper-viewer flex-1 overflow-auto"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          style={{ WebkitOverflowScrolling: 'touch' }}
-        >
-          {hasPages && pageImages[currentPage] ? (
-            <div className="md:flex md:justify-center md:py-4 md:px-4">
-              <div style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: 'top center' }}>
-                <img
-                  src={pageImages[currentPage]}
-                  alt={`Page ${currentPage + 1}`}
-                  className="w-full md:w-auto md:max-w-[900px] lg:max-w-[1000px] xl:max-w-[1100px] md:max-h-[calc(100vh-180px)] md:object-contain select-none block"
-                  draggable={false}
-                  style={{ boxShadow: zoom === 1 ? undefined : '0 8px 40px rgba(0,0,0,0.6)' }}
-                />
-              </div>
-            </div>
-          ) : !pdfLoading ? (
-            <div className="flex items-center justify-center min-h-[60vh] w-full">
-              <div className="text-center">
-                <BookOpen className="w-14 h-14 mx-auto mb-3 text-gray-700" />
-                <p className="font-medium text-gray-500 text-sm">Select an edition to read</p>
-              </div>
-            </div>
-          ) : null}
         </div>
 
-        {/* Desktop: Right Arrow */}
-        {hasPages && currentPage < totalPages - 1 && (
-          <button
-            onClick={nextPage}
-            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur-md shadow-xl border border-white/10 transition-all"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </button>
+        {/* RIGHT SIDEBAR: Today's Edition & Others (Hidden in fullscreen) */}
+        {!isFullscreen && (
+          <div className="hidden xl:flex flex-col w-[320px] shrink-0 gap-6">
+            {/* Today's Edition */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden p-5">
+              <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                <h3 className="font-black text-sm text-gray-900">Today's Edition</h3>
+              </div>
+              <p className="text-xs font-bold text-gray-800 mb-1">Wednesday, 16 September 2026</p>
+              <p className="text-[11px] text-gray-500 mb-1">Pune Edition</p>
+              <p className="text-[11px] text-gray-400 mb-5">12 Pages | ₹5</p>
+              
+              <button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
+                <BookOpen className="w-4 h-4" /> Read Now
+              </button>
+              <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold py-2.5 rounded-lg transition-colors">
+                <Download className="w-4 h-4" /> Download PDF
+              </button>
+            </div>
+
+            {/* Other Editions */}
+            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden p-5">
+              <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-500">📅</span>
+                  <h3 className="font-black text-sm text-gray-900">Other Editions</h3>
+                </div>
+                <button className="text-[10px] font-bold text-red-600">View All →</button>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  { day: 'Tuesday', date: '15 September 2026', img: '/epaper-thumb-1.jpg' },
+                  { day: 'Monday', date: '14 September 2026', img: '/epaper-thumb-2.jpg' },
+                  { day: 'Sunday', date: '13 September 2026', img: '/epaper-thumb-3.jpg' },
+                  { day: 'Saturday', date: '12 September 2026', img: '/epaper-thumb-4.jpg' },
+                  { day: 'Friday', date: '11 September 2026', img: '/epaper-thumb-5.jpg' },
+                ].map(ed => (
+                  <div key={ed.day} className="flex gap-3 cursor-pointer group">
+                    <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded overflow-hidden shadow-sm group-hover:border-red-400 transition-colors shrink-0 flex items-center justify-center">
+                      <Newspaper className="w-5 h-5 text-gray-300" />
+                    </div>
+                    <div className="flex-1 py-1">
+                      <h4 className="font-black text-xs text-gray-900 group-hover:text-red-600 transition-colors">{ed.day}</h4>
+                      <p className="text-[10px] text-gray-500">{ed.date}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </div>
-
-      {/* ═══════ MOBILE BOTTOM NAV BAR (Lokmat-style) ═══════ */}
-      {hasPages && (
-        <div className="md:hidden bg-[#1a1a1a] border-t border-gray-800 shrink-0 safe-bottom">
-          {/* Page counter + mini strip */}
-          <div className="flex items-center gap-1 px-2 pt-2 pb-1 overflow-x-auto scrollbar-thin">
-            {Array.from({ length: totalPages }, (_, idx) => (
-              <button
-                key={idx}
-                onClick={() => goToPage(idx)}
-                className={`shrink-0 min-w-[28px] h-6 rounded text-[10px] font-bold ${
-                  currentPage === idx
-                    ? 'bg-red-600 text-white'
-                    : idx < pageImages.length
-                      ? 'bg-gray-800 text-gray-400'
-                      : 'bg-gray-800/40 text-gray-600'
-                }`}
-                disabled={idx >= pageImages.length}
-              >
-                {idx + 1}
-              </button>
-            ))}
-          </div>
-          {/* Prev / Grid / Next */}
-          <div className="flex items-center justify-between px-4 py-2">
-            <button
-              onClick={prevPage}
-              disabled={currentPage <= 0}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                currentPage > 0 ? 'bg-gray-800 text-white active:bg-gray-700' : 'text-gray-600'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Prev
-            </button>
-            <button
-              onClick={() => setShowThumbnails(!showThumbnails)}
-              className="p-2.5 rounded-lg bg-gray-800 text-gray-300 active:bg-gray-700"
-            >
-              <Grid3X3 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={nextPage}
-              disabled={currentPage >= totalPages - 1}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                currentPage < totalPages - 1 ? 'bg-gray-800 text-white active:bg-gray-700' : 'text-gray-600'
-              }`}
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ═══════ DESKTOP BOTTOM THUMBNAIL STRIP ═══════ */}
-      {hasPages && totalPages > 0 && (
-        <div className="hidden md:block bg-[#111] border-t border-gray-800 px-6 py-2 shrink-0">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-              {pageImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToPage(idx)}
-                  className={`flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all duration-200 ${currentPage === idx
-                    ? 'border-red-500 ring-2 ring-red-500/30 scale-105'
-                    : 'border-gray-700 hover:border-gray-600 opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img} alt={`Page ${idx + 1}`} className="w-14 h-20 object-cover" draggable={false} />
-                  <div className={`text-[8px] font-bold text-center py-0.5 ${currentPage === idx ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400'}`}>
-                    {idx + 1}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Scrollbar + safe area styles */}
       <style jsx global>{`

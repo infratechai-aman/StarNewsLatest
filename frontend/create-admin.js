@@ -1,7 +1,42 @@
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 const { getFirestore } = require('firebase-admin/firestore');
-require('dotenv').config({ path: '.env.local' });
+const fs = require('fs');
+const path = require('path');
+
+// Load .env.local without requiring external dotenv package
+const envPath = path.resolve(__dirname, '.env.local');
+if (fs.existsSync(envPath)) {
+    if (typeof process.loadEnvFile === 'function') {
+        try {
+            process.loadEnvFile(envPath);
+        } catch (e) {
+            // Fallback manual parser if loadEnvFile has formatting issues
+            parseEnvManually(envPath);
+        }
+    } else {
+        parseEnvManually(envPath);
+    }
+}
+
+function parseEnvManually(filePath) {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    content.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) return;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            let val = trimmed.slice(eqIdx + 1).trim();
+            if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                val = val.slice(1, -1);
+            }
+            if (!process.env[key]) {
+                process.env[key] = val;
+            }
+        }
+    });
+}
 
 // Initialize Firebase Admin (mimicking lib/firebaseAdmin.js)
 // Initialize Firebase Admin

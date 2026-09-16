@@ -147,65 +147,102 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-10" key={language}>
-      {/* Navigation */}
-      <div className="flex items-center justify-between mb-16">
-        <Button
-          variant="ghost"
-          onClick={handleBackToHome}
-          className="group flex items-center gap-4 font-black text-xs tracking-[0.3em] uppercase hover:bg-gray-100 rounded-full px-8 h-12 border-2 border-transparent hover:border-gray-200 transition-all"
-        >
-          <ArrowLeft className="h-5 w-5 group-hover:-translate-x-2 transition-transform text-red-600" />
-          {t('backToHome')}
-        </Button>
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-5 md:py-10" key={language}>
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-6 md:mb-8 overflow-hidden whitespace-nowrap text-ellipsis">
+        <button onClick={handleBackToHome} className="hover:text-red-600 transition-colors cursor-pointer flex items-center gap-1">
+          <ArrowLeft className="w-3 md:w-3.5 h-3 md:h-3.5" /> Home
+        </button>
+        <span>&gt;</span>
+        <button onClick={() => {if(setCurrentView) setCurrentView('news')}} className="hover:text-red-600 transition-colors cursor-pointer">
+          News
+        </button>
+        <span>&gt;</span>
+        <button className="hover:text-red-600 transition-colors cursor-pointer">
+          {category}
+        </button>
+        <span>&gt;</span>
+        <span className="text-gray-900 truncate">{title}</span>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-16">
+      <div className="grid lg:grid-cols-12 gap-8 lg:gap-16">
         {/* Main Article Content */}
-        <article className="lg:col-span-8 space-y-10 select-none" onContextMenu={(e) => e.preventDefault()}>
+        <article className="lg:col-span-8 space-y-6 select-none" onContextMenu={(e) => e.preventDefault()}>
           {/* Header Section */}
-          <div className="space-y-8">
-            <Badge className="bg-red-600 text-white px-6 py-2 font-black uppercase text-[10px] tracking-[0.4em] border-none shadow-[0_10px_30px_-5px_rgba(220,38,38,0.5)]">
-              {category}
-            </Badge>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <Badge className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 font-bold uppercase text-[11px] border-none rounded-full">
+                {category}
+              </Badge>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-gray-100 rounded-full p-1 border border-gray-200">
+                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A-</button>
+                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A</button>
+                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A+</button>
+                </div>
+                <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-black bg-gray-100 rounded-full border border-gray-200 transition-all">
+                  <Bookmark className="w-3.5 h-3.5" /> Save
+                </button>
+              </div>
+            </div>
 
-            <h1 className="text-4xl md:text-7xl font-heading font-black text-gray-900 leading-[0.9] tracking-tighter drop-shadow-sm">
+            <h1 className="text-2xl sm:text-3xl md:text-[40px] font-black text-gray-900 leading-[1.1] tracking-tight">
               {title}
             </h1>
+            
+            {(article.metaDescription || article.shortDescription) && (
+              <p className="text-base sm:text-lg md:text-xl font-medium text-gray-600 leading-snug">
+                {getLocalizedText(article.metaDescription || article.shortDescription, language)}
+              </p>
+            )}
           </div>
 
           {/* Author & Meta */}
-          <div className="flex flex-wrap items-center gap-8 py-10 border-y border-gray-100">
-            {(article.authorName || article.author?.name) && (
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-600 to-red-500 flex items-center justify-center text-white font-black text-xl shadow-lg ring-4 ring-red-50/50">
-                  {(() => {
-                    const name = article.authorName || article.author?.name
-                    return (name === 'Pune Majha News' ? 'StarNews Admin' : name)?.charAt(0)
-                  })()}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-gray-200">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px] font-bold text-gray-500">
+              {(article.authorName || article.author?.name) && (
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-sm">
+                    {(() => {
+                      const name = article.authorName || article.author?.name
+                      return (name === 'Pune Majha News' ? 'StarNews Admin' : name)?.charAt(0)
+                    })()}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-900 text-xs">
+                      {(article.authorName || article.author?.name) === 'Pune Majha News' ? 'StarNews Admin' : (article.authorName || article.author?.name)}
+                    </span>
+                    <svg className="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
+                    </svg>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">{t('writtenBy') || 'Correspondent'}</p>
-                  <p className="font-heading font-black text-xl text-gray-900 tracking-tight">
-                    {(article.authorName || article.author?.name) === 'Pune Majha News' ? 'StarNews Admin' : (article.authorName || article.author?.name)}
-                  </p>
-                </div>
+              )}
+              
+              <div className="flex items-center gap-4 border-l border-gray-300 pl-4">
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  {formatDate(article.publishedAt || article.createdAt)}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  5 min read
+                </span>
               </div>
-            )}
+            </div>
 
-            <div className="flex items-center gap-10 text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-auto">
-              <span className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-red-600" />
-                </div>
-                {formatDate(article.publishedAt || article.createdAt)}
-              </span>
-              <span className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-red-600" />
-                </div>
-                {(article.views || 0).toLocaleString()}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-gray-500 mr-1">Share:</span>
+              <button className="w-7 h-7 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80 transition-opacity"><Facebook className="w-3.5 h-3.5" /></button>
+              <button className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:opacity-80 transition-opacity">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </button>
+              <button className="w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:opacity-80 transition-opacity">
+                <MessageCircle className="w-3.5 h-3.5" />
+              </button>
+              <button className="w-7 h-7 rounded-full bg-gray-600 text-white flex items-center justify-center hover:opacity-80 transition-opacity">
+                <Share2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 
@@ -222,7 +259,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             }
             if (!videoId) return null
             return (
-              <div className="relative w-full rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100" style={{ paddingTop: '56.25%' }}>
+              <div className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
                   className="absolute top-0 left-0 w-full h-full"
@@ -234,8 +271,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </div>
             )
           })() : article.mainImage && (
-            <div className="relative aspect-video rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100">
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+            <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100">
               <Image
                 src={article.mainImage}
                 alt={title}
@@ -243,36 +279,26 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 className="object-cover"
                 priority
               />
-            </div>
-          )}
-
-          {/* Lead/Short Description */}
-          {(article.metaDescription || article.shortDescription) && (
-            <div className="relative p-12 bg-gray-50 rounded-[40px] border-l-[12px] border-red-600 shadow-sm overflow-hidden">
-              <Quote className="absolute top-8 right-10 w-20 h-20 text-red-600/5 rotate-12" />
-              <p className="text-2xl font-heading font-black text-gray-900 leading-tight tracking-tight italic relative z-10">
-                {getLocalizedText(article.metaDescription || article.shortDescription, language)}
-              </p>
+              <div className="absolute top-4 right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-3 py-1 rounded">
+                FILE PHOTO
+              </div>
             </div>
           )}
 
           {/* Article Body with Inline Gallery Images */}
-          <div className="prose prose-2xl max-w-none text-gray-800 leading-[1.8] magazine-body font-serif selection:bg-red-100">
+          <div className="text-gray-800 text-base md:text-lg leading-relaxed space-y-6 pb-6">
             {(() => {
               const galleryImgs = article.galleryImages && article.galleryImages.length > 0 ? article.galleryImages : []
 
               if (galleryImgs.length === 0) {
-                // No gallery images — render content normally
                 return (
                   <div
-                    className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                    className="space-y-6"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 )
               }
 
-              // Split content into paragraphs to insert images inline
-              // Split on </p> tags while keeping the tags
               const parts = content ? content.split(/(<\/p>)/i) : ['']
               const paragraphs = []
               for (let i = 0; i < parts.length; i += 2) {
@@ -280,23 +306,17 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 if (text.trim()) paragraphs.push(text)
               }
 
-              // If we can't split meaningfully, just put images after first chunk
               if (paragraphs.length <= 1) {
                 return (
                   <>
                     <div
-                      className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                      className="space-y-6"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                     />
-                    <div className="my-12 space-y-8">
+                    <div className="my-8 space-y-6">
                       {galleryImgs.map((img, idx) => (
-                        <div key={idx} className="relative w-full rounded-[32px] overflow-hidden shadow-xl border-4 border-white" style={{ aspectRatio: '16/10' }}>
-                          <Image
-                            src={img}
-                            alt={`${title} - Image ${idx + 2}`}
-                            fill
-                            className="object-cover"
-                          />
+                        <div key={idx} className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
+                          <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                         </div>
                       ))}
                     </div>
@@ -304,37 +324,26 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 )
               }
 
-              // Insert gallery images after the first paragraph
               const insertAfterIdx = Math.min(1, paragraphs.length - 1)
               const firstPart = paragraphs.slice(0, insertAfterIdx + 1).join('')
               const secondPart = paragraphs.slice(insertAfterIdx + 1).join('')
 
               return (
                 <>
-                  {/* First part of the article */}
                   <div
-                    className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                    className="space-y-6"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(firstPart) }}
                   />
-
-                  {/* Inline Gallery Images */}
-                  <div className="my-12 space-y-8">
+                  <div className="my-8 space-y-6">
                     {galleryImgs.map((img, idx) => (
-                      <div key={idx} className="relative w-full rounded-[32px] overflow-hidden shadow-xl border-4 border-white" style={{ aspectRatio: '16/10' }}>
-                        <Image
-                          src={img}
-                          alt={`${title} - Image ${idx + 2}`}
-                          fill
-                          className="object-cover"
-                        />
+                      <div key={idx} className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
+                        <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                       </div>
                     ))}
                   </div>
-
-                  {/* Rest of the article */}
                   {secondPart && (
                     <div
-                      className="text-2xl md:text-3xl text-gray-800 space-y-8 font-serif-premium subpixel-antialiased"
+                      className="space-y-6"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(secondPart) }}
                     />
                   )}
@@ -342,155 +351,174 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               )
             })()}
           </div>
+
+          {/* Tags */}
+          <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-gray-200">
+            <span className="text-sm font-bold text-gray-500">Tags:</span>
+            {['Tablighi Jamaat', 'Delhi High Court', 'Corona', 'Judiciary', 'India News'].map((tag, idx) => (
+              <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-4 py-1.5 rounded-full hover:bg-gray-50 transition-colors">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+
+          {/* Author Box */}
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 my-8">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-2xl shadow-sm">
+                S
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="font-bold text-gray-900 text-lg">StarNews Admin</h4>
+                  <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-500 font-medium">News Desk</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-start md:items-end gap-3">
+              <div className="flex items-center gap-2">
+                <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"><Facebook className="w-4 h-4" /></button>
+                <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </button>
+                <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                </button>
+                <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></button>
+              </div>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Trusted, Unbiased, For the People.</p>
+            </div>
+          </div>
+
+          {/* Prev/Next Articles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button className="flex items-center gap-4 p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-left group">
+              <ArrowLeft className="w-5 h-5 text-red-500 group-hover:-translate-x-1 transition-transform shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-gray-900 mb-1">Previous Article</p>
+                <p className="text-sm font-medium text-gray-600 line-clamp-2">Nitish Kumar took oath as the Chief Minister of Bihar for the 10th time</p>
+              </div>
+            </button>
+            <button className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-right group">
+              <div>
+                <p className="text-xs font-bold text-gray-900 mb-1">Next Article</p>
+                <p className="text-sm font-medium text-gray-600 line-clamp-2">No time limit for governors, no endless delays: Supreme Court</p>
+              </div>
+              <ArrowLeft className="w-5 h-5 text-red-500 rotate-180 group-hover:translate-x-1 transition-transform shrink-0" />
+            </button>
+          </div>
         </article>
 
         {/* Right Sidebar */}
-        <aside className="lg:col-span-4 space-y-12">
+        <aside className="lg:col-span-4 space-y-8">
           {/* Related Stories */}
-          <div className="bg-gradient-to-b from-gray-50 to-white rounded-[36px] p-8 lg:p-10 border border-gray-100 shadow-lg relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-red-600 via-red-500 to-orange-400" />
-            <div className="flex items-center gap-4 mb-8">
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-800 shrink-0">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-1 h-5 bg-red-600 rounded-full"></div>
+              <h3 className="text-lg font-bold text-gray-900">
                 {t('relatedStories')}
               </h3>
-              <div className="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></div>
+              <button className="ml-auto text-xs font-bold text-blue-600 hover:underline">View All +</button>
             </div>
-            <div className="space-y-6">
-              {relatedNews.slice(0, 4).map((item) => (
+            
+            <div className="space-y-4">
+              {relatedNews.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-5 group cursor-pointer p-3 -mx-3 rounded-2xl hover:bg-gray-100/60 transition-all duration-300"
+                  className="flex gap-4 group cursor-pointer bg-white p-2 rounded-xl hover:bg-gray-50 transition-colors"
                   onClick={() => handleRelatedClick(item)}
                 >
-                  <div className="relative w-32 h-24 shrink-0 rounded-2xl overflow-hidden bg-gray-100 shadow-md ring-1 ring-gray-200/50 transition-transform group-hover:scale-[1.03] duration-500">
+                  <div className="relative w-24 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-contain border-none"
+                      className="object-cover"
                     />
                   </div>
-                  <div className="flex-1 py-1 flex flex-col justify-center min-w-0">
-                    <Badge className="bg-red-50 text-red-600 border-none font-bold text-[9px] tracking-wider px-2 py-0.5 w-fit mb-2 uppercase">
-                      {getTranslatedCategory(item.category, language)}
-                    </Badge>
-                    <h4 className="font-heading font-black text-base lg:text-lg leading-tight group-hover:text-red-600 transition-colors tracking-tight line-clamp-2">
+                  <div className="flex-1 py-1 flex flex-col">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-bold text-red-600">{getTranslatedCategory(item.category, language)}</span>
+                      <span className="text-[10px] text-gray-400">{new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <h4 className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 leading-snug">
                       {getLocalizedText(item.title, language)}
                     </h4>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2 flex items-center gap-2">
-                      <Clock className="w-3 h-3 text-red-500" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Featured Advertisement */}
-          {articleAdSettings.banner?.enabled !== false && (
-            <div className="premium-card rounded-[48px] overflow-hidden shadow-2xl border-8 border-white bg-white ring-1 ring-gray-100">
-              <div className="relative aspect-[4/5]">
-                {articleAdSettings.banner?.imageUrl ? (
-                  <a href={articleAdSettings.banner?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative group">
-                    <Image
-                      src={articleAdSettings.banner.imageUrl}
-                      alt="Ad"
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-[4000ms]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                    <div className="absolute bottom-10 left-10 right-10">
-                      <Badge className="bg-red-600 text-white border-none mb-4 uppercase font-black text-[10px] tracking-widest shadow-lg px-4 py-1.5">{t('sponsored') || 'Editor\'s Choice'}</Badge>
-                      <h4 className="text-white font-heading font-black text-3xl leading-[1.1] tracking-tighter italic">Experience Peak Influence</h4>
-                    </div>
-                  </a>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] flex flex-col items-center justify-center p-14 text-center text-white relative">
-                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                    <Badge className="absolute top-10 left-10 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black text-[10px] tracking-[0.3em] px-5 py-2">PREMIUM</Badge>
-                    <p className="text-4xl font-serif italic font-bold mb-6 drop-shadow-lg">🎯 {t('yourAdHere') || 'Exclusive Reach'}</p>
-                    <p className="text-xs uppercase tracking-[0.4em] font-black opacity-40 mb-10 leading-relaxed">Reach Millions • Dominate Your Market</p>
-                    <Button className="rounded-full bg-red-600 text-white font-black hover:bg-white hover:text-red-600 transition-all px-12 h-14 shadow-xl text-xs tracking-widest">
-                      {t('getInTouch') || 'CONTACT US'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Top Stories Sidebar */}
-          <div className="bg-white rounded-[48px] p-10 border border-gray-100 shadow-xl overflow-hidden relative">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-blue-400"></div>
-            <div className="flex items-center gap-4 mb-10">
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 shrink-0">
-                {t('topStories') || 'Hot Right Now'}
+          {/* Trending Now */}
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <div className="flex items-center gap-2 mb-6">
+              <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+              <h3 className="text-lg font-bold text-gray-900">
+                Trending Now
               </h3>
-              <div className="h-px flex-1 bg-gray-100"></div>
             </div>
-            <div className="space-y-10">
-              {sidebarLatest.map((newsItem, idx) => (
+            
+            <div className="space-y-5">
+              {sidebarLatest.slice(0, 5).map((newsItem, idx) => (
                 <div
                   key={newsItem.id}
-                  className="flex gap-6 cursor-pointer group"
+                  className="flex gap-4 items-center group cursor-pointer"
                   onClick={() => handleRelatedClick(newsItem)}
                 >
-                  <span className="font-heading font-black text-5xl text-gray-100 group-hover:text-blue-600/30 transition-all leading-none shrink-0 italic transform -rotate-6">0{idx + 1}</span>
-                  <div className="pt-1">
-                    <p className="font-heading font-black text-xl leading-[1.2] group-hover:text-blue-600 transition-colors tracking-tight line-clamp-3">
-                      {getLocalizedText(newsItem.title, language)}
-                    </p>
-                    <Badge className="mt-3 bg-blue-50 text-blue-600 border-none font-black text-[8px] tracking-widest px-3 py-1 uppercase">{getTranslatedCategory(newsItem.category, language)}</Badge>
+                  <div className="w-8 h-8 rounded-full bg-white text-gray-400 font-bold text-sm flex items-center justify-center shrink-0 border border-gray-200">
+                    {idx + 1}
                   </div>
+                  <div className="relative w-16 h-12 shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <Image
+                      src={newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg'}
+                      alt=""
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <p className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+                    {getLocalizedText(newsItem.title, language)}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Vertical Sticky Ad */}
-          {articleAdSettings.sticky?.enabled !== false && (
-            <div className="sticky top-24">
-              <div className="rounded-[48px] overflow-hidden shadow-2xl border-8 border-white ring-1 ring-gray-100 aspect-[3/4.5] relative group">
-                {articleAdSettings.sticky?.imageUrl ? (
-                  <a href={articleAdSettings.sticky?.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
-                    <Image
-                      src={articleAdSettings.sticky.imageUrl}
-                      alt="Ad"
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-[6000ms]"
-                    />
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                    <Badge className="absolute top-8 right-8 bg-black/60 backdrop-blur-md text-white border-none font-black text-[9px] uppercase tracking-[0.2em] px-4 py-2 opacity-80">{t('advertisement')}</Badge>
-                  </a>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-700 to-blue-900 flex flex-col items-center justify-center p-12 text-center text-white relative">
-                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                    <Badge className="absolute top-10 right-10 bg-white/20 text-white border-none font-black text-[9px] uppercase tracking-widest px-4 py-1.5 backdrop-blur-sm">EDITORIAL</Badge>
-                    <p className="text-3xl font-heading font-black italic mb-4 leading-none tracking-tighter transform -rotate-2">Premium Discovery</p>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 mb-4 whitespace-nowrap">High-Impact Vertical</p>
-                    <div className="w-16 h-1 bg-white/30 rounded-full mt-4"></div>
-                  </div>
-                )}
-              </div>
+          {/* Newsletter / Stay Informed */}
+          <div className="bg-red-600 rounded-2xl p-8 relative overflow-hidden text-white shadow-xl">
+            <div className="relative z-10">
+              <h3 className="text-2xl font-black leading-tight mb-2">
+                Stay Informed<br/>with StarNews
+              </h3>
+              <p className="text-red-100 text-sm mb-6 leading-relaxed">
+                Get the latest news, breaking updates and top stories delivered to you.
+              </p>
+              
+              <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+                <input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="w-full px-4 py-3 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+                <Button className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
+                  Subscribe
+                </Button>
+              </form>
             </div>
-          )}
+            
+            <div className="absolute top-4 right-4 opacity-20 transform rotate-45">
+              <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </div>
+          </div>
         </aside>
         <style jsx>{`
-        .font-serif-premium {
-          font-family: var(--font-playfair), serif;
-        }
-        .magazine-body :global(p) {
-          margin-bottom: 2rem;
-        }
-        .magazine-body :global(p:first-of-type::first-letter) {
-          float: left;
-          font-size: 5.5rem;
-          line-height: 1;
-          padding: 0.5rem 0.75rem 0.25rem 0;
-          font-family: var(--font-playfair), serif;
-          font-weight: 900;
-          color: #dc2626;
-        }
       `}</style>
       </div>
     </div>

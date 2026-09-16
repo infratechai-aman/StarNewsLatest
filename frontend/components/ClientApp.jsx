@@ -25,6 +25,7 @@ import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import ShortsPage from '@/components/ShortsPage'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { auth } from '@/lib/api'
 import { auth as firebaseClientAuth } from '@/lib/firebase'
@@ -45,6 +46,47 @@ const ClientApp = ({ initialNewsData }) => {
     const [selectedArticle, setSelectedArticle] = useState(null)
     const [selectedBusiness, setSelectedBusiness] = useState(null)
     const [selectedClassified, setSelectedClassified] = useState(null)
+
+    // Unified navigation function that changes view, scrolls to top, and updates URL
+    const handleSetCurrentView = (view, extraState = {}) => {
+        setCurrentView(view)
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'instant' })
+            try {
+                const url = view === 'home' ? '/' : `?view=${view}`
+                window.history.pushState({ view, ...extraState }, '', url)
+            } catch (err) {
+                // Ignore history errors
+            }
+        }
+    }
+
+    // Scroll to top whenever view changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'instant' })
+        }
+    }, [currentView])
+
+    // Detect view from URL on initial page load
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const params = new URLSearchParams(window.location.search)
+        const viewParam = params.get('view')
+        const path = window.location.pathname.replace(/^\//, '')
+        const validViews = ['home', 'news', 'businesses', 'classifieds', 'live-tv', 'enewspaper', 'city', 'shorts', 'about', 'terms', 'privacy', 'login', 'register', 'daily-deals', 'reporter-dashboard', 'admin-dashboard', 'advertiser-dashboard']
+        const aliasMap = {
+            'livetv': 'live-tv',
+            'business': 'businesses',
+            'classified': 'classifieds',
+            'epaper': 'enewspaper',
+            'e-newspaper': 'enewspaper'
+        }
+        const resolvedView = viewParam || aliasMap[path] || (validViews.includes(path) ? path : null)
+        if (resolvedView && validViews.includes(resolvedView)) {
+            setCurrentView(resolvedView)
+        }
+    }, [])
 
     // Use the server-fetched data as our initial state
     const [newsData, setNewsData] = useState(initialNewsData || {
@@ -96,20 +138,16 @@ const ClientApp = ({ initialNewsData }) => {
     // Handle browser back/forward button
     useEffect(() => {
         const handlePopState = (event) => {
-            if (event.state?.view) {
-                setCurrentView(event.state.view)
-                if (event.state.article) {
-                    setSelectedArticle(event.state.article)
-                } else {
-                    setSelectedArticle(null)
-                }
+            const params = new URLSearchParams(window.location.search)
+            const viewFromUrl = params.get('view')
+            const targetView = event.state?.view || viewFromUrl || 'home'
+            setCurrentView(targetView)
+            if (event.state?.article) {
+                setSelectedArticle(event.state.article)
             } else {
-                // No state means we're going back to initial page (home)
-                setCurrentView('home')
                 setSelectedArticle(null)
-                setSelectedBusiness(null)
-                setSelectedClassified(null)
             }
+            window.scrollTo({ top: 0, behavior: 'instant' })
         }
 
         window.addEventListener('popstate', handlePopState)
@@ -217,35 +255,36 @@ const ClientApp = ({ initialNewsData }) => {
                 <Header
                     user={user}
                     currentView={currentView}
-                    setCurrentView={setCurrentView}
+                    setCurrentView={handleSetCurrentView}
                     handleLogout={handleLogout}
                 />
 
                 <BreakingNewsTicker />
 
                 <ErrorBoundary fallbackMessage="This section failed to load. Please try refreshing.">
-                <main className={['home', 'live-tv', 'news', 'classifieds', 'city', 'enewspaper'].includes(currentView) ? "w-full pb-6" : "container py-6"}>
-                    {currentView === 'home' && <HomePage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
-                    {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={setCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
-                    {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
-                    {currentView === 'businesses' && <BusinessesPage setSelectedBusiness={setSelectedBusiness} setCurrentView={setCurrentView} />}
-                    {currentView === 'business-detail' && selectedBusiness && <BusinessDetailPage business={selectedBusiness} setCurrentView={setCurrentView} user={user} toast={toast} />}
+                <main className={['home', 'live-tv', 'news', 'classifieds', 'city', 'enewspaper', 'businesses', 'shorts'].includes(currentView) ? "w-full" : "container py-6"}>
+                    {currentView === 'home' && <HomePage setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
+                    {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={handleSetCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
+                    {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} />}
+                    {currentView === 'businesses' && <BusinessesPage setSelectedBusiness={setSelectedBusiness} setCurrentView={handleSetCurrentView} />}
+                    {currentView === 'business-detail' && selectedBusiness && <BusinessDetailPage business={selectedBusiness} setCurrentView={handleSetCurrentView} user={user} toast={toast} />}
                     {currentView === 'daily-deals' && <DailyDealsPage />}
-                    {currentView === 'classifieds' && <ClassifiedsPage user={user} toast={toast} setSelectedClassified={setSelectedClassified} setCurrentView={setCurrentView} />}
-                    {currentView === 'classified-detail' && selectedClassified && <ClassifiedDetailPage classified={selectedClassified} setCurrentView={setCurrentView} />}
-                    {currentView === 'live-tv' && <LiveTVPage setCurrentView={setCurrentView} />}
+                    {currentView === 'classifieds' && <ClassifiedsPage user={user} toast={toast} setSelectedClassified={setSelectedClassified} setCurrentView={handleSetCurrentView} />}
+                    {currentView === 'classified-detail' && selectedClassified && <ClassifiedDetailPage classified={selectedClassified} setCurrentView={handleSetCurrentView} />}
+                    {currentView === 'live-tv' && <LiveTVPage setCurrentView={handleSetCurrentView} />}
                     {currentView === 'enewspaper' && <EnewspaperPage />}
-                    {currentView === 'city' && <CityPage setCurrentView={setCurrentView} setSelectedArticle={setSelectedArticle} />}
+                    {currentView === 'city' && <CityPage setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} />}
+                    {currentView === 'shorts' && <ShortsPage setCurrentView={handleSetCurrentView} />}
                     {currentView === 'about' && <AboutUsPage />}
                     {currentView === 'terms' && <TermsConditionsPage />}
                     {currentView === 'privacy' && <PrivacyPolicyPage />}
-                    {currentView === 'login' && <LoginPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-                    {currentView === 'register' && <RegisterPage setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
-                    {currentView === 'force-password-change' && user?.requirePasswordChange && <ForcePasswordChange user={user} setUser={setUser} setCurrentView={setCurrentView} toast={toast} />}
+                    {currentView === 'login' && <LoginPage setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
+                    {currentView === 'register' && <RegisterPage setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
+                    {currentView === 'force-password-change' && user?.requirePasswordChange && <ForcePasswordChange user={user} setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
                 </main>
                 </ErrorBoundary>
 
-                <Footer setCurrentView={setCurrentView} />
+                <Footer setCurrentView={handleSetCurrentView} />
             </div>
         </LanguageProvider>
     )

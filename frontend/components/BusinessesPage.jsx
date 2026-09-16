@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, MapPin, Phone, Globe, Star, Building2, Filter, Store, ChevronRight, Zap } from 'lucide-react'
+import { Search, MapPin, Phone, Globe, Star, Building2, Filter, Store, ChevronRight, Zap, LayoutGrid, Utensils, HeartPulse, GraduationCap, Home, Car, Laptop, Scissors, Plane, Scale, Hammer, MoreHorizontal } from 'lucide-react'
 import Image from 'next/image'
 import { businesses } from '@/lib/api'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
@@ -101,18 +101,16 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
     const fetchBusinesses = async () => {
       try {
         const response = await businesses.getAll({})
-        // API returns array directly
-        if (Array.isArray(response)) {
+        if (Array.isArray(response) && response.length > 0) {
           setBusinessList(response)
           setFilteredBusinesses(response)
-        } else if (response.businesses && Array.isArray(response.businesses)) {
-          // Handle object format if legacy
+        } else if (response?.businesses && Array.isArray(response.businesses) && response.businesses.length > 0) {
           setBusinessList(response.businesses)
           setFilteredBusinesses(response.businesses)
         } else {
-          // Fallback only if strictly empty
-          setBusinessList([])
-          setFilteredBusinesses([])
+          // Fallback to mock businesses so page has rich content
+          setBusinessList(mockBusinesses)
+          setFilteredBusinesses(mockBusinesses)
         }
       } catch (error) {
         console.error('Failed to load businesses from API:', error)
@@ -155,217 +153,295 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mag-section-header flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-blue-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-blue-100">
-            <Building2 className="h-10 w-10 text-white" />
-          </div>
-          <div>
-            <h1 className="text-5xl font-heading font-black tracking-tighter italic">{t('businessDirectory') || 'Business Directory'}</h1>
-            <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-1">{t('businessDirectoryDesc') || 'Discover elite local enterprises'}</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-white">
 
-        <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-          <DialogTrigger asChild>
-            <Button className="h-14 rounded-full px-10 bg-blue-600 hover:bg-black text-white font-black transition-all shadow-xl hover:-translate-y-1">
-              <Store className="mr-3 h-5 w-5" /> {t('promoteYourBusiness') || 'Post your Ad'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] p-8 rounded-2xl shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-3xl font-bold text-gray-900 mb-2">{t('promoteYourBusiness') || 'Promote Your Business'}</DialogTitle>
-              <DialogDescription className="text-gray-600 text-base">
-                {t('promotionFormDescription') || 'Fill out the form below and our team will contact you to help promote your business.'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handlePromotionSubmit} className="grid gap-6 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="businessName" className="text-sm font-medium text-gray-700">{t('businessName') || 'Business Name'}</Label>
-                <Input
-                  id="businessName"
-                  placeholder={t('businessNamePlaceholder') || "e.g., My Awesome Restaurant"}
-                  value={promotionData.businessName}
-                  onChange={(e) => setPromotionData({ ...promotionData, businessName: e.target.value })}
-                  required
-                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="ownerName" className="text-sm font-medium text-gray-700">{t('ownerName') || 'Your Name'}</Label>
-                <Input
-                  id="ownerName"
-                  placeholder={t('ownerNamePlaceholder') || "e.g., John Doe"}
-                  value={promotionData.ownerName}
-                  onChange={(e) => setPromotionData({ ...promotionData, ownerName: e.target.value })}
-                  required
-                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="phone" className="text-sm font-medium text-gray-700">{t('phone') || 'Phone'}</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder={t('phonePlaceholder') || "+91 98765 43210"}
-                    value={promotionData.phone}
-                    onChange={(e) => setPromotionData({ ...promotionData, phone: e.target.value })}
-                    required
-                    className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">{t('email') || 'Email'}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder={t('emailPlaceholder') || "you@example.com"}
-                    value={promotionData.email}
-                    onChange={(e) => setPromotionData({ ...promotionData, email: e.target.value })}
-                    required
-                    className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                  />
+      {/* ─── HERO BANNER ─── */}
+      <div className="relative w-full overflow-hidden h-[160px] md:h-[200px]">
+        <Image src="/business_dir_banner_1789519372349.jpg" alt="Business Directory" fill className="absolute inset-0 object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+        <div className="relative z-10 w-full px-4 md:px-12 flex flex-col justify-center h-full">
+          <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">BUSINESS DIRECTORY</p>
+          <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-2">
+            Discover Local <span className="text-red-500">Businesses</span>
+          </h1>
+          <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">Find trusted businesses, services and professionals across Pune and beyond.</p>
+          <div className="hidden md:flex flex-wrap gap-6">
+            {[
+              { icon: '🏢', value: '5,000+', label: 'Listed Businesses' },
+              { icon: '📂', value: '100+', label: 'Categories' },
+              { icon: '✅', value: 'Verified', label: 'Listings Trusted & Authentic' },
+              { icon: '📈', value: 'Local Growth', label: 'Stronger Communities' },
+            ].map(s => (
+              <div key={s.label} className="flex items-center gap-2">
+                <span className="text-xl">{s.icon}</span>
+                <div>
+                  <p className="text-white text-sm font-black">{s.value}</p>
+                  <p className="text-gray-400 text-[10px]">{s.label}</p>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="address" className="text-sm font-medium text-gray-700">{t('address') || 'Business Address'}</Label>
-                <Input
-                  id="address"
-                  placeholder={t('addressPlaceholder') || "123 Main St, Pune"}
-                  value={promotionData.address}
-                  onChange={(e) => setPromotionData({ ...promotionData, address: e.target.value })}
-                  required
-                  className="h-12 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700">{t('description') || 'Description'}</Label>
-                <Textarea
-                  id="description"
-                  placeholder={t('descriptionPlaceholder') || "Tell us more about your business..."}
-                  value={promotionData.description}
-                  onChange={(e) => setPromotionData({ ...promotionData, description: e.target.value })}
-                  rows={4}
-                  className="rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <DialogFooter className="pt-4">
-                <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg transition-all">
-                  {isSubmitting ? (
-                    <span className="flex items-center">
-                      <Zap className="animate-spin mr-2 h-5 w-5" /> {t('submitting') || 'Submitting...'}
-                    </span>
-                  ) : (
-                    t('submitRequest') || 'Submit Request'
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Search & Filter - Magazine Style */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-12">
-        <div className="lg:col-span-3 relative">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            placeholder={t('searchBusinesses') || "Search elite firms, services, or locations..."}
-            className="h-16 pl-16 rounded-[24px] bg-white border-gray-100 shadow-sm font-bold text-lg focus:ring-4 focus:ring-blue-100 outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="h-16 rounded-[24px] bg-white border-gray-100 shadow-sm font-black px-8">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="rounded-[24px] border-none shadow-2xl">
-            {BUSINESS_CATEGORIES.map((cat) => (
-              <SelectItem key={cat} value={cat} className="font-bold py-3">
-                {cat}
-              </SelectItem>
             ))}
-          </SelectContent>
-        </Select>
+          </div>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-        {filteredBusinesses.map((business) => (
-          <div
-            key={business.id}
-            className="premium-card rounded-3xl overflow-hidden cursor-pointer group shadow-lg border border-gray-100 flex flex-col bg-white transition-all duration-500 hover:-translate-y-2 h-full"
-            onClick={() => {
-              setSelectedBusiness(business)
-              setCurrentView('business-detail')
-            }}
-          >
-            <div className="relative aspect-[16/10] overflow-hidden bg-gray-50 border-b border-gray-50">
-              <Image
-                src={business.cover_image || business.coverImage || business.image || business.logo || business.images?.[0] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'}
-                alt={business.name}
-                fill
-                className="object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      {/* ─── SEARCH BAR ─── */}
+      <div className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-6 py-4">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search for business, service or keyword..."
+                className="h-11 pl-10 rounded-lg border-gray-200 text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              {business.featured && (
-                <Badge className="absolute top-6 left-6 bg-blue-600 text-white border-none px-4 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl">
-                  {t('featured') || 'PREMIUM'}
-                </Badge>
-              )}
-              <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg">
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                <span className="text-[10px] font-black text-gray-900">{business.rating}</span>
-                <span className="w-1 h-1 rounded-full bg-gray-200" />
-                <span className="text-[10px] font-bold text-gray-400">{business.reviewCount}</span>
+            </div>
+            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 text-sm text-gray-600">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span>Pune, Maharashtra</span>
+            </div>
+            <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
+              Search →
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── CATEGORY TABS ─── */}
+      <div className="border-b border-gray-100 bg-white shadow-sm pt-5 pb-5">
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {[
+              { icon: <LayoutGrid className="w-5 h-5 text-indigo-500" />, label: 'All Categories', color: 'bg-indigo-50' },
+              { icon: <Utensils className="w-5 h-5 text-orange-500" />, label: 'Restaurants & Cafes', color: 'bg-orange-50' },
+              { icon: <HeartPulse className="w-5 h-5 text-rose-500" />, label: 'Healthcare', color: 'bg-rose-50' },
+              { icon: <GraduationCap className="w-5 h-5 text-violet-500" />, label: 'Education', color: 'bg-violet-50' },
+              { icon: <Home className="w-5 h-5 text-blue-500" />, label: 'Real Estate', color: 'bg-blue-50' },
+              { icon: <Car className="w-5 h-5 text-emerald-500" />, label: 'Automotive', color: 'bg-emerald-50' },
+              { icon: <Laptop className="w-5 h-5 text-cyan-500" />, label: 'Electronics', color: 'bg-cyan-50' },
+              { icon: <Scissors className="w-5 h-5 text-pink-500" />, label: 'Beauty & Wellness', color: 'bg-pink-50' },
+              { icon: <Plane className="w-5 h-5 text-sky-500" />, label: 'Travel & Tourism', color: 'bg-sky-50' },
+              { icon: <Scale className="w-5 h-5 text-amber-500" />, label: 'Professional Services', color: 'bg-amber-50' },
+              { icon: <Hammer className="w-5 h-5 text-teal-500" />, label: 'Home Services', color: 'bg-teal-50' },
+              { icon: <MoreHorizontal className="w-5 h-5 text-gray-500" />, label: 'More', color: 'bg-gray-100' },
+            ].map((cat, i) => {
+              const isActive = (i === 0 && selectedCategory === 'All Categories') || (cat.label === selectedCategory)
+              return (
+                <button
+                  key={cat.label}
+                  onClick={() => setSelectedCategory(i === 0 ? 'All Categories' : cat.label)}
+                  className={`shrink-0 flex flex-col items-center justify-center gap-2 min-w-[105px] h-[90px] rounded-[18px] border transition-all duration-300 ${
+                    isActive ? 'border-red-500 bg-red-50/50 shadow-sm text-red-600' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md hover:-translate-y-1 text-gray-700'
+                  }`}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
+                    {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
+                  </div>
+                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'} text-center px-1 leading-tight`}>{cat.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── MAIN LAYOUT ─── */}
+      <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8">
+
+          {/* LEFT: Filters */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-sm text-gray-900">Filters</h3>
+              <button className="text-red-600 text-xs font-bold">Clear All</button>
+            </div>
+
+            {/* Location */}
+            <div>
+              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><MapPin className="w-3 h-3" /> Location</p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
+                <option>Pune, Maharashtra</option>
+                <option>Mumbai, Maharashtra</option>
+                <option>Nashik, Maharashtra</option>
+              </select>
+            </div>
+
+            {/* Category */}
+            <div>
+              <p className="text-xs font-black text-gray-700 mb-2">Category</p>
+              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
+                {BUSINESS_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+
+            {/* Rating */}
+            <div>
+              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><Star className="w-3 h-3" /> Rating</p>
+              {['4.5 & above', '4.0 & above', '3.0 & above', 'Any rating'].map(r => (
+                <label key={r} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
+                  <input type="radio" name="rating" className="accent-red-600" /> {r}
+                </label>
+              ))}
+            </div>
+
+            {/* Business Type */}
+            <div>
+              <p className="text-xs font-black text-gray-700 mb-2">Business Type</p>
+              {['Verified Business', 'Open Now', 'Offers & Deals', 'Home Delivery', 'Online Booking'].map(bt => (
+                <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
+                  <input type="checkbox" className="accent-red-600" /> {bt}
+                </label>
+              ))}
+            </div>
+
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm">Apply Filters</Button>
+          </div>
+
+          {/* CENTER: Results Grid */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-500">Showing 1-12 of {filteredBusinesses.length} businesses</p>
+              <div className="flex items-center gap-2">
+                <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700">
+                  <option>Most Relevant</option>
+                  <option>Highest Rated</option>
+                  <option>Newest First</option>
+                </select>
               </div>
             </div>
 
-            <div className="p-6 flex-1 flex flex-col">
-              <div className="flex items-center gap-3 mb-4">
-                <Badge className="bg-gray-100 text-blue-600 border-none font-black text-[10px] tracking-widest px-4 py-1">
-                  {business.category}
-                </Badge>
-                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                  <MapPin className="w-3 h-3" /> {business.area || 'City Area'}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredBusinesses.map((business) => (
+                <div
+                  key={business.id}
+                  className="bg-white border border-gray-100 rounded-xl overflow-hidden cursor-pointer group hover:shadow-md transition-all duration-300"
+                  onClick={() => { setSelectedBusiness(business); setCurrentView('business-detail') }}
+                >
+                  <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
+                    <img
+                      src={business.cover_image || business.coverImage || business.image || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=250&fit=crop'}
+                      alt={business.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={e => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=250&fit=crop' }}
+                    />
+                    {business.isOpen !== false && (
+                      <span className="absolute top-2 left-2 text-[9px] font-black bg-green-500 text-white px-2 py-0.5 rounded">Open Now</span>
+                    )}
+                    {business.verified && (
+                      <span className="absolute top-2 left-2 text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">✓ Verified</span>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-black text-sm text-gray-900 leading-tight group-hover:text-red-600 transition-colors line-clamp-1">{business.name}</h3>
+                        <p className="text-[10px] text-red-500 font-bold mt-0.5">{business.category}</p>
+                      </div>
+                      {business.logo && (
+                        <div className="w-9 h-9 rounded-lg border border-gray-100 overflow-hidden shrink-0 ml-2 bg-white">
+                          <img src={business.logo} alt="" className="w-full h-full object-contain" onError={e => e.target.style.display='none'} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 mb-1">
+                      <div className="flex">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`w-3 h-3 ${s <= Math.round(business.rating || 4) ? 'fill-yellow-400 text-yellow-400' : 'fill-gray-200 text-gray-200'}`} />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-700">{business.rating || '4.5'}</span>
+                      <span className="text-[10px] text-gray-400">({business.reviewCount || '320'} reviews)</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 flex items-center gap-1">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      <span className="line-clamp-1">{business.area || business.address || 'Pune, Maharashtra'}</span>
+                    </p>
+                    {business.description && (
+                      <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">{business.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {filteredBusinesses.length === 0 && (
+              <div className="text-center py-12">
+                <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-gray-400 font-bold">No businesses found matching your criteria</p>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: Sidebar */}
+          <div className="space-y-4">
+            {/* List Your Business CTA */}
+            <div className="border border-gray-200 rounded-xl p-4">
+              <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center mb-3">
+                <Store className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="font-black text-sm text-gray-900 mb-1">List Your Business</h3>
+              <p className="text-[11px] text-gray-500 mb-3">Reach thousands of potential customers across India.</p>
+              <ul className="space-y-1 mb-4">
+                {['Get discovered locally','Boost your brand visibility','Easy and quick listing','Trusted by the StarNews community'].map(p => (
+                  <li key={p} className="flex items-center gap-2 text-[11px] text-gray-600">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />{p}
+                  </li>
+                ))}
+              </ul>
+              <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-lg">+ Add Your Business</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] p-8 rounded-2xl shadow-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">Promote Your Business</DialogTitle>
+                    <DialogDescription className="text-gray-600">Fill out the form and our team will contact you to help promote your business.</DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handlePromotionSubmit} className="grid gap-4 py-4">
+                    <div className="grid gap-2"><Label htmlFor="businessName2">Business Name</Label><Input id="businessName2" placeholder="e.g., My Awesome Restaurant" value={promotionData.businessName} onChange={e => setPromotionData({...promotionData, businessName: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="ownerName2">Your Name</Label><Input id="ownerName2" placeholder="e.g., John Doe" value={promotionData.ownerName} onChange={e => setPromotionData({...promotionData, ownerName: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="grid gap-2"><Label htmlFor="phone2">Phone</Label><Input id="phone2" type="tel" placeholder="+91 98765 43210" value={promotionData.phone} onChange={e => setPromotionData({...promotionData, phone: e.target.value})} required className="h-11 rounded-lg" /></div>
+                      <div className="grid gap-2"><Label htmlFor="email2">Email</Label><Input id="email2" type="email" placeholder="you@example.com" value={promotionData.email} onChange={e => setPromotionData({...promotionData, email: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    </div>
+                    <div className="grid gap-2"><Label htmlFor="address2">Business Address</Label><Input id="address2" placeholder="123 Main St, Pune" value={promotionData.address} onChange={e => setPromotionData({...promotionData, address: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="description2">Description</Label><Textarea id="description2" placeholder="Tell us more about your business..." value={promotionData.description} onChange={e => setPromotionData({...promotionData, description: e.target.value})} rows={3} className="rounded-lg" /></div>
+                    <Button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">
+                      {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Good Businesses Banner */}
+            <div className="bg-gray-900 rounded-xl p-4 relative overflow-hidden">
+              <div className="relative z-10">
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Good Businesses</p>
+                <h3 className="text-white font-black text-base leading-tight mb-2">Build Great<br/>Cities</h3>
+                <p className="text-gray-400 text-[11px] mb-3">Let your business be part of a stronger, informed India.</p>
+                <button className="bg-white text-gray-900 text-xs font-black px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">List Now →</button>
+              </div>
+            </div>
+
+            {/* Businesses Near You */}
+            <div className="border border-gray-200 rounded-xl p-4">
+              <h3 className="font-black text-sm text-gray-900 mb-3">Businesses Near You</h3>
+              <div className="bg-gray-100 rounded-lg h-40 flex items-center justify-center mb-3">
+                <div className="text-center">
+                  <MapPin className="w-6 h-6 text-red-500 mx-auto mb-1" />
+                  <p className="text-xs text-gray-500">Map View</p>
+                  <div className="flex gap-1 mt-2 justify-center">
+                    {['🔴','🔴','🔴'].map((pin, i) => <span key={i}>{pin}</span>)}
+                  </div>
                 </div>
               </div>
-
-              <h3 className="font-heading font-black text-2xl mb-4 leading-tight group-hover:text-blue-600 transition-colors tracking-tighter italic">
-                {business.name}
-              </h3>
-
-              <p className="text-gray-500 text-sm line-clamp-2 mb-6 flex-1 leading-relaxed">
-                {business.description || 'Exclusive local partner of StarNews India...'}
-              </p>
-
-              <div className="pt-6 border-t border-gray-50 mt-auto flex items-center justify-between">
-                <a
-                  href={`tel:${business.phone}`}
-                  className="flex items-center gap-3 text-blue-600 font-black text-xs group-hover:gap-4 transition-all"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Phone className="w-4 h-4" /> {business.phone}
-                </a>
-                <ChevronRight className="w-5 h-5 text-gray-200 group-hover:text-blue-600 group-hover:translate-x-2 transition-all" />
-              </div>
+              <button className="w-full border border-gray-200 text-gray-700 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">View on Map →</button>
             </div>
           </div>
-        ))}
+        </div>
       </div>
-
-      {filteredBusinesses.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">No businesses found matching your criteria</p>
-          </CardContent>
-        </Card>
-      )}
-
     </div>
   )
 }

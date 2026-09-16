@@ -35,6 +35,17 @@ const nextConfig = {
     maxInactiveAge: 10000,
     pagesBufferLength: 2,
   },
+  async rewrites() {
+    return [
+      { source: '/enewspaper', destination: '/?view=enewspaper' },
+      { source: '/classifieds', destination: '/?view=classifieds' },
+      { source: '/businesses', destination: '/?view=businesses' },
+      { source: '/city', destination: '/?view=city' },
+      { source: '/live-tv', destination: '/?view=live-tv' },
+      { source: '/livetv', destination: '/?view=live-tv' },
+      { source: '/news', destination: '/?view=news' },
+    ];
+  },
   async headers() {
     // fix(P3-SEC-01): Use production domain as default instead of undefined/empty
     // which would make CORS headers absent. CORS_ORIGINS env var overrides this.
@@ -48,16 +59,14 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              // fix(P3-SEC-02): Removed 'unsafe-eval' from script-src.
-          // 'unsafe-eval' is required only for eval() / Function() — Next.js does not use it in production.
-          // 'unsafe-inline' is kept because Next.js injects inline scripts for hydration (unavoidable without nonces).
-          "script-src 'self' 'unsafe-inline' https://unpkg.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://vercel.live https://*.vercel.live",
+              "worker-src 'self' blob: https://cdn.jsdelivr.net",
               "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' https://www.youtube.com https://*.youtube.com blob:",
               "frame-src 'self' https://www.youtube.com https://www.google.com",
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://*.firebaseapp.com wss://*.firebaseio.com https://translate.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+              "connect-src 'self' data: blob: https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://*.firebaseapp.com wss://*.firebaseio.com https://translate.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

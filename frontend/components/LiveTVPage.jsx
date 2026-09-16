@@ -74,76 +74,52 @@ const LiveTVPage = ({ setCurrentView }) => {
     )
   }
 
-  // Disabled state
-  if (!config?.enabled || !config?.streams?.length) {
-    return (
-      <div className="min-h-[80vh] bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center px-4">
-        <div className="text-center max-w-lg">
-          <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-8">
-            <svg className="w-12 h-12 text-red-500/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-black text-white mb-3">Live TV</h2>
-          <p className="text-white/40 text-lg">No live broadcasts at the moment. Check back soon!</p>
-        </div>
-      </div>
-    )
+  const DEFAULT_STREAM = {
+    id: 'default-starnews',
+    title: 'Star News Live 24/7',
+    url: 'https://www.youtube.com/live/GFjuqQmfVIU',
+    description: 'Top stories. Ground reports. Expert analysis 24/7 from across India.',
+    isLive: true
   }
 
-  const activeStream = config.streams.find(s => s.id === activeStreamId) || config.streams[0]
-  const otherStreams = config.streams.filter(s => s.id !== activeStream?.id)
-  const youtubeId = extractYouTubeId(activeStream?.url)
-  const hasLiveStreams = config.streams.some(s => s.isLive)
+  const streams = (config?.streams && config.streams.length > 0) ? config.streams : [DEFAULT_STREAM]
+  const activeStream = streams.find(s => s.id === activeStreamId) || streams[0]
+  const otherStreams = streams.filter(s => s.id !== activeStream?.id)
+  const youtubeId = extractYouTubeId(activeStream?.url) || 'GFjuqQmfVIU'
+  const hasLiveStreams = streams.some(s => s.isLive)
   const currentAd = sidebarAds[adIndex]
 
+  const programSchedule = [
+    { time: '12:00 PM – 01:06 PM', show: 'Star News Live', desc: 'Top stories. Ground reports. Expert analysis.', live: true },
+    { time: '01:00 PM – 02:00 PM', show: 'News Bulletin', desc: '', live: false },
+    { time: '02:00 PM – 03:00 PM', show: 'Maharashtra Today', desc: '', live: false },
+    { time: '03:00 PM – 04:30 PM', show: 'Nation First', desc: '', live: false },
+    { time: '04:00 PM – 10:00 PM', show: 'Business Roundup', desc: '', live: false },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
+    <div className="min-h-screen bg-[#0f111a] pb-12">
 
-      {/* ====== TOP BRANDING BAR ====== */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-red-800 via-red-600 to-red-800 py-3 lg:py-3 px-4 lg:px-4 shadow-lg shadow-red-900/30">
-        {/* Subtle animated shimmer on mobile */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] lg:hidden" />
-        <div className="max-w-7xl mx-auto flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-2.5 lg:gap-3">
-            <span className="relative flex h-2.5 w-2.5 lg:h-3 lg:w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 lg:h-3 lg:w-3 bg-white" />
-            </span>
-            <span className="text-white font-black text-[13px] lg:text-sm tracking-[0.12em] lg:tracking-[0.2em] uppercase">Star News Live</span>
-            {hasLiveStreams && (
-              <Badge className="bg-white/20 text-white border-none text-[9px] lg:text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ml-0.5">
-                ON AIR
-              </Badge>
-            )}
-          </div>
-          <span className="text-white/60 text-[10px] lg:text-xs hidden sm:block font-medium" suppressHydrationWarning>
-            {new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </span>
-        </div>
-      </div>
+      {/* ====== MAIN CONTENT: Player + Schedule Sidebar ====== */}
+      <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 lg:gap-8">
 
-      {/* ====== MAIN CONTENT ====== */}
-      <div className="max-w-7xl mx-auto px-0 lg:px-4 pt-0 lg:pt-6 pb-6 lg:pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-0 lg:gap-6">
-
-          {/* ====== LEFT COLUMN: Player + News ====== */}
-          <div className="space-y-0 lg:space-y-6">
-
-            {/* Video Player — Full width on mobile, no border radius */}
-            <div className="relative rounded-none lg:rounded-2xl overflow-hidden bg-black shadow-[0_0_80px_rgba(220,38,38,0.12)] ring-0 lg:ring-1 ring-white/10">
+          {/* LEFT: Video Player */}
+          <div>
+            {/* Player */}
+            <div className="relative rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/5 ring-1 ring-white/10">
               {activeStream?.isLive && (
-                <div className="absolute top-3 left-3 lg:top-4 lg:left-4 z-20">
-                  <span className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] lg:text-xs font-black uppercase tracking-widest px-3 lg:px-4 py-1 lg:py-1.5 rounded-lg shadow-lg shadow-red-600/40">
-                    <span className="relative flex h-1.5 w-1.5 lg:h-2 lg:w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 lg:h-2 lg:w-2 bg-white" />
-                    </span>
-                    LIVE
+                <div className="absolute top-4 left-4 z-20 flex gap-2">
+                  <span className="flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md text-white text-[11px] font-black tracking-wide px-3 py-1.5 rounded shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    ((•)) LIVE
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white/90 text-[11px] font-bold tracking-wide px-3 py-1.5 rounded shadow-lg">
+                    2.4K watching
                   </span>
                 </div>
               )}
-              <div className="aspect-video w-full">
+              <div className="aspect-video w-full relative">
                 {youtubeId ? (
                   <iframe
                     key={youtubeId}
@@ -155,404 +131,215 @@ const LiveTVPage = ({ setCurrentView }) => {
                     style={{ border: 'none' }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-900 aspect-video">
-                    <p className="text-white/40">Unable to load stream</p>
+                  <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                    <p className="text-white/40">Stream unavailable</p>
                   </div>
                 )}
-              </div>
-            </div>
+                
+                {/* Custom Gradient overlay at bottom for controls background */}
+                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-            {/* Stream Info — Premium glassmorphism card */}
-            <div className="mx-3 lg:mx-0 mt-3 lg:mt-0 relative overflow-hidden bg-gradient-to-br from-white/[0.10] via-white/[0.06] to-white/[0.03] border border-white/[0.12] rounded-2xl p-4 lg:p-5 backdrop-blur-xl shadow-xl shadow-black/20">
-              {/* Subtle gradient accent line at top on mobile */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-red-500/60 to-transparent lg:hidden" />
-              <div className="flex items-start justify-between gap-3 lg:gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {activeStream?.isLive ? (
-                      <Badge className="bg-red-600 text-white border-none text-[9px] lg:text-[10px] font-black uppercase tracking-wider px-2.5 lg:px-2.5 py-0.5 flex items-center gap-1.5 shadow-md shadow-red-600/30">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />LIVE
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-white/10 text-white/60 border-white/20 text-[9px] lg:text-[10px] font-bold uppercase tracking-wider px-2 lg:px-2.5 py-0.5">REPLAY</Badge>
-                    )}
+                {/* Breaking News Overlay (Inside Player) */}
+                <div className="absolute bottom-16 left-6 z-20 pointer-events-none">
+                  <div className="inline-block bg-red-600 text-white text-[13px] font-black uppercase tracking-wider px-3 py-1 mb-1">
+                    BREAKING NEWS
                   </div>
-                  <h2 className="text-white font-bold text-base lg:text-xl leading-tight">{activeStream?.title}</h2>
-                  <p className="text-white/35 text-[11px] lg:text-sm mt-1.5" suppressHydrationWarning>
-                    {activeStream?.isLive ? '🔴 Streaming live now' : `Added ${new Date(activeStream?.addedAt).toLocaleDateString('en-IN')}`}
-                  </p>
+                  <div className="bg-white/90 backdrop-blur-md px-4 py-2 max-w-2xl shadow-lg border-l-4 border-red-600">
+                    <p className="text-black text-xl font-black leading-tight drop-shadow-sm">
+                      {newsArticles[0] ? (typeof newsArticles[0].title === 'string' ? newsArticles[0].title : newsArticles[0].title?.en || '') : 'Mumbai BMC Elections 2026: 41.08% Voter Turnout Till 3:30 PM'}
+                    </p>
+                  </div>
                 </div>
-                <a href={activeStream?.url} target="_blank" rel="noopener noreferrer"
-                  className="shrink-0 bg-gradient-to-br from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 text-white text-[10px] lg:text-xs font-bold px-3.5 lg:px-5 py-2.5 lg:py-3 rounded-xl transition-all shadow-lg shadow-red-600/25 hover:shadow-red-600/40 flex items-center gap-1.5 lg:gap-2 whitespace-nowrap active:scale-95">
-                  <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#fff" /></svg>
-                  YouTube
-                </a>
               </div>
             </div>
 
-            {/* ====== ADVERTISEMENT BANNER (Mobile ONLY — Desktop uses sidebar individual ads) ====== */}
-            {sidebarAds.length > 0 && currentAd && (
-              <div className="mx-3 lg:hidden mt-4 relative overflow-hidden rounded-2xl">
-                <a href={currentAd.destinationUrl || '#'} target="_blank" rel="noopener noreferrer" className="block">
-                  <div className="relative bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.10] rounded-2xl overflow-hidden shadow-lg shadow-black/20">
-                    <div className="absolute top-2 right-2 z-10">
-                      <span className="text-[8px] text-white/30 font-bold uppercase tracking-widest bg-black/40 px-2 py-0.5 rounded-full backdrop-blur-sm">Ad</span>
-                    </div>
-                    <img
-                      src={currentAd.imageUrl}
-                      alt="Advertisement"
-                      className="w-full h-auto max-h-[180px] object-contain mx-auto transition-transform hover:scale-[1.02]"
-                    />
+            {/* Now Playing Info Bar */}
+            <div className="mt-6 flex flex-col md:flex-row md:items-start justify-between gap-6">
+              <div className="flex gap-4 items-start">
+                {/* Thumbnail */}
+                <div className="relative w-[140px] h-[85px] rounded-lg overflow-hidden bg-gray-900 shrink-0 border border-white/10 shadow-lg">
+                  {youtubeId && <img src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover opacity-80" />}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <span className="text-white text-sm font-black text-center leading-tight drop-shadow-md">STAR NEWS<br/>LIVE</span>
                   </div>
-                </a>
-                {/* Ad dots indicator */}
-                {sidebarAds.length > 1 && (
-                  <div className="flex justify-center gap-1.5 mt-3">
-                    {sidebarAds.map((_, i) => (
-                      <button key={i} onClick={() => setAdIndex(i)}
-                        className={`h-1.5 rounded-full transition-all duration-300 ${i === adIndex ? 'bg-red-500 w-6 shadow-sm shadow-red-500/50' : 'bg-white/20 hover:bg-white/40 w-1.5'}`} />
+                </div>
+                <div>
+                  <h2 className="text-white font-bold text-2xl leading-tight mb-1">{activeStream?.title || 'Star News Live'}</h2>
+                  <p className="text-gray-300 text-sm mb-3">{activeStream?.description || 'Top stories. Ground reports. Expert analysis.'}</p>
+                  <p className="text-gray-400 text-xs max-w-xl leading-relaxed mb-4">Stay updated with the latest news from across India and around the world with our live coverage, expert discussions and on-ground reporting.</p>
+                  <div className="flex gap-2">
+                    {['News','Live','Hindi','English'].map(tag => (
+                      <span key={tag} className="text-[10px] font-bold text-gray-400 border border-gray-700/50 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">{tag}</span>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
-            )}
-
-            {/* ====== LATEST NEWS SECTION ====== */}
-            {newsArticles.length > 0 && (
-              <div className="px-3 lg:px-0 mt-6 lg:mt-0 space-y-4">
+              {/* Stats */}
+              <div className="flex flex-col gap-3 min-w-[140px] shrink-0 border-l border-white/10 pl-6 hidden md:flex">
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-7 bg-gradient-to-b from-red-500 to-red-700 rounded-full" />
-                  <h3 className="text-white font-black text-base lg:text-lg uppercase tracking-wider">Latest News</h3>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
-                </div>
-
-                {/* Mobile: Premium horizontal scroll cards */}
-                <div className="lg:hidden">
-                  <div className="flex gap-3 overflow-x-auto pb-4 -mx-3 px-3 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-                    {newsArticles.slice(0, 8).map((article, idx) => (
-                      <div
-                        key={article.id || idx}
-                        className="snap-start shrink-0 w-[72vw] max-w-[280px] group cursor-pointer bg-gradient-to-br from-white/[0.08] via-white/[0.04] to-white/[0.02] border border-white/[0.10] rounded-2xl overflow-hidden transition-all duration-300 active:scale-[0.97] shadow-lg shadow-black/15"
-                        onClick={() => {
-                          if (setCurrentView) {
-                            window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
-                            setCurrentView('news-detail')
-                          }
-                        }}
-                      >
-                        {(article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image) && (
-                          <div className="relative w-full h-40 overflow-hidden">
-                            <img
-                              src={article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image}
-                              alt={typeof article.title === 'string' ? article.title : 'News'}
-                              className="w-full h-full object-cover"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                            {article.category && (
-                              <span className="absolute bottom-2.5 left-2.5 text-[9px] font-bold text-white bg-red-600 px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
-                                {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <div className="p-3.5">
-                          <h4 className="text-white/90 font-semibold text-[13px] line-clamp-2 leading-snug">
-                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
-                          </h4>
-                          <p className="text-white/30 text-[10px] mt-2.5 flex items-center gap-1.5" suppressHydrationWarning>
-                            <svg className="w-3 h-3 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            {article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                   </div>
+                  <div><p className="text-sm font-bold text-white">2.4K</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Watching Live</p></div>
                 </div>
-
-                {/* Desktop: 2-col grid (unchanged) */}
-                <div className="hidden lg:grid grid-cols-2 gap-4">
-                  {newsArticles.slice(0, 6).map((article, idx) => (
-                    <div
-                      key={article.id || idx}
-                      className="group cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-white/[0.12] rounded-xl overflow-hidden transition-all duration-300"
-                      onClick={() => {
-                        if (setCurrentView) {
-                          window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
-                          setCurrentView('news-detail')
-                        }
-                      }}
-                    >
-                      <div className="flex gap-3 p-3">
-                        {(article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image) && (
-                          <div className="shrink-0 w-28 h-20 rounded-lg overflow-hidden bg-white/5">
-                            <img
-                              src={article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl || article.image}
-                              alt={typeof article.title === 'string' ? article.title : 'News'}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              onError={(e) => e.target.style.display = 'none'}
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            {article.category && (
-                              <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">
-                                {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-white/80 group-hover:text-white font-semibold text-sm line-clamp-2 leading-snug transition-colors">
-                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
-                          </h4>
-                          <p className="text-white/25 text-[10px] mt-1.5" suppressHydrationWarning>
-                            {article.createdAt ? new Date(article.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  </div>
+                  <div><p className="text-sm font-bold text-white">HD</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Streaming in HD</p></div>
                 </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  </div>
+                  <div><p className="text-sm font-bold text-white">24/7</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">News Coverage</p></div>
+                </div>
+              </div>
+            </div>
 
-                {/* More news CTA */}
-                <div className="text-center pt-3">
-                  <button
-                    onClick={() => { if (setCurrentView) { window.history.pushState({ view: 'news' }, '', '?view=news'); setCurrentView('news') } }}
-                    className="text-red-400 hover:text-red-300 text-sm font-bold hover:underline transition-colors inline-flex items-center gap-1.5 active:scale-95"
-                  >
-                    View All News
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+            {/* Latest from Star News */}
+            {newsArticles.length > 0 && (
+              <div className="mt-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-[16px] font-black text-white flex items-center gap-2">
+                    <span className="w-1 h-5 bg-red-600 rounded-full block" />
+                    Latest from Star News
+                  </h2>
+                  <button onClick={() => setCurrentView && setCurrentView('news')} className="text-white/60 text-xs font-bold hover:text-white flex items-center gap-1 transition-colors">
+                    View All →
                   </button>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* ====== RIGHT SIDEBAR (Desktop Only) ====== */}
-          <div className="hidden lg:block space-y-5">
-
-            {/* Stream Playlist */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-white/80 font-bold text-xs uppercase tracking-[0.15em] flex items-center gap-2">
-                  <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-                  {config.streams.length > 1 ? 'All Streams' : 'Now Playing'}
-                </h3>
-                <span className="text-white/20 text-[10px] font-semibold">{config.streams.length}</span>
-              </div>
-
-              <div className="space-y-2">
-                {config.streams.map((stream) => {
-                  const thumbId = extractYouTubeId(stream.url)
-                  const isActive = stream.id === activeStreamId
-                  return (
-                    <div
-                      key={stream.id}
-                      className={`group cursor-pointer rounded-xl p-2.5 transition-all duration-200 flex gap-3 items-start ${isActive
-                        ? 'bg-red-600/20 border border-red-500/40 shadow-lg shadow-red-900/10'
-                        : 'bg-white/[0.04] border border-transparent hover:bg-white/[0.07] hover:border-white/10'
-                        }`}
-                      onClick={() => switchStream(stream.id)}
-                    >
-                      <div className="relative w-[120px] shrink-0 rounded-lg overflow-hidden aspect-video bg-gray-800">
-                        {thumbId ? (
-                          <img src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} alt={stream.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                            <svg className="w-6 h-6 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {newsArticles.slice(0, 4).map((article, idx) => {
+                    const thumb = article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl
+                    const title = typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || '')
+                    return (
+                      <div key={article.id || idx} className="cursor-pointer group flex flex-col h-full" onClick={() => { if (setCurrentView) { window.history.pushState({}, '', `?article=${article.id}`); setCurrentView('news-detail') } }}>
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-900 mb-3 shadow-md border border-white/5">
+                          {thumb ? <img src={thumb} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display='none'} /> : <div className="w-full h-full bg-gray-800" />}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                          
+                          {/* Play button overlay */}
+                          <div className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20">
+                            <svg className="w-2.5 h-2.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
                           </div>
-                        )}
-                        {!isActive && (
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                            <div className="w-8 h-8 bg-red-600/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100">
-                              <svg className="w-3.5 h-3.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            </div>
+                          
+                          {/* Duration Badge */}
+                          <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm tracking-wide">
+                            {idx === 0 ? '3:34' : idx === 1 ? '3:12' : idx === 2 ? '2:56' : '3:20'}
                           </div>
-                        )}
-                        {isActive && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="flex items-center gap-0.5">
-                              {[0, 150, 300, 450].map((d, i) => (
-                                <div key={d} className="w-0.5 bg-red-500 rounded-full animate-pulse" style={{ height: `${[14, 18, 12, 16][i]}px`, animationDelay: `${d}ms` }} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {stream.isLive && (
-                          <div className="absolute top-1 left-1">
-                            <span className="flex items-center gap-0.5 bg-red-600 text-white text-[7px] font-black uppercase px-1.5 py-0.5 rounded">
-                              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />LIVE
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 py-0.5">
-                        <h4 className={`font-semibold text-[13px] leading-snug line-clamp-2 ${isActive ? 'text-red-400' : 'text-white/70 group-hover:text-white/90'}`}>
-                          {stream.title}
-                        </h4>
-                        {stream.isLive ? (
-                          <span className="text-[10px] font-bold text-red-400 mt-1 block">Streaming Now</span>
-                        ) : (
-                          <span className="text-[10px] text-white/25 mt-1 block" suppressHydrationWarning>{new Date(stream.addedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                        )}
-                        {isActive && <span className="text-[9px] text-red-500/50 font-semibold mt-0.5 block">▶ Now Playing</span>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* ====== SIDEBAR ADS (Desktop only — NOT duplicated) ====== */}
-            {sidebarAds.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <span className="text-white/20 text-[10px] font-bold uppercase tracking-wider">Sponsored</span>
-                  <div className="flex-1 h-px bg-white/5" />
-                </div>
-                <div className="space-y-3">
-                  {sidebarAds.map((ad, i) => (
-                    <a key={i} href={ad.destinationUrl || '#'} target="_blank" rel="noopener noreferrer"
-                      className="block bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/[0.1] rounded-xl overflow-hidden transition-all duration-300 group">
-                      <div className="relative">
-                        <img src={ad.imageUrl} alt="Advertisement" className="w-full h-auto object-cover group-hover:scale-[1.03] transition-transform duration-500" />
-                        <span className="absolute top-1.5 right-1.5 text-[8px] text-white/25 font-bold uppercase tracking-widest bg-black/30 px-1.5 py-0.5 rounded">Ad</span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ====== MORE NEWS IN SIDEBAR (Desktop only) ====== */}
-            {newsArticles.length > 6 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1">
-                  <div className="w-1 h-5 bg-red-600 rounded-full" />
-                  <span className="text-white/60 text-xs font-bold uppercase tracking-wider">More Stories</span>
-                </div>
-                <div className="space-y-2">
-                  {newsArticles.slice(6, 12).map((article, idx) => (
-                    <div
-                      key={article.id || idx}
-                      className="group cursor-pointer p-3 bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.1] rounded-lg transition-all"
-                      onClick={() => {
-                        if (setCurrentView) {
-                          window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
-                          setCurrentView('news-detail')
-                        }
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="text-red-600/60 font-black text-lg leading-none shrink-0 mt-0.5">{idx + 1}.</span>
-                        <div className="min-w-0">
-                          <h5 className="text-white/60 group-hover:text-white/90 font-medium text-[13px] line-clamp-2 leading-snug transition-colors">
-                            {typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || 'News Article')}
-                          </h5>
-                          <span className="text-[10px] text-white/20 mt-1 block">
-                            {typeof article.category === 'string' ? article.category : (article.category?.name || 'News')}
-                          </span>
+                        </div>
+                        <h4 className="text-[13px] font-bold text-white/90 line-clamp-2 group-hover:text-white transition-colors leading-snug mb-1.5 flex-1">{title}</h4>
+                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/40 mt-auto">
+                          <span>{article.createdAt ? Math.max(1, Math.round((Date.now() - new Date(article.createdAt)) / 3600000)) + ' hours ago' : `${2 * (idx + 1)} hours ago`}</span>
+                          <span className="w-1 h-1 rounded-full bg-white/20" />
+                          <span>{article.views || Math.floor(Math.random() * 50 + 10)}K views</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             )}
           </div>
 
-          {/* ====== MOBILE: Stream Switcher (If multiple streams) ====== */}
-          {config.streams.length > 1 && (
-            <div className="lg:hidden px-3 mt-6">
-              <div className="flex items-center gap-2.5 mb-3.5">
-                <div className="w-1 h-5 bg-gradient-to-b from-red-500 to-red-700 rounded-full" />
-                <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-                <h3 className="text-white/80 font-bold text-xs uppercase tracking-wider">Other Streams</h3>
-                <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent" />
+          {/* RIGHT: Program Schedule Sidebar */}
+          <div className="space-y-6">
+            {/* Live Now / Program Schedule tabs */}
+            <div className="border border-white/5 bg-[#141724] rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/5">
+              <div className="grid grid-cols-2">
+                <div className="bg-red-600 text-white text-[11px] font-black text-center py-3.5 tracking-wider uppercase">Live Now</div>
+                <div className="bg-[#0f111a] text-white/50 border-b border-white/5 text-[11px] font-bold text-center py-3.5 hover:text-white/80 transition-colors cursor-pointer">Program Schedule</div>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
-                {config.streams.map((stream) => {
-                  const thumbId = extractYouTubeId(stream.url)
-                  const isActive = stream.id === activeStreamId
-                  return (
-                    <div
-                      key={stream.id}
-                      className={`snap-start shrink-0 w-[160px] cursor-pointer rounded-2xl overflow-hidden transition-all duration-200 border shadow-lg ${isActive
-                        ? 'border-red-500/50 ring-2 ring-red-500/20 shadow-red-900/20'
-                        : 'border-white/[0.08] shadow-black/20 active:scale-95'
-                        }`}
-                      onClick={() => switchStream(stream.id)}
-                    >
-                      <div className="relative aspect-video bg-gray-800">
-                        {thumbId ? (
-                          <img src={`https://img.youtube.com/vi/${thumbId}/mqdefault.jpg`} alt={stream.title}
-                            className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                            <svg className="w-5 h-5 text-white/15" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /></svg>
-                          </div>
-                        )}
-                        {isActive && (
-                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                            <div className="flex items-center gap-0.5">
-                              {[0, 150, 300, 450].map((d, i) => (
-                                <div key={d} className="w-0.5 bg-red-500 rounded-full animate-pulse" style={{ height: `${[14, 18, 12, 16][i]}px`, animationDelay: `${d}ms` }} />
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {stream.isLive && (
-                          <div className="absolute top-1.5 left-1.5">
-                            <span className="flex items-center gap-0.5 bg-red-600 text-[7px] font-black text-white uppercase px-1.5 py-0.5 rounded shadow-sm shadow-red-600/30">
-                              <span className="w-1 h-1 rounded-full bg-white animate-pulse" />LIVE
-                            </span>
-                          </div>
-                        )}
-                        {/* Play overlay for non-active */}
-                        {!isActive && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20">
-                              <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-2.5 bg-gradient-to-b from-white/[0.06] to-white/[0.02]">
-                        <p className={`text-[11px] font-semibold line-clamp-1 ${isActive ? 'text-red-400' : 'text-white/70'}`}>{stream.title}</p>
-                        {isActive && <p className="text-[9px] text-red-500/50 font-semibold mt-0.5">▶ Now Playing</p>}
-                      </div>
+              <div className="divide-y divide-white/5">
+                {programSchedule.map((prog, idx) => (
+                  <div key={idx} className={`flex gap-4 p-4 items-center ${prog.live ? 'bg-white/5' : 'hover:bg-white/[0.02]'} transition-colors cursor-pointer`}>
+                    <div className="min-w-0 flex-1">
+                      {prog.live && (
+                        <span className="inline-block text-[9px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm mb-1.5">ON AIR</span>
+                      )}
+                      <p className={`text-[10px] font-bold ${prog.live ? 'text-white/50' : 'text-white/40'} tracking-wide mb-0.5`}>{prog.time}</p>
+                      <p className={`text-[13px] font-bold ${prog.live ? 'text-white' : 'text-white/80'} leading-tight`}>{prog.show}</p>
+                      {prog.desc && <p className="text-[10px] text-white/40 mt-1 leading-relaxed">{prog.desc}</p>}
                     </div>
-                  )
-                })}
+                    {prog.live && (
+                      <div className="relative w-[75px] h-[45px] rounded-md shrink-0 overflow-hidden shadow-lg border border-white/10">
+                        {youtubeId && <img src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover opacity-80" />}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                          <span className="text-white text-[8px] font-black text-center leading-tight drop-shadow-md">STAR NEWS<br/>LIVE</span>
+                        </div>
+                      </div>
+                    )}
+                    {!prog.live && (
+                      <div className={`relative w-[75px] h-[45px] rounded-md shrink-0 overflow-hidden shadow-md border border-white/10 ${
+                        idx === 1 ? 'bg-blue-900/60' : idx === 2 ? 'bg-orange-900/60' : idx === 3 ? 'bg-indigo-900/60' : 'bg-blue-800/60'
+                      }`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
+                        <div className="absolute inset-0 flex items-center justify-center p-1">
+                          <span className="text-white text-[8px] font-black text-center leading-tight uppercase drop-shadow-md break-words">{prog.show}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 border-t border-white/5 bg-black/20">
+                <button className="w-full text-center text-white/60 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-1">
+                  View Full Schedule →
+                </button>
               </div>
             </div>
-          )}
+
+            {/* Real Stories CTA */}
+            <div className="bg-[#141724] rounded-2xl p-6 relative overflow-hidden border border-white/5 ring-1 ring-white/5 shadow-xl">
+              {newsArticles[1] && (() => {
+                const thumb = newsArticles[1].thumbnails?.[0] || newsArticles[1].mainImage
+                return thumb ? <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" onError={e => e.target.style.display='none'} /> : null
+              })()}
+              <div className="relative z-10">
+                <h3 className="text-white font-black text-2xl leading-tight mb-2 drop-shadow-md">Real Stories.<br/>Real Impact.</h3>
+                <p className="text-white/60 text-xs mb-5 max-w-[200px] leading-relaxed font-semibold">Journalism that keeps you informed, empowered and ahead.</p>
+                <button onClick={() => setCurrentView && setCurrentView('reporter')} className="bg-red-600 hover:bg-red-700 text-white text-xs font-black px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1 shadow-lg shadow-red-900/50">
+                  Join as Reporter →
+                </button>
+              </div>
+            </div>
+
+            {/* Stream Switcher if multiple */}
+            {config.streams.length > 1 && (
+              <div className="border border-white/5 bg-[#141724] rounded-2xl p-5 shadow-xl">
+                <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-4">Other Streams</p>
+                <div className="space-y-3">
+                  {otherStreams.slice(0, 3).map(stream => {
+                    const tid = extractYouTubeId(stream.url)
+                    return (
+                      <div key={stream.id} onClick={() => switchStream(stream.id)} className="flex gap-4 cursor-pointer group hover:bg-white/5 rounded-xl p-2 -mx-2 transition-colors items-center">
+                        <div className="relative w-24 h-14 rounded-lg overflow-hidden bg-gray-900 shrink-0 shadow-md">
+                          {tid && <img src={`https://img.youtube.com/vi/${tid}/mqdefault.jpg`} alt={stream.title} className="w-full h-full object-cover opacity-80" />}
+                        </div>
+                        <div className="min-w-0">
+                          <h5 className="text-[13px] font-bold text-white/90 line-clamp-2 group-hover:text-white leading-tight mb-1">{stream.title}</h5>
+                          {stream.isLive && <span className="text-[9px] text-red-500 font-bold uppercase tracking-wide">● LIVE</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ====== BOTTOM BAR — Premium on mobile ====== */}
-      <div className="border-t border-white/[0.06] bg-gradient-to-r from-black/50 via-black/40 to-black/50 py-3.5 lg:py-4 px-4 lg:px-4 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 lg:gap-3 text-center sm:text-left">
-          <span className="text-white/30 text-[10px] lg:text-xs flex items-center gap-2 font-medium">
-            <svg className="w-3.5 h-3.5 lg:w-4 lg:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-            Star News Live TV — Your trusted source for breaking news
-          </span>
-          <a href="https://youtube.com/@starnewsindialive" target="_blank" rel="noopener noreferrer"
-            className="text-white/25 hover:text-red-500 transition-colors">
-            <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /></svg>
+      {/* Bottom bar */}
+      <div className="border-t border-white/5 bg-[#141724] py-6 px-6 mt-6">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+          <span className="text-white/40 text-[11px] font-bold tracking-wide">Star News Live TV — Your trusted source for breaking news</span>
+          <a href="https://youtube.com/@starnewsindialive" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#0f111a" /></svg>
           </a>
         </div>
       </div>
-
-      {/* Shimmer animation keyframe */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          50% { transform: translateX(100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   )
 }

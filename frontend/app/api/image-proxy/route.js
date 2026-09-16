@@ -17,6 +17,8 @@ const ALLOWED_DOMAINS = [
   'images.unsplash.com',
   'lh3.googleusercontent.com',
   'blogger.googleusercontent.com',
+  'www.blogger.com',
+  'blogger.com',
   'i.ytimg.com',         // YouTube thumbnails
   'img.youtube.com',
 ];

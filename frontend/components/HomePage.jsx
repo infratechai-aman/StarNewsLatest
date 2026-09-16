@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Eye, Clock, Youtube, User, Shield } from 'lucide-react'
+import { Eye, Clock, Youtube, User, Shield, TrendingUp, TrendingDown, Play, Users, BookOpen, MapPin, Newspaper } from 'lucide-react'
 import { news } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
@@ -146,34 +146,60 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
     setImgSrc(proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg'))
   }, [item])
 
+  const accentBorderHover = {
+    red: 'group-hover:text-red-600',
+    green: 'group-hover:text-green-600',
+    blue: 'group-hover:text-blue-600',
+    emerald: 'group-hover:text-emerald-600',
+    purple: 'group-hover:text-purple-600',
+  }[accentColor] || 'group-hover:text-red-600'
+
+  const badgeBg = {
+    red: 'bg-red-600',
+    green: 'bg-green-600',
+    blue: 'bg-blue-600',
+    emerald: 'bg-emerald-600',
+    purple: 'bg-purple-600',
+  }[accentColor] || 'bg-red-600'
+
   return (
-    <Card
-      className={`overflow-hidden hover:shadow-xl transition-all cursor-pointer group border border-gray-200/60 rounded-xl md:rounded-2xl hover:border-${accentColor}-500 shadow-sm mb-4 md:mb-0`}
+    <div
+      className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col h-full"
       onClick={() => onClick(item)}
     >
-      <div className="relative h-40 overflow-hidden bg-gray-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
         <Image
           src={imgSrc}
           alt={title}
           fill
-          className="group-hover:scale-105 transition-transform duration-300"
-          style={{ objectFit: 'contain' }}
+          className="object-cover group-hover:scale-105 transition-transform duration-500"
           onError={() => setImgSrc('/placeholder-news.svg')}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           unoptimized={true}
           referrerPolicy="no-referrer"
         />
-        {category && <Badge className="absolute top-3 left-0 bg-[#cd4a4c] text-white text-[13px] font-bold px-3 py-1 rounded-l-none rounded-r-md shadow-md z-10 border-none tracking-normal capitalize">{category}</Badge>}
+        {category && (
+          <span className={`absolute bottom-2 left-2 ${badgeBg} text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow`}>
+            {category}
+          </span>
+        )}
       </div>
-      <CardContent className="p-3">
-        <h4 className={`font-bold text-sm line-clamp-2 group-hover:text-${accentColor}-600 transition-colors leading-tight`}>{title}</h4>
-        <p className="text-xs text-gray-500 mt-2 flex items-center gap-2 flex-wrap pb-1 leading-snug">
-
-          <span className="flex items-center gap-1" suppressHydrationWarning><Clock className="h-3 w-3" /> {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
-          <span className="ml-auto flex items-center gap-1"><Eye className="h-3 w-3" />{item.views || 0}</span>
-        </p>
-      </CardContent>
-    </Card>
+      <div className="p-3.5 flex-1 flex flex-col justify-between">
+        <h4 className={`font-bold text-[13px] line-clamp-2 ${accentBorderHover} transition-colors leading-snug text-gray-900`}>
+          {title}
+        </h4>
+        <div className="text-[10px] text-gray-400 mt-2.5 flex items-center justify-between pt-2 border-t border-gray-50">
+          <span className="flex items-center gap-1" suppressHydrationWarning>
+            <Clock className="h-3 w-3" />
+            {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+          </span>
+          <span className="flex items-center gap-1">
+            <Eye className="h-3 w-3" />
+            {item.views || 0}
+          </span>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -295,7 +321,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const [loading, setLoading] = useState(!newsData?.loaded)
   const [newsKey, setNewsKey] = useState(0)
 
-  // Admin content settings
+  // Stock ticker state
+  const [stockData, setStockData] = useState({
+    sensex: { value: '81,523.12', change: '+620.18', pct: '+0.77%', up: true },
+    nifty: { value: '24,972.40', change: '+182.35', pct: '+0.74%', up: true }
+  })
+
   // Admin content settings
   const [premiumAdSettings, setPremiumAdSettings] = useState({ enabled: true, imageUrl: '', linkUrl: '', title: '' })
   const [sidebarAdSettings, setSidebarAdSettings] = useState({ enabled: true, items: [] })
@@ -566,6 +597,39 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
     return () => clearInterval(interval)
   }, [])
 
+  // Fetch real-time stock data (NSE via Yahoo Finance public endpoint)
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        // Use Yahoo Finance v7 (no key needed, CORS ok via our own API proxy pattern)
+        const [sensexRes, niftyRes] = await Promise.all([
+          fetch('/api/finance?symbol=%5EBSESN'),
+          fetch('/api/finance?symbol=%5ENSEI')
+        ])
+        const [sensexJson, niftyJson] = await Promise.all([sensexRes.json(), niftyRes.json()])
+        const toIndian = (n) => n?.toLocaleString('en-IN', { maximumFractionDigits: 2 })
+        const fmt = (n) => (n >= 0 ? '+' : '') + toIndian(n)
+        const sensexMeta = sensexJson?.chart?.result?.[0]?.meta
+        const niftyMeta = niftyJson?.chart?.result?.[0]?.meta
+        if (sensexMeta && niftyMeta) {
+          const sChange = sensexMeta.regularMarketPrice - sensexMeta.previousClose
+          const sPct = (sChange / sensexMeta.previousClose) * 100
+          const nChange = niftyMeta.regularMarketPrice - niftyMeta.previousClose
+          const nPct = (nChange / niftyMeta.previousClose) * 100
+          setStockData({
+            sensex: { value: toIndian(sensexMeta.regularMarketPrice), change: fmt(sChange), pct: fmt(sPct) + '%', up: sChange >= 0 },
+            nifty: { value: toIndian(niftyMeta.regularMarketPrice), change: fmt(nChange), pct: fmt(nPct) + '%', up: nChange >= 0 }
+          })
+        }
+      } catch (e) {
+        // Silently fail — keep default placeholder values
+      }
+    }
+    fetchStocks()
+    const stockTimer = setInterval(fetchStocks, 60000) // Refresh every 1 min
+    return () => clearInterval(stockTimer)
+  }, [])
+
   // Advertisement rotation
   useEffect(() => {
     const items = sidebarAdSettings?.items || []
@@ -752,126 +816,226 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* PREMIUM AD BANNER WAS HERE */}
 
-      {/* --- DESKTOP VIEW (Magazine Style Hero) --- */}
-      <div className="hidden lg:block max-w-[1440px] mx-auto px-6 mb-10">
-        <div className="grid grid-cols-12 gap-8">
-          {/* HERO LEAD STORY */}
-          <div className="col-span-12 lg:col-span-8">
+      {/* --- DESKTOP VIEW (News Portal Style) --- */}
+      <div className="hidden lg:block max-w-[1340px] mx-auto px-6 mb-8">
+
+        {/* HERO ROW: Left big story + right sidebar */}
+        <div className="grid grid-cols-12 gap-5">
+
+          {/* LEFT: Big hero */}
+          <div className="col-span-6 flex">
+            {/* Hero image */}
             {cleanMainNews[0] && (
               <div
                 onClick={() => handleNewsClick(cleanMainNews[0])}
-                className="relative h-[650px] w-full rounded-[32px] overflow-hidden cursor-pointer group shadow-2xl premium-card"
+                className="relative w-full flex-shrink-0 overflow-hidden cursor-pointer group bg-gray-100 rounded-xl shadow-md"
+                style={{ minHeight: '460px' }}
               >
                 <Image
                   src={cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg'}
                   alt={getLocalizedText(cleanMainNews[0].title, language)}
                   fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-[3000ms] ease-out"
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
                   priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 p-12 w-full max-w-3xl">
-                  <Badge className="mb-6 bg-red-600 hover:bg-red-700 text-white border-none text-[10px] font-black uppercase tracking-[0.3em] px-5 py-2 shadow-xl">
-                    Lead Story
-                  </Badge>
-                  <h1 className="hero-title text-white text-5xl md:text-7xl mb-8 group-hover:text-red-100 transition-colors drop-shadow-2xl font-heading font-black leading-[1.05] tracking-tighter">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent rounded-xl"></div>
+                <div className="absolute bottom-0 left-0 p-6 w-full">
+                  <div className="flex gap-2 mb-3">
+                    <Badge className="bg-red-600 text-white border-none text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-sm">Top Story</Badge>
+                    {cleanMainNews[0].category && (
+                      <Badge className="bg-white/20 backdrop-blur-sm text-white border-none text-[10px] font-bold uppercase px-3 py-1 rounded-sm">{getTranslatedCategory(cleanMainNews[0].category, t, language)}</Badge>
+                    )}
+                  </div>
+                  <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-black leading-[1.1] mb-3 group-hover:text-red-100 transition-colors drop-shadow-xl">
                     {getLocalizedText(cleanMainNews[0].title, language)}
                   </h1>
-                  <div className="flex items-center gap-8">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                        <Clock className="w-5 h-5 text-red-500" />
-                      </div>
-                      <span className="text-white text-sm font-black uppercase tracking-widest" suppressHydrationWarning>
-                        {cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt ? new Date(cleanMainNews[0].publishedAt || cleanMainNews[0].createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                      </span>
-                    </div>
-                    <Button className="bg-white text-black hover:bg-red-600 hover:text-white font-black rounded-full px-10 h-14 transition-all shadow-2xl transform active:scale-95">
-                      EXPLORE NOW <ChevronRight className="ml-2 w-6 h-6" />
-                    </Button>
-                  </div>
+                  <p className="text-gray-300 text-[13px] md:text-sm line-clamp-2 mb-4 leading-relaxed max-w-2xl">
+                    {getLocalizedText(cleanMainNews[0].content, language)?.substring(0, 180)}...
+                  </p>
+                  <button className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-5 py-2.5 rounded-full transition-colors shadow-lg">
+                    Read Full Story <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )}
-
-            {/* SUB-FEATURED GRID */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-              {cleanMainNews.slice(1, 5).map((item) => (
-                <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-              ))}
-            </div>
+          </div>
+          
+          {/* MIDDLE: 3 stacked sub-articles */}
+          <div className="col-span-3 flex flex-col gap-4">
+            {cleanMainNews.slice(1, 4).map((item, idx) => (
+              <div
+                key={item.id}
+                onClick={() => handleNewsClick(item)}
+                className="flex flex-col flex-1 cursor-pointer group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative"
+              >
+                <div className="absolute top-2 left-2 z-10">
+                  <span className="bg-white/90 backdrop-blur text-gray-900 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">{getTranslatedCategory(item.category, t, language) || 'News'}</span>
+                </div>
+                <div className="relative w-full h-[120px] flex-shrink-0 overflow-hidden bg-gray-100">
+                  <Image
+                    src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                    alt={getLocalizedText(item.title, language)}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <div className="flex-1 p-3.5 flex flex-col justify-between">
+                  <h3 className="text-[14px] font-bold leading-[1.3] text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3">{getLocalizedText(item.title, language)}</h3>
+                  <span className="text-[10px] text-gray-400 mt-2 block flex items-center gap-1 font-semibold" suppressHydrationWarning>
+                    <Clock className="w-3 h-3 text-gray-300" />
+                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {/* HERO SIDEBAR */}
-          <div className="col-span-12 lg:col-span-4 space-y-8">
-            <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-100 shadow-sm">
-              <div className="flex justify-center">
-                <WeatherWidget />
+          {/* RIGHT SIDEBAR: Weather + E-Paper */}
+          <div className="col-span-3 flex flex-col gap-4">
+            {/* Weather widget */}
+            <div className="bg-gradient-to-br from-sky-500 to-blue-600 text-white p-5 relative overflow-hidden rounded-xl shadow-lg">
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-400/20 rounded-full blur-3xl"></div>
+              <div className="flex items-start justify-between relative z-10">
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <MapPin className="w-3.5 h-3.5 text-sky-200" />
+                    <span className="text-sm font-black">Pune, MH</span>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-6xl font-black leading-none">28<span className="text-3xl">°C</span></span>
+                  </div>
+                  <div className="mt-1">
+                    <span className="block text-sm font-bold text-sky-100">Mostly Sunny</span>
+                    <span className="text-[11px] text-sky-200">Feels like 30°</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 text-[11px] text-sky-200">
+                    <span>H: 31°</span>
+                    <span>L: 24°</span>
+                    <span className="text-sky-100 font-bold">| AQI 62 <span className="text-green-300">Good</span></span>
+                  </div>
+                </div>
+                <div className="text-right flex flex-col items-end">
+                  <svg className="w-16 h-16 text-yellow-300 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2"/></svg>
+                </div>
               </div>
             </div>
 
-            {/* Sliding Ads / Banner */}
+            {/* Today's E-Paper widget */}
+            <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
+              <div className="p-3 pb-2 relative z-10 bg-white">
+                <h3 className="font-black text-sm text-gray-900">Today's E-Paper</h3>
+                <p className="text-[11px] text-gray-500">Read the latest edition</p>
+              </div>
+              <div className="relative w-full overflow-hidden flex justify-center items-center -mt-2 -mb-2" style={{ height: '170px' }}>
+                <Image 
+                  src="/epaper_widget_mockup_1789524453621.jpg" 
+                  alt="E-Paper Preview" 
+                  fill
+                  className="object-contain group-hover:scale-105 transition-transform duration-500" 
+                />
+              </div>
+              <button
+                className="w-full mt-0 bg-[#0f111a] hover:bg-red-600 text-white text-[12px] font-bold py-3 px-4 transition-colors flex items-center justify-between relative z-10 shadow-lg rounded-b-xl"
+              >
+                Read E-Paper <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Rotating sidebar ad */}
             {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (
-              <Card
-                className="overflow-hidden border border-gray-100 shadow-xl cursor-pointer rounded-[32px]"
+              <div
+                className="relative overflow-hidden cursor-pointer bg-gray-100 aspect-[4/3] rounded-xl shadow-sm"
                 onClick={() => {
                   const url = sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl;
                   if (url) window.open(url, '_blank')
                 }}
               >
-                <CardContent className="p-0 aspect-[4/3] relative bg-gray-100">
-                  <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                  <Badge className="absolute top-4 right-4 bg-black/50 text-white text-[10px] px-3 py-1.5 backdrop-blur-sm border-none uppercase tracking-widest">{t('advertisement') || 'Advertisement'}</Badge>
-                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                    {sidebarAdSettings.items.map((_, idx) => (
-                      <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-6' : 'bg-white/50 w-2'}`} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="premium-card bg-white rounded-[32px] border border-gray-100 p-8 shadow-xl overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 to-red-400"></div>
-              <h3 className="font-heading font-black text-3xl mb-8 flex items-center gap-4">
-                Must Read
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                </span>
-              </h3>
-              <div className="space-y-8">
-                {cleanMainNews.slice(5, 10).map((item, idx) => (
-                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group flex gap-6 cursor-pointer items-start border-b border-gray-50 pb-6 last:border-0 last:pb-0">
-                    <span className="text-5xl font-heading font-black text-gray-100 group-hover:text-red-600 transition-all shrink-0 leading-none">0{idx + 1}</span>
-                    <div className="space-y-2">
-                      <h4 className="font-heading font-black text-lg text-gray-900 leading-[1.2] line-clamp-3 group-hover:text-red-700 transition-colors tracking-tight">
-                        {getLocalizedText(item.title, language)}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{getTranslatedCategory(item.category, t, language)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 border-none rounded-sm">Ad</Badge>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* LATEST NEWS + MUST READ ROW */}
+        <div className="grid grid-cols-12 gap-5 mt-8 border-t border-gray-200 pt-6">
+          {/* Latest News - horizontal cards */}
+          <div className="col-span-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
+                Latest News
+              </h2>
+              <button onClick={() => setCurrentView('news')} className="text-red-600 text-xs font-black hover:underline flex items-center gap-1">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {cleanLatestNews.slice(0, 4).map((item, idx) => (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="cursor-pointer group flex flex-col h-full">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 mb-3 rounded-lg shadow-sm">
+                    <Image
+                      src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                      alt={getLocalizedText(item.title, language)}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  {item.category && (
+                    <span className="text-[10px] font-black uppercase tracking-wider text-red-600 mb-1.5 block">
+                      {getTranslatedCategory(item.category, t, language)}
+                    </span>
+                  )}
+                  <h4 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-3 group-hover:text-red-600 transition-colors mb-2">{getLocalizedText(item.title, language)}</h4>
+                  <div className="mt-auto flex items-center gap-1.5 text-[10px] font-semibold text-gray-400" suppressHydrationWarning>
+                    <Clock className="w-3 h-3 text-gray-300" />
+                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                    <span className="text-gray-300 mx-0.5">•</span>
+                    <span>{idx + 1}h ago</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Must Read list */}
+          <div className="col-span-4 border-l border-gray-200 pl-5">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
+                Must Read
+              </h2>
+              <div className="flex gap-1">
+                <button className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors text-sm">&#8249;</button>
+                <button className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors text-sm">&#8250;</button>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {cleanMainNews.slice(4, 8).map((item, idx) => (
+                <div key={item.id} onClick={() => handleNewsClick(item)} className="flex gap-3 cursor-pointer group border-b border-gray-100 pb-3.5 last:border-b-0 last:pb-0">
+                  <span className="text-[28px] font-black text-gray-200 group-hover:text-red-600 transition-colors shrink-0 leading-none w-8">0{idx + 1}</span>
+                  <div className="min-w-0">
+                    <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
+                    <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>
+                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* LATEST NEWS SECTION */}
+      {/* LATEST NEWS SECTION — Mobile only (desktop covered above) */}
       {cleanLatestNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6">
+        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6 lg:hidden">
           <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0 flex items-center justify-between">
             <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
               <span className="text-red-600">Latest</span> Update
             </h2>
             <div className="h-px flex-1 bg-gray-100 mx-4 md:mx-8"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-10">
-            {cleanLatestNews.slice(0, 6).map((item) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-10">
+            {cleanLatestNews.slice(0, 4).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
@@ -888,57 +1052,78 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             )}
           </div>
 
-          <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
-            <div className="relative bg-gradient-to-br from-[#0a1525] to-[#050810] text-white py-10 px-0 md:px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-blue-900/20">
-              <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-              <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
-              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+          <section className="mb-10 w-full lg:max-w-[1340px] lg:mx-auto px-0 lg:px-6">
+            {/* Business & Economy section with BSE background image */}
+            <div className="relative text-white py-10 px-5 lg:px-10 overflow-hidden shadow-2xl rounded-xl lg:rounded-2xl">
+              {/* Background image */}
+              <div className="absolute inset-0 z-0">
+                <Image src="/business-economy-bg.jpg" alt="" fill className="object-cover" priority />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0a1628]/95 via-[#0a1628]/85 to-[#0a1628]/70"></div>
+              </div>
 
-              <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left px-5 md:px-0">
-                <div className="max-w-2xl flex flex-col items-center md:items-start">
-                  <Badge className="bg-blue-600/30 text-blue-300 border border-blue-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-                    {t('marketIntelligence') || 'Market Intelligence'}
-                  </Badge>
-                  <h2 className="font-heading font-black text-5xl md:text-8xl leading-[0.9] tracking-tighter">
-                    {t('business') || 'Business'} & <br />
-                    <span className="text-blue-400 italic font-serif glow-text-blue">{t('economy') || 'Economy'}</span>
+              {/* Header row */}
+              <div className="flex items-end justify-between mb-6 relative z-10">
+                <div>
+                  <h2 className="font-black text-3xl lg:text-4xl leading-tight">
+                    Business &amp; <span className="text-green-400 italic font-serif">Economy</span>
                   </h2>
+                  <p className="text-[12px] text-gray-400 mt-1">Markets. Policy. Business. Your edge in a changing economy.</p>
                 </div>
-                <Button
-                  variant="outline"
-                  className="text-white border-blue-500/30 bg-blue-600/10 hover:bg-blue-600 hover:border-blue-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group shadow-lg shadow-blue-900/20"
-                  onClick={() => handleCategoryClick('business')}
-                >
-                  {t('fullDirectory') || 'FULL DIRECTORY'} <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                <Button variant="outline" size="sm" className="text-white border-white/20 bg-white/5 hover:bg-green-600 hover:border-green-500 hover:text-white font-black text-xs px-5 h-9 rounded-lg transition-all backdrop-blur-sm" onClick={() => handleCategoryClick('business')}>
+                  View All <ChevronRight className="ml-1 w-3.5 h-3.5" />
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-8 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
-                {cleanBusinessNews.slice(0, 5).map((item, idx) => (
-                  <div
-                    key={item.id}
-                    onClick={() => handleNewsClick(item)}
-                    className={`premium-card cursor-pointer rounded-2xl md:rounded-[32px] overflow-hidden relative group transition-all duration-700 h-[280px] border border-white/20 shadow-lg ${idx === 0
-                        ? 'lg:col-span-2 lg:row-span-2 md:h-[632px]'
-                        : idx === 1
-                          ? 'lg:col-span-2 md:h-[300px]'
-                          : 'lg:col-span-1 md:h-[300px]'
-                      }`}
-                  >
-                    <Image
-                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
-                      alt={getLocalizedText(item.title, language)}
-                      fill
-                      className="object-contain bg-gray-900 group-hover:scale-105 transition-transform duration-[3000ms]"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                    <div className="absolute bottom-0 left-0 p-5 md:p-6 w-full">
-                      <h3 className={`font-heading font-black leading-tight group-hover:text-blue-300 transition-colors tracking-tight line-clamp-3 ${idx === 0 ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl'}`}>
-                        {getLocalizedText(item.title, language)}
-                      </h3>
+              {/* Stock ticker bar */}
+              <div className="flex gap-8 bg-white/5 backdrop-blur-sm border border-white/10 px-6 py-3.5 mb-7 relative z-10 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider">SENSEX</span>
+                  <span className="text-xl font-black text-white">{stockData.sensex.value}</span>
+                  <span className={`flex items-center gap-1 text-sm font-bold ${stockData.sensex.up ? 'text-green-400' : 'text-red-400'}`}>
+                    {stockData.sensex.up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    {stockData.sensex.change} ({stockData.sensex.pct})
+                  </span>
+                </div>
+                <div className="w-px bg-white/15"></div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider">NIFTY 50</span>
+                  <span className="text-xl font-black text-white">{stockData.nifty.value}</span>
+                  <span className={`flex items-center gap-1 text-sm font-bold ${stockData.nifty.up ? 'text-green-400' : 'text-red-400'}`}>
+                    {stockData.nifty.up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    {stockData.nifty.change} ({stockData.nifty.pct})
+                  </span>
+                </div>
+              </div>
+
+              {/* Business news cards */}
+              <div className="grid grid-cols-3 gap-5 relative z-10">
+                {cleanBusinessNews.slice(0, 3).map((item, idx) => {
+                  const labels = ['Markets', 'Economy', 'Corporate']
+                  const labelColors = ['bg-red-600', 'bg-green-600', 'bg-blue-600']
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => handleNewsClick(item)}
+                      className="cursor-pointer group overflow-hidden relative bg-white/5 border border-white/10 hover:border-green-400/40 transition-all rounded-xl hover:bg-white/10"
+                    >
+                      <div className="relative h-40 overflow-hidden bg-gray-900 rounded-t-xl">
+                        <Image
+                          src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                          alt={getLocalizedText(item.title, language)}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <span className={`absolute top-3 left-3 ${labelColors[idx]} text-white text-[9px] font-black px-2.5 py-1 uppercase tracking-wider rounded-sm shadow-lg`}>{labels[idx]}</span>
+                      </div>
+                      <div className="p-3.5">
+                        <h4 className="text-[13px] font-bold text-white leading-[1.4] line-clamp-2 group-hover:text-green-300 transition-colors">{getLocalizedText(item.title, language)}</h4>
+                        <span className="text-[10px] text-gray-500 mt-1.5 block" suppressHydrationWarning>
+                          {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </section>
@@ -959,81 +1144,185 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </>
       )}
 
-      {/* POLITICS & NATIONAL */}
-      {cleanPoliticsNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6 grid lg:grid-cols-12 gap-8 lg:gap-16">
-          <div className="lg:col-span-8">
-            <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0">
-              <h2 className="text-4xl font-heading font-black tracking-tighter">{t('nationalPolitics') || 'National Politics'}</h2>
-            </div>
-            <div className="space-y-0 md:space-y-8">
+      {/* NATIONAL POLITICS + CRIME & JUSTICE — Side by Side (desktop) + LIVE TV */}
+      <section className="mb-10 w-full lg:max-w-[1340px] lg:mx-auto px-0 lg:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:gap-6">
+
+          {/* National Politics — left col */}
+          {cleanPoliticsNews.length > 0 && (
+            <div className="lg:col-span-4 pt-4 px-4 lg:px-0">
+              <div className="flex items-center justify-between mb-3 border-b-2 border-red-600 pb-2">
+                <h2 className="text-lg font-black text-gray-900">{t('nationalPolitics') || 'National Politics'}</h2>
+                <button onClick={() => handleCategoryClick('politics')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+              </div>
               {cleanPoliticsNews[0] && (
-                <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="premium-card rounded-none md:rounded-[32px] overflow-hidden cursor-pointer group shadow-none md:shadow-lg border-y md:border border-gray-100 mb-6 md:mb-0">
-                  <div className="relative aspect-[21/9] mb-6 md:mb-8 overflow-hidden">
-                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Hero" fill className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]" />
-                    <Badge className="absolute top-4 left-4 md:top-6 md:left-6 bg-red-600 text-white border-none px-3 md:px-4 py-1 md:py-2 font-black uppercase text-[10px] tracking-widest shadow-2xl">{t('breakingNews') || 'Breaking News'}</Badge>
+                <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="cursor-pointer group mb-3">
+                  <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
+                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Politics" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">Politics</Badge>
                   </div>
-                  <div className="px-5 md:px-6 pb-6">
-                    <h3 className="font-heading font-black text-2xl md:text-4xl mb-4 md:mb-6 leading-[1.15] group-hover:text-red-600 transition-colors tracking-tight">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
-                    <p className="text-gray-600 line-clamp-3 md:line-clamp-2 mb-6 md:mb-8 text-base md:text-xl leading-relaxed">{getLocalizedText(cleanPoliticsNews[0].content, language)?.substring(0, 200)}...</p>
-                    <span className="text-xs md:text-sm font-black text-red-600 flex items-center gap-2 group-hover:translate-x-2 transition-transform">{t('viewFullReport') || 'VIEW FULL REPORT'} <ChevronRight className="w-5 h-5" /></span>
-                  </div>
+                  <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
+                  <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanPoliticsNews[0].publishedAt ? new Date(cleanPoliticsNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
                 </div>
               )}
-              <div className="grid md:grid-cols-2 gap-0 md:gap-10">
-                {cleanPoliticsNews.slice(1, 3).map(item => (
-                  <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+              <div className="space-y-0">
+                {cleanPoliticsNews.slice(1, 3).map((item, idx) => (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
+                    <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
+                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-105 transition-transform" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
+                      <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                    </div>
+                  </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Crime & Justice — center col */}
+          {cleanCrimeNews.length > 0 && (
+            <div className="lg:col-span-4 pt-4 px-4 lg:px-0 lg:border-l lg:border-l-gray-200 lg:pl-6">
+              <div className="flex items-center justify-between mb-3 border-b-2 border-gray-800 pb-2">
+                <h2 className="text-lg font-black text-gray-900">Crime &amp; Justice</h2>
+                <button onClick={() => handleCategoryClick('crime')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+              </div>
+              {cleanCrimeNews[0] && (
+                <div onClick={() => handleNewsClick(cleanCrimeNews[0])} className="cursor-pointer group mb-3">
+                  <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
+                    <Image src={proxyImageUrl(cleanCrimeNews[0].mainImage || '/placeholder-news.svg')} alt="Crime" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">Crime</Badge>
+                  </div>
+                  <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanCrimeNews[0].title, language)}</h3>
+                  <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanCrimeNews[0].publishedAt ? new Date(cleanCrimeNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                </div>
+              )}
+              <div className="space-y-0">
+                {cleanCrimeNews.slice(1, 3).map((item, idx) => (
+                  <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
+                    <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
+                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-105 transition-transform" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
+                      <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Live TV — right col (desktop) */}
+          <div className="lg:col-span-4 pt-4 px-4 lg:px-0 lg:border-l lg:border-l-gray-200 lg:pl-6 hidden lg:block">
+            <div className="flex items-center justify-between mb-4 border-b-2 border-red-600 pb-2">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
+                Live TV
+              </h2>
+              <button onClick={() => setCurrentView('live-tv')} className="text-red-600 text-[11px] font-black uppercase tracking-wider hover:underline flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-full">Watch Now <ChevronRight className="w-3.5 h-3.5" /></button>
+            </div>
+            <div
+              onClick={() => setCurrentView('live-tv')}
+              className="block relative aspect-video bg-gray-900 overflow-hidden group cursor-pointer rounded-lg shadow-sm"
+            >
+              <img
+                src="/placeholder-news.svg"
+                alt="StarNews Live"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => { e.target.style.display = 'none' }}
+              />
+              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-14 h-10 bg-red-600/90 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform backdrop-blur-sm">
+                  <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+                </div>
+              </div>
+              <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 uppercase rounded flex items-center gap-1.5 shadow-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                LIVE
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-red-600"></span>
+              <div>
+                <h3 className="font-black text-gray-900 leading-none">StarNews Live</h3>
+                <p className="text-[11px] text-gray-500 font-medium mt-1">Real News. Real Time.</p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="lg:col-span-4 space-y-10">
+      {/* BE A PART OF THE STORY — CTA Banner */}
+      <section className="w-full bg-gray-50 border-t border-b border-gray-200 py-6 mb-10 hidden lg:block">
+        <div className="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <Users className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <div className="mag-section-header text-2xl mb-8">{t('dailyDigest') || 'The Daily Digest'}</div>
-              <div className="space-y-10">
-                {cleanEducationNews.slice(0, 4).map(item => (
-                  <div key={item.id} onClick={() => handleNewsClick(item)} className="group cursor-pointer border-l-4 border-red-600 pl-8 transition-all hover:bg-gray-50 py-2">
-                    <span className="text-sm font-black text-red-600 mb-2 block">{t('quickBrief') || 'Quick Brief'}</span>
-                    <h4 className="font-heading font-black text-xl leading-tight group-hover:text-red-700 transition-colors tracking-tight">{getLocalizedText(item.title, language)}</h4>
-                  </div>
-                ))}
-              </div>
+              <h3 className="font-black text-lg text-gray-900">Be a Part of the Story</h3>
+              <p className="text-gray-500 text-xs">Share news, photos or video from your area. Because every story matters.</p>
             </div>
-
-            <div className="sponsored-card bg-gray-50 rounded-[40px] p-8 border border-gray-100 flex flex-col items-center text-center mb-8">
-              <Badge className="bg-gray-200 text-gray-500 border-none mb-8 px-4 py-1 text-[10px] uppercase font-black tracking-widest">{t('sponsored') || 'Sponsored'}</Badge>
-              <div className="w-16 h-16 rounded-full bg-red-600/10 flex items-center justify-center mb-6">
-                <Shield className="w-8 h-8 text-red-600" />
+          </div>
+          <button
+            onClick={() => { window.open('/reporter', '_self') }}
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black text-sm px-6 py-3 transition-colors flex-shrink-0"
+          >
+            Join as Reporter <ChevronRight className="w-4 h-4" />
+          </button>
+          <div className="flex gap-8 flex-shrink-0">
+            <div className="text-center">
+              <div className="flex items-center gap-1 justify-center">
+                <Users className="w-4 h-4 text-red-600" />
+                <span className="font-black text-xl text-gray-900">10K+</span>
               </div>
-              <h3 className="font-heading font-black text-2xl mb-4">{t('premiumBusinessPlacements') || 'Premium Business Placements'}</h3>
-              <p className="text-gray-500 text-sm mb-8 leading-relaxed">{t('premiumPlacementDesc') || 'Reach our exclusive audience of millions with high-impact editorial placements.'}</p>
-              <Button className="w-full bg-black text-white rounded-full h-14 font-black hover:bg-red-600 transition-colors" onClick={() => setPromotionOpen(true)}>{t('getInTouch') || 'GET IN TOUCH'}</Button>
+              <p className="text-[10px] text-gray-500 font-bold">Citizen Reporters</p>
             </div>
+            <div className="text-center">
+              <div className="flex items-center gap-1 justify-center">
+                <BookOpen className="w-4 h-4 text-red-600" />
+                <span className="font-black text-xl text-gray-900">500+</span>
+              </div>
+              <p className="text-[10px] text-gray-500 font-bold">Stories Every Day</p>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center gap-1 justify-center">
+                <MapPin className="w-4 h-4 text-red-600" />
+                <span className="font-black text-xl text-gray-900">Real</span>
+              </div>
+              <p className="text-[10px] text-gray-500 font-bold">Impact Across India</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            {businessAdSettings?.enabled && (
-              <BusinessAdWidget settings={businessAdSettings} t={t} onClick={() => { }} />
-            )}
-
-            <SubscribeWidget />
+      {/* Mobile-only Politics section */}
+      {cleanPoliticsNews.length > 0 && (
+        <section className="mb-10 w-full lg:hidden px-4">
+          <div className="mag-section-header mb-4">
+            <h2 className="text-3xl font-heading font-black tracking-tighter">{t('nationalPolitics') || 'National Politics'}</h2>
+          </div>
+          <div className="space-y-0">
+            {cleanPoliticsNews.slice(0, 2).map(item => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+            ))}
           </div>
         </section>
       )}
 
-      {/* CRIME SECTION */}
+      {/* CRIME SECTION — Mobile only (desktop is inside Politics/Crime side-by-side above) */}
       {cleanCrimeNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6">
-          <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0 flex items-center justify-between">
-            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
-              <span className="text-red-700">Crime</span> & Justice
+        <section className="mb-10 w-full px-4 lg:hidden">
+          <div className="mag-section-header mb-4">
+            <h2 className="text-3xl font-heading font-black tracking-tighter">
+              <span className="text-red-700">Crime</span> &amp; Justice
             </h2>
-            <div className="hidden md:block h-px flex-1 bg-gray-100 mx-8"></div>
-            <Button variant="outline" className="rounded-full font-black hidden md:flex" onClick={() => handleCategoryClick('crime')}>
-              View All <ChevronRight className="ml-1 w-4 h-4" />
-            </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-10">
-            {cleanCrimeNews.slice(0, 3).map((item) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-10">
+            {cleanCrimeNews.slice(0, 2).map((item) => (
               <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
             ))}
           </div>
@@ -1042,57 +1331,45 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* SPORTS SECTION */}
       {cleanSportsNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 lg:px-6">
-          <div className="relative bg-gradient-to-br from-[#0d3320] to-[#061a10] text-white py-10 md:py-12 px-0 md:px-6 lg:p-12 rounded-none lg:rounded-[48px] overflow-hidden shadow-2xl border-y lg:border-x border-green-900/20">
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-600/20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
-            <div className="flex flex-col md:flex-row justify-between items-center md:items-end mb-8 md:mb-10 gap-6 md:gap-8 relative z-10 text-center md:text-left px-5 md:px-0">
-              <div className="max-w-2xl flex flex-col items-center md:items-start">
-                <Badge className="bg-green-600/30 text-green-300 border border-green-500/50 mb-6 px-5 py-2 font-black uppercase tracking-[0.3em] text-[10px] backdrop-blur-md">
-                  Live Updates
-                </Badge>
-                <h2 className="font-heading font-black text-6xl md:text-8xl leading-[0.9] tracking-tighter">
-                  Sports <br />
-                  <span className="text-green-400 italic font-serif">Arena</span>
-                </h2>
-              </div>
-              <Button
-                variant="outline"
-                className="text-white border-green-500/30 bg-green-600/10 hover:bg-green-600 hover:border-green-500 hover:text-white font-black rounded-full px-10 h-16 transition-all backdrop-blur-xl group"
-                onClick={() => handleCategoryClick('sports')}
-              >
-                ALL SPORTS <ChevronRight className="ml-2 w-6 h-6 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 relative z-10 mx-0 md:mx-0 pt-6 md:pt-0 pb-4">
-              {cleanSportsNews.slice(0, 3).map((item) => (
-                <div key={item.id} onClick={() => handleNewsClick(item)} className="premium-card cursor-pointer rounded-2xl md:rounded-[24px] overflow-hidden relative group h-[calc(100dvh-104px)] md:h-[280px] border border-white/20 shadow-lg">
-                  <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-110 transition-transform duration-[3000ms]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                  <div className="absolute bottom-0 left-0 p-5 w-full">
-                    <h3 className="font-heading font-black text-xl leading-tight group-hover:text-green-300 transition-colors tracking-tight text-white">{getLocalizedText(item.title, language)}</h3>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <section className="mb-12 w-full max-w-[1340px] mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-green-600 rounded-full block" />
+              Sports News
+            </h2>
+            <button
+              onClick={() => handleCategoryClick('sports')}
+              className="text-green-600 hover:text-green-700 text-xs font-bold flex items-center gap-1 hover:underline"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {cleanSportsNews.slice(0, 4).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} accentColor="green" />
+            ))}
           </div>
         </section>
       )}
 
       {/* EDUCATION SECTION */}
       {cleanEducationNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6">
-          <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0 flex items-center justify-between">
-            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
-              <span className="text-blue-600">Education</span> & Learning
+        <section className="mb-12 w-full max-w-[1340px] mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-blue-600 rounded-full block" />
+              Education & Learning
             </h2>
-            <div className="hidden md:block h-px flex-1 bg-gray-100 mx-8"></div>
-            <Button variant="outline" className="rounded-full font-black hidden md:flex" onClick={() => handleCategoryClick('education')}>
-              View All <ChevronRight className="ml-1 w-4 h-4" />
-            </Button>
+            <button
+              onClick={() => handleCategoryClick('education')}
+              className="text-blue-600 hover:text-blue-700 text-xs font-bold flex items-center gap-1 hover:underline"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-10">
-            {cleanEducationNews.slice(0, 3).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {cleanEducationNews.slice(0, 4).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} accentColor="blue" />
             ))}
           </div>
         </section>
@@ -1100,19 +1377,22 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* HEALTH SECTION */}
       {cleanHealthNews.length > 0 && (
-        <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6">
-          <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0 flex items-center justify-between">
-            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
-              <span className="text-emerald-600">Health</span> & Wellness
+        <section className="mb-12 w-full max-w-[1340px] mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-emerald-600 rounded-full block" />
+              Health & Wellness
             </h2>
-            <div className="hidden md:block h-px flex-1 bg-gray-100 mx-8"></div>
-            <Button variant="outline" className="rounded-full font-black hidden md:flex" onClick={() => handleCategoryClick('health')}>
-              View All <ChevronRight className="ml-1 w-4 h-4" />
-            </Button>
+            <button
+              onClick={() => handleCategoryClick('health')}
+              className="text-emerald-600 hover:text-emerald-700 text-xs font-bold flex items-center gap-1 hover:underline"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-10">
-            {cleanHealthNews.slice(0, 3).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {cleanHealthNews.slice(0, 4).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} accentColor="emerald" />
             ))}
           </div>
         </section>
@@ -1120,19 +1400,22 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* TECHNOLOGY SECTION */}
       {cleanTechnologyNews.length > 0 && (
-        <section className="mb-10 container mx-auto px-6">
-          <div className="mag-section-header mb-8 flex items-center justify-between">
-            <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
-              <span className="text-purple-600">Technology</span> & Innovation
+        <section className="mb-12 w-full max-w-[1340px] mx-auto px-4 lg:px-6">
+          <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
+            <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+              <span className="w-1.5 h-5 bg-purple-600 rounded-full block" />
+              Technology & Innovation
             </h2>
-            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
-            <Button variant="outline" className="rounded-full font-black" onClick={() => handleCategoryClick('technology')}>
-              View All <ChevronRight className="ml-1 w-4 h-4" />
-            </Button>
+            <button
+              onClick={() => handleCategoryClick('technology')}
+              className="text-purple-600 hover:text-purple-700 text-xs font-bold flex items-center gap-1 hover:underline"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {cleanTechnologyNews.slice(0, 3).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {cleanTechnologyNews.slice(0, 4).map((item) => (
+              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} accentColor="purple" />
             ))}
           </div>
         </section>
@@ -1154,33 +1437,31 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 border-2 border-white rounded-full animate-ping opacity-75"></span>
       </a>
 
-      {/* Bottom News Grid - Full Width, No Sidebar */}
-      <div className="container mx-auto px-4 mt-20">
-        <div className="space-y-12">
-          <div className="mag-section-header mb-8 flex items-center justify-between">
-            <h2 className="text-4xl font-heading font-black tracking-tighter">
-              {t('moreStories') || 'More Stories'}
-            </h2>
-            <div className="h-px flex-1 bg-gray-100 mx-8"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {oldNews.slice(6, visibleMoreStories + 6).map((item) => (
-              <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
-            ))}
-          </div>
-          {oldNews.length > visibleMoreStories + 6 && (
-            <div className="flex justify-center pt-8">
-              <Button
-                variant="outline"
-                className="rounded-full px-12 h-14 font-black border-2 border-gray-200 hover:border-red-600 hover:text-red-600 transition-all"
-                onClick={() => setVisibleMoreStories(prev => prev + 12)}
-              >
-                {t('loadMore') || 'LOAD MORE STORIES'}
-              </Button>
-            </div>
-          )}
+      {/* MORE STORIES SECTION - Full Width Editorial Grid */}
+      <section className="mb-16 w-full max-w-[1340px] mx-auto px-4 lg:px-6">
+        <div className="flex items-center justify-between mb-6 border-b border-gray-200 pb-3">
+          <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
+            <span className="w-1.5 h-5 bg-red-600 rounded-full block" />
+            {t('moreStories') || 'More Stories'}
+          </h2>
+          <span className="text-xs text-gray-400 font-medium">Explore all categories & archives</span>
         </div>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {oldNews.slice(6, visibleMoreStories + 6).map((item) => (
+            <NewsBox key={item.id} item={item} onClick={handleNewsClick} language={language} />
+          ))}
+        </div>
+        {oldNews.length > visibleMoreStories + 6 && (
+          <div className="flex justify-center pt-10">
+            <button
+              className="bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-wider px-8 py-3 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-2 active:scale-95"
+              onClick={() => setVisibleMoreStories(prev => prev + 12)}
+            >
+              {t('loadMore') || 'LOAD MORE STORIES'} ↓
+            </button>
+          </div>
+        )}
+      </section>
       <style jsx>{`
             @keyframes marquee {
               0% { transform: translateX(0); }

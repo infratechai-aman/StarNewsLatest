@@ -5,12 +5,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Newspaper, ChevronRight, Loader2, Flame, TrendingUp, Clock } from 'lucide-react'
+import { Eye, Newspaper, ChevronRight, Loader2, Flame, TrendingUp, Clock, ArrowRight } from 'lucide-react'
 import Image from 'next/image'
 import { news, categories } from '@/lib/api'
 
 import { useLanguage } from '@/contexts/LanguageContext'
-import { getLocalizedText } from '@/lib/newsData'
+import { getLocalizedText, getTranslatedCategory } from '@/lib/newsData'
 import { proxyImageUrl } from '@/lib/imageProxy'
 
 const ARTICLES_PER_PAGE = 30
@@ -164,74 +164,38 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
 
   return (
     <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12">
-      {/* Premium Hero Banner */}
-      <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-gray-900 via-red-950 to-black text-white mb-10 shadow-2xl">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diamond-upholstery.png')] opacity-10" />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/15 to-transparent hidden md:block" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-600/10 rounded-full blur-[120px]" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 p-8 md:p-12 lg:p-16">
-          <div className="flex-1 min-w-0">
-            <Badge className="bg-red-600/20 text-red-400 border border-red-600/30 mb-6 px-4 py-1.5 font-black uppercase text-[10px] tracking-[0.3em] backdrop-blur-md">
-              <Flame className="w-3 h-3 mr-2" />
-              {t('allNews') || 'All News'}
-            </Badge>
-            <h1 className="text-5xl md:text-7xl font-heading font-black leading-[0.9] tracking-tighter mb-6 italic">
-              {t('allNews') || 'Latest'} <span className="text-red-500">Stories</span>
+      {/* HERO BANNER */}
+      <div className="relative w-full rounded-[24px] overflow-hidden mb-8 h-[160px] md:h-[200px] shadow-sm">
+        <Image src="/city_icon_delhi_1789524771933.jpg" alt="All News" fill className="absolute inset-0 object-cover" priority />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent" />
+        
+        <div className="relative z-10 w-full h-full flex items-center justify-between p-6 md:px-12">
+          {/* Left Text */}
+          <div className="max-w-md">
+            <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter mb-2 text-gray-900 leading-none drop-shadow-sm">
+              All <span className="text-red-600">News</span>
             </h1>
-            <p className="text-lg text-gray-400 font-medium leading-relaxed max-w-lg mb-8">
-              {language === 'hi' ? 'भारत और विश्व से ताज़ा ख़बरें' : language === 'mr' ? 'भारत आणि जगातील ताज्या बातम्या' : 'Breaking news, in-depth analysis, and stories that matter from across India and the world.'}
+            <p className="text-gray-600 font-medium text-xs md:text-sm leading-relaxed hidden sm:block">
+              {language === 'hi' ? 'भारत और विश्व से ताज़ा ख़बरें' : language === 'mr' ? 'भारत आणि जगातील ताज्या बातम्या' : 'Explore the latest news, in-depth analysis and stories that matter from across India and around the world.'}
             </p>
-
-            {/* Category Filter Pills inside hero */}
-            <div className="flex flex-wrap items-center gap-3">
-              <Select value={currentCategory} onValueChange={handleCategoryChange}>
-                <SelectTrigger className="w-60 h-12 bg-white/10 backdrop-blur-md border-white/20 rounded-full px-6 font-bold text-white shadow-lg hover:bg-white/20 transition-all">
-                  <SelectValue placeholder={t('allCategories')} />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-gray-100 shadow-2xl">
-                  <SelectItem value="all" className="font-bold">{t('allCategories')}</SelectItem>
-                  {categoriesData.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.slug} className="font-bold">{cat.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
-                <TrendingUp className="w-4 h-4" />
-                <span className="font-bold">{articles.length} {t('news') || 'articles'}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Hero Featured Article */}
+          {/* Right Top Story Card (Hidden on Mobile) */}
           {heroArticle && (
-            <div
-              className="w-full lg:w-[480px] flex-shrink-0 cursor-pointer group"
-              onClick={() => viewArticle(heroArticle)}
-            >
-              <div className="relative rounded-[24px] overflow-hidden shadow-2xl border border-white/10">
-                <div className="relative aspect-[16/10] overflow-hidden bg-gray-800">
-                  <Image
-                    src={
-                      (heroArticle.thumbnails && heroArticle.thumbnails[0]) ||
-                      heroArticle.thumbnailUrl ||
-                      heroArticle.mainImage ||
-                      '/placeholder-news.svg'
-                    }
-                    alt={getLocalizedText(heroArticle.title, language) || 'Featured'}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
-                    sizes="480px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <Badge className="bg-red-600 text-white border-none px-3 py-1 font-black uppercase text-[10px] tracking-widest shadow-xl mb-3">
-                      {heroArticle.genre || t('featured') || 'Featured'}
-                    </Badge>
-                    <h3 className="font-heading font-black text-xl md:text-2xl text-white leading-tight tracking-tight line-clamp-2 group-hover:text-red-300 transition-colors">
-                      {getLocalizedText(heroArticle.title, language) || heroArticle.title}
-                    </h3>
-                  </div>
+            <div className="hidden lg:block w-[380px] bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-xl border border-white/60 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all" onClick={() => viewArticle(heroArticle)}>
+              <Badge className="bg-red-600 text-white border-none font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 mb-3 shadow-sm">
+                TOP STORY
+              </Badge>
+              <h3 className="font-heading font-black text-lg text-gray-900 leading-tight tracking-tight mb-3 group-hover:text-red-600 transition-colors line-clamp-2">
+                {getLocalizedText(heroArticle.title, language) || heroArticle.title}
+              </h3>
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <Clock className="w-3.5 h-3.5 text-red-500" />
+                  {new Date(heroArticle.publishedAt || heroArticle.createdAt).toLocaleDateString()}
+                </span>
+                <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center text-white shadow-md transform group-hover:translate-x-1 transition-transform">
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
             </div>
@@ -239,27 +203,61 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center justify-between mb-8 px-2">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm font-bold text-gray-500">
-            <Clock className="w-4 h-4" />
-            <span suppressHydrationWarning>{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+      {/* FILTER & SORT BAR */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4 relative z-20">
+        {/* Category Pills */}
+        <div className="flex-1 w-full overflow-x-auto hide-scrollbar flex items-center gap-2 pb-1">
+          <button
+            onClick={() => handleCategoryChange('all')}
+            className={`px-4 py-1.5 rounded-full text-[11px] uppercase tracking-wide font-black whitespace-nowrap transition-all border shadow-sm ${currentCategory === 'all' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+          >
+            All
+          </button>
+          {categoriesData.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryChange(cat.slug)}
+              className={`px-4 py-1.5 rounded-full text-[11px] uppercase tracking-wide font-black whitespace-nowrap transition-all border shadow-sm ${currentCategory === cat.slug ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort & Layout Controls */}
+        <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
+          <Select defaultValue="latest">
+            <SelectTrigger className="w-[130px] h-8 bg-white border-gray-200 rounded-md text-[11px] font-bold text-gray-600 focus:ring-0 shadow-sm uppercase tracking-wide">
+              <SelectValue placeholder="Latest First" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="latest" className="text-xs font-bold">Latest First</SelectItem>
+              <SelectItem value="oldest" className="text-xs font-bold">Oldest First</SelectItem>
+              <SelectItem value="popular" className="text-xs font-bold">Most Popular</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="flex items-center gap-1 bg-gray-50 rounded-md p-1 border border-gray-200 shadow-sm hidden sm:flex">
+            <button className="w-7 h-6 rounded flex items-center justify-center bg-red-600 text-white shadow-sm">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </button>
+            <button className="w-7 h-6 rounded flex items-center justify-center text-gray-400 hover:text-gray-900 transition-colors">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="4"></rect><rect x="3" y="10" width="18" height="4"></rect><rect x="3" y="16" width="18" height="4"></rect></svg>
+            </button>
           </div>
         </div>
-        <div className="h-px flex-1 mx-6 bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">{currentCategory === 'all' ? (t('allCategories') || 'All Categories') : currentCategory}</span>
       </div>
 
       {/* Premium News Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {gridArticles.map((article, idx) => (
           <div
             key={article.id}
-            className={`group rounded-[24px] overflow-hidden cursor-pointer border border-gray-100 bg-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col h-full ${idx === 0 ? 'sm:col-span-2 sm:row-span-1' : ''}`}
+            className="group rounded-2xl overflow-hidden cursor-pointer border border-gray-200 bg-white hover:shadow-xl transition-all duration-300 flex flex-col h-full"
             onClick={() => viewArticle(article)}
           >
-            <div className={`relative overflow-hidden bg-gray-50 ${idx === 0 ? 'aspect-[2/1]' : 'aspect-[16/10]'}`}>
+            {/* Image Container */}
+            <div className="relative overflow-hidden bg-gray-100 aspect-[16/10] w-full">
               <Image
                 src={proxyImageUrl(
                   (article.thumbnails && article.thumbnails[0]) ||
@@ -271,47 +269,45 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                priority={idx === 0}
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder-news.svg';
                   e.currentTarget.srcset = '';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              {/* Category Badge */}
-              <div className="absolute top-4 left-0 flex items-center gap-2 z-10">
-                {article.genre && (
-                  <Badge className="bg-[#cd4a4c] text-white text-[13px] font-bold px-3 py-1 rounded-l-none rounded-r-md shadow-md border-none tracking-normal capitalize">
-                    {article.genre}
-                  </Badge>
-                )}
+              
+              {/* Top-Left Category Badge */}
+              <div className="absolute top-3 left-3 z-10">
+                <Badge className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1 rounded-full border-none shadow-sm capitalize">
+                  {getTranslatedCategory(article.category, language) || t('news')}
+                </Badge>
               </div>
             </div>
 
-            <div className="p-5 md:p-6 flex-1 flex flex-col">
-              <div className="flex items-center gap-3 mb-3">
-                <Badge className="bg-red-50 text-red-600 border-none font-black text-[9px] tracking-widest px-2.5 py-0.5">
-                  {getLocalizedText(article.category, language) || t('news')}
-                </Badge>
-                <div className="text-[9px] font-bold text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
-                  <Eye className="w-3 h-3" /> {article.views || 0}
-                </div>
+            {/* Content Container */}
+            <div className="p-5 flex-1 flex flex-col">
+              {/* Date/Time */}
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2">
+                <Clock className="w-3.5 h-3.5 text-red-500" />
+                <span suppressHydrationWarning>
+                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                </span>
               </div>
 
-              <h3 className="font-heading font-black text-lg md:text-xl mb-3 leading-tight group-hover:text-red-700 transition-colors tracking-tight line-clamp-2">
+              {/* Title */}
+              <h3 className="font-heading font-black text-[17px] leading-tight mb-2 text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3">
                 {getLocalizedText(article.title, language) || article.title}
               </h3>
 
-              <p className="text-gray-400 text-xs line-clamp-2 mb-4 flex-1 leading-relaxed">
+              {/* Excerpt */}
+              <p className="text-gray-500 text-xs line-clamp-2 mb-4 leading-relaxed">
                 {getLocalizedText(article.content, language)?.replace(/<[^>]*>/g, '').substring(0, 120) || article.metaDescription || 'Read the full story on StarNews...'}
               </p>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
-                <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest" suppressHydrationWarning>
-                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : ''}
-                </span>
-                <span className="font-black text-red-600 text-[10px] flex items-center gap-1.5 group-hover:translate-x-1 transition-transform uppercase tracking-widest">
-                  {t('read') || 'Read'} <ChevronRight className="w-3.5 h-3.5" />
+              {/* Read More */}
+              <div className="mt-auto pt-1">
+                <span className="font-bold text-red-600 text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Read More <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </div>
