@@ -425,7 +425,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
     try {
       setLoading(true)
-      const response = await news.getAll({ limit: 100 })
+      const response = await news.getAll({ limit: 50 }) // fix(DEFECT-04): Reduced from 100 — page only shows ~50 articles
       let articles = response.articles || []
 
       // Sort articles by date (newest first, prefer publishedAt)

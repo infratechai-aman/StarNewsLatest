@@ -47,7 +47,10 @@ export async function GET(request) {
         // Cache for 1 minute
         setCache(cacheKey, businesses, 60 * 1000);
 
-        return NextResponse.json(businesses);
+        // fix(DEFECT-08): Add Cache-Control for browser/CDN caching
+        const response = NextResponse.json(businesses);
+        response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=60');
+        return response;
     } catch (error) {
         console.error('Error fetching businesses:', error.message);
         return NextResponse.json({ error: 'Failed to fetch businesses' }, { status: 500 });

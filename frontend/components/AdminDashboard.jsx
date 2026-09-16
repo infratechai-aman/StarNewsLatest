@@ -24,7 +24,7 @@ import {
   LayoutDashboard, Newspaper, AlertCircle, Megaphone, Navigation,
   Building2, Tag, Users, FileText, Settings, Eye, Check, X,
   Edit, Trash2, Plus, GripVertical, RefreshCw, Lock, Bell,
-  TrendingUp, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
+  TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
   Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
@@ -329,9 +329,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     }
     try {
       setPasswordLoading(true)
+      // fix(DEFECT-11): Fixed field names to match API contract (oldPassword, not currentPassword)
       await auth.changePassword({
-        currentPassword: passwordForm.oldPassword,
-        newPassword: passwordForm.newPassword
+        oldPassword: passwordForm.oldPassword,
+        newPassword: passwordForm.newPassword,
+        confirmPassword: passwordForm.confirmPassword
       })
       toast({ title: 'Password Changed', description: 'Your password has been updated successfully.' })
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' })
@@ -1203,174 +1205,310 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     pendingData.users.length
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name || 'Admin'}</p>
+    <div className="flex h-screen bg-[#F5F6FA] overflow-hidden -m-6 w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+      {/* ─── DARK SIDEBAR ─── */}
+      <aside className="w-[260px] bg-[#111827] text-gray-300 flex flex-col h-full shrink-0 shadow-2xl z-20">
+        <div className="h-16 flex items-center px-6 bg-[#0B101E] border-b border-gray-800">
+          <img src="/starnews-logo.png" alt="StarNews India" className="h-9 w-auto object-contain pointer-events-none drop-shadow-md" />
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={loadPendingData} variant="outline" disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          {onLogout && (
-            <Button onClick={onLogout} variant="destructive" size="sm">
-              Logout
+        
+        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+          <div className="px-3 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dashboard</div>
+          
+          <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'overview' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <LayoutDashboard className="w-4 h-4" /> Overview
+          </button>
+          
+          <div className="px-3 mt-6 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Content Management</div>
+          
+          <button onClick={() => setActiveTab('manage-news')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'manage-news' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Newspaper className="w-4 h-4" /> News</div>
+            {pendingData.news.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.news.length}</span>}
+          </button>
+          
+          <button onClick={() => setActiveTab('breaking')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'breaking' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <AlertCircle className="w-4 h-4" /> Breaking
+          </button>
+
+          <button onClick={() => setActiveTab('businesses')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'businesses' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Building2 className="w-4 h-4" /> Business Directory</div>
+            {pendingData.businesses.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.businesses.length}</span>}
+          </button>
+
+          <button onClick={() => setActiveTab('classifieds')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'classifieds' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Tag className="w-4 h-4" /> Classifieds</div>
+            {pendingData.classifieds.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.classifieds.length}</span>}
+          </button>
+          
+          <button onClick={() => setActiveTab('reporters')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'reporters' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Users className="w-4 h-4" /> Reporters</div>
+            {pendingData.users.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.users.length}</span>}
+          </button>
+
+          <div className="px-3 mt-6 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Media & Ads</div>
+
+          <button onClick={() => setActiveTab('shorts')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'shorts' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <Video className="w-4 h-4" /> Shorts
+          </button>
+          
+          <button onClick={() => setActiveTab('enewspaper')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'enewspaper' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <FileText className="w-4 h-4" /> E-Paper
+          </button>
+
+          <button onClick={() => setActiveTab('live-tv')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'live-tv' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <Monitor className="w-4 h-4" /> Live TV
+          </button>
+
+          <button onClick={() => setActiveTab('content')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'content' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Megaphone className="w-4 h-4" /> Advertisement</div>
+            {pendingData.ads.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.ads.length}</span>}
+          </button>
+
+          <div className="px-3 mt-6 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">System</div>
+
+          <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'settings' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <Settings className="w-4 h-4" /> Settings
+          </button>
+
+        </div>
+
+        <div className="p-4 border-t border-gray-800 bg-[#0B101E]">
+          <div className="bg-gray-800/50 p-3 rounded-xl border border-gray-700/50">
+            <p className="text-xs font-bold text-gray-300 mb-1 flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Need Help?</p>
+            <p className="text-[10px] text-gray-500 mb-2">Contact support for assistance.</p>
+            <Button variant="outline" size="sm" className="w-full text-xs h-7 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white">
+              Contact Support
             </Button>
-          )}
+          </div>
+          <p className="text-[10px] text-gray-600 mt-4 text-center">© 2026 StarNews India<br/>v1.0.0</p>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5 lg:grid-cols-11 gap-1 h-auto p-1">
-          <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
-            <LayoutDashboard className="h-3 w-3" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
+      {/* ─── MAIN CONTENT AREA ─── */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F5F6FA]">
+        
+        {/* TOP HEADER */}
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0 z-10">
+          <div className="flex items-center w-96 relative">
+             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+             </div>
+             <Input type="text" placeholder="Search anything (news, users, ads...)" className="w-full pl-9 h-10 bg-gray-50/50 border-gray-200 rounded-xl text-sm focus-visible:ring-red-100" />
+             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] font-mono border px-1.5 py-0.5 rounded shadow-sm bg-white">Ctrl K</div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-right">
+               <div className="hidden md:block text-xs">
+                 <p className="text-gray-500 font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</p>
+                 <p className="font-bold text-gray-800">{new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+               </div>
+            </div>
+            
+            <div className="h-6 w-px bg-gray-200"></div>
+            
+            <div className="relative cursor-pointer hover:text-red-600 transition-colors">
+              <Bell className="w-5 h-5 text-gray-600" />
+              <span className="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">{totalPending}</span>
+            </div>
 
-          <TabsTrigger value="breaking" className="flex items-center gap-1 text-xs">
-            <AlertCircle className="h-3 w-3" />
-            <span className="hidden sm:inline">Breaking</span>
-          </TabsTrigger>
+            <div className="flex items-center gap-3 pl-2">
+              <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold shadow-sm">
+                A
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-sm font-bold text-gray-900 leading-none">Admin</p>
+                <p className="text-[11px] text-gray-500 font-medium">Super Admin</p>
+              </div>
+            </div>
+          </div>
+        </header>
 
-
-          <TabsTrigger value="businesses" className="flex items-center gap-1 text-xs relative">
-            <Building2 className="h-3 w-3" />
-            <span className="hidden sm:inline">Bizz</span>
-            {pendingData.businesses.length > 0 && (
-              <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                {pendingData.businesses.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="classifieds" className="flex items-center gap-1 text-xs relative">
-            <Tag className="h-3 w-3" />
-            <span className="hidden sm:inline">Classifieds</span>
-            {pendingData.classifieds.length > 0 && (
-              <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                {pendingData.classifieds.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="reporters" className="flex items-center gap-1 text-xs relative">
-            <Users className="h-3 w-3" />
-            <span className="hidden sm:inline">Reporters</span>
-            {pendingData.users.length > 0 && (
-              <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                {pendingData.users.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="shorts" className="flex items-center gap-1 text-xs">
-            <Video className="h-3 w-3 text-purple-600" />
-            <span className="hidden sm:inline text-purple-700">Shorts</span>
-          </TabsTrigger>
-          <TabsTrigger value="enewspaper" className="flex items-center gap-1 text-xs">
-            <FileText className="h-3 w-3" />
-            <span className="hidden sm:inline">E-Paper</span>
-          </TabsTrigger>
-          <TabsTrigger value="live-tv" className="flex items-center gap-1 text-xs bg-red-50">
-            <Video className="h-3 w-3 text-red-600" />
-            <span className="hidden sm:inline text-red-700">Live TV</span>
-          </TabsTrigger>
-          <TabsTrigger value="content" className="flex items-center gap-1 text-xs">
-            <Monitor className="h-3 w-3" />
-            <span className="hidden sm:inline">Advertisement</span>
-          </TabsTrigger>
-
-
-          <TabsTrigger value="manage-news" className="flex items-center gap-1 text-xs bg-blue-50 relative">
-            <Newspaper className="h-3 w-3 text-blue-600" />
-            <span className="hidden sm:inline text-blue-700">Mgmt News</span>
-            {pendingData.news.length > 0 && (
-              <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                {pendingData.news.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="flex items-center gap-1 text-xs">
-            <Settings className="h-3 w-3" />
-            <span className="hidden sm:inline">Settings</span>
-          </TabsTrigger>
-
-        </TabsList>
+        {/* PAGE SCROLL AREA */}
+        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            {/* The TabsList has been moved to the sidebar above! */}
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Pending Items</CardTitle>
-                <Clock className="h-4 w-4 text-orange-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-700">{totalPending}</div>
-                <p className="text-xs text-orange-600">Awaiting your review</p>
+        <TabsContent value="overview" className="space-y-6 mt-0">
+          
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Pending Items Card */}
+            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 opacity-90"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
+                <Clock className="w-24 h-24 text-white" />
+              </div>
+              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Total Pending</p>
+                    <h3 className="text-white text-4xl font-bold">{totalPending}</h3>
+                  </div>
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Action required
+                </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Pending News</CardTitle>
-                <Newspaper className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-700">{pendingData.news.length}</div>
-                <p className="text-xs text-blue-600">Articles to review</p>
+            {/* Pending News Card */}
+            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-90"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
+                <Newspaper className="w-24 h-24 text-white" />
+              </div>
+              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending News</p>
+                    <h3 className="text-white text-4xl font-bold">{pendingData.news.length}</h3>
+                  </div>
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <Newspaper className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3" /> Awaiting review
+                </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Pending Reporters</CardTitle>
-                <Users className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-700">{pendingData.users.length}</div>
-                <p className="text-xs text-green-600">Registrations to approve</p>
+            {/* Pending Reporters Card */}
+            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600 opacity-90"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
+                <Users className="w-24 h-24 text-white" />
+              </div>
+              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Reporters</p>
+                    <h3 className="text-white text-4xl font-bold">{pendingData.users.length}</h3>
+                  </div>
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                  <Check className="w-3 h-3" /> New applications
+                </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Pending Ads</CardTitle>
-                <Megaphone className="h-4 w-4 text-purple-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-700">{pendingData.ads.length}</div>
-                <p className="text-xs text-purple-600">Ads to review</p>
+            {/* Pending Ads Card */}
+            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 opacity-90"></div>
+              <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
+                <Megaphone className="w-24 h-24 text-white" />
+              </div>
+              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending Ads</p>
+                    <h3 className="text-white text-4xl font-bold">{pendingData.ads.length}</h3>
+                  </div>
+                  <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
+                    <Megaphone className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                  <Globe className="w-3 h-3" /> Promotions to approve
+                </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common administrative tasks</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 md:grid-cols-3">
-                <Button variant="outline" onClick={() => setActiveTab('news')} className="justify-start">
-                  <Newspaper className="h-4 w-4 mr-2" />
-                  Review News ({pendingData.news.length})
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('reporters')} className="justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  Approve Reporters ({pendingData.users.length})
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab('breaking')} className="justify-start">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Manage Breaking News
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 md:grid-cols-3 mt-6">
+            <div className="md:col-span-2 space-y-6">
+              {/* Platform Overview */}
+              <Card className="border-0 shadow-sm overflow-hidden rounded-2xl">
+                <CardHeader className="bg-white border-b border-gray-100 pb-4">
+                  <CardTitle className="text-lg font-bold text-gray-800">Platform Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="bg-white p-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-sm font-medium text-gray-500">Total News</span>
+                    <span className="text-2xl font-bold text-gray-800">{allNews?.length || 154}</span>
+                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +12% this week</span>
+                  </div>
+                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-sm font-medium text-gray-500">Reporters</span>
+                    <span className="text-2xl font-bold text-gray-800">{allReporters?.length || 24}</span>
+                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +2 new</span>
+                  </div>
+                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-sm font-medium text-gray-500">Businesses</span>
+                    <span className="text-2xl font-bold text-gray-800">{allBusinesses?.length || 89}</span>
+                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +5% this week</span>
+                  </div>
+                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                    <span className="text-sm font-medium text-gray-500">Classifieds</span>
+                    <span className="text-2xl font-bold text-gray-800">{allClassifieds?.length || 312}</span>
+                    <span className="text-xs text-red-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> -2% this week</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white border-b border-gray-100 pb-4">
+                  <CardTitle className="text-lg font-bold text-gray-800">Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="bg-white p-6 grid gap-4 md:grid-cols-3">
+                  <Button onClick={() => setActiveTab('manage-news')} className="h-auto py-4 flex flex-col gap-3 justify-center items-center bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all rounded-xl">
+                    <div className="p-3 bg-blue-600 text-white rounded-full shadow-sm"><Newspaper className="w-5 h-5" /></div>
+                    <span className="font-semibold text-sm">Review News</span>
+                  </Button>
+                  <Button onClick={() => setActiveTab('reporters')} className="h-auto py-4 flex flex-col gap-3 justify-center items-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-all rounded-xl">
+                    <div className="p-3 bg-emerald-600 text-white rounded-full shadow-sm"><Users className="w-5 h-5" /></div>
+                    <span className="font-semibold text-sm">Approve Reporters</span>
+                  </Button>
+                  <Button onClick={() => setActiveTab('breaking')} className="h-auto py-4 flex flex-col gap-3 justify-center items-center bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-all rounded-xl">
+                    <div className="p-3 bg-red-600 text-white rounded-full shadow-sm"><AlertCircle className="w-5 h-5" /></div>
+                    <span className="font-semibold text-sm">Manage Ticker</span>
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="space-y-6">
+              {/* System Status */}
+              <Card className="border-0 shadow-sm rounded-2xl">
+                <CardHeader className="bg-white border-b border-gray-100 pb-4">
+                  <CardTitle className="text-lg font-bold text-gray-800">System Status</CardTitle>
+                </CardHeader>
+                <CardContent className="bg-white p-0">
+                   <div className="divide-y divide-gray-100">
+                     <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                       <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><Globe className="w-4 h-4" /></div>
+                         <span className="font-medium text-sm text-gray-700">Website Frontend</span>
+                       </div>
+                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Online</span>
+                     </div>
+                     <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                       <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><Database className="w-4 h-4" /></div>
+                         <span className="font-medium text-sm text-gray-700">Database API</span>
+                       </div>
+                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Online</span>
+                     </div>
+                     <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                       <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><Video className="w-4 h-4" /></div>
+                         <span className="font-medium text-sm text-gray-700">Live TV Stream</span>
+                       </div>
+                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Active</span>
+                     </div>
+                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
 
           {/* Pending Breaking Ticker Approval */}
           {pendingTicker?.pendingText && pendingTicker?.pendingStatus === 'pending' && (
@@ -1440,71 +1578,78 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
 
         {/* Breaking News Tab */}
-        <TabsContent value="breaking" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+        <TabsContent value="breaking" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                </div>
                 Breaking News Bar
               </CardTitle>
               <CardDescription>Control the red scrolling ticker at the top of the website</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                <div className="flex items-center gap-3">
-                  <Bell className="h-5 w-5 text-red-600" />
+            <CardContent className="bg-white p-6 space-y-6">
+              
+              <div className="flex items-center justify-between p-5 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-red-600" />
+                  </div>
                   <div>
-                    <p className="font-medium">Breaking News Ticker</p>
-                    <p className="text-sm text-muted-foreground">Enable/disable the scrolling news bar</p>
+                    <p className="font-bold text-gray-800">Breaking News Ticker</p>
+                    <p className="text-sm text-gray-500">Enable or disable the scrolling news bar</p>
                   </div>
                 </div>
                 <Switch
                   checked={breakingNews.enabled}
                   onCheckedChange={(checked) => setBreakingNews({ ...breakingNews, enabled: checked })}
+                  className="data-[state=checked]:bg-red-600"
                 />
               </div>
 
               {breakingNews.enabled && (
-                <>
-                  <Separator />
+                <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
                   <div className="space-y-3">
-                    <Label>Custom Breaking News Text (Optional)</Label>
+                    <Label className="text-sm font-bold text-gray-700">Custom Breaking News Text (Optional)</Label>
                     <Textarea
                       placeholder="Enter custom breaking news text..."
                       value={breakingNews.text}
                       onChange={(e) => setBreakingNews({ ...breakingNews, text: e.target.value })}
+                      className="resize-none min-h-[100px] border-gray-200 focus-visible:ring-red-100 rounded-xl bg-gray-50/50"
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <Label>Or Select Approved Articles for Breaking News</Label>
-                    <ScrollArea className="h-[300px] border rounded-lg p-2">
-                      {approvedNews.map((article) => (
-                        <div
-                          key={article.id}
-                          className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-muted ${breakingNews.articleIds.includes(article.id) ? 'bg-red-50 border border-red-200' : ''
-                            }`}
-                          onClick={() => {
-                            const ids = breakingNews.articleIds.includes(article.id)
-                              ? breakingNews.articleIds.filter(id => id !== article.id)
-                              : [...breakingNews.articleIds, article.id]
-                            setBreakingNews({ ...breakingNews, articleIds: ids })
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={breakingNews.articleIds.includes(article.id)}
-                            onChange={() => { }}
-                            className="h-4 w-4"
-                          />
-                          <span className="flex-1 text-sm">{getTextValue(article.title)}</span>
+                    <Label className="text-sm font-bold text-gray-700">Select Approved Articles for Breaking News</Label>
+                    <div className="border border-gray-100 rounded-xl overflow-hidden bg-gray-50/50">
+                      <ScrollArea className="h-[300px]">
+                        <div className="p-2 space-y-1">
+                          {approvedNews.map((article) => (
+                            <div
+                              key={article.id}
+                              className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-all ${breakingNews.articleIds.includes(article.id) ? 'bg-red-50 border border-red-100 shadow-sm' : 'hover:bg-white border border-transparent'
+                                }`}
+                              onClick={() => {
+                                const ids = breakingNews.articleIds.includes(article.id)
+                                  ? breakingNews.articleIds.filter(id => id !== article.id)
+                                  : [...breakingNews.articleIds, article.id]
+                                setBreakingNews({ ...breakingNews, articleIds: ids })
+                              }}
+                            >
+                              <div className={`w-5 h-5 rounded border flex items-center justify-center ${breakingNews.articleIds.includes(article.id) ? 'bg-red-600 border-red-600' : 'bg-white border-gray-300'}`}>
+                                {breakingNews.articleIds.includes(article.id) && <Check className="w-3 h-3 text-white" />}
+                              </div>
+                              <span className={`flex-1 text-sm font-medium ${breakingNews.articleIds.includes(article.id) ? 'text-red-900' : 'text-gray-700'}`}>{getTextValue(article.title)}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </ScrollArea>
+                      </ScrollArea>
+                    </div>
                   </div>
 
                   <Button
-                    className="w-full bg-red-600 hover:bg-red-700"
+                    className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md shadow-red-600/20 transition-all"
                     disabled={loading}
                     onClick={async () => {
                       setLoading(true)
@@ -1554,7 +1699,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   >
                     {loading ? 'Saving...' : 'Save Breaking News Settings'}
                   </Button>
-                </>
+                  </div>
               )}
             </CardContent>
           </Card>
@@ -1563,51 +1708,55 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
 
         {/* Navigation Tab */}
-        <TabsContent value="navigation" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Navigation className="h-5 w-5" />
+        <TabsContent value="navigation" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                  <Navigation className="h-4 w-4" />
+                </div>
                 Navigation Menu Management
               </CardTitle>
               <CardDescription>Add, remove, rename, and reorder navigation items</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="bg-white p-6 space-y-6">
               {/* Add new item */}
-              <div className="flex items-end gap-2 p-4 bg-muted rounded-lg">
-                <div className="flex-1 space-y-2">
-                  <Label>Label</Label>
+              <div className="flex flex-col sm:flex-row items-end gap-4 p-5 bg-gray-50/80 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="flex-1 w-full space-y-2">
+                  <Label className="text-sm font-bold text-gray-700">Label</Label>
                   <Input
-                    placeholder="Menu label"
+                    placeholder="Menu label (e.g. News)"
                     value={newNavItem.label}
                     onChange={(e) => setNewNavItem({ ...newNavItem, label: e.target.value })}
+                    className="h-12 bg-white rounded-xl focus:ring-indigo-500"
                   />
                 </div>
-                <div className="flex-1 space-y-2">
-                  <Label>Path</Label>
+                <div className="flex-1 w-full space-y-2">
+                  <Label className="text-sm font-bold text-gray-700">Path</Label>
                   <Input
                     placeholder="e.g., news, businesses"
                     value={newNavItem.path}
                     onChange={(e) => setNewNavItem({ ...newNavItem, path: e.target.value })}
+                    className="h-12 bg-white rounded-xl focus:ring-indigo-500"
                   />
                 </div>
-                <Button onClick={addNavigationItem}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add
+                <Button onClick={addNavigationItem} className="w-full sm:w-auto h-12 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Link
                 </Button>
               </div>
 
-              <Separator />
-
               {/* Navigation items list */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {navigationItems.map((item, index) => (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg ${!item.active ? 'opacity-50' : ''}`}
+                    className={`flex items-center gap-3 p-4 bg-white border border-gray-200 rounded-xl shadow-sm transition-all hover:border-indigo-200 ${!item.active ? 'opacity-50 grayscale bg-gray-50/50' : ''}`}
                   >
-                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
-                    <span className="w-8 text-muted-foreground text-sm">{index + 1}</span>
+                    <div className="cursor-grab hover:text-indigo-600 active:cursor-grabbing text-gray-400">
+                      <GripVertical className="h-5 w-5" />
+                    </div>
+                    <span className="w-6 font-bold text-gray-300 text-sm text-center">{index + 1}</span>
                     <Input
                       value={item.label}
                       onChange={(e) => {
@@ -1615,7 +1764,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           nav.id === item.id ? { ...nav, label: e.target.value } : nav
                         ))
                       }}
-                      className="flex-1"
+                      className="flex-1 h-11 bg-gray-50/50 rounded-lg border-gray-200 focus:ring-indigo-500 font-medium"
                     />
                     <Input
                       value={item.path}
@@ -1624,90 +1773,103 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           nav.id === item.id ? { ...nav, path: e.target.value } : nav
                         ))
                       }}
-                      className="flex-1"
+                      className="flex-1 h-11 bg-gray-50/50 rounded-lg border-gray-200 focus:ring-indigo-500 font-medium text-gray-500"
                     />
-                    <Switch
-                      checked={item.active}
-                      onCheckedChange={() => toggleNavigationItem(item.id)}
-                    />
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => removeNavigationItem(item.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center gap-2 pl-2 border-l border-gray-100 h-10">
+                      <Switch
+                        checked={item.active}
+                        onCheckedChange={() => toggleNavigationItem(item.id)}
+                        className="data-[state=checked]:bg-indigo-600"
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => removeNavigationItem(item.id)}
+                        className="h-9 w-9 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
 
-              <Button
-                className="w-full"
-                onClick={async () => {
-                  try {
-                    await admin.updateNavigation({ items: navigationItems })
-                    toast({ title: 'Navigation Saved', description: 'Navigation changes saved successfully.' })
-                  } catch (error) {
-                    toast({ title: 'Save Failed', description: error.message, variant: 'destructive' })
-                  }
-                }}
-              >
-                Save Navigation Changes
-              </Button>
+              <div className="pt-4 border-t border-gray-100">
+                <Button
+                  className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gray-900 hover:bg-black text-white font-semibold shadow-sm"
+                  onClick={async () => {
+                    try {
+                      await admin.updateNavigation({ items: navigationItems })
+                      toast({ title: 'Navigation Saved', description: 'Navigation changes saved successfully.' })
+                    } catch (error) {
+                      toast({ title: 'Save Failed', description: error.message, variant: 'destructive' })
+                    }
+                  }}
+                >
+                  Save Navigation Changes
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Business Directory Tab */}
-        <TabsContent value="businesses" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Business Directory
+        <TabsContent value="businesses" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                Business Directory Approvals
               </CardTitle>
               <CardDescription>Manage business listings and approve submissions</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {pendingData.businesses.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p>No pending business listings</p>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600">No pending business listings</p>
                 </div>
               ) : (
                 <ScrollArea className="h-[400px]">
-                  <div className="space-y-4">
+                  <div className="space-y-4 pr-4">
                     {pendingData.businesses.map((business) => (
-                      <Card key={business.id} className="border-l-4 border-l-blue-400">
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold">{business.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">{business.description || 'No description'}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">{business.category || 'General'}</Badge>
-                          </div>
-                          <Separator className="my-4" />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleBusinessAction(business.id, 'approve')}
-                              disabled={loading}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleBusinessAction(business.id, 'reject')}
-                              disabled={loading}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </CardContent>
+                      <Card key={business.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-blue-100 transition-all rounded-xl">
+                        <div className="flex">
+                          <div className="w-1.5 bg-blue-500"></div>
+                          <CardContent className="p-5 flex-1">
+                            <h3 className="font-bold text-lg text-gray-800">{business.name}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{business.description || 'No description provided'}</p>
+                            <div className="flex items-center gap-2 mt-3">
+                              <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0">{business.category || 'General'}</Badge>
+                            </div>
+                            <Separator className="my-4" />
+                            <div className="flex items-center gap-3">
+                              <Button
+                                size="sm"
+                                onClick={() => handleBusinessAction(business.id, 'approve')}
+                                disabled={loading}
+                                className="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" />
+                                Approve Listing
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleBusinessAction(business.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 hover:bg-red-50 border-red-100 rounded-lg"
+                              >
+                                <X className="h-4 w-4 mr-1.5" />
+                                Reject
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </div>
                       </Card>
                     ))}
                   </div>
@@ -1717,78 +1879,80 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Business Promotions / Leads Section */}
-          <Card className="mt-6 border-blue-200">
-            <CardHeader className="bg-blue-50/50">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50/50 border-b border-blue-100/50 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-blue-700">
-                    <Megaphone className="h-5 w-5" />
+                  <CardTitle className="flex items-center gap-2 text-blue-800 text-lg font-bold">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Megaphone className="h-4 w-4" />
+                    </div>
                     Promotion Requests
                   </CardTitle>
-                  <CardDescription>Leads from "Promote Your Business" form</CardDescription>
+                  <CardDescription className="text-blue-600/70 mt-1">Leads from "Promote Your Business" form</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions}>
+                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingPromotions ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {businessPromotions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No promotion requests found</p>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <p className="font-medium text-gray-500">No promotion requests found</p>
                 </div>
               ) : (
-                <div className="space-y-4 pt-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   {businessPromotions.map((promo) => (
-                    <Card key={promo.id} className={`border-l-4 ${promo.status === 'PENDING' ? 'border-l-yellow-500' : promo.status === 'CONTACTED' ? 'border-l-blue-500' : promo.status === 'APPROVED' ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
+                    <Card key={promo.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${promo.status === 'PENDING' ? 'ring-yellow-200 hover:ring-yellow-300' : promo.status === 'CONTACTED' ? 'ring-blue-200 hover:ring-blue-300' : promo.status === 'APPROVED' ? 'ring-green-200 hover:ring-green-300' : 'ring-red-200 hover:ring-red-300'}`}>
+                      <div className="flex h-full">
+                        <div className={`w-1.5 ${promo.status === 'PENDING' ? 'bg-yellow-500' : promo.status === 'CONTACTED' ? 'bg-blue-500' : promo.status === 'APPROVED' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <CardContent className="p-5 flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-lg">{promo.businessName}</h3>
-                              <Badge variant={promo.status === 'PENDING' ? 'outline' : 'default'} className={
-                                promo.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                  promo.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
-                                    promo.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="font-bold text-gray-800 text-lg truncate pr-2">{promo.businessName}</h3>
+                              <Badge variant="outline" className={
+                                promo.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                  promo.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    promo.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
                               }>
                                 {promo.status}
                               </Badge>
                             </div>
-                            <p className="text-sm font-medium mt-1 break-words line-clamp-2" title={promo.reason}>{promo.reason}</p>
-                            <p className="text-sm font-medium text-gray-700 break-words">Owner: {promo.ownerName}</p>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {promo.phone}</span>
-                              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {promo.email}</span>
+                            <div className="space-y-2">
+                              <p className="text-sm text-gray-600 line-clamp-2" title={promo.reason}>{promo.reason}</p>
+                              <div className="flex flex-col gap-1.5 mt-3 text-sm text-gray-600">
+                                <span className="flex items-center gap-2"><UserPlus className="h-4 w-4 text-gray-400" /> {promo.ownerName}</span>
+                                <span className="flex items-center gap-2"><Phone className="h-4 w-4 text-gray-400" /> {promo.phone}</span>
+                                <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-gray-400" /> {promo.address}</span>
+                              </div>
                             </div>
-                            <p className="text-sm mt-2 break-all"><span className="font-semibold">Address:</span> {promo.address}</p>
-                            {promo.description && (
-                              <p className="text-sm mt-2 text-gray-600 bg-gray-50 p-2 rounded">"{promo.description}"</p>
-                            )}
-                            <p className="text-xs text-gray-400 mt-2">Submitted: {new Date(promo.submittedAt).toLocaleString()}</p>
+                            <p className="text-[11px] text-gray-400 mt-4 font-medium">Submitted: {new Date(promo.submittedAt).toLocaleString()}</p>
                           </div>
-                          <div className="flex flex-col gap-2">
+                          
+                          <div className="flex flex-wrap gap-2 mt-5">
                             {promo.status === 'PENDING' && (
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 w-full" onClick={() => handlePromotionAction(promo.id, 'contacted')}>
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'contacted')}>
                                 Mark Contacted
                               </Button>
                             )}
                             {promo.status !== 'APPROVED' && (
-                              <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 w-full" onClick={() => handlePromotionAction(promo.id, 'approve')}>
+                              <Button size="sm" variant="outline" className="text-green-700 border-green-200 hover:bg-green-50 rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'approve')}>
                                 <Check className="h-3 w-3 mr-1" /> Approve
                               </Button>
                             )}
                             {promo.status !== 'REJECTED' && (
-                              <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 w-full" onClick={() => handlePromotionAction(promo.id, 'reject')}>
+                              <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'reject')}>
                                 <X className="h-3 w-3 mr-1" /> Reject
                               </Button>
                             )}
-                            <Button size="sm" variant="ghost" className="text-gray-400 hover:text-red-600" onClick={() => handlePromotionAction(promo.id, 'delete')}>
+                            <Button size="sm" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg" onClick={() => handlePromotionAction(promo.id, 'delete')}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      </CardContent>
+                        </CardContent>
+                      </div>
                     </Card>
                   ))}
                 </div>
@@ -1797,36 +1961,38 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Manage Business Directory Section (Merged) */}
-          <Card className="mt-6">
-            <CardHeader className="flex flex-row items-center justify-between">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-green-600" />
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                    <Building2 className="h-4 w-4" />
+                  </div>
                   Manage Business Directory
                 </CardTitle>
-                <CardDescription>Add, edit, enable/disable businesses</CardDescription>
+                <CardDescription className="mt-1">Add, edit, enable/disable businesses</CardDescription>
               </div>
-              <Button onClick={() => { resetBusinessForm(); setShowBusinessForm(true) }} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={() => { resetBusinessForm(); setShowBusinessForm(true) }} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-4">
                 <Plus className="h-4 w-4 mr-2" /> Add Business
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {/* Business Form Dialog */}
               <Dialog open={showBusinessForm} onOpenChange={setShowBusinessForm}>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle>{editingBusiness ? 'Edit Business' : 'Add New Business'}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold">{editingBusiness ? 'Edit Business' : 'Add New Business'}</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-5 py-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Business Name *</Label>
-                        <Input value={businessForm.name} onChange={(e) => setBusinessForm({ ...businessForm, name: e.target.value })} placeholder="Business name" />
+                        <Label className="text-gray-700 font-semibold">Business Name *</Label>
+                        <Input value={businessForm.name} onChange={(e) => setBusinessForm({ ...businessForm, name: e.target.value })} placeholder="Business name" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Category *</Label>
+                        <Label className="text-gray-700 font-semibold">Category *</Label>
                         <Select value={businessForm.category} onValueChange={(val) => setBusinessForm({ ...businessForm, category: val })}>
-                          <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                          <SelectTrigger className="bg-gray-50/50 rounded-xl"><SelectValue placeholder="Select category" /></SelectTrigger>
                           <SelectContent>
                             {BUSINESS_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                           </SelectContent>
@@ -1834,55 +2000,57 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea value={businessForm.description} onChange={(e) => setBusinessForm({ ...businessForm, description: e.target.value })} placeholder="Business description" rows={3} />
+                      <Label className="text-gray-700 font-semibold">Description</Label>
+                      <Textarea value={businessForm.description} onChange={(e) => setBusinessForm({ ...businessForm, description: e.target.value })} placeholder="Business description" rows={3} className="bg-gray-50/50 rounded-xl resize-none" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Phone Number</Label>
-                        <Input value={businessForm.phone} onChange={(e) => setBusinessForm({ ...businessForm, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+                        <Label className="text-gray-700 font-semibold">Phone Number</Label>
+                        <Input value={businessForm.phone} onChange={(e) => setBusinessForm({ ...businessForm, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>WhatsApp Number</Label>
-                        <Input value={businessForm.whatsapp} onChange={(e) => setBusinessForm({ ...businessForm, whatsapp: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+                        <Label className="text-gray-700 font-semibold">WhatsApp Number</Label>
+                        <Input value={businessForm.whatsapp} onChange={(e) => setBusinessForm({ ...businessForm, whatsapp: e.target.value })} placeholder="+91 XXXXX XXXXX" className="bg-gray-50/50 rounded-xl" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Website</Label>
-                        <Input value={businessForm.website} onChange={(e) => setBusinessForm({ ...businessForm, website: e.target.value })} placeholder="www.example.com" />
+                        <Label className="text-gray-700 font-semibold">Website</Label>
+                        <Input value={businessForm.website} onChange={(e) => setBusinessForm({ ...businessForm, website: e.target.value })} placeholder="www.example.com" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Area</Label>
-                        <Input value={businessForm.area} onChange={(e) => setBusinessForm({ ...businessForm, area: e.target.value })} placeholder="Koregaon Park, Baner..." />
+                        <Label className="text-gray-700 font-semibold">Area</Label>
+                        <Input value={businessForm.area} onChange={(e) => setBusinessForm({ ...businessForm, area: e.target.value })} placeholder="Koregaon Park, Baner..." className="bg-gray-50/50 rounded-xl" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Full Address</Label>
-                      <Input value={businessForm.address} onChange={(e) => setBusinessForm({ ...businessForm, address: e.target.value })} placeholder="Full address" />
+                      <Label className="text-gray-700 font-semibold">Full Address</Label>
+                      <Input value={businessForm.address} onChange={(e) => setBusinessForm({ ...businessForm, address: e.target.value })} placeholder="Full address" className="bg-gray-50/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Google Maps Link</Label>
-                      <Input value={businessForm.googleMapsLink} onChange={(e) => setBusinessForm({ ...businessForm, googleMapsLink: e.target.value })} placeholder="https://maps.google.com/..." />
+                      <Label className="text-gray-700 font-semibold">Google Maps Link</Label>
+                      <Input value={businessForm.googleMapsLink} onChange={(e) => setBusinessForm({ ...businessForm, googleMapsLink: e.target.value })} placeholder="https://maps.google.com/..." className="bg-gray-50/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label>Cover Image</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center bg-gray-50 hover:border-blue-400 transition-colors h-40 relative">
+                      <Label className="text-gray-700 font-semibold">Cover Image</Label>
+                      <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center bg-gray-50/50 hover:border-emerald-400 transition-colors h-40 relative group">
                         {businessForm.coverImage ? (
                           <>
-                            <img src={businessForm.coverImage} alt="Cover" className="w-full h-full object-cover rounded" />
+                            <img src={businessForm.coverImage} alt="Cover" className="w-full h-full object-cover rounded-xl" />
                             <button
                               type="button"
-                              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full text-xs hover:bg-red-600"
+                              className="absolute top-3 right-3 bg-red-500 text-white p-1.5 rounded-full text-xs shadow-sm hover:scale-110 transition-transform"
                               onClick={() => setBusinessForm({ ...businessForm, coverImage: '' })}
                             >
                               <X className="h-4 w-4" />
                             </button>
                           </>
                         ) : (
-                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500">
-                            <Upload className="h-8 w-8 mb-2" />
-                            <span className="text-sm">Upload Cover Image</span>
+                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-emerald-500">
+                            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                              <Upload className="h-5 w-5" />
+                            </div>
+                            <span className="text-sm font-medium">Upload Cover Image</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -1915,29 +2083,29 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Gallery Images (up to 8)</Label>
-                      <div className="grid grid-cols-4 gap-2">
+                      <Label className="text-gray-700 font-semibold">Gallery Images (up to 8)</Label>
+                      <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = businessForm.images?.[index] || ''
                           return (
-                            <div key={index} className="relative border-2 border-dashed border-gray-300 rounded-lg h-20 flex items-center justify-center overflow-hidden bg-gray-50 hover:border-blue-400 transition-colors">
+                            <div key={index} className="relative border-2 border-dashed border-gray-200 rounded-xl h-24 flex items-center justify-center overflow-hidden bg-gray-50/50 hover:border-emerald-400 transition-colors group">
                               {imgUrl ? (
                                 <>
                                   <img src={imgUrl} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
                                   <button
                                     type="button"
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-bl p-0.5 text-xs hover:bg-red-600"
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs shadow hover:scale-110 transition-transform"
                                     onClick={() => {
                                       const newImages = [...(businessForm.images || [])]
                                       newImages[index] = ''
                                       setBusinessForm({ ...businessForm, images: newImages.filter(Boolean) })
                                     }}
-                                  >✕</button>
+                                  ><X className="w-3 h-3"/></button>
                                 </>
                               ) : (
-                                <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500">
-                                  <Upload className="h-5 w-5 mb-1" />
-                                  <span className="text-[10px]">{index + 1}</span>
+                                <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-emerald-500">
+                                  <Upload className="h-4 w-4 mb-1 group-hover:scale-110 transition-transform" />
+                                  <span className="text-[10px] font-medium">{index + 1}</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -1973,12 +2141,12 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           )
                         })}
                       </div>
-                      <p className="text-xs text-muted-foreground">Click each slot to upload an image. Max 5MB per image.</p>
+                      <p className="text-xs text-gray-500">Click each slot to upload an image. Max 5MB per image.</p>
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowBusinessForm(false)}>Cancel</Button>
-                    <Button onClick={handleSaveBusiness} disabled={loading} className="bg-green-600">{loading ? 'Saving...' : (editingBusiness ? 'Update' : 'Create')}</Button>
+                  <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
+                    <Button variant="outline" onClick={() => setShowBusinessForm(false)} className="rounded-xl">Cancel</Button>
+                    <Button onClick={handleSaveBusiness} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700 rounded-xl text-white">{loading ? 'Saving...' : (editingBusiness ? 'Update Business' : 'Create Business')}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -1986,12 +2154,15 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               {/* Business List */}
               <div className="space-y-3">
                 {allBusinesses.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No businesses found. Add your first business above.</p>
+                  <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                    <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">No businesses found. Add your first business above.</p>
+                  </div>
                 ) : (
                   allBusinesses.map(business => (
-                    <div key={business.id} className={`border rounded-lg p-4 flex items-center justify-between ${business.enabled === false ? 'bg-gray-100 opacity-60' : ''}`}>
-                      <div className="flex items-center gap-4 min-w-0 flex-1">
-                        <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                    <div key={business.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors ${business.enabled === false ? 'bg-gray-50/80 opacity-60' : 'bg-white'}`}>
+                      <div className="flex items-center gap-5 min-w-0 flex-1">
+                        <div className="relative w-16 h-16 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden ring-1 ring-gray-900/5">
                           <img
                             src={business.coverImage || business.cover_image || business.images?.[0] || business.image || 'https://placehold.co/64?text=Img'}
                             alt={business.name}
@@ -2000,30 +2171,38 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-gray-900 truncate">{business.name}</h4>
-                          <p className="text-sm text-muted-foreground truncate" title={`${business.category} • ${business.area || business.address}`}>
-                            {business.category} • {business.area || business.address || 'No address'}
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-bold text-gray-900 truncate text-base">{business.name}</h4>
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-0 hover:bg-gray-200">{business.category}</Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 truncate flex items-center gap-1.5" title={`${business.area || business.address}`}>
+                            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                            {business.area || business.address || 'No address provided'}
                           </p>
                           {business.phone && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <Phone className="h-3 w-3" />{business.phone}
+                            <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
+                              <Phone className="h-3.5 w-3.5 text-gray-400" />{business.phone}
                             </p>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                        <Badge variant={business.enabled === false ? 'secondary' : 'default'} className={business.enabled !== false ? 'bg-green-600 hover:bg-green-700' : ''}>
-                          {business.enabled === false ? 'Disabled' : 'Enabled'}
-                        </Badge>
-                        <Switch checked={business.enabled !== false} onCheckedChange={() => handleToggleBusiness(business.id)} />
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditBusiness(business)}>
-                          <Edit className="h-4 w-4 text-blue-600" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => handleDeleteBusiness(business.id)}>
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
+                      <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                          <span className={`text-xs font-semibold ${business.enabled !== false ? 'text-green-600' : 'text-gray-500'}`}>
+                            {business.enabled === false ? 'Disabled' : 'Enabled'}
+                          </span>
+                          <Switch checked={business.enabled !== false} onCheckedChange={() => handleToggleBusiness(business.id)} className="data-[state=checked]:bg-green-500 scale-90" />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg" onClick={() => handleEditBusiness(business)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" onClick={() => handleDeleteBusiness(business.id)}>
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))
@@ -2034,76 +2213,82 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         </TabsContent>
 
         {/* Classifieds Tab - Pending Approvals */}
-        <TabsContent value="classifieds" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="h-5 w-5" />
+        <TabsContent value="classifieds" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                  <Tag className="h-4 w-4" />
+                </div>
                 Pending Classified Ads
                 {pendingData.classifieds.length > 0 && (
-                  <Badge className="bg-yellow-500 text-white ml-2">{pendingData.classifieds.length} Pending</Badge>
+                  <Badge className="bg-yellow-500 text-white ml-2 rounded-full px-2">{pendingData.classifieds.length} Pending</Badge>
                 )}
               </CardTitle>
               <CardDescription>Review and approve user-submitted classified advertisements</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {pendingData.classifieds.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p>No pending classified ads</p>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600">No pending classified ads</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-4">
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-4 pr-4">
                     {pendingData.classifieds.map((classified) => (
-                      <Card key={classified.id} className="border-l-4 border-l-yellow-400 hover:shadow-md transition-shadow">
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-3">
-                            {/* Small Thumbnail */}
-                            <img
-                              src={classified.image || classified.images?.[0] || 'https://placehold.co/80?text=Ad'}
-                              alt={classified.title}
-                              style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }}
-                              className="rounded object-cover flex-shrink-0"
-                            />
-
-                            {/* Details - Compact */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2">
-                                <h3 className="font-semibold text-sm truncate">{getTextValue(classified.title)}</h3>
-                                <Badge className="bg-yellow-100 text-yellow-700 text-xs">PENDING</Badge>
+                      <Card key={classified.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-yellow-100 transition-all rounded-xl">
+                        <div className="flex">
+                          <div className="w-1.5 bg-yellow-400"></div>
+                          <CardContent className="p-4 flex-1">
+                            <div className="flex items-center gap-4">
+                              {/* Small Thumbnail */}
+                              <div className="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-xl overflow-hidden ring-1 ring-gray-900/5">
+                                <img
+                                  src={classified.image || classified.images?.[0] || 'https://placehold.co/80?text=Ad'}
+                                  alt={classified.title}
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
-                              <p className="text-xs text-muted-foreground truncate">{classified.description || 'No description'}</p>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate">{classified.location || 'N/A'}</span>
-                                <Phone className="h-3 w-3 ml-2" />
-                                <span>{classified.phone || 'N/A'}</span>
+
+                              {/* Details - Compact */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <h3 className="font-bold text-gray-800 text-base truncate">{getTextValue(classified.title)}</h3>
+                                  <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">PENDING</Badge>
+                                </div>
+                                <p className="text-sm text-gray-500 truncate mb-2">{classified.description || 'No description provided'}</p>
+                                <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
+                                  <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{classified.location || 'N/A'}</span>
+                                  <span className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5" />{classified.phone || 'N/A'}</span>
+                                </div>
+                              </div>
+
+                              {/* Actions - Right */}
+                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleClassifiedAction(classified.id, 'approve')}
+                                  disabled={loading}
+                                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm h-9"
+                                >
+                                  <Check className="h-4 w-4 mr-1.5" />Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleClassifiedAction(classified.id, 'reject')}
+                                  disabled={loading}
+                                  className="text-red-600 border-red-100 hover:bg-red-50 rounded-lg h-9"
+                                >
+                                  <X className="h-4 w-4 mr-1.5" />Reject
+                                </Button>
                               </div>
                             </div>
-
-                            {/* Actions - Right */}
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              <Button
-                                size="sm"
-                                onClick={() => handleClassifiedAction(classified.id, 'approve')}
-                                disabled={loading}
-                                className="bg-green-600 hover:bg-green-700 h-8"
-                              >
-                                <Check className="h-4 w-4 mr-1" />Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleClassifiedAction(classified.id, 'reject')}
-                                disabled={loading}
-                                className="h-8"
-                              >
-                                <X className="h-4 w-4 mr-1" />Reject
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
+                          </CardContent>
+                        </div>
                       </Card>
                     ))}
                   </div>
@@ -2113,51 +2298,53 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Manage Classifieds Section (Merged) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Tag className="h-5 w-5 text-yellow-600" />
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                    <Tag className="h-4 w-4" />
+                  </div>
                   Manage Classified Ads
                 </CardTitle>
-                <CardDescription>Add, edit, enable/disable classified ads</CardDescription>
+                <CardDescription className="mt-1">Add, edit, enable/disable classified ads</CardDescription>
               </div>
-              <Button onClick={() => { resetClassifiedForm(); setShowClassifiedForm(true) }} className="bg-yellow-600 hover:bg-yellow-700">
+              <Button onClick={() => { resetClassifiedForm(); setShowClassifiedForm(true) }} className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm h-10 px-4">
                 <Plus className="h-4 w-4 mr-2" /> Add Classified
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {/* Classified Form Dialog */}
               <Dialog open={showClassifiedForm} onOpenChange={setShowClassifiedForm}>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
                   <DialogHeader>
-                    <DialogTitle>{editingClassified ? 'Edit Classified' : 'Add New Classified'}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold">{editingClassified ? 'Edit Classified' : 'Add New Classified'}</DialogTitle>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-5 py-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Title *</Label>
-                        <Input value={classifiedForm.title} onChange={(e) => setClassifiedForm({ ...classifiedForm, title: e.target.value })} placeholder="Ad title" />
+                        <Label className="text-gray-700 font-semibold">Title *</Label>
+                        <Input value={classifiedForm.title} onChange={(e) => setClassifiedForm({ ...classifiedForm, title: e.target.value })} placeholder="Ad title" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Category *</Label>
+                        <Label className="text-gray-700 font-semibold">Category *</Label>
                         <Select value={classifiedForm.category} onValueChange={(val) => setClassifiedForm({ ...classifiedForm, category: val })}>
-                          <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                          <SelectTrigger className="bg-gray-50/50 rounded-xl"><SelectValue placeholder="Select category" /></SelectTrigger>
                           <SelectContent>
                             {CLASSIFIED_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Price</Label>
-                        <Input value={classifiedForm.price} onChange={(e) => setClassifiedForm({ ...classifiedForm, price: e.target.value })} placeholder="₹ 10,000" />
+                        <Label className="text-gray-700 font-semibold">Price</Label>
+                        <Input value={classifiedForm.price} onChange={(e) => setClassifiedForm({ ...classifiedForm, price: e.target.value })} placeholder="₹ 10,000" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Condition</Label>
+                        <Label className="text-gray-700 font-semibold">Condition</Label>
                         <Select value={classifiedForm.condition} onValueChange={(val) => setClassifiedForm({ ...classifiedForm, condition: val })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="bg-gray-50/50 rounded-xl"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="New">New</SelectItem>
                             <SelectItem value="Like New">Like New</SelectItem>
@@ -2169,53 +2356,53 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Description</Label>
-                      <Textarea value={classifiedForm.description} onChange={(e) => setClassifiedForm({ ...classifiedForm, description: e.target.value })} placeholder="Detailed description" rows={3} />
+                      <Label className="text-gray-700 font-semibold">Description</Label>
+                      <Textarea value={classifiedForm.description} onChange={(e) => setClassifiedForm({ ...classifiedForm, description: e.target.value })} placeholder="Detailed description" rows={3} className="bg-gray-50/50 rounded-xl resize-none" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Seller Name</Label>
-                        <Input value={classifiedForm.sellerName} onChange={(e) => setClassifiedForm({ ...classifiedForm, sellerName: e.target.value })} placeholder="Seller name" />
+                        <Label className="text-gray-700 font-semibold">Seller Name</Label>
+                        <Input value={classifiedForm.sellerName} onChange={(e) => setClassifiedForm({ ...classifiedForm, sellerName: e.target.value })} placeholder="Seller name" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Location</Label>
-                        <Input value={classifiedForm.location} onChange={(e) => setClassifiedForm({ ...classifiedForm, location: e.target.value })} placeholder="Pune, Mumbai..." />
+                        <Label className="text-gray-700 font-semibold">Location</Label>
+                        <Input value={classifiedForm.location} onChange={(e) => setClassifiedForm({ ...classifiedForm, location: e.target.value })} placeholder="Pune, Mumbai..." className="bg-gray-50/50 rounded-xl" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
                       <div className="space-y-2">
-                        <Label>Phone Number</Label>
-                        <Input value={classifiedForm.phone} onChange={(e) => setClassifiedForm({ ...classifiedForm, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+                        <Label className="text-gray-700 font-semibold">Phone Number</Label>
+                        <Input value={classifiedForm.phone} onChange={(e) => setClassifiedForm({ ...classifiedForm, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" className="bg-gray-50/50 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label>WhatsApp Number</Label>
-                        <Input value={classifiedForm.whatsapp} onChange={(e) => setClassifiedForm({ ...classifiedForm, whatsapp: e.target.value })} placeholder="+91 XXXXX XXXXX" />
+                        <Label className="text-gray-700 font-semibold">WhatsApp Number</Label>
+                        <Input value={classifiedForm.whatsapp} onChange={(e) => setClassifiedForm({ ...classifiedForm, whatsapp: e.target.value })} placeholder="+91 XXXXX XXXXX" className="bg-gray-50/50 rounded-xl" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Images (up to 8)</Label>
-                      <div className="grid grid-cols-4 gap-2">
+                      <Label className="text-gray-700 font-semibold">Images (up to 8)</Label>
+                      <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = classifiedForm.images?.[index] || ''
                           return (
-                            <div key={index} className="relative border-2 border-dashed border-gray-300 rounded-lg h-20 flex items-center justify-center overflow-hidden bg-gray-50 hover:border-blue-400 transition-colors">
+                            <div key={index} className="relative border-2 border-dashed border-gray-200 rounded-xl h-24 flex items-center justify-center overflow-hidden bg-gray-50/50 hover:border-orange-400 transition-colors group">
                               {imgUrl ? (
                                 <>
                                   <img src={imgUrl} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
                                   <button
                                     type="button"
-                                    className="absolute top-0 right-0 bg-red-500 text-white rounded-bl p-0.5 text-xs hover:bg-red-600"
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 text-xs shadow hover:scale-110 transition-transform"
                                     onClick={() => {
                                       const newImages = [...(classifiedForm.images || [])]
                                       newImages[index] = ''
                                       setClassifiedForm({ ...classifiedForm, images: newImages.filter(Boolean) })
                                     }}
-                                  >✕</button>
+                                  ><X className="w-3 h-3"/></button>
                                 </>
                               ) : (
-                                <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-blue-500">
-                                  <Upload className="h-5 w-5 mb-1" />
-                                  <span className="text-[10px]">{index + 1}</span>
+                                <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-orange-500">
+                                  <Upload className="h-4 w-4 mb-1 group-hover:scale-110 transition-transform" />
+                                  <span className="text-[10px] font-medium">{index + 1}</span>
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -2251,119 +2438,134 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           )
                         })}
                       </div>
-                      <p className="text-xs text-muted-foreground">Click each slot to upload an image. Max 5MB per image.</p>
+                      <p className="text-xs text-gray-500">Click each slot to upload an image. Max 5MB per image.</p>
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowClassifiedForm(false)}>Cancel</Button>
-                    <Button onClick={handleSaveClassified} disabled={loading} className="bg-yellow-600">{loading ? 'Saving...' : (editingClassified ? 'Update' : 'Create')}</Button>
+                  <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
+                    <Button variant="outline" onClick={() => setShowClassifiedForm(false)} className="rounded-xl">Cancel</Button>
+                    <Button onClick={handleSaveClassified} disabled={loading} className="bg-orange-500 hover:bg-orange-600 rounded-xl text-white">{loading ? 'Saving...' : (editingClassified ? 'Update Ad' : 'Create Ad')}</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
 
               {/* Classified List */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {allClassifieds.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No classifieds found. Add your first classified above.</p>
+                  <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                    <Tag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500 font-medium">No classifieds found. Add your first classified above.</p>
+                  </div>
                 ) : (
                   <>
                     {/* Approved Section */}
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <Badge className="bg-green-500">Approved</Badge>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-green-600 flex items-center gap-2 mb-3">
                         Approved Classified Ads
                       </h3>
                       {allClassifieds.filter(c => c.approvalStatus === 'approved').length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">No approved classifieds yet</p>
+                        <p className="text-sm text-gray-400 py-4 text-center border border-dashed border-gray-100 rounded-xl">No approved classifieds yet</p>
                       ) : (
-                        allClassifieds.filter(c => c.approvalStatus === 'approved').map(classified => (
-                          <div key={classified.id} className={`border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-green-500 ${classified.enabled === false ? 'bg-gray-100 opacity-60' : ''}`}>
-                            <div className="flex items-center gap-4">
-                              {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
-                              <div>
-                                <h4 className="font-semibold">{getTextValue(classified.title)}</h4>
-                                <p className="text-sm text-muted-foreground">{classified.category} • {classified.location}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge className="bg-green-100 text-green-700 text-xs">APPROVED</Badge>
-                                  {classified.approvedAt && (
-                                    <span className="text-xs text-muted-foreground">
-                                      Approved: {new Date(classified.approved_at || classified.updated_at).toLocaleDateString()}
-                                    </span>
-                                  )}
+                        <div className="space-y-2">
+                          {allClassifieds.filter(c => c.approvalStatus === 'approved').map(classified => (
+                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.enabled === false ? 'opacity-60' : ''}`}>
+                              <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+                                  {(classified.images?.[0] || classified.image) ? <img src={classified.images?.[0] || classified.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Tag className="w-6 h-6"/></div>}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-gray-800">{getTextValue(classified.title)}</h4>
+                                  <p className="text-sm text-gray-500">{classified.category} • {classified.location}</p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <Badge className="bg-green-50 text-green-700 border-green-200 text-xs">APPROVED</Badge>
+                                    {classified.approvedAt && (
+                                      <span className="text-xs text-gray-400 font-medium">
+                                        Approved: {new Date(classified.approved_at || classified.updated_at).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                                  <span className={`text-xs font-semibold ${classified.enabled !== false ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {classified.enabled === false ? 'Disabled' : 'Enabled'}
+                                  </span>
+                                  <Switch checked={classified.enabled !== false} onCheckedChange={() => handleToggleClassified(classified.id)} className="data-[state=checked]:bg-green-500 scale-90" />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg" onClick={() => handleEditClassified(classified)}><Edit className="h-4 w-4" /></Button>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Switch checked={classified.enabled !== false} onCheckedChange={() => handleToggleClassified(classified.id)} />
-                              <Button size="sm" variant="ghost" onClick={() => handleEditClassified(classified)}><Edit className="h-4 w-4" /></Button>
-                              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       )}
                     </div>
-
-                    <Separator className="my-6" />
 
                     {/* Pending Section */}
                     <div className="mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <Badge className="bg-yellow-500">Pending</Badge>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-yellow-600 flex items-center gap-2 mb-3 mt-6">
                         Pending Review
                       </h3>
                       {allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">No pending classifieds</p>
+                        <p className="text-sm text-gray-400 py-4 text-center border border-dashed border-gray-100 rounded-xl">No pending classifieds</p>
                       ) : (
-                        allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).map(classified => (
-                          <div key={classified.id} className={`border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-yellow-400 ${classified.enabled === false ? 'bg-gray-100 opacity-60' : ''}`}>
-                            <div className="flex items-center gap-4">
-                              {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
-                              <div>
-                                <h4 className="font-semibold">{getTextValue(classified.title)}</h4>
-                                <p className="text-sm text-muted-foreground">{classified.category} • {classified.location}</p>
-                                <Badge className="bg-yellow-100 text-yellow-700 text-xs mt-1">PENDING</Badge>
+                        <div className="space-y-2">
+                          {allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).map(classified => (
+                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.enabled === false ? 'opacity-60' : ''}`}>
+                              <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
+                                  {(classified.images?.[0] || classified.image) ? <img src={classified.images?.[0] || classified.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Tag className="w-6 h-6"/></div>}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-gray-800">{getTextValue(classified.title)}</h4>
+                                  <p className="text-sm text-gray-500">{classified.category} • {classified.location}</p>
+                                  <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs mt-1.5">PENDING</Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-9" onClick={() => handleClassifiedAction(classified.id, 'approve')}>
+                                  <Check className="h-4 w-4 mr-1.5" />Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-red-600 border-red-100 hover:bg-red-50 rounded-lg h-9" onClick={() => handleClassifiedAction(classified.id, 'reject')}>
+                                  <X className="h-4 w-4 mr-1.5" />Reject
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-9 w-9 ml-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleClassifiedAction(classified.id, 'approve')}>
-                                <Check className="h-4 w-4 mr-1" />Approve
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleClassifiedAction(classified.id, 'reject')}>
-                                <X className="h-4 w-4 mr-1" />Reject
-                              </Button>
-                              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       )}
                     </div>
 
-                    <Separator className="my-6" />
-
                     {/* Rejected Section */}
                     <div>
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <Badge className="bg-red-500">Rejected</Badge>
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-red-500 flex items-center gap-2 mb-3 mt-6">
                         Rejected Ads
                       </h3>
                       {allClassifieds.filter(c => c.approvalStatus === 'rejected').length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">No rejected classifieds</p>
+                        <p className="text-sm text-gray-400 py-4 text-center border border-dashed border-gray-100 rounded-xl">No rejected classifieds</p>
                       ) : (
-                        allClassifieds.filter(c => c.approvalStatus === 'rejected').map(classified => (
-                          <div key={classified.id} className="border rounded-lg p-4 flex items-center justify-between mb-2 border-l-4 border-l-red-500 bg-red-50 opacity-70">
-                            <div className="flex items-center gap-4">
-                              {(classified.images?.[0] || classified.image) && <img src={classified.images?.[0] || classified.image} alt="" style={{ width: 64, height: 64, minWidth: 64, maxWidth: 64 }} className="rounded object-cover flex-shrink-0" />}
-                              <div>
-                                <h4 className="font-semibold">{getTextValue(classified.title)}</h4>
-                                <p className="text-sm text-muted-foreground">{classified.category} • {classified.location}</p>
-                                <Badge className="bg-red-100 text-red-700 text-xs mt-1">REJECTED</Badge>
+                        <div className="space-y-2">
+                          {allClassifieds.filter(c => c.approvalStatus === 'rejected').map(classified => (
+                            <div key={classified.id} className="border border-red-100 rounded-xl p-4 flex items-center justify-between bg-red-50/50 opacity-80">
+                              <div className="flex items-center gap-4">
+                                <div className="w-16 h-16 rounded-xl bg-white border border-red-100 overflow-hidden flex-shrink-0">
+                                  {(classified.images?.[0] || classified.image) ? <img src={classified.images?.[0] || classified.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Tag className="w-6 h-6"/></div>}
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-gray-800">{getTextValue(classified.title)}</h4>
+                                  <p className="text-sm text-gray-600">{classified.category} • {classified.location}</p>
+                                  <Badge className="bg-red-100 text-red-700 border-red-200 text-xs mt-1.5">REJECTED</Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button size="icon" variant="ghost" className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteClassified(classified.id)}><Trash2 className="h-4 w-4" /></Button>
-                            </div>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       )}
                     </div>
                   </>
@@ -2374,138 +2576,170 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         </TabsContent>
 
         {/* Reporters Tab */}
-        < TabsContent value="reporters" className="space-y-4" >
+        {/* Reporters Tab */}
+        <TabsContent value="reporters" className="space-y-6 mt-0">
           {/* Reporter Applications Section (Merged) */}
-          <Card>
-            <CardHeader>
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 text-purple-600" />
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                      <UserPlus className="h-4 w-4" />
+                    </div>
                     Reporter Applications
                   </CardTitle>
-                  <CardDescription>Review and manage reporter join requests</CardDescription>
+                  <CardDescription className="mt-1">Review and manage reporter join requests</CardDescription>
                 </div>
-                <Button onClick={loadReporterApplications} variant="outline" size="sm">
+                <Button onClick={loadReporterApplications} variant="outline" size="sm" className="bg-white border-purple-200 text-purple-700 hover:bg-purple-50 rounded-xl">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingReporterApps ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {loadingReporterApps ? (
-                <div className="text-center py-8 text-muted-foreground">Loading applications...</div>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <RefreshCw className="h-8 w-8 text-purple-300 mx-auto mb-3 animate-spin" />
+                  <p className="font-medium text-gray-500">Loading applications...</p>
+                </div>
               ) : reporterApplications.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No reporter applications found</div>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-purple-50 text-purple-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <UserPlus className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600">No reporter applications found</p>
+                </div>
               ) : (
-                <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   {reporterApplications.map((app) => (
-                    <Card key={app.id} className="border-l-4 border-l-purple-500">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-bold text-lg">{app.fullName}</h3>
-                              <Badge variant={app.status === 'PENDING' ? 'outline' : app.status === 'CONTACTED' ? 'default' : 'destructive'}>
+                    <Card key={app.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${app.status === 'PENDING' ? 'ring-yellow-200 hover:ring-yellow-300' : app.status === 'CONTACTED' ? 'ring-blue-200 hover:ring-blue-300' : 'ring-red-200 hover:ring-red-300'}`}>
+                      <div className="flex h-full">
+                        <div className={`w-1.5 ${app.status === 'PENDING' ? 'bg-yellow-500' : app.status === 'CONTACTED' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
+                        <CardContent className="p-5 flex-1 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="font-bold text-gray-800 text-lg truncate pr-2">{app.fullName}</h3>
+                              <Badge variant="outline" className={
+                                app.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                  app.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    'bg-red-50 text-red-700 border-red-200'
+                              }>
                                 {app.status}
                               </Badge>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-3">
                               <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4 text-gray-500" />
-                                <span>{app.phone}</span>
+                                <Phone className="h-4 w-4 text-gray-400" />
+                                <span className="truncate">{app.phone}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-500">Email:</span>
-                                <span>{app.email}</span>
+                                <Mail className="h-4 w-4 text-gray-400" />
+                                <span className="truncate">{app.email}</span>
                               </div>
                             </div>
-                            {app.experience && (
-                              <p className="text-sm"><strong>Experience:</strong> {app.experience}</p>
-                            )}
-                            {app.portfolio && (
-                              <p className="text-sm"><strong>Portfolio:</strong> <a href={app.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{app.portfolio}</a></p>
-                            )}
-                            {app.reason && (
-                              <p className="text-sm"><strong>Why join:</strong> {app.reason}</p>
-                            )}
-                            <p className="text-xs text-gray-500">Submitted: {new Date(app.submittedAt).toLocaleDateString()}</p>
+                            <div className="space-y-1.5 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
+                              {app.experience && (
+                                <p className="text-sm"><strong className="text-gray-700">Experience:</strong> <span className="text-gray-600">{app.experience}</span></p>
+                              )}
+                              {app.portfolio && (
+                                <p className="text-sm truncate"><strong className="text-gray-700">Portfolio:</strong> <a href={app.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{app.portfolio}</a></p>
+                              )}
+                              {app.reason && (
+                                <p className="text-sm line-clamp-2" title={app.reason}><strong className="text-gray-700">Why join:</strong> <span className="text-gray-600">{app.reason}</span></p>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-3 font-medium">Submitted: {new Date(app.submittedAt).toLocaleDateString()}</p>
                           </div>
-                          <div className="flex gap-2">
+                          
+                          <div className="flex flex-wrap gap-2 mt-4">
                             {app.status === 'PENDING' && (
                               <>
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}>
-                                  <Check className="h-4 w-4 mr-1" /> Contact
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg flex-1" onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}>
+                                  <Check className="h-3.5 w-3.5 mr-1" /> Contact
                                 </Button>
-                                <Button size="sm" variant="destructive" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
-                                  <X className="h-4 w-4 mr-1" /> Reject
+                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
+                                  <X className="h-3.5 w-3.5 mr-1" /> Reject
                                 </Button>
                               </>
                             )}
-                            <Button size="sm" variant="outline" onClick={() => handleDeleteReporterApp(app.id)}>
+                            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9" onClick={() => handleDeleteReporterApp(app.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      </CardContent>
+                        </CardContent>
+                      </div>
                     </Card>
                   ))}
                 </div>
               )}
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                  <Users className="h-4 w-4" />
+                </div>
                 Reporter Approvals
               </CardTitle>
-              <CardDescription>Approve or reject reporter registrations</CardDescription>
+              <CardDescription className="mt-1">Approve or reject reporter registrations</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {pendingData.users.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p>No pending reporter registrations</p>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600">No pending reporter registrations</p>
                 </div>
               ) : (
                 <ScrollArea className="h-[400px]">
-                  <div className="space-y-4">
+                  <div className="space-y-3 pr-4">
                     {pendingData.users.map((reporter) => (
-                      <Card key={reporter.id} className="border-l-4 border-l-green-400">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{reporter.name}</h3>
-                              <p className="text-sm text-muted-foreground">{reporter.email}</p>
-                              <Badge variant="outline" className="mt-2">{reporter.role}</Badge>
+                      <Card key={reporter.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-teal-100 transition-all rounded-xl">
+                        <div className="flex">
+                          <div className="w-1.5 bg-teal-400"></div>
+                          <CardContent className="p-4 flex-1 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center font-bold text-lg ring-1 ring-teal-100">
+                                {reporter.name?.charAt(0)?.toUpperCase() || 'R'}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-gray-800">{reporter.name}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <p className="text-sm text-gray-500">{reporter.email}</p>
+                                  <span className="text-gray-300">•</span>
+                                  <Badge className="bg-gray-100 text-gray-600 hover:bg-gray-200 border-0">{reporter.role}</Badge>
+                                </div>
+                                <p className="text-xs text-gray-400 font-medium mt-1">
+                                  Registered: {new Date(reporter.createdAt).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                              Registered: {new Date(reporter.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Separator className="my-4" />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleUserAction(reporter.id, 'approve')}
-                              disabled={loading}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleUserAction(reporter.id, 'reject')}
-                              disabled={loading}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </CardContent>
+                            <div className="flex items-center gap-2 ml-4">
+                              <Button
+                                size="sm"
+                                onClick={() => handleUserAction(reporter.id, 'approve')}
+                                disabled={loading}
+                                className="bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-sm h-9"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUserAction(reporter.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 border-red-100 hover:bg-red-50 rounded-lg h-9"
+                              >
+                                <X className="h-4 w-4 mr-1.5" />
+                                Reject
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </div>
                       </Card>
                     ))}
                   </div>
@@ -2515,80 +2749,86 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Create Reporter Section */}
-          <Card className="border-green-200">
-            <CardHeader>
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                      <UserPlus className="h-4 w-4" />
+                    </div>
                     Create Reporter Account
                   </CardTitle>
-                  <CardDescription>Directly create a reporter account</CardDescription>
+                  <CardDescription className="mt-1">Directly create a reporter account</CardDescription>
                 </div>
                 <Button
                   onClick={() => setShowCreateReporterForm(!showCreateReporterForm)}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-sm h-10 px-4"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  {showCreateReporterForm ? <X className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                   {showCreateReporterForm ? 'Cancel' : 'Add Reporter'}
                 </Button>
               </div>
             </CardHeader>
             {showCreateReporterForm && (
-              <CardContent>
-                <div className="grid gap-4 p-4 border rounded-lg bg-gray-50">
-                  <div className="grid grid-cols-2 gap-4">
+              <CardContent className="bg-gray-50/50 p-6 border-b border-gray-100">
+                <div className="grid gap-5">
+                  <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="reporterName">Full Name *</Label>
+                      <Label htmlFor="reporterName" className="text-gray-700 font-semibold">Full Name *</Label>
                       <Input
                         id="reporterName"
                         value={createReporterForm.name}
                         onChange={(e) => setCreateReporterForm({ ...createReporterForm, name: e.target.value })}
                         placeholder="Enter reporter name"
+                        className="bg-white rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="reporterEmail">Email *</Label>
+                      <Label htmlFor="reporterEmail" className="text-gray-700 font-semibold">Email *</Label>
                       <Input
                         id="reporterEmail"
                         type="email"
                         value={createReporterForm.email}
                         onChange={(e) => setCreateReporterForm({ ...createReporterForm, email: e.target.value })}
                         placeholder="reporter@email.com"
+                        className="bg-white rounded-xl"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="reporterPhone">Phone</Label>
+                      <Label htmlFor="reporterPhone" className="text-gray-700 font-semibold">Phone</Label>
                       <Input
                         id="reporterPhone"
                         value={createReporterForm.phone}
                         onChange={(e) => setCreateReporterForm({ ...createReporterForm, phone: e.target.value })}
                         placeholder="+91 XXXXXXXXXX"
+                        className="bg-white rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="reporterPassword">Password *</Label>
+                      <Label htmlFor="reporterPassword" className="text-gray-700 font-semibold">Password *</Label>
                       <Input
                         id="reporterPassword"
                         type="text"
                         value={createReporterForm.password}
                         onChange={(e) => setCreateReporterForm({ ...createReporterForm, password: e.target.value })}
-                        placeholder="Enter password (min 8 characters)"
+                        placeholder="Enter password (min 6 characters)"
                         required
+                        className="bg-white rounded-xl"
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => {
+                  <div className="flex justify-end gap-3 mt-2">
+                    <Button variant="outline" className="rounded-xl" onClick={() => {
                       setShowCreateReporterForm(false)
                       setCreateReporterForm({ name: '', email: '', phone: '', password: '' })
                     }}>
                       Cancel
                     </Button>
                     <Button
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-sm px-6"
                       disabled={creatingReporter || !createReporterForm.name || !createReporterForm.email || !createReporterForm.password || createReporterForm.password.length < 6}
                       onClick={async () => {
                         setCreatingReporter(true)
@@ -2627,56 +2867,72 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* All Reporters List */}
-          <Card>
-            <CardHeader>
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    All Reporters ({allReporters.length})
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Users className="h-4 w-4" />
+                    </div>
+                    All Reporters <Badge className="ml-2 bg-blue-50 text-blue-700 border-0">{allReporters.length}</Badge>
                   </CardTitle>
-                  <CardDescription>Manage all registered reporter accounts</CardDescription>
+                  <CardDescription className="mt-1">Manage all registered reporter accounts</CardDescription>
                 </div>
-                <Button onClick={loadAllReporters} variant="outline" size="sm" disabled={loadingAllReporters}>
+                <Button onClick={loadAllReporters} variant="outline" size="sm" disabled={loadingAllReporters} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingAllReporters ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-white p-6">
               {loadingAllReporters ? (
-                <div className="text-center py-8 text-muted-foreground">Loading reporters...</div>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <RefreshCw className="h-8 w-8 text-blue-300 mx-auto mb-3 animate-spin" />
+                  <p className="font-medium text-gray-500">Loading reporters...</p>
+                </div>
               ) : allReporters.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No reporters found</p>
-                  <p className="text-sm">Create a reporter account above</p>
+                <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600">No reporters found</p>
+                  <p className="text-sm mt-1 text-gray-400">Create a reporter account above</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {allReporters.map((reporter) => (
-                    <div key={reporter.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div key={reporter.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors bg-white">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">
                           {reporter.name?.charAt(0)?.toUpperCase() || 'R'}
                         </div>
                         <div>
-                          <h4 className="font-semibold">{reporter.name}</h4>
-                          <p className="text-sm text-muted-foreground">{reporter.email}</p>
-                          {reporter.phone && <p className="text-xs text-gray-500">{reporter.phone}</p>}
+                          <h4 className="font-bold text-gray-800">{reporter.name}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-gray-500">{reporter.email}</p>
+                            {reporter.phone && (
+                              <>
+                                <span className="text-gray-300">•</span>
+                                <p className="text-sm text-gray-500">{reporter.phone}</p>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Badge variant={reporter.status === 'active' ? 'default' : 'outline'} className={reporter.status === 'active' ? 'bg-green-600' : ''}>
-                          {reporter.status}
-                        </Badge>
-                        <p className="text-xs text-gray-500">
-                          Joined: {new Date(reporter.createdAt).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          <p className="text-xs text-gray-400 font-medium hidden sm:block">
+                            Joined: {new Date(reporter.createdAt).toLocaleDateString()}
+                          </p>
+                          <Badge className={reporter.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-600 border-gray-200'}>
+                            {reporter.status}
+                          </Badge>
+                        </div>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg h-9 w-9"
                           onClick={() => handleDeleteReporter(reporter.id, reporter.name)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -2688,7 +2944,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               )}
             </CardContent>
           </Card>
-        </TabsContent >
+        </TabsContent>
 
         {/* Shorts Tab */}
         <TabsContent value="shorts" className="space-y-4">
@@ -2696,43 +2952,49 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         </TabsContent>
 
         {/* E-Newspaper Tab */}
-        < TabsContent value="enewspaper" className="space-y-4" >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+        <TabsContent value="enewspaper" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                  <FileText className="h-4 w-4" />
+                </div>
                 E-Newspaper Management
               </CardTitle>
-              <CardDescription>Upload and manage PDF e-newspapers</CardDescription>
+              <CardDescription className="mt-1">Upload and manage PDF e-newspapers</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="bg-white p-6 space-y-6">
               {/* Upload Form */}
-              <div className="border rounded-lg p-6 bg-gray-50">
-                <h3 className="font-semibold mb-4">📘 Upload New E-Newspaper</h3>
+              <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50">
+                <h3 className="font-bold text-gray-800 mb-5 flex items-center gap-2">
+                  <span className="text-xl">📘</span> Upload New E-Newspaper
+                </h3>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div className="grid md:grid-cols-2 gap-5 mb-5">
                   <div className="space-y-2">
-                    <Label>Newspaper Title *</Label>
+                    <Label className="text-gray-700 font-semibold">Newspaper Title *</Label>
                     <Input
                       value={enewspaperForm.title}
                       onChange={(e) => setEnewspaperForm({ ...enewspaperForm, title: e.target.value })}
                       placeholder="e.g., Daily Edition"
+                      className="bg-white rounded-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Edition Date *</Label>
+                    <Label className="text-gray-700 font-semibold">Edition Date *</Label>
                     <Input
                       type="date"
                       value={enewspaperForm.editionDate}
                       onChange={(e) => setEnewspaperForm({ ...enewspaperForm, editionDate: e.target.value })}
+                      className="bg-white rounded-xl"
                     />
                   </div>
                 </div>
 
                 {/* PDF File Upload */}
-                <div className="mb-4">
-                  <Label className="block mb-2">Upload PDF File *</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                <div className="mb-5">
+                  <Label className="block mb-2 text-gray-700 font-semibold">Upload PDF File *</Label>
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-red-400 hover:bg-red-50/30 transition-colors cursor-pointer group bg-white"
                     onClick={() => enewspaperFileInputRef.current?.click()}>
                     <input
                       type="file"
@@ -2742,21 +3004,25 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       className="hidden"
                     />
                     {enewspaperPdfFile ? (
-                      <div className="flex items-center justify-center gap-3">
-                        <FileText className="h-8 w-8 text-red-600" />
-                        <div className="text-left">
-                          <p className="font-medium">{enewspaperPdfFile.name}</p>
-                          <p className="text-sm text-muted-foreground">{(enewspaperPdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <div className="flex items-center justify-center gap-4">
+                        <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <FileText className="h-6 w-6" />
                         </div>
-                        <Button type="button" variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); resetEnewspaperForm() }}>
+                        <div className="text-left flex-1 min-w-0">
+                          <p className="font-bold text-gray-800 truncate">{enewspaperPdfFile.name}</p>
+                          <p className="text-sm text-gray-500">{(enewspaperPdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-100 hover:text-red-600 rounded-lg flex-shrink-0" onClick={(e) => { e.stopPropagation(); resetEnewspaperForm() }}>
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
                       <div>
-                        <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                        <p className="text-muted-foreground font-medium">Choose PDF File</p>
-                        <p className="text-sm text-muted-foreground mt-1">Max size: 25MB</p>
+                        <div className="w-16 h-16 bg-gray-50 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                          <FileText className="h-8 w-8 text-gray-400 group-hover:text-red-400 transition-colors" />
+                        </div>
+                        <p className="text-gray-600 font-bold text-lg">Click to Choose PDF File</p>
+                        <p className="text-sm text-gray-400 mt-1 font-medium">Max size: 25MB</p>
                       </div>
                     )}
                   </div>
@@ -2764,34 +3030,36 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
                 {/* PDF Preview */}
                 {enewspaperPdfPreview && (
-                  <div className="mb-4">
-                    <Label className="block mb-2">PDF Preview</Label>
-                    <div className="border rounded-lg overflow-hidden bg-white">
+                  <div className="mb-5">
+                    <Label className="block mb-2 text-gray-700 font-semibold">PDF Preview</Label>
+                    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
                       <iframe
                         src={enewspaperPdfPreview}
-                        className="w-full h-64"
+                        className="w-full h-80"
                         title="PDF Preview"
                       />
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-2 mb-4">
-                  <Label>Thumbnail Image URL (Optional)</Label>
+                <div className="space-y-2 mb-5">
+                  <Label className="text-gray-700 font-semibold">Thumbnail Image URL (Optional)</Label>
                   <Input
                     value={enewspaperForm.thumbnailUrl}
                     onChange={(e) => setEnewspaperForm({ ...enewspaperForm, thumbnailUrl: e.target.value })}
                     placeholder="https://..."
+                    className="bg-white rounded-xl"
                   />
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <Label>Description (Optional)</Label>
+                <div className="space-y-2 mb-6">
+                  <Label className="text-gray-700 font-semibold">Description (Optional)</Label>
                   <Textarea
                     value={enewspaperForm.description}
                     onChange={(e) => setEnewspaperForm({ ...enewspaperForm, description: e.target.value })}
                     placeholder="Any additional notes..."
                     rows={2}
+                    className="bg-white rounded-xl resize-none"
                   />
                 </div>
 
@@ -2799,50 +3067,63 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   <Button
                     onClick={handleSaveEnewspaper}
                     disabled={loading || !enewspaperPdfFile}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm px-6 h-11 text-base"
                   >
                     {uploadingEnewspaper ? 'Uploading PDF...' : loading ? 'Saving...' : 'Upload E-Newspaper'}
                   </Button>
-                  <Button variant="outline" onClick={resetEnewspaperForm}>Cancel</Button>
+                  <Button variant="outline" onClick={resetEnewspaperForm} className="rounded-xl h-11 px-6">Cancel</Button>
                 </div>
               </div>
 
-              <Separator />
-
               {/* Uploaded Papers List */}
-              <div>
-                <h4 className="font-medium mb-4">Uploaded E-Newspapers</h4>
+              <div className="pt-2">
+                <h4 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
+                  <span className="w-2 h-6 bg-red-500 rounded-full inline-block"></span>
+                  Uploaded E-Newspapers
+                </h4>
                 {allEnewspapers.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No e-newspapers uploaded yet</p>
+                  <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <div className="w-16 h-16 bg-red-50 text-red-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="h-8 w-8" />
+                    </div>
+                    <p className="font-medium text-gray-500">No e-newspapers uploaded yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {allEnewspapers.map((paper) => (
-                      <div key={paper.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-8 w-8 text-red-600" />
+                      <div key={paper.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors bg-white">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center flex-shrink-0 ring-1 ring-red-100">
+                            <FileText className="h-6 w-6" />
+                          </div>
                           <div>
-                            <h5 className="font-semibold">{paper.title}</h5>
-                            <p className="text-sm text-muted-foreground">
-                              Edition: {new Date(paper.publishDate || paper.editionDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Uploaded: {new Date(paper.createdAt || paper.uploadedAt).toLocaleString()}
-                            </p>
+                            <h5 className="font-bold text-gray-800">{paper.title}</h5>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-sm text-gray-500">
+                                Edition: {new Date(paper.publishDate || paper.editionDate).toLocaleDateString()}
+                              </p>
+                              <span className="text-gray-300">•</span>
+                              <p className="text-xs text-gray-400 font-medium">
+                                Uploaded: {new Date(paper.createdAt || paper.uploadedAt).toLocaleString()}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <a href={paper.pdfUrl} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="outline">View PDF</Button>
-                          </a>
-                          <Badge className={paper.approvalStatus === 'approved' ? 'bg-green-600' : paper.approvalStatus === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'}>
-                            {paper.approvalStatus}
+                        <div className="flex items-center gap-3">
+                          <Badge className={
+                            paper.approvalStatus === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                              paper.approvalStatus === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                                'bg-yellow-50 text-yellow-700 border-yellow-200'
+                          }>
+                            {paper.approvalStatus || 'pending'}
                           </Badge>
-                          {paper.approvalStatus === 'pending' && (
-                            <>
-                              <Button size="sm" className="bg-green-600" onClick={async () => {
+                          <a href={paper.pdfUrl} target="_blank" rel="noopener noreferrer" className="ml-2">
+                            <Button size="sm" variant="outline" className="rounded-lg h-9">View PDF</Button>
+                          </a>
+                          
+                          {(!paper.approvalStatus || paper.approvalStatus === 'pending') && (
+                            <div className="flex items-center gap-1.5 border-l border-gray-200 pl-3 ml-1">
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-9 w-9 p-0" onClick={async () => {
                                 const token = localStorage.getItem('token')
                                 await fetch(`/api/admin/enewspaper/${paper.id}/approve`, {
                                   method: 'PUT',
@@ -2853,7 +3134,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               }}>
                                 <Check className="h-4 w-4" />
                               </Button>
-                              <Button size="sm" variant="destructive" onClick={async () => {
+                              <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg h-9 w-9 p-0" onClick={async () => {
                                 const reason = prompt('Rejection reason (optional):')
                                 const token = localStorage.getItem('token')
                                 await fetch(`/api/admin/enewspaper/${paper.id}/reject`, {
@@ -2866,9 +3147,9 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               }}>
                                 <X className="h-4 w-4" />
                               </Button>
-                            </>
+                            </div>
                           )}
-                          <Button size="sm" variant="ghost" className="text-red-600" onClick={() => handleDeleteEnewspaper(paper.id)}>
+                          <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg h-9 w-9 ml-1" onClick={() => handleDeleteEnewspaper(paper.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -2879,83 +3160,117 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               </div>
             </CardContent>
           </Card>
-        </TabsContent >
+        </TabsContent>
 
         {/* Content Management Tab */}
-        < TabsContent value="content" className="space-y-4" >
+        <TabsContent value="content" className="space-y-6 mt-0">
           {/* Ads Request Section */}
-          <Card className="border-l-4 border-l-blue-500 bg-blue-50/10">
-            <CardHeader className="bg-blue-50/50">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50/30">
+            <CardHeader className="bg-white/50 backdrop-blur-sm border-b border-blue-100/50 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-blue-700">
-                    <Megaphone className="h-5 w-5" />
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Megaphone className="h-4 w-4" />
+                    </div>
                     Ads Request
                   </CardTitle>
-                  <CardDescription>Requests from 'Promote Your Business/Ad' forms</CardDescription>
+                  <CardDescription className="mt-1">Requests from 'Promote Your Business/Ad' forms</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions}>
+                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingPromotions ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               {businessPromotions.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No ad requests found</p>
+                <div className="text-center py-12 bg-white/50 rounded-2xl border border-dashed border-blue-200">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Megaphone className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-500">No ad requests found</p>
                 </div>
               ) : (
-                <div className="space-y-4 pt-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   {businessPromotions.map((promo) => (
-                    <Card key={promo.id} className={`border-l-4 ${promo.status === 'PENDING' ? 'border-l-yellow-500' : promo.status === 'CONTACTED' ? 'border-l-blue-500' : promo.status === 'APPROVED' ? 'border-l-green-500' : 'border-l-red-500'}`}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
+                    <Card key={promo.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl bg-white ${
+                      promo.status === 'PENDING' ? 'ring-yellow-200 hover:ring-yellow-300' : 
+                      promo.status === 'CONTACTED' ? 'ring-blue-200 hover:ring-blue-300' : 
+                      promo.status === 'APPROVED' ? 'ring-green-200 hover:ring-green-300' : 
+                      'ring-red-200 hover:ring-red-300'
+                    }`}>
+                      <div className="flex h-full">
+                        <div className={`w-1.5 ${
+                          promo.status === 'PENDING' ? 'bg-yellow-400' : 
+                          promo.status === 'CONTACTED' ? 'bg-blue-400' : 
+                          promo.status === 'APPROVED' ? 'bg-green-400' : 
+                          'bg-red-400'
+                        }`}></div>
+                        <CardContent className="p-5 flex-1 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-lg">{promo.businessName}</h3>
-                              <Badge variant={promo.status === 'PENDING' ? 'outline' : 'default'} className={
-                                promo.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                  promo.status === 'CONTACTED' ? 'bg-blue-100 text-blue-800' :
-                                    promo.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            <div className="flex items-center justify-between mb-3">
+                              <h3 className="font-bold text-gray-800 text-lg truncate pr-2">{promo.businessName}</h3>
+                              <Badge variant="outline" className={
+                                promo.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                  promo.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                    promo.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' : 
+                                    'bg-red-50 text-red-700 border-red-200'
                               }>
                                 {promo.status}
                               </Badge>
                             </div>
-                            <p className="text-sm font-medium mt-1 break-words line-clamp-2" title={promo.reason}>{promo.reason}</p>
-                            <p className="text-sm font-medium text-gray-700 break-words">Owner: {promo.ownerName}</p>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {promo.phone}</span>
-                              <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {promo.email}</span>
+                            <div className="space-y-2 mb-4">
+                              <p className="text-sm font-medium text-gray-700 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                <span className="text-gray-500">Owner:</span> {promo.ownerName}
+                              </p>
+                              {promo.reason && (
+                                <p className="text-sm font-medium text-gray-800 italic border-l-2 border-blue-200 pl-2">"{promo.reason}"</p>
+                              )}
                             </div>
-                            <p className="text-sm mt-2 break-all"><span className="font-semibold">Address:</span> {promo.address}</p>
-                            {promo.description && (
-                              <p className="text-sm mt-2 text-gray-600 bg-gray-50 p-2 rounded">"{promo.description}"</p>
-                            )}
-                            <p className="text-xs text-gray-400 mt-2">Submitted: {new Date(promo.submittedAt).toLocaleString()}</p>
+                            <div className="grid grid-cols-2 gap-3 text-sm text-gray-600 mb-3">
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-gray-400" />
+                                <span className="truncate">{promo.phone}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-gray-400" />
+                                <span className="truncate">{promo.email}</span>
+                              </div>
+                            </div>
+                            <div className="space-y-1.5 bg-gray-50/50 p-3 rounded-xl border border-gray-100 mt-3">
+                              <p className="text-sm break-words"><strong className="text-gray-700">Address:</strong> <span className="text-gray-600">{promo.address}</span></p>
+                              {promo.description && (
+                                <p className="text-sm text-gray-600 border-t border-gray-200 pt-1.5 mt-1.5 break-words">"{promo.description}"</p>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-400 mt-3 font-medium flex items-center gap-1">
+                              <Calendar className="h-3 w-3" /> Submitted: {new Date(promo.submittedAt).toLocaleString()}
+                            </p>
                           </div>
-                          <div className="flex flex-col gap-2">
+                          
+                          <div className="flex flex-wrap gap-2 mt-4">
                             {promo.status === 'PENDING' && (
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 w-full" onClick={() => handlePromotionAction(promo.id, 'contacted')}>
-                                Mark Contacted
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'contacted')}>
+                                <Check className="h-3.5 w-3.5 mr-1" /> Mark Contacted
                               </Button>
                             )}
                             {promo.status !== 'APPROVED' && (
-                              <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 w-full" onClick={() => handlePromotionAction(promo.id, 'approve')}>
-                                <Check className="h-3 w-3 mr-1" /> Approve
+                              <Button size="sm" variant="outline" className="text-green-700 border-green-200 hover:bg-green-50 rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'approve')}>
+                                <Check className="h-3.5 w-3.5 mr-1" /> Approve
                               </Button>
                             )}
                             {promo.status !== 'REJECTED' && (
-                              <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 w-full" onClick={() => handlePromotionAction(promo.id, 'reject')}>
-                                <X className="h-3 w-3 mr-1" /> Reject
+                              <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1" onClick={() => handlePromotionAction(promo.id, 'reject')}>
+                                <X className="h-3.5 w-3.5 mr-1" /> Reject
                               </Button>
                             )}
-                            <Button size="sm" variant="ghost" className="text-gray-400 hover:text-red-600" onClick={() => handlePromotionAction(promo.id, 'delete')}>
+                            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9" onClick={() => handlePromotionAction(promo.id, 'delete')}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                        </div>
-                      </CardContent>
+                        </CardContent>
+                      </div>
                     </Card>
                   ))}
                 </div>
@@ -2964,21 +3279,25 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Premium Advertisement Banner */}
-          < Card >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Image className="h-5 w-5 text-purple-600" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                  <Image className="h-4 w-4" />
+                </div>
                 Header Advertisements
               </CardTitle>
-              <CardDescription>Control the main advertisement banner on homepage</CardDescription>
+              <CardDescription className="mt-1">Control the main advertisement banner on homepage</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-3">
-                  <Megaphone className="h-5 w-5 text-purple-600" />
+            <CardContent className="bg-white p-6 space-y-6">
+              <div className="flex items-center justify-between p-5 bg-purple-50/50 rounded-2xl border border-purple-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-purple-600">
+                    <Megaphone className="h-6 w-6" />
+                  </div>
                   <div>
-                    <p className="font-medium">Header Ad</p>
-                    <p className="text-sm text-muted-foreground">Show/hide the top header advertisement</p>
+                    <p className="font-bold text-gray-800 text-lg">Header Ad</p>
+                    <p className="text-sm text-gray-500 font-medium">Show/hide the top header advertisement</p>
                   </div>
                 </div>
                 <Switch
@@ -2989,14 +3308,15 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     savePremiumAdSettings({ enabled: checked })
                     toast({ title: checked ? 'Premium Ad Enabled' : 'Premium Ad Disabled' })
                   }}
+                  className="data-[state=checked]:bg-purple-600"
                 />
               </div>
 
               {contentSettings.premiumAd?.enabled && (
-                <>
-                  <div className="grid gap-4 md:grid-cols-2">
+                <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="grid gap-6 md:grid-cols-2 mb-6">
                     <div className="space-y-2">
-                      <Label>Ad Image URL or Upload</Label>
+                      <Label className="text-gray-700 font-semibold">Ad Image URL or Upload</Label>
                       <div className="flex gap-2">
                         <Input
                           placeholder="https://example.com/ad-image.jpg"
@@ -3005,7 +3325,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                             ...contentSettings,
                             premiumAd: { ...contentSettings.premiumAd, imageUrl: e.target.value }
                           })}
-                          className="flex-1"
+                          className="flex-1 bg-white rounded-xl"
                         />
                         <input
                           type="file"
@@ -3041,28 +3361,31 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         />
                         <Button
                           variant="outline"
+                          className="rounded-xl bg-white border-purple-200 hover:bg-purple-50 hover:text-purple-700 text-purple-600 font-medium"
                           onClick={() => premiumAdImageRef.current?.click()}
                           disabled={uploadingPremiumAd}
                         >
-                          {uploadingPremiumAd ? 'Uploading...' : '📁 Upload'}
+                          {uploadingPremiumAd ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                          {uploadingPremiumAd ? 'Uploading...' : 'Upload'}
                         </Button>
                         {contentSettings.premiumAd?.imageUrl && (
                           <Button
                             variant="destructive"
                             size="icon"
+                            className="rounded-xl h-10 w-10"
                             onClick={() => setContentSettings({
                               ...contentSettings,
                               premiumAd: { ...contentSettings.premiumAd, imageUrl: '' }
                             })}
                             title="Delete Image"
                           >
-                            🗑️
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Ad Link URL</Label>
+                      <Label className="text-gray-700 font-semibold">Ad Link URL</Label>
                       <Input
                         placeholder="https://advertiser-website.com"
                         value={contentSettings.premiumAd?.linkUrl || ''}
@@ -3070,12 +3393,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           premiumAd: { ...contentSettings.premiumAd, linkUrl: e.target.value }
                         })}
+                        className="bg-white rounded-xl"
                       />
                     </div>
                   </div>
 
                   <Button
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-sm px-6 h-11"
                     onClick={async () => {
                       const success = await savePremiumAdSettings(contentSettings.premiumAd)
                       if (success) {
@@ -3085,29 +3409,34 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       }
                     }}
                   >
+                    <Check className="h-4 w-4 mr-2" />
                     Save Premium Ad Settings
                   </Button>
-                </>
+                </div>
               )}
             </CardContent>
-          </Card >
+          </Card>
 
           {/* Sidebar Advertisement - Numbered Images with Individual Destination URLs */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Image className="h-5 w-5 text-blue-600" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                  <Image className="h-4 w-4" />
+                </div>
                 Sidebar Advertisements
               </CardTitle>
-              <CardDescription>Manage sidebar ad images - each image has its own destination URL (max 4 images)</CardDescription>
+              <CardDescription className="mt-1">Manage sidebar ad images - each image has its own destination URL (max 4 images)</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-3">
-                  <Megaphone className="h-5 w-5 text-blue-600" />
+            <CardContent className="bg-white p-6 space-y-6">
+              <div className="flex items-center justify-between p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-600">
+                    <Megaphone className="h-6 w-6" />
+                  </div>
                   <div>
-                    <p className="font-medium">Sidebar Ad</p>
-                    <p className="text-sm text-muted-foreground">Show/hide the sidebar advertisement</p>
+                    <p className="font-bold text-gray-800 text-lg">Sidebar Ad</p>
+                    <p className="text-sm text-gray-500 font-medium">Show/hide the sidebar advertisement</p>
                   </div>
                 </div>
                 <Switch
@@ -3118,32 +3447,35 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     saveSidebarAdSettings({ enabled: checked })
                     toast({ title: checked ? 'Sidebar Ad Enabled' : 'Sidebar Ad Disabled' })
                   }}
+                  className="data-[state=checked]:bg-blue-600"
                 />
               </div>
 
               {contentSettings.sidebarAd?.enabled && (
-                <>
+                <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200">
                   {/* Numbered Image Cards */}
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">Sidebar Ad Images (A4 or Square • Individual Links)</Label>
-                    <p className="text-sm text-muted-foreground">Each image opens its own destination URL when clicked. Images must be uploaded in A4 portrait (3:4 ratio) or Square (1:1 ratio) format.</p>
+                  <div className="space-y-5">
+                    <div>
+                      <Label className="text-lg font-bold text-gray-800">Sidebar Ad Images</Label>
+                      <p className="text-sm text-gray-500 mt-1">Each image opens its own destination URL when clicked. Images must be A4 portrait (3:4) or Square (1:1).</p>
+                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {[0, 1, 2, 3].map((index) => {
                         const item = contentSettings.sidebarAd?.items?.[index] || { imageUrl: '', destinationUrl: '' }
                         const hasImage = item.imageUrl && item.imageUrl.trim() !== ''
 
                         return (
-                          <Card key={index} className={`border-2 ${hasImage ? 'border-blue-300 bg-blue-50/50' : 'border-dashed border-gray-300'}`}>
-                            <CardContent className="p-4 space-y-3">
+                          <Card key={index} className={`border-2 rounded-2xl overflow-hidden transition-all ${hasImage ? 'border-blue-200 bg-white shadow-sm ring-1 ring-blue-50' : 'border-dashed border-gray-200 bg-gray-50/50'}`}>
+                            <CardContent className="p-5 space-y-4">
                               {/* Image Number Label */}
                               <div className="flex items-center justify-between">
-                                <Badge className="bg-blue-600 text-white">Image {index + 1}</Badge>
+                                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-0 font-bold px-3 py-1 rounded-lg">Image {index + 1}</Badge>
                                 {hasImage && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-7 px-2"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 px-3 rounded-lg font-medium"
                                     onClick={() => {
                                       const items = [...(contentSettings.sidebarAd?.items || [])]
                                       items[index] = { imageUrl: '', destinationUrl: '' }
@@ -3153,32 +3485,39 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                       })
                                     }}
                                   >
-                                    <X className="h-3 w-3 mr-1" />
+                                    <X className="h-4 w-4 mr-1.5" />
                                     Remove
                                   </Button>
                                 )}
                               </div>
 
                               {/* Rectangle Image Preview - Smaller */}
-                              <div className="h-24 w-full bg-gray-100 rounded-lg overflow-hidden border relative">
+                              <div className="h-32 w-full bg-white rounded-xl overflow-hidden border border-gray-100 relative group">
                                 {hasImage ? (
-                                  <img
-                                    src={item.imageUrl}
-                                    alt={`Ad ${index + 1}`}
-                                    className="w-full h-full object-cover"
-                                  />
+                                  <>
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={`Ad ${index + 1}`}
+                                      className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                      <Button variant="secondary" size="sm" className="rounded-lg" onClick={() => window.open(item.imageUrl, '_blank')}>View Full</Button>
+                                    </div>
+                                  </>
                                 ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                                    <Image className="h-6 w-6 mb-1" />
-                                    <span className="text-xs">No Image</span>
+                                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+                                      <Image className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <span className="text-sm font-medium">No Image</span>
                                   </div>
                                 )}
                               </div>
 
                               {/* Image URL Input */}
-                              <div className="space-y-1">
-                                <Label className="text-xs text-gray-600">Image URL</Label>
-                                <div className="flex gap-1">
+                              <div className="space-y-1.5">
+                                <Label className="text-sm font-semibold text-gray-700">Image URL</Label>
+                                <div className="flex gap-2">
                                   <Input
                                     placeholder="Paste image URL..."
                                     value={item.imageUrl}
@@ -3191,7 +3530,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                         sidebarAd: { ...contentSettings.sidebarAd, items }
                                       })
                                     }}
-                                    className="text-xs h-8"
+                                    className="text-sm bg-white rounded-xl h-10"
                                   />
                                   <input
                                     type="file"
@@ -3227,18 +3566,17 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                   />
                                   <Button
                                     variant="outline"
-                                    size="sm"
-                                    className="h-8 px-2"
+                                    className="h-10 px-4 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
                                     onClick={() => document.getElementById(`sidebar-upload-${index}`)?.click()}
                                   >
-                                    📁
+                                    <Upload className="h-4 w-4" />
                                   </Button>
                                 </div>
                               </div>
 
                               {/* Destination URL Input */}
-                              <div className="space-y-1">
-                                <Label className="text-xs text-gray-600">Destination URL (Click opens this link)</Label>
+                              <div className="space-y-1.5">
+                                <Label className="text-sm font-semibold text-gray-700">Destination URL (Click opens this link)</Label>
                                 <Input
                                   placeholder="https://advertiser-website.com"
                                   value={item.destinationUrl}
@@ -3251,7 +3589,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                       sidebarAd: { ...contentSettings.sidebarAd, items }
                                     })
                                   }}
-                                  className="text-xs h-8"
+                                  className="text-sm bg-white rounded-xl h-10"
                                 />
                               </div>
                             </CardContent>
@@ -3262,7 +3600,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </div>
 
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-11 text-base"
                     onClick={async () => {
                       const success = await saveSidebarAdSettings(contentSettings.sidebarAd)
                       if (success) {
@@ -3272,29 +3610,36 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       }
                     }}
                   >
+                    <Check className="h-4 w-4 mr-2" />
                     Save Sidebar Ad Settings
                   </Button>
-                </>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* Inner Page Advertisements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-pink-600" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center text-pink-600">
+                  <FileText className="h-4 w-4" />
+                </div>
                 Inner Page Advertisements
               </CardTitle>
-              <CardDescription>Manage ads shown on article/news detail pages</CardDescription>
+              <CardDescription className="mt-1">Manage ads shown on article/news detail pages</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="bg-white p-6 space-y-6">
               {/* Article Ad Banner (Pink/Purple - Advertise Your Business) */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
+              <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h4 className="font-semibold">Article Ad Banner</h4>
-                    <p className="text-sm text-muted-foreground">Pink/purple "Advertise Your Business" banner (Must be A4 portrait or Square format)</p>
+                    <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                      <span className="w-2 h-6 bg-pink-500 rounded-full inline-block"></span>
+                      Article Ad Banner
+                    </h4>
+                    <p className="text-sm text-gray-500 font-medium mt-1 ml-4">Pink/purple banner (Must be A4 portrait or Square format)</p>
                   </div>
                   <Switch
                     checked={contentSettings.articleAd?.banner?.enabled ?? true}
@@ -3308,92 +3653,100 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       }
                       setContentSettings(updated)
                     }}
+                    className="data-[state=checked]:bg-pink-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Image URL</Label>
-                  <div className="flex gap-2">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-semibold">Image URL</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/banner.jpg"
+                        value={contentSettings.articleAd?.banner?.imageUrl || ''}
+                        onChange={(e) => {
+                          const updated = {
+                            ...contentSettings,
+                            articleAd: {
+                              ...contentSettings.articleAd,
+                              banner: { ...contentSettings.articleAd?.banner, imageUrl: e.target.value }
+                            }
+                          }
+                          setContentSettings(updated)
+                        }}
+                        className="flex-1 bg-white rounded-xl"
+                      />
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            if (file.size > 5 * 1024 * 1024) {
+                              toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                              return
+                            }
+                            try {
+                              const formData = new FormData()
+                              formData.append('file', file)
+                              const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
+                              const data = await res.json()
+                              if (res.ok) {
+                                const updated = {
+                                  ...contentSettings,
+                                  articleAd: {
+                                    ...contentSettings.articleAd,
+                                    banner: { ...contentSettings.articleAd?.banner, imageUrl: data.url }
+                                  }
+                                }
+                                setContentSettings(updated)
+                                toast({ title: 'Article Ad Banner image uploaded!' })
+                              } else {
+                                toast({ title: 'Upload failed', variant: 'destructive' })
+                              }
+                            } catch (err) {
+                              toast({ title: 'Upload failed', variant: 'destructive' })
+                            }
+                          }}
+                        />
+                        <div className="h-10 px-4 rounded-xl border border-pink-200 text-pink-600 bg-white hover:bg-pink-50 flex items-center justify-center font-medium transition-colors">
+                          <Upload className="h-4 w-4 mr-2" /> Upload
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-semibold">Click/Destination URL</Label>
                     <Input
-                      placeholder="https://example.com/banner.jpg"
-                      value={contentSettings.articleAd?.banner?.imageUrl || ''}
+                      placeholder="https://example.com/advertiser-site"
+                      value={contentSettings.articleAd?.banner?.linkUrl || ''}
                       onChange={(e) => {
                         const updated = {
                           ...contentSettings,
                           articleAd: {
                             ...contentSettings.articleAd,
-                            banner: { ...contentSettings.articleAd?.banner, imageUrl: e.target.value }
+                            banner: { ...contentSettings.articleAd?.banner, linkUrl: e.target.value }
                           }
                         }
                         setContentSettings(updated)
                       }}
-                      className="flex-1"
+                      className="bg-white rounded-xl"
                     />
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          if (file.size > 5 * 1024 * 1024) {
-                            toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
-                            return
-                          }
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                            const data = await res.json()
-                            if (res.ok) {
-                              const updated = {
-                                ...contentSettings,
-                                articleAd: {
-                                  ...contentSettings.articleAd,
-                                  banner: { ...contentSettings.articleAd?.banner, imageUrl: data.url }
-                                }
-                              }
-                              setContentSettings(updated)
-                              toast({ title: 'Article Ad Banner image uploaded!' })
-                            } else {
-                              toast({ title: 'Upload failed', variant: 'destructive' })
-                            }
-                          } catch (err) {
-                            toast({ title: 'Upload failed', variant: 'destructive' })
-                          }
-                        }}
-                      />
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
-                      </Button>
-                    </label>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Click/Destination URL</Label>
-                  <Input
-                    placeholder="https://example.com/advertiser-site"
-                    value={contentSettings.articleAd?.banner?.linkUrl || ''}
-                    onChange={(e) => {
-                      const updated = {
-                        ...contentSettings,
-                        articleAd: {
-                          ...contentSettings.articleAd,
-                          banner: { ...contentSettings.articleAd?.banner, linkUrl: e.target.value }
-                        }
-                      }
-                      setContentSettings(updated)
-                    }}
-                  />
-                </div>
               </div>
-
+              
               {/* Article Sticky Ad (Bottom sticky - Premium Ad Space) */}
-              <div className="border rounded-lg p-4 space-y-4">
-                <div className="flex items-center justify-between">
+              <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h4 className="font-semibold">Article Sticky Ad</h4>
-                    <p className="text-sm text-muted-foreground">Bottom sticky "Premium Ad Space" banner (Must be A4 portrait or Square format)</p>
+                    <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                      <span className="w-2 h-6 bg-orange-500 rounded-full inline-block"></span>
+                      Article Sticky Ad
+                    </h4>
+                    <p className="text-sm text-gray-500 font-medium mt-1 ml-4">Bottom sticky "Premium Ad Space" banner (Must be A4 portrait or Square format)</p>
                   </div>
                   <Switch
                     checked={contentSettings.articleAd?.sticky?.enabled ?? true}
@@ -3407,27 +3760,29 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       }
                       setContentSettings(updated)
                     }}
+                    className="data-[state=checked]:bg-orange-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Image URL</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="https://example.com/sticky-ad.jpg"
-                      value={contentSettings.articleAd?.sticky?.imageUrl || ''}
-                      onChange={(e) => {
-                        const updated = {
-                          ...contentSettings,
-                          articleAd: {
-                            ...contentSettings.articleAd,
-                            sticky: { ...contentSettings.articleAd?.sticky, imageUrl: e.target.value }
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-gray-700 font-semibold">Image URL</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/sticky-ad.jpg"
+                        value={contentSettings.articleAd?.sticky?.imageUrl || ''}
+                        onChange={(e) => {
+                          const updated = {
+                            ...contentSettings,
+                            articleAd: {
+                              ...contentSettings.articleAd,
+                              sticky: { ...contentSettings.articleAd?.sticky, imageUrl: e.target.value }
+                            }
                           }
-                        }
-                        setContentSettings(updated)
-                      }}
-                      className="flex-1"
-                    />
-                    <label className="cursor-pointer">
+                          setContentSettings(updated)
+                        }}
+                        className="flex-1 bg-white rounded-xl"
+                      />
+                      <label className="cursor-pointer">
                       <input
                         type="file"
                         accept="image/*"
@@ -3486,6 +3841,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   />
                 </div>
               </div>
+              </div>
 
               {/* Save Button */}
               <Button
@@ -3501,21 +3857,25 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </Card>
 
           {/* Homepage Business Sidebar Ad */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-orange-600" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                  <Building2 className="h-4 w-4" />
+                </div>
                 Homepage Business Sidebar Ad
               </CardTitle>
-              <CardDescription>Manage the "BUSINESS Advertisement" sidebar on homepage</CardDescription>
+              <CardDescription className="mt-1">Manage the "BUSINESS Advertisement" sidebar on homepage</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-3">
-                  <Megaphone className="h-5 w-5 text-orange-600" />
+            <CardContent className="bg-white p-6 space-y-6">
+              <div className="flex items-center justify-between p-5 bg-orange-50/50 rounded-2xl border border-orange-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-orange-600">
+                    <Megaphone className="h-6 w-6" />
+                  </div>
                   <div>
-                    <p className="font-medium">Business Ad Section</p>
-                    <p className="text-sm text-muted-foreground">Show/hide the BUSINESS sidebar on homepage</p>
+                    <p className="font-bold text-gray-800 text-lg">Business Ad Section</p>
+                    <p className="text-sm text-gray-500 font-medium">Show/hide the BUSINESS sidebar on homepage</p>
                   </div>
                 </div>
                 <Switch
@@ -3526,14 +3886,15 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       businessAd: { ...contentSettings.businessAd, enabled: checked }
                     })
                   }}
+                  className="data-[state=checked]:bg-orange-500"
                 />
               </div>
 
               {contentSettings.businessAd?.enabled && (
-                <>
-                  <div className="grid gap-4 md:grid-cols-2">
+                <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200 space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Title (e.g., BUSINESS)</Label>
+                      <Label className="text-gray-700 font-semibold">Title (e.g., BUSINESS)</Label>
                       <Input
                         placeholder="BUSINESS"
                         value={contentSettings.businessAd?.title || ''}
@@ -3541,10 +3902,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           businessAd: { ...contentSettings.businessAd, title: e.target.value }
                         })}
+                        className="bg-white rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Subtitle</Label>
+                      <Label className="text-gray-700 font-semibold">Subtitle</Label>
                       <Input
                         placeholder="Advertisement"
                         value={contentSettings.businessAd?.subtitle || ''}
@@ -3552,12 +3914,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           businessAd: { ...contentSettings.businessAd, subtitle: e.target.value }
                         })}
+                        className="bg-white rounded-xl"
                       />
                     </div>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Button Text</Label>
+                      <Label className="text-gray-700 font-semibold">Button Text</Label>
                       <Input
                         placeholder="POST YOUR AD"
                         value={contentSettings.businessAd?.buttonText || ''}
@@ -3565,10 +3928,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           businessAd: { ...contentSettings.businessAd, buttonText: e.target.value }
                         })}
+                        className="bg-white rounded-xl"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Button Link URL</Label>
+                      <Label className="text-gray-700 font-semibold">Button Link URL</Label>
                       <Input
                         placeholder="https://wa.me/91XXXXXXXXXX"
                         value={contentSettings.businessAd?.linkUrl || ''}
@@ -3576,11 +3940,12 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           businessAd: { ...contentSettings.businessAd, linkUrl: e.target.value }
                         })}
+                        className="bg-white rounded-xl"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Custom Image URL (Optional - replaces default gradient)</Label>
+                    <Label className="text-gray-700 font-semibold">Custom Image URL (Optional - replaces default gradient)</Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/business-ad.jpg"
@@ -3589,7 +3954,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           ...contentSettings,
                           businessAd: { ...contentSettings.businessAd, imageUrl: e.target.value }
                         })}
-                        className="flex-1"
+                        className="flex-1 bg-white rounded-xl"
                       />
                       <input
                         type="file"
@@ -3622,42 +3987,48 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       />
                       <Button
                         variant="outline"
+                        className="h-10 px-4 rounded-xl border-orange-200 text-orange-600 bg-white hover:bg-orange-50 font-medium"
                         onClick={() => document.getElementById('business-ad-upload')?.click()}
                       >
-                        📁 Upload
+                        <Upload className="h-4 w-4 mr-2" /> Upload
                       </Button>
                     </div>
                   </div>
                   <Button
-                    className="bg-orange-600 hover:bg-orange-700 w-full"
+                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl shadow-sm w-full h-11 text-base mt-2"
                     onClick={() => {
                       saveBusinessAdSettings(contentSettings.businessAd)
                       toast({ title: 'Business Sidebar Ad Settings Saved' })
                     }}
                   >
+                    <Check className="h-4 w-4 mr-2" />
                     Save Business Ad Settings
                   </Button>
-                </>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* Trending News Section */}
-          < Card >
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-orange-600" />
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
                 Trending News Section
               </CardTitle>
-              <CardDescription>Control the trending news section on homepage</CardDescription>
+              <CardDescription className="mt-1">Control the trending news section on homepage</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-5 w-5 text-orange-600" />
+            <CardContent className="bg-white p-6 space-y-6">
+              <div className="flex items-center justify-between p-5 bg-red-50/50 rounded-2xl border border-red-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-red-600">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
                   <div>
-                    <p className="font-medium">Trending Section</p>
-                    <p className="text-sm text-muted-foreground">Show/hide the trending news section</p>
+                    <p className="font-bold text-gray-800 text-lg">Trending Section</p>
+                    <p className="text-sm text-gray-500 font-medium">Show/hide the trending news section</p>
                   </div>
                 </div>
                 <Switch
@@ -3668,60 +4039,73 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     saveTrendingSettings({ enabled: checked })
                     toast({ title: checked ? 'Trending Section Enabled' : 'Trending Section Disabled' })
                   }}
+                  className="data-[state=checked]:bg-red-500"
                 />
               </div>
 
               {contentSettings.trending?.enabled && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Select Trending News Articles</Label>
-                    <p className="text-sm text-muted-foreground">Check articles to mark them as trending</p>
+                <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="space-y-2 mb-4">
+                    <Label className="text-lg font-bold text-gray-800">Select Trending News Articles</Label>
+                    <p className="text-sm text-gray-500 font-medium">Check articles to mark them as trending</p>
                   </div>
-                  <ScrollArea className="h-[300px] border rounded-lg p-2">
-                    {approvedNews.length > 0 ? approvedNews.map((article) => {
-                      const isTrending = (contentSettings.trending?.newsIds || []).includes(article.id)
-                      return (
-                        <div
-                          key={article.id}
-                          className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-muted ${isTrending ? 'bg-orange-50 border border-orange-200' : ''
-                            }`}
-                          onClick={() => {
-                            const newsIds = isTrending
-                              ? (contentSettings.trending?.newsIds || []).filter(id => id !== article.id)
-                              : [...(contentSettings.trending?.newsIds || []), article.id]
-                            const updated = { ...contentSettings, trending: { ...contentSettings.trending, newsIds } }
-                            setContentSettings(updated)
-                            markNewsAsTrending(article.id, !isTrending)
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isTrending}
-                            onChange={() => { }}
-                            className="h-4 w-4"
-                          />
-                          <span className="flex-1 text-sm">{getTextValue(article.title)}</span>
-                          {isTrending && <Badge className="bg-orange-500">Trending</Badge>}
+                  <ScrollArea className="h-[350px] border border-gray-200 rounded-xl bg-white p-3 shadow-inner">
+                    {approvedNews.length > 0 ? (
+                      <div className="space-y-2">
+                        {approvedNews.map((article) => {
+                          const isTrending = (contentSettings.trending?.newsIds || []).includes(article.id)
+                          return (
+                            <div
+                              key={article.id}
+                              className={`flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-colors border ${
+                                isTrending 
+                                  ? 'bg-red-50/50 border-red-200 shadow-sm' 
+                                  : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-100'
+                                }`}
+                              onClick={() => {
+                                const newsIds = isTrending
+                                  ? (contentSettings.trending?.newsIds || []).filter(id => id !== article.id)
+                                  : [...(contentSettings.trending?.newsIds || []), article.id]
+                                const updated = { ...contentSettings, trending: { ...contentSettings.trending, newsIds } }
+                                setContentSettings(updated)
+                                markNewsAsTrending(article.id, !isTrending)
+                              }}
+                            >
+                              <div className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                                isTrending ? 'bg-red-500 border-red-500 text-white' : 'border-gray-300 bg-white'
+                              }`}>
+                                {isTrending && <Check className="h-3 w-3" />}
+                              </div>
+                              <span className="flex-1 text-sm font-medium text-gray-700 leading-tight">{getTextValue(article.title)}</span>
+                              {isTrending && <Badge className="bg-gradient-to-r from-red-500 to-orange-500 border-0 shadow-sm font-semibold">Trending</Badge>}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12">
+                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                          <Newspaper className="h-6 w-6 text-gray-400" />
                         </div>
-                      )
-                    }) : (
-                      <p className="text-center py-4 text-muted-foreground">No approved news articles found</p>
+                        <p className="font-medium">No approved news articles found</p>
+                      </div>
                     )}
                   </ScrollArea>
                   <Button
-                    className="w-full bg-orange-600 hover:bg-orange-700"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm mt-6 h-11 text-base"
                     onClick={() => {
                       saveTrendingSettings(contentSettings.trending)
                       toast({ title: 'Trending Settings Saved', description: `${(contentSettings.trending?.newsIds || []).length} articles marked as trending` })
                     }}
                   >
+                    <Check className="h-4 w-4 mr-2" />
                     Save Trending Settings
                   </Button>
-                </>
+                </div>
               )}
             </CardContent>
-          </Card >
-        </TabsContent >
+          </Card>
+        </TabsContent>
 
         {/* Manage Businesses Tab - Full CRUD */}
 
@@ -3730,317 +4114,457 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
 
         {/* Manage News Tab - Full CRUD */}
-        < TabsContent value="manage-news" className="space-y-4" >
+        {/* Manage News Tab - Full CRUD */}
+        <TabsContent value="manage-news" className="space-y-6 mt-0">
           {/* News Moderation Section (Merged) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Newspaper className="h-5 w-5" />
-                News Moderation
-                {pendingData.news.length > 0 && (
-                  <Badge className="bg-yellow-500 text-white ml-2">{pendingData.news.length} Pending</Badge>
-                )}
-              </CardTitle>
-              <CardDescription>Review and approve news articles submitted by reporters</CardDescription>
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-gradient-to-br from-yellow-50 to-orange-50/30">
+            <CardHeader className="bg-white/50 backdrop-blur-sm border-b border-yellow-100/50 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                      <Newspaper className="h-4 w-4" />
+                    </div>
+                    News Moderation
+                    {pendingData.news.length > 0 && (
+                      <Badge className="bg-yellow-500 hover:bg-yellow-600 text-white ml-2 rounded-lg px-2 py-0.5 shadow-sm border-0 transition-colors">{pendingData.news.length} Pending</Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="mt-1">Review and approve news articles submitted by reporters</CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               {pendingData.news.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                  <p>No pending news articles</p>
+                <div className="text-center py-12 bg-white/50 rounded-2xl border border-dashed border-yellow-200">
+                  <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600 text-lg">You're all caught up!</p>
+                  <p className="text-sm text-gray-500 mt-1">No pending news articles require moderation.</p>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px]">
-                  <div className="space-y-3">
+                <ScrollArea className="h-[500px] pr-4 -mr-4">
+                  <div className="space-y-4">
                     {pendingData.news.map((article) => (
-                      <div key={article.id} className="border rounded-lg p-3 border-l-4 border-l-yellow-400 hover:shadow-md transition-shadow flex items-center gap-4">
-                        {/* Image - Fixed 80x60 */}
-                        <div className="flex-shrink-0 w-[80px] h-[60px] bg-gray-100 rounded overflow-hidden">
-                          {article.mainImage ? (
-                            <img
-                              src={article.mainImage}
-                              alt={getTextValue(article.title)}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                              <Newspaper className="h-6 w-6 text-gray-400" />
+                      <Card key={article.id} className="border-0 shadow-sm ring-1 ring-yellow-200 hover:ring-yellow-300 overflow-hidden transition-all rounded-xl bg-white group">
+                        <div className="flex h-full">
+                          <div className="w-1.5 bg-yellow-400 group-hover:bg-yellow-500 transition-colors"></div>
+                          <CardContent className="p-4 flex-1 flex flex-col md:flex-row items-start md:items-center gap-5">
+                            {/* Image - Premium aspect ratio */}
+                            <div className="flex-shrink-0 w-full md:w-32 aspect-video md:aspect-[4/3] bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
+                              {article.mainImage ? (
+                                <img
+                                  src={article.mainImage}
+                                  alt={getTextValue(article.title)}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
+                                  <Newspaper className="h-6 w-6" />
+                                  <span className="text-[10px] font-medium">No Image</span>
+                                </div>
+                              )}
+                              <div className="absolute top-2 right-2 flex gap-1">
+                                <Badge className="bg-yellow-500/90 text-white text-[10px] backdrop-blur-sm border-0 shadow-sm px-1.5 py-0">PENDING</Badge>
+                              </div>
                             </div>
-                          )}
-                        </div>
 
-                        {/* Content - Center */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm truncate">{getTextValue(article.title)}</h3>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-gray-800 text-base leading-tight mb-2 line-clamp-2" title={getTextValue(article.title)}>{getTextValue(article.title)}</h3>
+                              
+                              <div className="flex flex-wrap items-center gap-2 mb-3">
+                                <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
+                                  {getTextValue(article.category) || article.genre || 'Article'}
+                                </Badge>
+                                <span className="text-xs font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-md border border-blue-100 flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  By: {article.authorName || 'Reporter'}
+                                </span>
+                              </div>
+                              
+                              <p className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5" /> 
+                                Submitted on {new Date(article.createdAt).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                              </p>
+                            </div>
 
-                            <Badge variant="outline" className="text-xs">{getTextValue(article.category) || article.genre || 'Article'}</Badge>
-                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                              Posted By: {article.authorName || 'Reporter'}
-                            </span>
-                            <Badge className="bg-yellow-100 text-yellow-700 text-xs">PENDING</Badge>
-                            <span>{new Date(article.createdAt).toLocaleDateString()}</span>
-                          </div>
+                            {/* Actions - Right */}
+                            <div className="flex flex-row md:flex-col items-center justify-end gap-2 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 md:pl-4 md:border-l">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  // Load article into news form for editing
+                                  setNewsForm({
+                                    title: getTextValue(article.title),
+                                    content: getTextValue(article.content),
+                                    category: article.category || article.categoryId || 'City News',
+                                    mainImage: article.mainImage || '',
+                                    youtubeUrl: article.youtubeUrl || article.videoUrl || '',
+                                    thumbnails: article.thumbnails || (article.thumbnailUrl ? [article.thumbnailUrl] : []),
+                                    thumbnailUrl: article.thumbnailUrl || '',
+                                    metaDescription: article.metaDescription || '',
+                                    tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
+                                    featured: article.featured || false,
+                                    showOnHome: article.showOnHome !== false
+                                  })
+                                  setEditingNews(article)
+                                  setShowNewsForm(true)
+                                }}
+                                disabled={loading}
+                                className="bg-blue-50/50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 w-full rounded-lg"
+                              >
+                                <Edit className="h-3.5 w-3.5 mr-1.5" />
+                                Review & Edit
+                              </Button>
+                              <div className="flex gap-2 w-full">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleNewsAction(article.id, 'approve')}
+                                  disabled={loading}
+                                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg flex-1 shadow-sm"
+                                >
+                                  <Check className="h-3.5 w-3.5 md:mr-1" />
+                                  <span className="hidden md:inline">Approve</span>
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleNewsAction(article.id, 'reject')}
+                                  disabled={loading}
+                                  className="text-red-700 border-red-200 hover:bg-red-50 hover:border-red-300 rounded-lg flex-1"
+                                >
+                                  <X className="h-3.5 w-3.5 md:mr-1" />
+                                  <span className="hidden md:inline">Reject</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
                         </div>
-
-                        {/* Actions - Right */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              // Load article into news form for editing
-                              setNewsForm({
-                                title: getTextValue(article.title),
-                                content: getTextValue(article.content),
-                                category: article.category || article.categoryId || 'City News',
-                                mainImage: article.mainImage || '',
-                                youtubeUrl: article.youtubeUrl || article.videoUrl || '',
-                                thumbnails: article.thumbnails || (article.thumbnailUrl ? [article.thumbnailUrl] : []),
-                                thumbnailUrl: article.thumbnailUrl || '',
-                                metaDescription: article.metaDescription || '',
-                                tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
-                                featured: article.featured || false,
-                                showOnHome: article.showOnHome !== false
-                              })
-                              setEditingNews(article)
-                              setShowNewsForm(true)
-                            }}
-                            disabled={loading}
-                            className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleNewsAction(article.id, 'approve')}
-                            disabled={loading}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleNewsAction(article.id, 'reject')}
-                            disabled={loading}
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 </ScrollArea>
               )}
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Newspaper className="h-5 w-5 text-blue-600" />
+                <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <Newspaper className="h-4 w-4" />
+                  </div>
                   Manage All News
                 </CardTitle>
-                <CardDescription>Add, edit, enable/disable, feature news for home page</CardDescription>
+                <CardDescription className="mt-1">Add, edit, enable/disable, and feature news for the home page</CardDescription>
               </div>
-              <Button onClick={() => { resetNewsForm(); setShowNewsForm(true) }} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" /> Add News
+              <Button onClick={() => { resetNewsForm(); setShowNewsForm(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-11 px-5">
+                <Plus className="h-4 w-4 mr-2" /> Add News Article
               </Button>
             </CardHeader>
-            <CardContent>
-
+            <CardContent className="p-6 bg-gray-50/30">
 
               {/* News List */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {allNews.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No news articles found. Add your first article above.</p>
-                ) : (
-                  allNews.map(article => (
-                    <div key={article.id} className={`border rounded-lg p-3 flex items-center gap-4 h-[80px] ${article.enabled === false ? 'bg-gray-100 opacity-60' : ''} ${article.featured ? 'border-l-4 border-l-yellow-400 bg-yellow-50' : 'border-l-4 border-l-blue-400'}`}>
-                      {/* Image - Fixed 80x60 */}
-                      <div className="flex-shrink-0 w-[80px] h-[60px] bg-gray-100 rounded overflow-hidden">
-                        {article.mainImage ? (
-                          <img src={article.mainImage} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                            <Newspaper className="h-6 w-6 text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content - Center */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm truncate">{getTextValue(article.title)}</h4>
-                          {article.featured && <Badge className="bg-yellow-500 text-xs"><Star className="h-3 w-3 mr-1" />Featured</Badge>}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-
-                          <Badge variant="outline" className="text-xs">{getTextValue(article.category) || article.categoryId}</Badge>
-                          <Badge className={`text-xs ${article.approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : article.approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                            {article.approvalStatus?.toUpperCase() || 'PENDING'}
-                          </Badge>
-                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                            Posted By: {article.authorName || 'Admin'}
-                          </span>
-                          <span>{new Date(article.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-
-                      {/* Actions - Right */}
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button size="sm" variant={article.featured ? "default" : "outline"} onClick={() => handleToggleNewsFeatured(article.id)} title="Toggle Featured" className="h-8 w-8 p-0">
-                          <Star className={`h-4 w-4 ${article.featured ? 'fill-current' : ''}`} />
-                        </Button>
-                        <Switch checked={article.enabled !== false} onCheckedChange={() => handleToggleNews(article.id)} />
-                        <Button size="sm" variant="ghost" onClick={() => handleEditNews(article)} className="h-8 w-8 p-0"><Edit className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" className="text-red-600 h-8 w-8 p-0" onClick={() => handleDeleteNews(article.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
+                  <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200">
+                    <div className="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Newspaper className="h-8 w-8" />
                     </div>
-                  ))
+                    <p className="font-medium text-gray-600">No news articles found</p>
+                    <p className="text-sm text-gray-500 mt-1">Add your first article using the button above.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {allNews.map(article => (
+                    <Card key={article.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${
+                      article.enabled === false ? 'ring-gray-200 bg-gray-50 opacity-75' : 
+                      article.featured ? 'ring-yellow-200 bg-white hover:shadow-md' : 
+                      'ring-blue-100 bg-white hover:shadow-md'
+                    }`}>
+                      <div className="flex h-full">
+                        <div className={`w-1.5 ${
+                          article.enabled === false ? 'bg-gray-300' : 
+                          article.featured ? 'bg-yellow-400' : 
+                          'bg-blue-500'
+                        }`}></div>
+                        <CardContent className="p-4 flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          {/* Image - Premium aspect ratio */}
+                          <div className="flex-shrink-0 w-full sm:w-28 aspect-video sm:aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-100 relative group">
+                            {article.mainImage ? (
+                              <img src={article.mainImage} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 gap-1">
+                                <Newspaper className="h-5 w-5" />
+                                <span className="text-[9px] font-medium">No Image</span>
+                              </div>
+                            )}
+                            {article.featured && (
+                              <div className="absolute top-1 left-1">
+                                <Badge className="bg-yellow-500 text-white shadow-sm border-0 px-1 py-0 h-5 text-[10px] rounded flex items-center gap-1">
+                                  <Star className="h-2.5 w-2.5 fill-current" />
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Content - Center */}
+                          <div className="flex-1 min-w-0 py-1">
+                            <h4 className={`font-bold text-base leading-tight mb-2 line-clamp-2 ${article.enabled === false ? 'text-gray-500' : 'text-gray-800'}`} title={getTextValue(article.title)}>
+                              {getTextValue(article.title)}
+                            </h4>
+                            
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 ${article.enabled === false ? 'border-gray-200 text-gray-400' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
+                                {getTextValue(article.category) || article.categoryId}
+                              </Badge>
+                              
+                              <Badge className={`text-[10px] px-1.5 py-0 h-5 shadow-none border-0 ${
+                                article.approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : 
+                                article.approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' : 
+                                'bg-yellow-100 text-yellow-700'
+                              }`}>
+                                {article.approvalStatus?.toUpperCase() || 'PENDING'}
+                              </Badge>
+                              
+                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md flex items-center gap-1 ${
+                                article.enabled === false ? 'bg-gray-100 text-gray-500' : 'text-blue-700 bg-blue-50/80 border border-blue-100'
+                              }`}>
+                                <Users className="h-2.5 w-2.5" />
+                                {article.authorName || 'Admin'}
+                              </span>
+                            </div>
+                            
+                            <p className="text-[11px] text-gray-400 font-medium flex items-center gap-1 mt-1.5">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(article.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+
+                          {/* Actions - Right */}
+                          <div className="flex sm:flex-col items-center justify-end gap-1.5 flex-shrink-0 w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                            <div className="flex gap-1.5">
+                              <Button 
+                                size="sm" 
+                                variant={article.featured ? "default" : "outline"} 
+                                onClick={() => handleToggleNewsFeatured(article.id)} 
+                                title={article.featured ? "Remove from Featured" : "Mark as Featured"} 
+                                className={`h-8 w-8 p-0 rounded-lg transition-colors ${article.featured ? 'bg-yellow-500 hover:bg-yellow-600 text-white shadow-sm border-0' : 'text-gray-500 hover:text-yellow-600 border-gray-200 hover:bg-yellow-50 hover:border-yellow-200'}`}
+                              >
+                                <Star className={`h-4 w-4 ${article.featured ? 'fill-current' : ''}`} />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleEditNews(article)} 
+                                title="Edit Article"
+                                className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200 hover:bg-blue-50 transition-colors"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-8 w-8 p-0 rounded-lg text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 transition-colors" 
+                                onClick={() => handleDeleteNews(article.id)}
+                                title="Delete Article"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2 sm:mt-1 bg-gray-50 sm:bg-transparent px-3 py-1 sm:p-0 rounded-lg border sm:border-0 border-gray-100 ml-auto sm:ml-0">
+                              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{article.enabled !== false ? 'Live' : 'Hidden'}</span>
+                              <Switch 
+                                checked={article.enabled !== false} 
+                                onCheckedChange={() => handleToggleNews(article.id)} 
+                                className="data-[state=checked]:bg-green-500 scale-75 sm:scale-90 transform origin-right"
+                              />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </div>
+                    </Card>
+                  ))}
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
-        </TabsContent >
+        </TabsContent>
 
         {/* Settings Tab */}
-        < TabsContent value="settings" className="space-y-4" >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
-              </CardTitle>
-              <CardDescription>Update your admin account password</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input
-                    id="currentPassword"
-                    type="password"
-                    value={passwordForm.oldPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">New Password</Label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    value={passwordForm.newPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={passwordLoading}>
-                  {passwordLoading ? 'Changing...' : 'Change Password'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+        <TabsContent value="settings" className="space-y-6 mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+              <CardHeader className="bg-white border-b border-gray-100 pb-4">
+                <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                  Change Password
+                </CardTitle>
+                <CardDescription className="mt-1">Update your admin account password</CardDescription>
+              </CardHeader>
+              <CardContent className="bg-white p-6">
+                <form onSubmit={handlePasswordChange} className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword" className="text-gray-700 font-semibold">Current Password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      value={passwordForm.oldPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                      required
+                      className="bg-gray-50/50 rounded-xl border-gray-200 h-11 focus-visible:ring-slate-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword" className="text-gray-700 font-semibold">New Password</Label>
+                    <Input
+                      id="newPassword"
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      required
+                      className="bg-gray-50/50 rounded-xl border-gray-200 h-11 focus-visible:ring-slate-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-gray-700 font-semibold">Confirm New Password</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      required
+                      className="bg-gray-50/50 rounded-xl border-gray-200 h-11 focus-visible:ring-slate-500"
+                    />
+                  </div>
+                  <Button type="submit" disabled={passwordLoading} className="w-full bg-slate-800 hover:bg-slate-900 text-white rounded-xl shadow-sm h-11 mt-2">
+                    {passwordLoading ? 'Changing Password...' : 'Change Password'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Username:</span>
-                  <span className="font-medium">{user?.email}</span>
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+              <CardHeader className="bg-white border-b border-gray-100 pb-4">
+                <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <User className="h-4 w-4" />
+                  </div>
+                  Admin Information
+                </CardTitle>
+                <CardDescription className="mt-1">Details about your account</CardDescription>
+              </CardHeader>
+              <CardContent className="bg-white p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl border border-gray-100">
+                    <span className="text-gray-500 font-medium flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-400" />
+                      Email Address
+                    </span>
+                    <span className="font-bold text-gray-800 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm">{user?.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+                    <span className="text-gray-500 font-medium flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-blue-400" />
+                      Account Role
+                    </span>
+                    <Badge className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm border-0 px-3 py-1">{user?.role?.toUpperCase() || 'ADMIN'}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-gray-50/80 rounded-xl border border-gray-100">
+                    <span className="text-gray-500 font-medium flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      Member Since
+                    </span>
+                    <span className="font-semibold text-gray-700">Today</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Role:</span>
-                  <Badge>{user?.role}</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent >
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* ===== LIVE TV TAB ===== */}
-        <TabsContent value="live-tv" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+        <TabsContent value="live-tv" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden mt-6">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Video className="h-5 w-5 text-red-600" />
+                  <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                      <Video className="h-4 w-4" />
+                    </div>
                     Live TV Management
                   </CardTitle>
-                  <CardDescription>Manage your live streams and video replays</CardDescription>
+                  <CardDescription className="mt-1">Manage your live streams and video replays</CardDescription>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium">{liveTVConfig.enabled ? 'Enabled' : 'Disabled'}</span>
+                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                  <span className="text-sm font-semibold text-gray-700">{liveTVConfig.enabled ? 'Live TV Enabled' : 'Live TV Disabled'}</span>
                   <Switch
                     checked={liveTVConfig.enabled}
                     onCheckedChange={(checked) => handleSaveLiveTVConfig({ ...liveTVConfig, enabled: checked })}
+                    className="data-[state=checked]:bg-red-500"
                   />
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="bg-gray-50/30 p-6 space-y-6">
               {/* Add/Edit Stream Form */}
-              <Card className="border-dashed border-2">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">
-                    {editingStream ? '✏️ Edit Stream' : '➕ Add New Stream'}
+              <Card className="border border-dashed border-red-200 shadow-sm rounded-xl bg-white overflow-hidden">
+                <CardHeader className="pb-3 bg-red-50/30 border-b border-red-100/50">
+                  <CardTitle className="text-base font-bold text-gray-800 flex items-center gap-2">
+                    {editingStream ? (
+                      <><Edit className="h-4 w-4 text-red-500" /> Edit Stream Details</>
+                    ) : (
+                      <><PlusCircle className="h-4 w-4 text-red-500" /> Add New Stream</>
+                    )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="p-5 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <Label>Stream Title *</Label>
+                      <Label className="text-gray-700 font-semibold">Stream Title *</Label>
                       <Input
                         value={liveTVForm.title}
                         onChange={(e) => setLiveTVForm({ ...liveTVForm, title: e.target.value })}
                         placeholder="e.g. Star News 24/7 Live"
+                        className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>YouTube URL *</Label>
+                      <Label className="text-gray-700 font-semibold">YouTube URL *</Label>
                       <Input
                         value={liveTVForm.url}
                         onChange={(e) => setLiveTVForm({ ...liveTVForm, url: e.target.value })}
                         placeholder="https://www.youtube.com/watch?v=..."
+                        className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
                       />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-3 bg-red-50/50 px-4 py-2.5 rounded-xl border border-red-100 w-full sm:w-auto">
                       <Switch
                         checked={liveTVForm.isLive}
                         onCheckedChange={(checked) => setLiveTVForm({ ...liveTVForm, isLive: checked })}
+                        className="data-[state=checked]:bg-red-500"
                       />
-                      <Label className="flex items-center gap-1.5">
-                        {liveTVForm.isLive && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-                        {liveTVForm.isLive ? '🔴 Mark as LIVE' : 'Mark as Live'}
+                      <Label className="flex items-center gap-2 font-bold text-red-700 m-0 cursor-pointer" onClick={() => setLiveTVForm({ ...liveTVForm, isLive: !liveTVForm.isLive })}>
+                        {liveTVForm.isLive && <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm shadow-red-200" />}
+                        {liveTVForm.isLive ? 'Currently Broadcasting LIVE' : 'Mark as LIVE'}
                       </Label>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3 w-full sm:w-auto">
                       {editingStream && (
-                        <Button variant="outline" onClick={handleCancelEditStream}>Cancel</Button>
+                        <Button variant="outline" onClick={handleCancelEditStream} className="rounded-xl h-11 flex-1 sm:flex-none border-gray-200 hover:bg-gray-50">Cancel</Button>
                       )}
-                      <Button onClick={handleAddStream} disabled={loadingLiveTV} className="bg-red-600 hover:bg-red-700">
-                        <Plus className="h-4 w-4 mr-1" />
+                      <Button onClick={handleAddStream} disabled={loadingLiveTV} className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-sm h-11 flex-1 sm:flex-none px-6">
+                        {editingStream ? <Check className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                         {editingStream ? 'Update Stream' : 'Add Stream'}
                       </Button>
                     </div>
@@ -4050,133 +4574,221 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
               {/* Streams List */}
               {loadingLiveTV ? (
-                <div className="text-center py-8 text-muted-foreground">Loading streams...</div>
+                <div className="text-center py-12 text-gray-500 bg-white rounded-xl border border-dashed border-gray-200">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
+                  <p className="font-medium">Loading streams...</p>
+                </div>
               ) : (liveTVConfig.streams || []).length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Video className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>No streams added yet. Add your first YouTube stream above!</p>
+                <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-200">
+                  <div className="w-16 h-16 bg-red-50 text-red-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Video className="h-8 w-8" />
+                  </div>
+                  <p className="font-medium text-gray-600 text-lg">No streams added yet</p>
+                  <p className="text-sm text-gray-500 mt-1">Add your first YouTube stream using the form above.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider">All Streams ({liveTVConfig.streams.length})</h3>
-                  {(liveTVConfig.streams || []).map((stream) => (
-                    <Card key={stream.id} className={`transition-all ${liveTVConfig.primaryStreamId === stream.id ? 'border-red-500 border-2 bg-red-50/50' : 'border'
-                      } ${!stream.isActive ? 'opacity-50' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold truncate">{stream.title}</h4>
-                              {stream.isLive && (
-                                <Badge className="bg-red-600 text-white text-[10px] px-1.5 py-0 flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                                  LIVE
-                                </Badge>
-                              )}
-                              {liveTVConfig.primaryStreamId === stream.id && (
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-500 text-red-600">
-                                  ★ PRIMARY
-                                </Badge>
-                              )}
-                              {!stream.isActive && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                  HIDDEN
-                                </Badge>
-                              )}
+                <div className="space-y-4 mt-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="font-bold text-sm text-gray-500 uppercase tracking-wider">Configured Streams</h3>
+                    <Badge variant="secondary" className="rounded-full bg-gray-200 text-gray-700">{liveTVConfig.streams.length}</Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    {(liveTVConfig.streams || []).map((stream) => (
+                      <Card key={stream.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${
+                        liveTVConfig.primaryStreamId === stream.id 
+                          ? 'ring-red-300 bg-red-50/30' 
+                          : !stream.isActive 
+                            ? 'ring-gray-200 bg-gray-50/50 opacity-75' 
+                            : 'ring-gray-200 bg-white hover:ring-gray-300'
+                        }`}>
+                        <div className="flex">
+                          <div className={`w-1.5 ${
+                            liveTVConfig.primaryStreamId === stream.id ? 'bg-red-500' :
+                            !stream.isActive ? 'bg-gray-300' : 'bg-gray-400'
+                          }`}></div>
+                          <CardContent className="p-4 flex-1">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <h4 className={`font-bold text-base truncate ${!stream.isActive ? 'text-gray-500' : 'text-gray-800'}`}>
+                                    {stream.title}
+                                  </h4>
+                                  
+                                  {stream.isLive && (
+                                    <Badge className="bg-red-500 hover:bg-red-600 text-white text-[10px] px-1.5 py-0 h-5 border-0 shadow-sm flex items-center gap-1.5 rounded">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                      LIVE
+                                    </Badge>
+                                  )}
+                                  
+                                  {liveTVConfig.primaryStreamId === stream.id && (
+                                    <Badge className="bg-red-50 text-red-700 border border-red-200 text-[10px] px-1.5 py-0 h-5 shadow-none rounded flex items-center gap-1 font-bold">
+                                      <Star className="h-2.5 w-2.5 fill-current" /> PRIMARY
+                                    </Badge>
+                                  )}
+                                  
+                                  {!stream.isActive && (
+                                    <Badge className="bg-gray-100 text-gray-500 border border-gray-200 text-[10px] px-1.5 py-0 h-5 shadow-none rounded">
+                                      HIDDEN
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100 inline-flex max-w-full">
+                                  <Video className="h-3 w-3 shrink-0" />
+                                  <span className="truncate">{stream.url}</span>
+                                </div>
+                                <p className="text-[11px] text-gray-400 font-medium flex items-center gap-1 mt-2">
+                                  <Calendar className="h-3 w-3" />
+                                  Added: {new Date(stream.addedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                </p>
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-2 shrink-0 bg-white md:bg-transparent p-2 md:p-0 rounded-xl border border-gray-100 md:border-0 w-full md:w-auto">
+                                <Button
+                                  size="sm"
+                                  variant={stream.isLive ? 'default' : 'outline'}
+                                  className={`h-8 rounded-lg text-xs font-semibold px-3 ${
+                                    stream.isLive 
+                                      ? 'bg-red-100 text-red-700 hover:bg-red-200 border-0' 
+                                      : 'text-gray-600 border-gray-200 hover:bg-gray-50'
+                                  }`}
+                                  onClick={() => handleToggleStreamLive(stream.id)}
+                                >
+                                  {stream.isLive ? <><span className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-1.5 inline-block" /> Live Now</> : 'Set as Live'}
+                                </Button>
+                                
+                                {liveTVConfig.primaryStreamId !== stream.id && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 rounded-lg text-xs font-semibold text-yellow-700 border-yellow-200 bg-yellow-50 hover:bg-yellow-100 px-3"
+                                    onClick={() => handleSetPrimaryStream(stream.id)}
+                                  >
+                                    <Star className="h-3.5 w-3.5 mr-1" /> Make Primary
+                                  </Button>
+                                )}
+                                
+                                <div className="h-6 w-px bg-gray-200 hidden md:block mx-1"></div>
+                                
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className={`h-8 w-8 p-0 rounded-lg ${
+                                    stream.isActive 
+                                      ? 'text-gray-600 border-gray-200 hover:bg-gray-100' 
+                                      : 'text-gray-400 border-gray-200 bg-gray-50 hover:bg-gray-100'
+                                  }`}
+                                  onClick={() => handleToggleStreamActive(stream.id)}
+                                  title={stream.isActive ? "Hide Stream" : "Show Stream"}
+                                >
+                                  {stream.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0 rounded-lg text-blue-600 border-blue-200 hover:bg-blue-50"
+                                  onClick={() => handleEditStream(stream)}
+                                  title="Edit Stream"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-8 w-8 p-0 rounded-lg text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+                                  onClick={() => handleDeleteStream(stream.id)}
+                                  title="Delete Stream"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate">{stream.url}</p>
-                            <p className="text-[10px] text-muted-foreground mt-1">
-                              Added: {new Date(stream.addedAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              size="sm"
-                              variant={stream.isLive ? 'destructive' : 'outline'}
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleToggleStreamLive(stream.id)}
-                            >
-                              {stream.isLive ? '🔴 Live' : '⚪ Not Live'}
-                            </Button>
-                            {liveTVConfig.primaryStreamId !== stream.id && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs px-2"
-                                onClick={() => handleSetPrimaryStream(stream.id)}
-                              >
-                                ★ Set Primary
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleToggleStreamActive(stream.id)}
-                            >
-                              {stream.isActive ? <Eye className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleEditStream(stream)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleDeleteStream(stream.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          </CardContent>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
+        </Tabs>
+        </main>
+      </div>
 
-
-      </Tabs >
+      {/* GLOBAL MODALS & DIALOGS */}
 
       {/* Global News Form Dialog - Works from any tab */}
-      < Dialog open={showNewsForm} onOpenChange={setShowNewsForm} >
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingNews ? 'Edit News Article' : 'Publish New Article'}</DialogTitle>
+      {/* Global News Form Dialog - Works from any tab */}
+      <Dialog open={showNewsForm} onOpenChange={setShowNewsForm}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border-0 shadow-2xl p-0">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <Newspaper className="h-5 w-5" />
+              </div>
+              {editingNews ? 'Edit News Article' : 'Publish New Article'}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Title *</Label>
-              <Input value={newsForm.title} onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} placeholder="Article title" />
+          <div className="p-6 space-y-6">
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-gray-700">Article Title *</Label>
+              <Input 
+                value={newsForm.title} 
+                onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })} 
+                placeholder="Enter a catchy headline..." 
+                className="h-12 bg-gray-50/50 rounded-xl border-gray-200 text-lg font-medium focus:ring-blue-500" 
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Category * (Mandatory)</Label>
-              <Select value={newsForm.category} onValueChange={(val) => setNewsForm({ ...newsForm, category: val })}>
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                <SelectContent>
-                  {['Crime', 'Politics', 'Education', 'Sports', 'Entertainment', 'Trending', 'Business', 'Nation', 'City News', 'Murder', 'General'].map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700">Category * (Mandatory)</Label>
+                <Select value={newsForm.category} onValueChange={(val) => setNewsForm({ ...newsForm, category: val })}>
+                  <SelectTrigger className="h-12 bg-gray-50/50 rounded-xl border-gray-200">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                    {['Crime', 'Politics', 'Education', 'Sports', 'Entertainment', 'Trending', 'Business', 'Nation', 'City News', 'Murder', 'General'].map((cat) => (
+                      <SelectItem key={cat} value={cat} className="rounded-lg">{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700">YouTube Video URL (optional)</Label>
+                <Input 
+                  value={newsForm.youtubeUrl} 
+                  onChange={(e) => setNewsForm({ ...newsForm, youtubeUrl: e.target.value })} 
+                  placeholder="https://youtube.com/watch?v=..." 
+                  className="h-12 bg-gray-50/50 rounded-xl border-gray-200 focus:ring-red-500" 
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Content *</Label>
-              <Textarea value={newsForm.content} onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} placeholder="Full article content..." rows={6} />
+
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-gray-700">Full Content *</Label>
+              <Textarea 
+                value={newsForm.content} 
+                onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })} 
+                placeholder="Write your article content here..." 
+                rows={8} 
+                className="bg-gray-50/50 rounded-xl border-gray-200 resize-none focus:ring-blue-500 text-base leading-relaxed" 
+              />
             </div>
-            <div className="space-y-2">
-              <Label>Main Image URL</Label>
-              <div className="flex gap-2">
-                <Input value={newsForm.mainImage} onChange={(e) => setNewsForm({ ...newsForm, mainImage: e.target.value })} placeholder="https://example.com/image.jpg" className="flex-1" />
-                <label className="cursor-pointer">
+
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-gray-700">Main Cover Image</Label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input 
+                  value={newsForm.mainImage} 
+                  onChange={(e) => setNewsForm({ ...newsForm, mainImage: e.target.value })} 
+                  placeholder="Paste image URL or upload ->" 
+                  className="h-12 bg-gray-50/50 rounded-xl border-gray-200 flex-1" 
+                />
+                <label className="cursor-pointer shrink-0">
                   <input
                     type="file"
                     accept="image/*"
@@ -4192,17 +4804,28 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" size="sm" asChild>
-                    <span><Upload className="h-4 w-4 mr-1" /> Upload</span>
+                  <Button type="button" variant="outline" className="h-12 px-6 rounded-xl border-gray-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" asChild>
+                    <span><Upload className="h-4 w-4 mr-2" /> Upload Image</span>
                   </Button>
                 </label>
               </div>
+              {newsForm.mainImage && (
+                <div className="mt-3 relative h-48 w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                  <img src={newsForm.mainImage} alt="Main preview" className="w-full h-full object-cover" />
+                </div>
+              )}
             </div>
-            <div className="space-y-2">
-              <Label>Thumbnail URLs (Max 3)</Label>
-              <div className="space-y-2">
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-bold text-gray-700">Gallery Thumbnails (Max 3)</Label>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">For Rotating Effect</span>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {(newsForm.thumbnails || (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : [])).map((thumb, idx) => (
-                  <div key={idx} className="flex gap-2 mb-2">
+                  <div key={idx} className="relative h-24 rounded-xl overflow-hidden border border-gray-200 group bg-gray-50 flex flex-col">
+                    <img src={thumb} alt={`Thumb ${idx}`} className="w-full h-full object-cover absolute inset-0 z-0 opacity-40 group-hover:opacity-10 transition-opacity" />
                     <Input
                       value={thumb}
                       onChange={(e) => {
@@ -4210,42 +4833,27 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         newThumbs[idx] = e.target.value
                         setNewsForm({ ...newsForm, thumbnails: newThumbs })
                       }}
-                      placeholder={`Thumbnail URL ${idx + 1}`}
-                      className="flex-1"
+                      placeholder={`URL ${idx + 1}`}
+                      className="absolute inset-x-2 bottom-2 h-8 text-xs bg-white/80 backdrop-blur-sm border-0 rounded-md z-10 font-medium"
                     />
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="destructive"
                       size="icon"
-                      className="text-red-500"
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-sm"
                       onClick={() => {
                         const newThumbs = (newsForm.thumbnails || []).filter((_, i) => i !== idx)
                         setNewsForm({ ...newsForm, thumbnails: newThumbs, thumbnailUrl: newThumbs[0] || '' })
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3" />
                     </Button>
                   </div>
                 ))}
+
                 {(newsForm.thumbnails?.length || 0) < 3 && (
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add new thumbnail URL"
-                      className="flex-1"
-                      value={newThumbInput || ''}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setNewThumbInput(val)
-                      }}
-                      onBlur={() => {
-                        if (newThumbInput) {
-                          const newThumbs = [...(newsForm.thumbnails || []), newThumbInput]
-                          setNewsForm({ ...newsForm, thumbnails: newThumbs, thumbnailUrl: newThumbs[0] })
-                          setNewThumbInput('')
-                        }
-                      }}
-                    />
-                    <label className="cursor-pointer">
+                  <div className="h-24 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-blue-50/50 hover:border-blue-200 transition-colors">
+                    <label className="cursor-pointer w-full h-full flex flex-col items-center justify-center group">
                       <input
                         type="file"
                         accept="image/*"
@@ -4262,44 +4870,69 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           }
                         }}
                       />
-                      <Button type="button" variant="outline" size="sm" asChild>
-                        <span><Upload className="h-4 w-4 mr-1" /> Add</span>
-                      </Button>
+                      <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                        <Plus className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <span className="text-xs font-bold text-gray-500">Add Image</span>
                     </label>
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Add up to 3 images for rotating thumbnail effect</p>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>YouTube Video URL (optional)</Label>
-              <Input value={newsForm.youtubeUrl} onChange={(e) => setNewsForm({ ...newsForm, youtubeUrl: e.target.value })} placeholder="https://www.youtube.com/watch?v=..." />
-            </div>
-            <div className="space-y-2">
-              <Label>Meta Description</Label>
-              <Input value={newsForm.metaDescription} onChange={(e) => setNewsForm({ ...newsForm, metaDescription: e.target.value })} placeholder="Brief description for SEO" />
-            </div>
-            <div className="space-y-2">
-              <Label>Tags (comma-separated)</Label>
-              <Input value={newsForm.tags} onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })} placeholder="politics, pune, breaking" />
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Checkbox id="gfeatured" checked={newsForm.featured} onCheckedChange={(c) => setNewsForm({ ...newsForm, featured: c })} />
-                <Label htmlFor="gfeatured">Featured Article</Label>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700">Meta Description (SEO)</Label>
+                <Input 
+                  value={newsForm.metaDescription} 
+                  onChange={(e) => setNewsForm({ ...newsForm, metaDescription: e.target.value })} 
+                  placeholder="Brief summary for search engines..." 
+                  className="h-11 bg-gray-50/50 rounded-xl border-gray-200" 
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="gshowHome" checked={newsForm.showOnHome} onCheckedChange={(c) => setNewsForm({ ...newsForm, showOnHome: c })} />
-                <Label htmlFor="gshowHome">Show on Home Page</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700">Tags</Label>
+                <Input 
+                  value={newsForm.tags} 
+                  onChange={(e) => setNewsForm({ ...newsForm, tags: e.target.value })} 
+                  placeholder="politics, breaking, updates (comma separated)" 
+                  className="h-11 bg-gray-50/50 rounded-xl border-gray-200" 
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+              <div className="flex-1 flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col">
+                  <Label htmlFor="gfeatured" className="font-bold text-gray-800 text-sm cursor-pointer">Featured Article</Label>
+                  <span className="text-[10px] text-gray-500 font-medium">Highlight in top sliders</span>
+                </div>
+                <Switch id="gfeatured" checked={newsForm.featured} onCheckedChange={(c) => setNewsForm({ ...newsForm, featured: c })} className="data-[state=checked]:bg-blue-600" />
+              </div>
+              <div className="flex-1 flex items-center justify-between p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="flex flex-col">
+                  <Label htmlFor="gshowHome" className="font-bold text-gray-800 text-sm cursor-pointer">Show on Home Page</Label>
+                  <span className="text-[10px] text-gray-500 font-medium">Display on main feed</span>
+                </div>
+                <Switch id="gshowHome" checked={newsForm.showOnHome} onCheckedChange={(c) => setNewsForm({ ...newsForm, showOnHome: c })} className="data-[state=checked]:bg-blue-600" />
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNewsForm(false)}>Cancel</Button>
-            <Button onClick={handleSaveNews} disabled={loading} className="bg-blue-600">{loading ? 'Saving...' : (editingNews ? 'Update' : 'Publish')}</Button>
+          
+          <DialogFooter className="p-6 pt-4 border-t border-gray-100 bg-gray-50/50 sticky bottom-0">
+            <Button variant="outline" onClick={() => setShowNewsForm(false)} className="h-12 px-6 rounded-xl border-gray-200 font-bold hover:bg-gray-100 text-gray-600">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveNews} 
+              disabled={loading} 
+              className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-md shadow-blue-600/20"
+            >
+              {loading ? 'Processing...' : (editingNews ? 'Update Article' : 'Publish Article')}
+            </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog >
+      </Dialog>
     </div >
   )
 }

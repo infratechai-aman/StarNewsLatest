@@ -4,6 +4,31 @@ import { getAuth, getDb } from './firebaseAdmin'
 // Re-exported here so all existing server-side imports keep working unchanged.
 export { ROLES } from './roles'
 
+// fix(DEFECT-10): Cache user document lookups to avoid redundant Firestore reads.
+// Every admin API call does requireSuperAdmin() which reads the user doc.
+// Cache for 5 minutes — admin role doesn't change mid-session.
+const userDocCache = new Map()
+const USER_DOC_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+async function getCachedUserDoc(db, uid) {
+  const cached = userDocCache.get(uid)
+  if (cached && (Date.now() - cached.ts < USER_DOC_CACHE_TTL)) {
+    return cached.data
+  }
+  const userDoc = await db.collection('users').doc(uid).get()
+  if (userDoc.exists) {
+    const data = userDoc.data()
+    // Evict old entries if cache grows
+    if (userDocCache.size > 100) {
+      const oldest = userDocCache.keys().next().value
+      userDocCache.delete(oldest)
+    }
+    userDocCache.set(uid, { data, ts: Date.now() })
+    return data
+  }
+  return null
+}
+
 // Get current user from request headers (token-based only, no cookie fallback)
 export async function getCurrentUser(request) {
   const auth = getAuth();
@@ -108,14 +133,12 @@ export async function requireSuperAdmin(request) {
     const decodedToken = await auth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    // Check Firestore for role
-    const userDoc = await db.collection('users').doc(uid).get();
+    // fix(DEFECT-10): Use cached user doc lookup
+    const userData = await getCachedUserDoc(db, uid);
 
-    if (!userDoc.exists) {
+    if (!userData) {
       return { error: 'User not found', status: 403 };
     }
-
-    const userData = userDoc.data();
 
     if (userData.role !== ROLES.SUPER_ADMIN) {
       return { error: 'Forbidden: Admin access required', status: 403 };
@@ -157,13 +180,12 @@ export async function requireReporterOrAdmin(request) {
     const decodedToken = await auth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    const userDoc = await db.collection('users').doc(uid).get();
+    // fix(DEFECT-10): Use cached user doc lookup
+    const userData = await getCachedUserDoc(db, uid);
 
-    if (!userDoc.exists) {
+    if (!userData) {
       return { error: 'User not found', status: 403 };
     }
-
-    const userData = userDoc.data();
 
     if (userData.role !== ROLES.SUPER_ADMIN && userData.role !== ROLES.REPORTER) {
       return { error: 'Forbidden: Reporter or Admin access required', status: 403 };

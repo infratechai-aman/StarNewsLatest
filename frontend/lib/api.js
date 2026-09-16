@@ -5,8 +5,47 @@ import { signInWithEmailAndPassword } from 'firebase/auth'
 
 export const API_BASE = '/api'
 
+// fix(DEFECT-05): Client-side in-memory cache for GET requests.
+// Prevents re-fetching data when user navigates back to a previously visited page.
+const CLIENT_CACHE = new Map()
+const CLIENT_CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+
+function getClientCache(key) {
+  const cached = CLIENT_CACHE.get(key)
+  if (cached && (Date.now() - cached.ts < CLIENT_CACHE_TTL)) {
+    return cached.data
+  }
+  if (cached) CLIENT_CACHE.delete(key)
+  return null
+}
+
+function setClientCache(key, data) {
+  // Evict old entries if cache grows too large (max 50)
+  if (CLIENT_CACHE.size > 50) {
+    const oldest = CLIENT_CACHE.keys().next().value
+    CLIENT_CACHE.delete(oldest)
+  }
+  CLIENT_CACHE.set(key, { data, ts: Date.now() })
+}
+
+// Invalidate cache entries matching a pattern (called after mutations)
+function invalidateClientCache(pattern) {
+  for (const key of CLIENT_CACHE.keys()) {
+    if (key.includes(pattern)) {
+      CLIENT_CACHE.delete(key)
+    }
+  }
+}
+
 export async function apiRequest(endpoint, options = {}) {
   const token = localStorage.getItem('token')
+  const method = (options.method || 'GET').toUpperCase()
+
+  // Client-side cache: only for GET requests
+  if (method === 'GET') {
+    const cached = getClientCache(endpoint)
+    if (cached) return cached
+  }
 
   const headers = {
     'Content-Type': 'application/json',
@@ -40,7 +79,29 @@ export async function apiRequest(endpoint, options = {}) {
     return {}
   }
 
-  return response.json()
+  const data = await response.json()
+
+  // Cache GET responses
+  if (method === 'GET') {
+    setClientCache(endpoint, data)
+  }
+
+  // Invalidate related cache on mutations
+  if (['POST', 'PUT', 'DELETE'].includes(method)) {
+    // Extract the base path (e.g., /admin/news/123 -> /news, /admin/news)
+    const baseParts = endpoint.split('/')
+    if (baseParts.length >= 2) {
+      const resourceType = baseParts[baseParts.length - 1] === 'approve' ? baseParts[baseParts.length - 2] : baseParts[baseParts.length - 1]
+      invalidateClientCache(resourceType)
+    }
+    // Also always invalidate common patterns
+    invalidateClientCache('/news')
+    invalidateClientCache('/pending')
+    invalidateClientCache('/businesses')
+    invalidateClientCache('/classifieds')
+  }
+
+  return data
 }
 
 export const auth = {

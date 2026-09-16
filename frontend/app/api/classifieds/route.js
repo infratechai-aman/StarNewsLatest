@@ -32,14 +32,9 @@ export async function GET(request) {
             query = query.where('category', '==', category);
         }
 
-        // Get total count (cached separately for performance)
-        const countCacheKey = `classifieds_count_c${category}`;
-        let totalCount = getCache(countCacheKey);
-        if (!totalCount) {
-            const countSnapshot = await query.get();
-            totalCount = countSnapshot.size;
-            setCache(countCacheKey, totalCount, 5 * 60 * 1000);
-        }
+        // fix(DEFECT-03): REMOVED expensive count query that fetched ALL documents.
+        // Old code did `await query.get()` just to count total — reading every document!
+        // Now using hasMore pattern: fetch limit+1 to check if more exist.
 
         // Cursor-based pagination: if we have an afterId, start after that document
         let paginatedQuery = query.orderBy('createdAt', 'desc');
@@ -60,19 +55,20 @@ export async function GET(request) {
             }
         }
 
-        const snapshot = await paginatedQuery.limit(limit).get();
-        const paginatedAds = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snapshot = await paginatedQuery.limit(limit + 1).get(); // Fetch 1 extra to check hasMore
+        const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const hasMore = allDocs.length > limit;
+        const paginatedAds = hasMore ? allDocs.slice(0, limit) : allDocs;
 
-        const totalPages = Math.ceil(totalCount / limit);
         const lastDoc = paginatedAds[paginatedAds.length - 1];
 
         const result = {
             classifieds: paginatedAds,
-            total: totalCount,
+            total: paginatedAds.length, // Actual count of returned items
             page,
             limit,
-            totalPages,
-            hasMore: page < totalPages,
+            hasMore,
             // Return cursor for next page
             nextCursor: lastDoc?.id || null
         };
@@ -80,7 +76,10 @@ export async function GET(request) {
         // Cache for 3 minutes
         setCache(cacheKey, result, 3 * 60 * 1000);
 
-        return NextResponse.json(result);
+        // fix(DEFECT-08): Add Cache-Control for browser/CDN caching
+        const response = NextResponse.json(result);
+        response.headers.set('Cache-Control', 'public, s-maxage=180, stale-while-revalidate=60');
+        return response;
     } catch (error) {
         console.error('Error fetching classifieds:', error.message);
         return NextResponse.json({ error: 'Failed to fetch classifieds' }, { status: 500 });

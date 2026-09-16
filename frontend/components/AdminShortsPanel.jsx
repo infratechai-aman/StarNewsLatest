@@ -231,99 +231,134 @@ export default function AdminShortsPanel({ toast }) {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Manage Shorts & Reels</h2>
-                <Button onClick={() => { resetForm(); setIsFormOpen(!isFormOpen); }}>
+        <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Manage Shorts & Reels</h2>
+                    <p className="text-sm text-gray-500 mt-1">Add and organize your short-form video content</p>
+                </div>
+                <Button 
+                    onClick={() => { resetForm(); setIsFormOpen(!isFormOpen); }}
+                    className={`rounded-xl shadow-sm h-11 px-5 font-semibold transition-all ${
+                        isFormOpen 
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200' 
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                >
                     {isFormOpen ? <><X className="w-4 h-4 mr-2" /> Cancel</> : <><Plus className="w-4 h-4 mr-2" /> Create Reel</>}
                 </Button>
             </div>
 
             {isFormOpen && (
-                <Card className="border-primary bg-primary/5">
-                    <CardHeader>
-                        <CardTitle>{editingShort ? 'Edit Reel / Short' : 'Create New Reel / Short'}</CardTitle>
+                <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white ring-1 ring-gray-100">
+                    <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-5">
+                        <CardTitle className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${editingShort ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'}`}>
+                                {editingShort ? <Pencil className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                            </div>
+                            {editingShort ? 'Edit Reel / Short' : 'Create New Reel / Short'}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="p-6 md:p-8 space-y-6">
 
-                        <div>
-                            <label className="text-sm font-medium">Media Type</label>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700">Media Type</label>
                             <Select value={mediaType} onValueChange={setMediaType} disabled={!!editingShort}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full h-12 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500">
                                     <SelectValue placeholder="Select type..." />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="video"><div className="flex items-center"><VideoIcon className="w-4 h-4 mr-2" /> Video Link (YouTube/MP4)</div></SelectItem>
-                                    <SelectItem value="image"><div className="flex items-center"><ImageIcon className="w-4 h-4 mr-2" /> Static Image Upload</div></SelectItem>
+                                <SelectContent className="rounded-xl border-gray-100 shadow-lg">
+                                    <SelectItem value="video" className="rounded-lg my-1"><div className="flex items-center"><VideoIcon className="w-4 h-4 mr-2 text-red-500" /> Video Link (YouTube/MP4)</div></SelectItem>
+                                    <SelectItem value="image" className="rounded-lg my-1"><div className="flex items-center"><ImageIcon className="w-4 h-4 mr-2 text-blue-500" /> Static Image Upload</div></SelectItem>
                                 </SelectContent>
                             </Select>
-                            {editingShort && <p className="text-xs text-muted-foreground mt-1">Media type cannot be changed when editing.</p>}
+                            {editingShort && <p className="text-xs text-amber-600 font-medium ml-1">Media type cannot be changed when editing.</p>}
                         </div>
 
                         {mediaType === 'video' ? (
-                            <div>
-                                <label className="text-sm font-medium">Video URL (YouTube Shorts or external MP4)</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-gray-700">Video URL</label>
                                 <Input
                                     placeholder="https://youtube.com/shorts/..."
                                     value={videoUrl}
                                     onChange={(e) => setVideoUrl(e.target.value)}
+                                    className="h-12 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                                 />
+                                <p className="text-xs text-gray-500 font-medium ml-1">Supports YouTube Shorts or external MP4 links</p>
                             </div>
                         ) : (
-                            <div>
-                                <label className="text-sm font-medium">
-                                    {editingShort ? 'Replace Image (Max 2MB) — leave empty to keep current' : 'Upload Image (Max 2MB)'}
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-gray-700">
+                                    {editingShort ? 'Replace Image' : 'Upload Image'}
                                 </label>
                                 {editingShort?.mediaUrl && !selectedFile && (
-                                    <div className="mb-2">
-                                        <img src={editingShort.mediaUrl} alt="Current" className="h-20 w-auto rounded object-cover border" />
-                                        <p className="text-xs text-muted-foreground mt-1">Current image — select a new file to replace it</p>
+                                    <div className="mb-3 p-3 bg-gray-50 rounded-xl border border-gray-100 inline-block">
+                                        <img src={editingShort.mediaUrl} alt="Current" className="h-24 w-auto rounded-lg object-cover shadow-sm" />
+                                        <p className="text-xs text-gray-500 font-medium mt-2">Current image</p>
                                     </div>
                                 )}
-                                <Input
-                                    type="file"
-                                    accept="image/*"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="cursor-pointer"
-                                />
-                                {selectedFile && <p className="text-xs text-green-600 mt-1">Ready: {selectedFile.name}</p>}
+                                <div className="flex items-center gap-3">
+                                    <label className="cursor-pointer">
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            className="hidden"
+                                        />
+                                        <span className="inline-flex items-center h-12 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm font-medium">
+                                            <ImageIcon className="h-4 w-4 mr-2" /> 
+                                            {selectedFile ? 'Change File' : 'Select Image'}
+                                        </span>
+                                    </label>
+                                    {selectedFile && <span className="text-sm text-green-600 font-semibold bg-green-50 px-3 py-1.5 rounded-lg border border-green-100 truncate max-w-xs">{selectedFile.name}</span>}
+                                </div>
+                                <p className="text-xs text-gray-500 font-medium ml-1">Maximum file size: 2MB</p>
                             </div>
                         )}
 
-                        <div>
-                            <label className="text-sm font-medium">Title (Optional)</label>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700">Title (Optional)</label>
                             <Input
                                 placeholder="Catchy title..."
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 maxLength={200}
+                                className="h-12 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Caption (Optional)</label>
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-700">Caption (Optional)</label>
                             <Textarea
                                 placeholder="Write a description or caption..."
                                 value={caption}
                                 onChange={(e) => setCaption(e.target.value)}
-                                className="h-24"
+                                className="h-28 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 resize-none p-4"
                                 maxLength={2000}
                             />
                         </div>
 
-                        <div className="flex items-center gap-2">
-                            <Switch checked={isActive} onCheckedChange={setIsActive} />
-                            <span className="text-sm font-medium">Active (Visible to users)</span>
+                        <div className="flex items-center gap-3 p-4 bg-gray-50/80 rounded-xl border border-gray-100 w-fit">
+                            <Switch checked={isActive} onCheckedChange={setIsActive} className="data-[state=checked]:bg-green-500" />
+                            <span className="text-sm font-semibold text-gray-700">Active (Visible to users)</span>
                         </div>
 
-                        <div className="flex gap-2">
-                            <Button onClick={handleSubmitShort} disabled={saving || uploadingImage}>
-                                {(saving || uploadingImage) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        <div className="flex gap-3 pt-4 border-t border-gray-100">
+                            <Button 
+                                onClick={handleSubmitShort} 
+                                disabled={saving || uploadingImage}
+                                className="bg-blue-600 hover:bg-blue-700 text-white h-12 px-8 rounded-xl shadow-sm text-base flex-1 sm:flex-none"
+                            >
+                                {(saving || uploadingImage) && <Loader2 className="w-5 h-5 mr-2 animate-spin" />}
                                 {uploadingImage ? 'Uploading Image...' : saving ? 'Saving...' : editingShort ? 'Save Changes' : 'Publish Reel'}
                             </Button>
                             {editingShort && (
-                                <Button variant="outline" onClick={resetForm}>
+                                <Button 
+                                    variant="outline" 
+                                    onClick={resetForm}
+                                    className="h-12 px-8 rounded-xl border-gray-200 hover:bg-gray-50 text-gray-700 font-medium flex-1 sm:flex-none"
+                                >
                                     Cancel Edit
                                 </Button>
                             )}
@@ -332,49 +367,82 @@ export default function AdminShortsPanel({ toast }) {
                 </Card>
             )}
 
-            <Card>
+            <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
                 <CardContent className="p-0">
                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Title</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
+                        <TableHeader className="bg-gray-50/80">
+                            <TableRow className="border-gray-100">
+                                <TableHead className="font-semibold text-gray-500 py-4 px-6 w-[100px]">Type</TableHead>
+                                <TableHead className="font-semibold text-gray-500 py-4">Title</TableHead>
+                                <TableHead className="font-semibold text-gray-500 py-4 w-[150px]">Status</TableHead>
+                                <TableHead className="font-semibold text-gray-500 py-4 px-6 text-right w-[150px]">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {shorts.map(short => (
-                                <TableRow key={short.id}>
-                                    <TableCell>
-                                        {short.mediaType === 'image'
-                                            ? <ImageIcon className="w-4 h-4 text-blue-500" />
-                                            : <VideoIcon className="w-4 h-4 text-red-500" />
-                                        }
+                                <TableRow key={short.id} className="border-gray-100 hover:bg-gray-50/50 transition-colors group">
+                                    <TableCell className="px-6 py-4">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
+                                            short.mediaType === 'image' ? 'bg-blue-50' : 'bg-red-50'
+                                        }`}>
+                                            {short.mediaType === 'image'
+                                                ? <ImageIcon className="w-5 h-5 text-blue-500" />
+                                                : <VideoIcon className="w-5 h-5 text-red-500" />
+                                            }
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="font-medium max-w-xs truncate">
-                                        {short.title || '(No Title)'}
+                                    <TableCell className="py-4">
+                                        <div className="font-bold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                                            {short.title || <span className="text-gray-400 font-medium italic">(No Title)</span>}
+                                        </div>
+                                        {short.caption && (
+                                            <div className="text-xs text-gray-500 mt-1 line-clamp-1 max-w-md">{short.caption}</div>
+                                        )}
                                     </TableCell>
-                                    <TableCell>
-                                        <Switch
-                                            checked={short.active}
-                                            onCheckedChange={() => handleToggle(short.id, short.active)}
-                                        />
+                                    <TableCell className="py-4">
+                                        <div className="flex items-center gap-2">
+                                            <Switch
+                                                checked={short.active}
+                                                onCheckedChange={() => handleToggle(short.id, short.active)}
+                                                className="data-[state=checked]:bg-green-500 shadow-sm"
+                                            />
+                                            <span className={`text-xs font-bold px-2 py-1 rounded-md ${short.active ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                {short.active ? 'ACTIVE' : 'HIDDEN'}
+                                            </span>
+                                        </div>
                                     </TableCell>
-                                    <TableCell className="text-right flex justify-end gap-1">
-                                        <Button variant="ghost" size="sm" onClick={() => openEditForm(short)} className="text-blue-500">
-                                            <Pencil className="w-4 h-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(short.id)} className="text-red-500">
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                    <TableCell className="text-right px-6 py-4">
+                                        <div className="flex justify-end gap-2">
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                onClick={() => openEditForm(short)} 
+                                                className="h-9 w-9 p-0 rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50 shadow-sm"
+                                                title="Edit Short"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </Button>
+                                            <Button 
+                                                variant="outline" 
+                                                size="sm" 
+                                                onClick={() => handleDelete(short.id)} 
+                                                className="h-9 w-9 p-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50 shadow-sm"
+                                                title="Delete Short"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
                             {shorts.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                                        No reels created yet.
+                                    <TableCell colSpan={4} className="text-center py-16 bg-gray-50/30">
+                                        <div className="w-16 h-16 bg-gray-100 text-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <VideoIcon className="h-8 w-8" />
+                                        </div>
+                                        <p className="font-medium text-gray-500 text-lg">No reels created yet.</p>
+                                        <p className="text-sm text-gray-400 mt-1">Click "Create Reel" to add your first short video or image.</p>
                                     </TableCell>
                                 </TableRow>
                             )}

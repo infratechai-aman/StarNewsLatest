@@ -77,19 +77,10 @@ export async function GET(request) {
             query = query.where('featured', '==', true)
         }
 
-        // fix(P1-DB-01): query.count() is a Firestore billing-tier API — fails on Spark (free) plan.
-        // Strategy: Fetch all matching doc IDs (lightweight — no field data), count them in memory.
-        // This works on ALL Firestore plans and avoids the billing-tier restriction.
-        let total = 0;
-        try {
-            const countSnap = await query.select().get(); // select() fetches IDs only, not full documents
-            total = countSnap.size;
-        } catch (countErr) {
-            // If even select() fails (e.g., no index), fall back to 0 — pagination won't be accurate
-            // but the page will still load instead of returning 500
-            console.warn('Count query failed, pagination total will be inaccurate:', countErr.message);
-            total = 0;
-        }
+        // fix(DEFECT-02): REMOVED expensive count query that fetched ALL document IDs.
+        // Old code: `const countSnap = await query.select().get(); total = countSnap.size;`
+        // This was fetching 10,000+ document IDs just to get a total count.
+        // Now we use snapshot.size to determine hasMore instead.
 
         // Apply Sorting & Pagination
         // TRY-CATCH for Fallback if Index is missing
@@ -97,7 +88,7 @@ export async function GET(request) {
         try {
             // Primary Strategy: Database Sort (Requires Index)
             let sortedQuery = query.orderBy('publishedAt', 'desc')
-                .limit(limit)
+                .limit(limit + 1)  // Fetch 1 extra to check hasMore
                 .offset((page - 1) * limit);
 
             snapshot = await sortedQuery.get();
@@ -108,16 +99,20 @@ export async function GET(request) {
             if (err.message.includes('index') || err.message.includes('FAILED_PRECONDITION')) {
                 console.warn('⚠️ FIRESTORE INDEX MISSING: Falling back to in-memory sorting. Please create the index for better performance.');
 
-                snapshot = await query.limit(limit).get();
+                snapshot = await query.limit(limit + 1).get();
 
                 let tempDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 tempDocs.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+                
+                const fallbackHasMore = tempDocs.length > limit;
+                const fallbackArticles = fallbackHasMore ? tempDocs.slice(0, limit) : tempDocs;
 
                 const responseData = {
-                    articles: tempDocs,
-                    total: total || tempDocs.length,
+                    articles: fallbackArticles,
+                    total: fallbackArticles.length,
                     page,
-                    limit
+                    limit,
+                    hasMore: fallbackHasMore
                 };
                 setCache(cacheKey, responseData, 5 * 60 * 1000);
                 return NextResponse.json(responseData);
@@ -127,16 +122,21 @@ export async function GET(request) {
             }
         }
 
-        const articles = snapshot.docs.map(doc => ({
+        const allDocs = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }))
 
+        // fix(DEFECT-02): Check if there are more results by seeing if we got limit+1 docs
+        const hasMore = allDocs.length > limit
+        const articles = hasMore ? allDocs.slice(0, limit) : allDocs
+
         const responseData = {
             articles,
-            total,
+            total: hasMore ? (page * limit) + 1 : ((page - 1) * limit) + articles.length, // Estimated total
             page,
-            limit
+            limit,
+            hasMore
         };
 
         setCache(cacheKey, responseData, 5 * 60 * 1000);

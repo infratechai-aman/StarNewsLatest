@@ -102,12 +102,12 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
 
     return (
         <div className="flex items-center justify-center min-h-[80vh]">
-            <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
-                    <div className="flex items-center gap-2 text-orange-600">
-                        <Shield className="h-6 w-6" />
-                        <CardTitle className="text-2xl">Password Change Required</CardTitle>
+            <Card className="w-full max-w-md shadow-xl border-0 bg-gradient-to-b from-white to-orange-50/30 rounded-2xl">
+                <CardHeader className="space-y-1 text-center pb-6">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mb-2 shadow-sm">
+                        <Shield className="h-8 w-8 text-white" />
                     </div>
+                    <CardTitle className="text-2xl font-bold">Password Change Required</CardTitle>
                     <CardDescription>
                         For security purposes, you must change your password before continuing.
                         This is your first login.
@@ -123,14 +123,14 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
                                     id="oldPassword"
                                     type="password"
                                     placeholder="Enter your current password"
-                                    className={`pl-10 ${errors.oldPassword ? 'border-red-500' : ''}`}
+                                    className={`pl-10 h-11 bg-white rounded-xl border-gray-200 focus:ring-orange-100 ${errors.oldPassword ? 'border-red-500' : ''}`}
                                     value={formData.oldPassword}
                                     onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
                                     required
                                 />
                             </div>
                             {errors.oldPassword && (
-                                <p className="text-sm text-red-500 flex items-center gap-1">
+                                <p className="text-sm text-red-500 flex items-center gap-1 font-medium">
                                     <AlertCircle className="h-3 w-3" />
                                     {errors.oldPassword}
                                 </p>
@@ -145,14 +145,14 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
                                     id="newPassword"
                                     type="password"
                                     placeholder="Enter your new password"
-                                    className={`pl-10 ${errors.newPassword ? 'border-red-500' : ''}`}
+                                    className={`pl-10 h-11 bg-white rounded-xl border-gray-200 focus:ring-orange-100 ${errors.newPassword ? 'border-red-500' : ''}`}
                                     value={formData.newPassword}
                                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                                     required
                                 />
                             </div>
                             {errors.newPassword && (
-                                <p className="text-sm text-red-500 flex items-center gap-1">
+                                <p className="text-sm text-red-500 flex items-center gap-1 font-medium">
                                     <AlertCircle className="h-3 w-3" />
                                     {errors.newPassword}
                                 </p>
@@ -160,27 +160,27 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
 
                             {/* Password strength indicators */}
                             {formData.newPassword && (
-                                <div className="mt-2 space-y-1 text-xs">
-                                    <p className="font-medium text-muted-foreground">Password requirements (at least 3):</p>
-                                    <div className="grid grid-cols-2 gap-1">
-                                        <div className={`flex items-center gap-1 ${passwordChecks.length ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                            {passwordChecks.length ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                <div className="mt-3 p-3 bg-white rounded-xl border border-gray-100 space-y-2 text-xs shadow-sm">
+                                    <p className="font-bold text-gray-700">Password requirements (at least 3):</p>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className={`flex items-center gap-1.5 font-medium ${passwordChecks.length ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {passwordChecks.length ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
                                             8+ characters
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordChecks.uppercase ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                            {passwordChecks.uppercase ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                        <div className={`flex items-center gap-1.5 font-medium ${passwordChecks.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {passwordChecks.uppercase ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
                                             Uppercase letter
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordChecks.lowercase ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                            {passwordChecks.lowercase ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                        <div className={`flex items-center gap-1.5 font-medium ${passwordChecks.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {passwordChecks.lowercase ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
                                             Lowercase letter
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordChecks.number ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                            {passwordChecks.number ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                        <div className={`flex items-center gap-1.5 font-medium ${passwordChecks.number ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {passwordChecks.number ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
                                             Number
                                         </div>
-                                        <div className={`flex items-center gap-1 ${passwordChecks.special ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                            {passwordChecks.special ? <CheckCircle className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                        <div className={`flex items-center gap-1.5 font-medium ${passwordChecks.special ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {passwordChecks.special ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
                                             Special character
                                         </div>
                                     </div>
@@ -196,21 +196,21 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
                                     id="confirmPassword"
                                     type="password"
                                     placeholder="Confirm your new password"
-                                    className={`pl-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                                    className={`pl-10 h-11 bg-white rounded-xl border-gray-200 focus:ring-orange-100 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                                     value={formData.confirmPassword}
                                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                                     required
                                 />
                             </div>
                             {errors.confirmPassword && (
-                                <p className="text-sm text-red-500 flex items-center gap-1">
+                                <p className="text-sm text-red-500 flex items-center gap-1 font-medium">
                                     <AlertCircle className="h-3 w-3" />
                                     {errors.confirmPassword}
                                 </p>
                             )}
                             {formData.confirmPassword && formData.newPassword === formData.confirmPassword && (
-                                <p className="text-sm text-green-600 flex items-center gap-1">
-                                    <CheckCircle className="h-3 w-3" />
+                                <p className="text-sm text-green-600 flex items-center gap-1 font-bold">
+                                    <CheckCircle className="h-4 w-4" />
                                     Passwords match
                                 </p>
                             )}
@@ -218,15 +218,15 @@ const ForcePasswordChange = ({ user, setUser, setCurrentView, toast }) => {
 
                         <Button
                             type="submit"
-                            className="w-full"
+                            className="w-full h-11 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold shadow-md shadow-orange-500/20"
                             disabled={loading || !isPasswordStrong}
                         >
                             {loading ? 'Changing Password...' : 'Change Password & Continue'}
                         </Button>
                     </form>
 
-                    <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                        <p className="text-sm text-orange-800">
+                    <div className="mt-6 p-4 bg-orange-50/80 border border-orange-100 rounded-xl">
+                        <p className="text-sm text-orange-800 font-medium">
                             <strong>Security Notice:</strong> You are required to change your password because this is your first login.
                             Choose a strong password that you haven't used before.
                         </p>

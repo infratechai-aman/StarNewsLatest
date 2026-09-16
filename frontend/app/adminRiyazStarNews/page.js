@@ -79,28 +79,8 @@ export default function AdminLoginPage() {
     // Show Admin Dashboard if authenticated
     if (isAuthenticated && user) {
         return (
-            <div className="min-h-screen bg-gray-50">
-                {/* Admin Header */}
-                <div className="bg-gradient-to-r from-red-700 via-red-600 to-red-700 text-white py-4 px-6 shadow-lg">
-                    <div className="max-w-7xl mx-auto flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <img src="/starnews-logo.png" alt="Star News Logo" className="h-12 w-auto object-contain pointer-events-none" />
-                        </div>
-                        <Button
-                            variant="outline"
-                            className="border-white text-white hover:bg-white hover:text-red-600"
-                            onClick={handleLogout}
-                        >
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Logout
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Admin Dashboard Content */}
-                <div className="max-w-7xl mx-auto p-6">
-                    <AdminDashboard user={user} toast={toast} />
-                </div>
+            <div className="h-screen w-full bg-gray-50 overflow-hidden">
+                <AdminDashboard user={user} toast={toast} onLogout={handleLogout} />
             </div>
         )
     }

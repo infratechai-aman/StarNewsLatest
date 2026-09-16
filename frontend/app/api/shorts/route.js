@@ -18,10 +18,10 @@ export async function GET(request) {
         const cached = getCache(cacheKey);
         if (cached) return NextResponse.json(cached);
 
-        // Avoid composite index requirement by filtering `active` in memory
+        // fix(DEFECT-09): Reduced from limit*3 to limit+10 — most shorts are active, no need for 3x buffer
         const snapshot = await db.collection('news_shorts')
             .orderBy('createdAt', 'desc')
-            .limit(limit * 3) // fetch extra to account for inactive ones
+            .limit(limit + 10) // Small buffer for inactive ones
             .get();
 
         const allShorts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -29,7 +29,10 @@ export async function GET(request) {
 
         setCache(cacheKey, { shorts }, 2 * 60 * 1000); // Cache for 2 mins
 
-        return NextResponse.json({ shorts });
+        // fix(DEFECT-08): Add Cache-Control for browser/CDN caching
+        const response = NextResponse.json({ shorts });
+        response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=60');
+        return response;
     } catch (error) {
         console.error('Error fetching shorts:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
