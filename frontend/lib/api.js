@@ -38,7 +38,21 @@ function invalidateClientCache(pattern) {
 }
 
 export async function apiRequest(endpoint, options = {}) {
-  const token = localStorage.getItem('token')
+  let token = localStorage.getItem('token')
+  
+  // Refresh token automatically if Firebase client auth is initialized
+  if (firebaseAuth && firebaseAuth.currentUser) {
+    try {
+      const freshToken = await firebaseAuth.currentUser.getIdToken(false)
+      if (freshToken) {
+        token = freshToken
+        localStorage.setItem('token', token)
+      }
+    } catch (e) {
+      console.warn("Failed to refresh Firebase token:", e)
+    }
+  }
+
   const method = (options.method || 'GET').toUpperCase()
 
   // Client-side cache: only for GET requests

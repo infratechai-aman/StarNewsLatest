@@ -65,7 +65,7 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' https://www.youtube.com https://*.youtube.com blob:",
-              "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://vercel.live https://*.vercel.live https://*.firebaseapp.com",
+              "frame-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://vercel.live https://*.vercel.live https://*.firebaseapp.com",
               "connect-src 'self' data: blob: https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://*.firebaseapp.com wss://*.firebaseio.com https://translate.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",

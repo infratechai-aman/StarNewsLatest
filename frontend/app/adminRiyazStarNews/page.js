@@ -11,6 +11,9 @@ import { auth } from '@/lib/api'
 import AdminDashboard from '@/components/AdminDashboard'
 import { useToast } from '@/hooks/use-toast'
 
+import { auth as firebaseClientAuth } from '@/lib/firebase'
+import { onIdTokenChanged } from 'firebase/auth'
+
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -20,6 +23,22 @@ export default function AdminLoginPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false)
     const [user, setUser] = useState(null)
     const { toast } = useToast()
+
+    // Setup Firebase token refresh listener
+    useEffect(() => {
+        if (!firebaseClientAuth) return
+        const unsubscribe = onIdTokenChanged(firebaseClientAuth, async (firebaseUser) => {
+            if (firebaseUser) {
+                try {
+                    const freshToken = await firebaseUser.getIdToken()
+                    localStorage.setItem('token', freshToken)
+                } catch (err) {
+                    console.error('Admin token refresh failed:', err)
+                }
+            }
+        })
+        return () => unsubscribe()
+    }, [])
 
     useEffect(() => {
         // Check if already logged in
