@@ -63,6 +63,7 @@ export async function PUT(request, { params }) {
 
         await docRef.update(updateData);
         purgeCache('news_');
+        purgeCache('admin_news_list_'); // Invalidate admin list cache
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -84,6 +85,7 @@ export async function DELETE(request, { params }) {
         const id = params.id;
         await db.collection('news_articles').doc(id).delete();
         purgeCache('news_');
+        purgeCache('admin_news_list_'); // Invalidate admin list cache
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -45,8 +45,10 @@ const BreakingNewsTicker = () => {
     loadTicker()
     setTickerKey(prev => prev + 1)
 
-    // Refresh every 30 seconds for live updates
-    const interval = setInterval(loadTicker, 30000)
+    // Refresh every 5 minutes — breaking news changes rarely, and the API
+    // already has a 1-minute server-side cache. 30-second polling was generating
+    // ~10,000+ unnecessary Vercel invocations/hour at real traffic.
+    const interval = setInterval(loadTicker, 300000)
     return () => clearInterval(interval)
   }, [loadTicker])
 

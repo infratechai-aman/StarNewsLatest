@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { getCache, setCache, purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,14 @@ export async function GET(request) {
         if (authResult.error) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
+
+        // opt(PERF-03): Cache admin classifieds list for 2 minutes.
+        // Each tab visit was re-scanning the entire classified_ads collection.
+        // Cache is purged on any write (POST/PUT/DELETE).
+        const CACHE_KEY = 'admin_classifieds_list';
+        const cached = getCache(CACHE_KEY);
+        if (cached) return NextResponse.json(cached);
+
         // In admin, we want to see everything
         const snapshot = await db.collection('classified_ads')
             .orderBy('createdAt', 'desc')
@@ -20,12 +29,14 @@ export async function GET(request) {
 
         const ads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+        setCache(CACHE_KEY, ads, 2 * 60 * 1000); // 2-minute TTL
         return NextResponse.json(ads);
     } catch (error) {
         console.error('Error fetching admin classifieds:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
 
 // POST: Create Classified (Admin)
 export async function POST(request) {
@@ -59,6 +70,7 @@ export async function POST(request) {
 
         const docRef = await db.collection('classified_ads').add(newAd);
         await docRef.update({ id: docRef.id });
+        purgeCache('admin_classifieds_list'); // Invalidate admin list cache
 
         return NextResponse.json({ id: docRef.id, ...newAd });
     } catch (error) {

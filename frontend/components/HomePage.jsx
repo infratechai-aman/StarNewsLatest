@@ -592,8 +592,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       setTrendingSettings(getTrendingSettings())
     }
     loadSettings()
-    // Refresh premium ad every 5 minutes for live updates to save database reads
-    const interval = setInterval(loadSettings, 300000)
+    // opt(PERF-04): Refresh ad settings every 15 minutes (was 5 min).
+    // Ad settings only change when admin manually updates them. Both /api/ads/premium
+    // and /api/ads/sidebar already have 1-min server caches, so 15-min client refresh
+    // is plenty. Saves ~1,200 API invocations/hour at real traffic.
+    const interval = setInterval(loadSettings, 900000)
     return () => clearInterval(interval)
   }, [])
 

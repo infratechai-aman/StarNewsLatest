@@ -2,7 +2,7 @@ import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { translateText } from '@/lib/translation';
-import { purgeCache } from '@/lib/cache';
+import { purgeCache, getCache, setCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +20,13 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '200')));
 
+        // opt(PERF-03): Cache admin news list for 2 minutes.
+        // Admin frequently switches between tabs — without cache each visit re-reads
+        // up to 200 full documents. Cache is purged on any write mutation via purgeCache('admin_news_').
+        const cacheKey = `admin_news_list_${limit}`;
+        const cached = getCache(cacheKey);
+        if (cached) return NextResponse.json(cached);
+
         const snapshot = await db.collection('news_articles')
             .orderBy('createdAt', 'desc')
             .limit(limit)
@@ -30,12 +37,14 @@ export async function GET(request) {
             id: doc.id
         }));
 
+        setCache(cacheKey, news, 2 * 60 * 1000); // 2-minute TTL
         return NextResponse.json(news);
     } catch (error) {
         console.error('Error fetching admin news:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
 
 // POST: Create News (Admin - Auto Approved)
 export async function POST(request) {
@@ -93,6 +102,7 @@ export async function POST(request) {
 
         const docRef = await db.collection('news_articles').add(newArticle);
         purgeCache('news_');
+        purgeCache('admin_news_list_'); // Invalidate admin list cache
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {

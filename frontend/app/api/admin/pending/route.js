@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { getCache, setCache, invalidateCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,14 @@ export async function GET(request) {
     if (authResult.error) {
         return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+
+    // opt(PERF-02): Cache pending data for 60 seconds.
+    // This runs 4 parallel Firestore queries on every admin mount and tab visit.
+    // 60s is safe — all approval actions call loadPendingData() which triggers a
+    // fresh fetch, so approved items will always appear immediately after action.
+    const CACHE_KEY = 'admin_pending';
+    const cached = getCache(CACHE_KEY);
+    if (cached) return NextResponse.json(cached);
 
     const db = getDb();
 
@@ -24,13 +33,16 @@ export async function GET(request) {
 
         const mapDocs = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.id }));
 
-        return NextResponse.json({
+        const result = {
             news: mapDocs(pendingNews),
             businesses: mapDocs(pendingBusinesses),
             classifieds: mapDocs(pendingClassifieds),
             ads: [],
             users: mapDocs(pendingUsers)
-        });
+        };
+
+        setCache(CACHE_KEY, result, 60 * 1000); // 60s TTL
+        return NextResponse.json(result);
     } catch (error) {
         console.error('Error fetching pending items:', error.message);
         return NextResponse.json({ error: 'Failed to fetch pending items' }, { status: 500 });

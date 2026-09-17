@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 
 // PUT: Update Business
@@ -19,6 +20,7 @@ export async function PUT(request, { params }) {
         delete updateData.createdAt;
 
         await db.collection('businesses').doc(id).update(updateData);
+        purgeCache('admin_businesses_list'); // Invalidate admin list cache
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -37,6 +39,7 @@ export async function DELETE(request, { params }) {
         }
         const id = params.id;
         await db.collection('businesses').doc(id).delete();
+        purgeCache('admin_businesses_list'); // Invalidate admin list cache
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting business:', error);

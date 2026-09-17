@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // Whitelist of allowed fields for classified updates
 const ALLOWED_CLASSIFIED_FIELDS = [
@@ -39,6 +40,7 @@ export async function PUT(request, { params }) {
         updateData.updatedAt = new Date().toISOString();
 
         await db.collection('classified_ads').doc(id).update(updateData);
+        purgeCache('admin_classifieds_list'); // Invalidate admin list cache
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -59,6 +61,7 @@ export async function DELETE(request, { params }) {
     try {
         const id = params.id;
         await db.collection('classified_ads').doc(id).delete();
+        purgeCache('admin_classifieds_list'); // Invalidate admin list cache
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error deleting classified:', error.message);
