@@ -25,7 +25,7 @@ import {
   Building2, Tag, Users, FileText, Settings, Eye, Check, X,
   Edit, Trash2, Plus, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
