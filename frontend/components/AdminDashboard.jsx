@@ -25,7 +25,8 @@ import {
   Building2, Tag, Users, FileText, Settings, Eye, EyeOff, Check, X,
   Edit, Trash2, Plus, PlusCircle, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, MoreHorizontal
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, MoreHorizontal,
+  LogOut
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
@@ -60,6 +61,17 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
+
+  const handleLogoutClick = () => {
+    if (onLogout) {
+      onLogout()
+    } else {
+      localStorage.removeItem('token')
+      localStorage.removeItem('reporterUser')
+      window.location.href = '/'
+    }
+  }
 
   // Data states
   const [pendingData, setPendingData] = useState({
@@ -1204,6 +1216,94 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     pendingData.ads.length + pendingData.classifieds.length +
     pendingData.users.length
 
+  const moreTabIds = ['businesses', 'classifieds', 'content', 'breaking', 'reporters', 'enewspaper', 'live-tv', 'navigation', 'settings']
+  const isMoreActive = showMoreMenu || moreTabIds.includes(activeTab)
+  const morePendingCount = pendingData.businesses.length + pendingData.classifieds.length + pendingData.ads.length + pendingData.users.length
+
+  const moreMenuItems = [
+    {
+      id: 'businesses',
+      label: 'Business Directory',
+      desc: 'Local businesses & stores',
+      icon: Building2,
+      iconBg: 'bg-emerald-500/15 text-emerald-400',
+      iconColor: 'text-emerald-400',
+      badge: pendingData.businesses.length
+    },
+    {
+      id: 'classifieds',
+      label: 'Classifieds',
+      desc: 'Jobs, property & vehicles',
+      icon: Tag,
+      iconBg: 'bg-amber-500/15 text-amber-400',
+      iconColor: 'text-amber-400',
+      badge: pendingData.classifieds.length
+    },
+    {
+      id: 'content',
+      label: 'Advertisements',
+      desc: 'Sidebar, banners & ads',
+      icon: Megaphone,
+      iconBg: 'bg-purple-500/15 text-purple-400',
+      iconColor: 'text-purple-400',
+      badge: pendingData.ads.length
+    },
+    {
+      id: 'breaking',
+      label: 'Breaking News',
+      desc: 'Flash ticker & alerts',
+      icon: AlertCircle,
+      iconBg: 'bg-rose-500/15 text-rose-400',
+      iconColor: 'text-rose-400',
+      badge: 0
+    },
+    {
+      id: 'reporters',
+      label: 'Reporters',
+      desc: 'Applications & team roster',
+      icon: Users,
+      iconBg: 'bg-blue-500/15 text-blue-400',
+      iconColor: 'text-blue-400',
+      badge: pendingData.users.length
+    },
+    {
+      id: 'enewspaper',
+      label: 'E-Paper',
+      desc: 'Digital daily editions',
+      icon: FileText,
+      iconBg: 'bg-teal-500/15 text-teal-400',
+      iconColor: 'text-teal-400',
+      badge: 0
+    },
+    {
+      id: 'live-tv',
+      label: 'Live TV',
+      desc: 'Broadcast streams',
+      icon: Monitor,
+      iconBg: 'bg-indigo-500/15 text-indigo-400',
+      iconColor: 'text-indigo-400',
+      badge: 0
+    },
+    {
+      id: 'navigation',
+      label: 'Navigation Bar',
+      desc: 'Header links & menu',
+      icon: Navigation,
+      iconBg: 'bg-cyan-500/15 text-cyan-400',
+      iconColor: 'text-cyan-400',
+      badge: 0
+    },
+    {
+      id: 'settings',
+      label: 'Settings',
+      desc: 'Admin password & info',
+      icon: Settings,
+      iconBg: 'bg-slate-500/15 text-slate-300',
+      iconColor: 'text-slate-300',
+      badge: 0
+    }
+  ]
+
   return (
     <div className="flex h-screen w-full bg-[#F5F6FA] overflow-hidden">
       {/* ─── DARK SIDEBAR (desktop only) ─── */}
@@ -1266,8 +1366,19 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
           <div className="px-3 mt-6 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">System</div>
 
+          <button onClick={() => setActiveTab('navigation')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'navigation' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <Navigation className="w-4 h-4" /> Navigation
+          </button>
+
           <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'settings' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
             <Settings className="w-4 h-4" /> Settings
+          </button>
+
+          <button
+            onClick={handleLogoutClick}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 group"
+          >
+            <LogOut className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Logout
           </button>
 
         </div>
@@ -1292,12 +1403,22 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           <div className="flex items-center gap-2">
             <img src="/starnews-logo.png" alt="StarNews" className="h-8 w-auto object-contain" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex items-center gap-2">
+            <div className="relative mr-1">
               <Bell className="w-5 h-5 text-gray-600" />
               {totalPending > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{totalPending}</span>}
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">A</div>
+            <Button
+              onClick={handleLogoutClick}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 hover:bg-red-50 h-8 px-2.5 rounded-lg text-xs font-medium flex items-center gap-1.5 ml-1"
+              title="Logout"
+            >
+              <LogOut className="w-3.5 h-3.5 text-red-600" />
+              <span>Logout</span>
+            </Button>
           </div>
         </header>
 
@@ -1335,6 +1456,17 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 <p className="text-[11px] text-gray-500 font-medium">Super Admin</p>
               </div>
             </div>
+
+            <Button
+              onClick={handleLogoutClick}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-xl h-9 px-3.5 font-medium transition-all flex items-center gap-2 shadow-sm ml-2"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4 text-red-500" />
+              <span>Logout</span>
+            </Button>
           </div>
         </header>
 
@@ -4498,6 +4630,15 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     </span>
                     <span className="font-semibold text-gray-700">Today</span>
                   </div>
+                  <div className="pt-2">
+                    <Button
+                      onClick={handleLogoutClick}
+                      variant="outline"
+                      className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl h-11 font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" /> Sign Out of Admin Panel
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -4982,7 +5123,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </button>
 
           {/* Centre FAB — Add */}
-          <button onClick={() => setActiveTab('add-news')} className="flex flex-col items-center gap-1 min-w-[52px] -mt-5">
+          <button 
+            onClick={() => { resetNewsForm(); setShowNewsForm(true); }} 
+            className="flex flex-col items-center gap-1 min-w-[52px] -mt-5"
+          >
             <div
               className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shadow-2xl"
               style={{
@@ -5004,17 +5148,119 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             {activeTab === 'shorts' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
           </button>
 
-          {/* More — using dots icon, NOT settings */}
-          <button onClick={() => setActiveTab('settings')} className="flex flex-col items-center gap-1 min-w-[52px] relative">
-            <div className={`p-1.5 rounded-2xl transition-all duration-200 ${activeTab === 'settings' ? 'bg-red-600/20' : ''}`}>
-              <MoreHorizontal className={`w-[22px] h-[22px] transition-colors ${activeTab === 'settings' ? 'text-red-500' : 'text-gray-400'}`} />
+          {/* More — opens mini bottom sheet */}
+          <button 
+            onClick={() => setShowMoreMenu(prev => !prev)} 
+            className="flex flex-col items-center gap-1 min-w-[52px] relative"
+          >
+            <div className={`p-1.5 rounded-2xl transition-all duration-200 relative ${isMoreActive ? 'bg-red-600/20' : ''}`}>
+              <MoreHorizontal className={`w-[22px] h-[22px] transition-colors ${isMoreActive ? 'text-red-500' : 'text-gray-400'}`} />
+              {morePendingCount > 0 && !showMoreMenu && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-600 text-white text-[8px] font-extrabold w-3.5 h-3.5 rounded-full flex items-center justify-center shadow">
+                  {morePendingCount > 9 ? '9+' : morePendingCount}
+                </span>
+              )}
             </div>
-            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${activeTab === 'settings' ? 'text-red-400' : 'text-gray-500'}`}>More</span>
-            {activeTab === 'settings' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
+            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${isMoreActive ? 'text-red-400' : 'text-gray-500'}`}>More</span>
+            {isMoreActive && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
           </button>
 
         </div>
       </nav>
+
+      {/* ─── MOBILE "MORE" BOTTOM SHEET / MINI WINDOW ─── */}
+      {showMoreMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="lg:hidden fixed inset-0 bg-black/65 backdrop-blur-sm z-50 transition-opacity animate-in fade-in duration-200"
+            onClick={() => setShowMoreMenu(false)}
+          />
+
+          {/* Mini Window (Bottom Sheet) */}
+          <div
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] border-t border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+            style={{
+              background: 'rgba(15, 23, 42, 0.97)',
+              backdropFilter: 'saturate(180%) blur(24px)',
+              WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+              maxHeight: '85vh',
+              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.65)'
+            }}
+          >
+            {/* Pill & Header */}
+            <div className="pt-3 pb-3 px-5 border-b border-white/10 bg-slate-900/40">
+              <div className="w-12 h-1.5 bg-gray-500/60 rounded-full mx-auto mb-3" />
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">Admin Sections</h3>
+                  <p className="text-xs text-gray-400">Select a section to manage</p>
+                </div>
+                <button
+                  onClick={() => setShowMoreMenu(false)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-gray-300 transition-all"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Grid of Sections */}
+            <div className="p-4 overflow-y-auto space-y-2 max-h-[calc(85vh-150px)] custom-scrollbar">
+              <div className="grid grid-cols-2 gap-2.5">
+                {moreMenuItems.map((item) => {
+                  const Icon = item.icon
+                  const isSelected = activeTab === item.id
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id)
+                        setShowMoreMenu(false)
+                      }}
+                      className={`flex flex-col items-start p-3 rounded-2xl border transition-all text-left relative group ${
+                        isSelected
+                          ? 'bg-red-600/20 border-red-500/60 text-white shadow-lg shadow-red-950/40'
+                          : 'bg-white/5 hover:bg-white/10 active:scale-[0.98] border-white/5 text-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-2">
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${item.iconBg}`}>
+                          <Icon className={`w-4 h-4 ${item.iconColor}`} />
+                        </div>
+                        {item.badge > 0 && (
+                          <span className="bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold leading-tight line-clamp-1">{item.label}</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{item.desc}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Sign Out Footer */}
+            <div
+              className="p-4 pt-3 border-t border-white/10 bg-[#0B101E]"
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 8px)' }}
+            >
+              <button
+                onClick={() => {
+                  setShowMoreMenu(false)
+                  handleLogoutClick()
+                }}
+                className="w-full bg-red-500/10 hover:bg-red-500/20 active:scale-[0.98] text-red-400 border border-red-500/20 rounded-xl h-11 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out of Admin Panel
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div >
   )
 }
