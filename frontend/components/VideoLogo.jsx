@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 
-export default function VideoLogo({ className = "", style = {}, videoSrc = "/NEWLOGO.mp4" }) {
+export default function VideoLogo({ className = "", style = {}, videoSrc = "/LatestLogo.mp4" }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
