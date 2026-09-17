@@ -1,8 +1,9 @@
 import { getAuth, getDb } from './firebaseAdmin'
+import { ROLES } from './roles'
 
 // fix(P3-FE-02): ROLES moved to lib/roles.js (shared, client-safe).
 // Re-exported here so all existing server-side imports keep working unchanged.
-export { ROLES } from './roles'
+export { ROLES }
 
 // fix(DEFECT-10): Cache user document lookups to avoid redundant Firestore reads.
 // Every admin API call does requireSuperAdmin() which reads the user doc.

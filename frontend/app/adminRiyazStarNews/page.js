@@ -35,11 +35,6 @@ export default function AdminLoginPage() {
                 } catch (err) {
                     console.error('Admin token refresh failed:', err)
                 }
-            } else {
-                // If Firebase user is null, the session is dead. Force logout.
-                localStorage.removeItem('token')
-                setUser(null)
-                setIsAuthenticated(false)
             }
         })
         return () => unsubscribe()
