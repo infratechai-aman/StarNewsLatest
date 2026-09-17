@@ -12,27 +12,19 @@ export async function GET() {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }
     try {
-        if (sidebarAdCache.data && (Date.now() - sidebarAdCache.lastFetch < CACHE_TTL)) {
-            return NextResponse.json(sidebarAdCache.data, {
-                headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
-            });
-        }
-
         const doc = await db.collection('site_settings').doc('sidebar_ad').get()
         let responseData = { enabled: false, items: [] };
 
         if (doc.exists) {
             const data = doc.data()
             responseData = {
-                enabled: data.enabled,
+                enabled: data.enabled === false ? false : Boolean(data.enabled),
                 items: data.items || []
             };
         }
 
-        sidebarAdCache = { data: responseData, lastFetch: Date.now() };
-
         return NextResponse.json(responseData, {
-            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
     } catch (error) {
         console.error('Ads Sidebar GET Error:', error)
@@ -49,14 +41,19 @@ export async function POST(request) {
         }
 
         const body = await request.json()
-        const { enabled, items } = body
-
-        await db.collection('site_settings').doc('sidebar_ad').set({
+        const updateData = {
             type: 'sidebar_ad',
-            items: items || [],
-            enabled: enabled !== false,
             updatedAt: new Date().toISOString()
-        }, { merge: true })
+        }
+
+        if (typeof body.enabled !== 'undefined') {
+            updateData.enabled = Boolean(body.enabled)
+        }
+        if (typeof body.items !== 'undefined') {
+            updateData.items = body.items
+        }
+
+        await db.collection('site_settings').doc('sidebar_ad').set(updateData, { merge: true })
 
         // Invalidate both module-level and shared caches
         sidebarAdCache = { data: null, lastFetch: 0 };

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Eye, Newspaper, ChevronRight, Loader2, Flame, TrendingUp, Clock, ArrowRight } from 'lucide-react'
+import { Eye, Newspaper, ChevronRight, Loader2, Flame, TrendingUp, Clock, ArrowRight, Search, X } from 'lucide-react'
 import Image from 'next/image'
 import { news, categories } from '@/lib/api'
 
@@ -20,12 +20,14 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   const [newsArticles, setLocalNewsArticles] = useState([])
   const [categoryList, setLocalCategoryList] = useState([])
   const [selectedCategory, setLocalSelectedCategory] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE)
   const [loadingMore, setLoadingMore] = useState(false)
 
-  // Track the last fetched category to know when to re-fetch
+  // Track the last fetched category and query to know when to re-fetch
   const lastFetchedCategory = useRef(null)
+  const lastFetchedQuery = useRef(null)
 
   // Derived state
   const articles = newsPageState?.articles?.length > 0 ? newsPageState.articles : newsArticles
@@ -44,6 +46,12 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
       setSelectedCategoryState(storedCategory)
       localStorage.removeItem('selectedCategory')
     }
+    const storedQuery = localStorage.getItem('searchQuery')
+    if (storedQuery) {
+      setSearchQuery(storedQuery)
+      localStorage.removeItem('searchQuery')
+    }
+
     const handleCategoryChange = () => {
       const newCategory = localStorage.getItem('selectedCategory')
       if (newCategory) {
@@ -51,28 +59,40 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         localStorage.removeItem('selectedCategory')
       }
     }
+
+    const handleSearchChange = (e) => {
+      const q = e?.detail || localStorage.getItem('searchQuery') || ''
+      setSearchQuery(q)
+      if (localStorage.getItem('searchQuery')) localStorage.removeItem('searchQuery')
+    }
+
     window.addEventListener('categoryChange', handleCategoryChange)
-    return () => window.removeEventListener('categoryChange', handleCategoryChange)
+    window.addEventListener('searchQueryChange', handleSearchChange)
+    return () => {
+      window.removeEventListener('categoryChange', handleCategoryChange)
+      window.removeEventListener('searchQueryChange', handleSearchChange)
+    }
   }, [])
 
   useEffect(() => {
-    // Only skip fetch if we already fetched this exact category
-    if (newsPageState?.loaded && lastFetchedCategory.current === currentCategory) {
+    // Only skip fetch if we already fetched this exact category and search query
+    if (newsPageState?.loaded && lastFetchedCategory.current === currentCategory && lastFetchedQuery.current === searchQuery) {
       setLoading(false)
       return
     }
 
     const fetchData = async () => {
       setLoading(true)
-      setVisibleCount(ARTICLES_PER_PAGE) // Reset pagination on category change
+      setVisibleCount(ARTICLES_PER_PAGE) // Reset pagination on filter change
       await loadCategories()
-      await loadNews()
+      await loadNews(searchQuery)
       setLoading(false)
       lastFetchedCategory.current = currentCategory
-      if (setNewsPageState) setLoaded(true)
+      lastFetchedQuery.current = searchQuery
+      if (setNewsPageState && !searchQuery) setLoaded(true)
     }
     fetchData()
-  }, [currentCategory])
+  }, [currentCategory, searchQuery])
 
   const loadCategories = async () => {
     try {
@@ -84,15 +104,17 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
     }
   }
 
-  const loadNews = async () => {
+  const loadNews = async (query = searchQuery) => {
     try {
-      const cats = newsPageState?.categories?.length > 0 ? newsPageState.categories : await categories.getAll()
       let params = {}
       if (currentCategory !== 'all' && currentCategory !== 'trending' && currentCategory !== 'special') {
         // Send slug directly — the API supports slug-based lookup
         params.category = currentCategory
       } else if (currentCategory === 'trending') {
         params.featured = true
+      }
+      if (query && query.trim()) {
+        params.search = query.trim()
       }
       const data = await news.getAll(params)
       const dbArticles = data.articles || []
@@ -202,6 +224,29 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
           )}
         </div>
       </div>
+
+      {/* SEARCH QUERY BANNER */}
+      {searchQuery && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center font-bold shrink-0">
+              <Search className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Search Results</p>
+              <h3 className="text-base font-black text-gray-900 leading-tight">
+                Showing articles for &ldquo;{searchQuery}&rdquo;
+              </h3>
+            </div>
+          </div>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="px-3.5 py-1.5 bg-white border border-gray-200 hover:border-red-600 text-xs font-bold text-gray-700 hover:text-red-600 rounded-full transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" /> Clear Search
+          </button>
+        </div>
+      )}
 
       {/* FILTER & SORT BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4 relative z-20">

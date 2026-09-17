@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap } from 'lucide-react'
+import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { getLocalizedText } from '@/lib/newsData'
 
 const ROLES = { REPORTER: 'reporter', SUPER_ADMIN: 'super_admin', ADVERTISER: 'advertiser' }
 
@@ -47,10 +48,18 @@ const SOCIAL_LINKS = {
   twitter: ''
 }
 
-const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
+const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedArticle }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [allNewsOpen, setAllNewsOpen] = useState(false)
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false)
+
+  // Search state
+  const [searchModalOpen, setSearchModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
+  const [searching, setSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
+  const searchInputRef = useRef(null)
 
   const [businessForm, setBusinessForm] = useState({
     businessName: '',
@@ -73,6 +82,80 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
   // Use language context
   const { language, changeLanguage, t, languageOptions } = useLanguage()
+
+  // Live search debounce
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setSearching(false)
+      setHasSearched(false)
+      return
+    }
+
+    setSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/news?search=${encodeURIComponent(searchQuery.trim())}&limit=20`)
+        const data = await res.json()
+        const articles = Array.isArray(data) ? data : (data.articles || data.news || [])
+        setSearchResults(articles.filter(a => a && (a.status === 'approved' || !a.status)))
+      } catch (err) {
+        console.error('Search error:', err)
+        setSearchResults([])
+      } finally {
+        setSearching(false)
+        setHasSearched(true)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchModalOpen(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Focus input when opened
+  useEffect(() => {
+    if (searchModalOpen) {
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 100)
+    } else {
+      setSearchQuery('')
+      setSearchResults([])
+      setHasSearched(false)
+    }
+  }, [searchModalOpen])
+
+  const handleSelectArticle = (article) => {
+    setSearchModalOpen(false)
+    if (setSelectedArticle) {
+      setSelectedArticle(article)
+    }
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    setCurrentView('news-detail')
+  }
+
+  const handleViewAllInNews = () => {
+    setSearchModalOpen(false)
+    if (searchQuery.trim()) {
+      localStorage.setItem('searchQuery', searchQuery.trim())
+      window.dispatchEvent(new CustomEvent('searchQueryChange', { detail: searchQuery.trim() }))
+    }
+    setCurrentView('news')
+  }
 
   const handleCategoryClick = (category) => {
     setCurrentView('news')
@@ -174,8 +257,19 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
                 </div>
               </div>
 
-              {/* RIGHT: Social Media & Profile — clean & refined */}
-              <div className="flex items-center gap-5">
+              {/* RIGHT: Search, Social Media & Profile — clean & refined */}
+              <div className="flex items-center gap-4">
+                {/* Desktop Search Button */}
+                <button
+                  onClick={() => setSearchModalOpen(true)}
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-red-50 hover:border-red-200 border border-gray-200/80 rounded-full px-3.5 py-1.5 text-gray-500 hover:text-red-600 transition-all duration-200 group text-xs shadow-sm cursor-pointer"
+                  title="Search news articles (Ctrl+K)"
+                >
+                  <Search className="h-3.5 w-3.5 text-gray-400 group-hover:text-red-600 transition-colors" />
+                  <span className="font-medium text-gray-600 group-hover:text-red-700">Search news...</span>
+                  <kbd className="hidden xl:inline-block bg-white border border-gray-200 text-[10px] font-semibold text-gray-400 px-1.5 py-0.5 rounded shadow-[0_1px_1px_rgba(0,0,0,0.05)]">Ctrl+K</kbd>
+                </button>
+
                 {/* Social icons in a subtle pill container */}
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5">
                   <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-[#1877F2] transition-all duration-200"><FacebookIcon /></a>
@@ -317,6 +411,15 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
             {/* Right: Action Buttons — clean white pills */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSearchModalOpen(true)}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold text-[12px] px-3.5 py-1.5 rounded-full backdrop-blur-sm border border-white/20 transition-all duration-200 shadow-sm cursor-pointer"
+                title="Search published articles"
+              >
+                <Search className="h-3.5 w-3.5 text-white" />
+                <span>Search</span>
+              </button>
+
               <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md">
@@ -407,7 +510,11 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
           {/* Right: Search & Language */}
           <div className="flex items-center gap-1 relative z-10">
-            <button onClick={() => setCurrentView('news')} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+            <button
+              onClick={() => setSearchModalOpen(true)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors active:scale-95 cursor-pointer"
+              title="Search news"
+            >
               <Search className="h-5 w-5 text-white" />
             </button>
             <DropdownMenu>
@@ -461,6 +568,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
 
               <div className="flex flex-col p-2">
                 <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main</div>
+                <Button variant="ghost" className="justify-start text-base font-semibold h-12 hover:bg-red-50 hover:text-red-600 text-red-600" onClick={() => { setMobileMenuOpen(false); setSearchModalOpen(true) }}>
+                  <Search className="mr-3 h-5 w-5 text-red-600" />Search News
+                </Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('home'); setMobileMenuOpen(false) }}><Home className="mr-3 h-5 w-5" />{t('home')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('news'); setMobileMenuOpen(false) }}><Newspaper className="mr-3 h-5 w-5" />{t('news')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('enewspaper'); setMobileMenuOpen(false) }}><FileText className="mr-3 h-5 w-5" />{t('eNewspaper')}</Button>
@@ -522,6 +632,135 @@ const Header = ({ user, currentView, setCurrentView, handleLogout }) => {
           </div>
         )}
       </div>
+
+      {/* Global Search Dialog Modal (Desktop + Mobile) */}
+      <Dialog open={searchModalOpen} onOpenChange={setSearchModalOpen}>
+        <DialogContent className="sm:max-w-[650px] p-0 overflow-hidden rounded-2xl border border-gray-100 shadow-2xl bg-white">
+          <div className="p-4 border-b border-gray-100 bg-gray-50/70 flex items-center gap-3">
+            <Search className="h-5 w-5 text-red-600 shrink-0" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search published news, topics, keywords..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base font-medium placeholder:text-gray-400 h-10 px-0 shadow-none"
+            />
+            {searching && <Loader2 className="h-5 w-5 text-gray-400 animate-spin shrink-0" />}
+            {searchQuery && !searching && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
+                title="Clear"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-[60vh] overflow-y-auto p-4 divide-y divide-gray-100">
+            {/* Quick Topic Chips when empty */}
+            {!searchQuery.trim() && (
+              <div className="py-3 px-2">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Topics</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Politics', 'Crime', 'Maharashtra', 'Sports', 'Entertainment', 'Business', 'Technology', 'Live TV'].map((topic) => (
+                    <button
+                      key={topic}
+                      onClick={() => setSearchQuery(topic)}
+                      className="px-3 py-1.5 rounded-full bg-gray-100 hover:bg-red-50 hover:text-red-600 text-xs font-semibold text-gray-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Tag className="h-3 w-3 opacity-60" />
+                      {topic}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Loading skeleton */}
+            {searching && searchResults.length === 0 && (
+              <div className="py-8 text-center text-gray-400 space-y-2">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-red-600" />
+                <p className="text-sm">Searching published news articles...</p>
+              </div>
+            )}
+
+            {/* Results list */}
+            {searchResults.length > 0 && (
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center justify-between px-2 pb-1 text-xs font-semibold text-gray-400">
+                  <span>Found {searchResults.length} published article{searchResults.length === 1 ? '' : 's'}</span>
+                  <span className="text-[11px] text-gray-400">Click to open</span>
+                </div>
+                {searchResults.map((article) => {
+                  const title = getLocalizedText(article.title, language) || article.title || 'Untitled Article'
+                  const desc = getLocalizedText(article.shortDescription || article.metaDescription, language) || ''
+                  const image = article.mainImage || article.images?.[0] || article.thumbnails?.[0] || '/placeholder-news.svg'
+                  const cat = typeof article.category === 'string' ? article.category : (article.category?.en || 'News')
+                  const dateStr = article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString() : ''
+
+                  return (
+                    <div
+                      key={article.id}
+                      onClick={() => handleSelectArticle(article)}
+                      className="flex gap-3.5 p-2.5 rounded-xl hover:bg-red-50/60 cursor-pointer transition-colors group items-start"
+                    >
+                      <div className="relative w-20 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100 border border-gray-200/60">
+                        <img
+                          src={image}
+                          alt=""
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { e.target.src = '/placeholder-news.svg' }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200/50 px-2 py-0.5 rounded-full uppercase">
+                            {cat}
+                          </span>
+                          {dateStr && <span className="text-[10px] text-gray-400">{dateStr}</span>}
+                        </div>
+                        <h4 className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+                          {title}
+                        </h4>
+                        {desc && (
+                          <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+                            {desc}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* No results */}
+            {hasSearched && !searching && searchResults.length === 0 && (
+              <div className="py-12 text-center text-gray-500">
+                <Search className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                <p className="font-bold text-gray-700">No articles found</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  We couldn't find anything for "{searchQuery}". Try a different keyword or topic.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <span className="hidden sm:inline">Press <kbd className="bg-white border px-1.5 py-0.5 rounded text-[10px] font-semibold">ESC</kbd> to close</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleViewAllInNews}
+              className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-50 font-bold text-xs"
+            >
+              Browse all articles in News →
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

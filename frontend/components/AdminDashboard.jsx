@@ -3451,7 +3451,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   onCheckedChange={(checked) => {
                     const updated = { ...contentSettings, premiumAd: { ...contentSettings.premiumAd, enabled: checked } }
                     setContentSettings(updated)
-                    savePremiumAdSettings({ enabled: checked })
+                    savePremiumAdSettings(updated.premiumAd)
                     toast({ title: checked ? 'Premium Ad Enabled' : 'Premium Ad Disabled' })
                   }}
                   className="data-[state=checked]:bg-purple-600"
@@ -3590,7 +3590,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   onCheckedChange={(checked) => {
                     const updated = { ...contentSettings, sidebarAd: { ...contentSettings.sidebarAd, enabled: checked } }
                     setContentSettings(updated)
-                    saveSidebarAdSettings({ enabled: checked })
+                    saveSidebarAdSettings(updated.sidebarAd)
                     toast({ title: checked ? 'Sidebar Ad Enabled' : 'Sidebar Ad Disabled' })
                   }}
                   className="data-[state=checked]:bg-blue-600"
@@ -3798,6 +3798,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         }
                       }
                       setContentSettings(updated)
+                      saveArticleAdSettings(updated.articleAd)
+                      toast({ title: checked ? 'Article Ad Banner Enabled' : 'Article Ad Banner Disabled' })
                     }}
                     className="data-[state=checked]:bg-pink-500"
                   />
@@ -3905,6 +3907,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         }
                       }
                       setContentSettings(updated)
+                      saveArticleAdSettings(updated.articleAd)
+                      toast({ title: checked ? 'Article Sticky Ad Enabled' : 'Article Sticky Ad Disabled' })
                     }}
                     className="data-[state=checked]:bg-orange-500"
                   />
@@ -3993,6 +3997,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               <Button
                 className="w-full bg-pink-600 hover:bg-pink-700"
                 onClick={() => {
+                  saveArticleAdSettings(contentSettings.articleAd)
                   saveContentSettings(contentSettings)
                   toast({ title: 'Article Page Ads Saved' })
                 }}
@@ -4027,10 +4032,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 <Switch
                   checked={contentSettings.businessAd?.enabled}
                   onCheckedChange={(checked) => {
-                    setContentSettings({
+                    const updated = {
                       ...contentSettings,
                       businessAd: { ...contentSettings.businessAd, enabled: checked }
-                    })
+                    }
+                    setContentSettings(updated)
+                    saveBusinessAdSettings(updated.businessAd)
+                    toast({ title: checked ? 'Business Ad Section Enabled' : 'Business Ad Section Disabled' })
                   }}
                   className="data-[state=checked]:bg-orange-500"
                 />

@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,14 +46,15 @@ export async function PUT(request) {
             return NextResponse.json({ error: 'Maximum 20 streams allowed' }, { status: 400 });
         }
 
-        // Validate each stream URL is a valid YouTube URL
+        // Validate each stream URL is a valid YouTube URL or 11-character video ID
         const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+        const idRegex = /^[a-zA-Z0-9_-]{11}$/;
         for (const stream of (body.streams || [])) {
             if (stream.title && stream.title.length > 100) {
                 return NextResponse.json({ error: 'Stream title must be under 100 characters' }, { status: 400 });
             }
-            if (stream.url && !youtubeRegex.test(stream.url)) {
-                return NextResponse.json({ error: `Invalid YouTube URL: "${stream.url}". Only YouTube URLs are supported.` }, { status: 400 });
+            if (stream.url && !youtubeRegex.test(stream.url.trim()) && !idRegex.test(stream.url.trim())) {
+                return NextResponse.json({ error: `Invalid YouTube URL or ID: "${stream.url}". Only YouTube URLs or video IDs are supported.` }, { status: 400 });
             }
         }
 
@@ -73,6 +75,9 @@ export async function PUT(request) {
         };
 
         await db.collection('settings').doc('live_tv_config').set(config, { merge: false });
+
+        // Invalidate public live TV cache
+        purgeCache('live_tv');
 
         return NextResponse.json({ success: true, config });
     } catch (error) {

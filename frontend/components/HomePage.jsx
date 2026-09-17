@@ -592,12 +592,24 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       setTrendingSettings(getTrendingSettings())
     }
     loadSettings()
-    // opt(PERF-04): Refresh ad settings every 15 minutes (was 5 min).
-    // Ad settings only change when admin manually updates them. Both /api/ads/premium
-    // and /api/ads/sidebar already have 1-min server caches, so 15-min client refresh
-    // is plenty. Saves ~1,200 API invocations/hour at real traffic.
-    const interval = setInterval(loadSettings, 900000)
-    return () => clearInterval(interval)
+
+    const handleSettingsChange = () => {
+      loadSettings()
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('adSettingsChanged', handleSettingsChange)
+      window.addEventListener('storage', handleSettingsChange)
+    }
+
+    // Refresh ad settings periodically
+    const interval = setInterval(loadSettings, 300000)
+    return () => {
+      clearInterval(interval)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('adSettingsChanged', handleSettingsChange)
+        window.removeEventListener('storage', handleSettingsChange)
+      }
+    }
   }, [])
 
   // Fetch real-time stock data (NSE via Yahoo Finance public endpoint)

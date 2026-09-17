@@ -9,8 +9,13 @@ import { getSidebarAdSettings } from '@/lib/contentStore'
 // Extract YouTube video ID
 const extractYouTubeId = (url) => {
   if (!url) return null
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-  return match ? match[1] : null
+  const str = String(url).trim()
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str
+  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/)
+  if (match) return match[1]
+  const vMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+  if (vMatch) return vMatch[1]
+  return null
 }
 
 const LiveTVPage = ({ setCurrentView }) => {
@@ -119,16 +124,16 @@ const LiveTVPage = ({ setCurrentView }) => {
                   </span>
                 </div>
               )}
-              <div className="aspect-video w-full relative">
+              <div className="aspect-video w-full relative bg-black">
                 {youtubeId ? (
                   <iframe
                     key={youtubeId}
-                    src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
+                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&rel=0`}
                     title={activeStream?.title || 'Live TV'}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     style={{ border: 'none' }}
                   />
                 ) : (
@@ -136,21 +141,19 @@ const LiveTVPage = ({ setCurrentView }) => {
                     <p className="text-white/40">Stream unavailable</p>
                   </div>
                 )}
-                
-                {/* Custom Gradient overlay at bottom for controls background */}
-                <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+              </div>
+            </div>
 
-                {/* Breaking News Overlay (Inside Player) */}
-                <div className="absolute bottom-16 left-6 z-20 pointer-events-none">
-                  <div className="inline-block bg-red-600 text-white text-[13px] font-black uppercase tracking-wider px-3 py-1 mb-1">
-                    BREAKING NEWS
-                  </div>
-                  <div className="bg-white/90 backdrop-blur-md px-4 py-2 max-w-2xl shadow-lg border-l-4 border-red-600">
-                    <p className="text-black text-xl font-black leading-tight drop-shadow-sm">
-                      {newsArticles[0] ? (typeof newsArticles[0].title === 'string' ? newsArticles[0].title : newsArticles[0].title?.en || '') : 'Mumbai BMC Elections 2026: 41.08% Voter Turnout Till 3:30 PM'}
-                    </p>
-                  </div>
-                </div>
+            {/* Breaking News Ticker (Broadcast TV style below player) */}
+            <div className="mt-3 flex items-center bg-[#141724] border border-white/10 rounded-xl overflow-hidden shadow-lg">
+              <div className="bg-red-600 text-white text-xs font-black uppercase tracking-wider px-4 py-3 shrink-0 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                BREAKING NEWS
+              </div>
+              <div className="px-4 py-2.5 overflow-hidden flex-1">
+                <p className="text-white text-sm font-bold truncate">
+                  {newsArticles[0] ? (typeof newsArticles[0].title === 'string' ? newsArticles[0].title : newsArticles[0].title?.en || '') : 'StarNews Live: Top breaking stories and live coverage across India'}
+                </p>
               </div>
             </div>
 

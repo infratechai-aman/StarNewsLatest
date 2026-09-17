@@ -4,42 +4,35 @@ import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 import { getCache, setCache, purgeCache } from '@/lib/cache'
 
 export async function GET() {
-    const CACHE_KEY = 'api_ads_premium';
-    const cachedData = getCache(CACHE_KEY);
-
-    if (cachedData) {
-        return NextResponse.json(cachedData, {
-            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
-        });
-    }
-
     const db = getDb();
     if (!db) {
-        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     }
     try {
-
         const doc = await db.collection('site_settings').doc('premium_ad').get()
         let responseData = { enabled: false, imageUrl: '', linkUrl: '', title: '' };
 
         if (doc.exists) {
             const data = doc.data()
+            const isExplicitlyDisabled = data.enabled === false;
             responseData = {
-                enabled: data.enabled,
+                enabled: isExplicitlyDisabled ? false : Boolean(data.enabled && data.imageUrl),
                 imageUrl: data.imageUrl || '',
                 linkUrl: data.linkUrl || '',
                 title: data.title || ''
             };
         }
 
-        setCache(CACHE_KEY, responseData, 60 * 1000); // 1 minute TTL
-
         return NextResponse.json(responseData, {
-            headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' }
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
     } catch (error) {
         console.error('Ads Premium GET Error:', error)
-        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' })
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        })
     }
 }
 
@@ -55,16 +48,19 @@ export async function POST(request) {
         }
 
         const body = await request.json()
-        const { enabled, imageUrl, linkUrl, title } = body
-
-        await db.collection('site_settings').doc('premium_ad').set({
+        const updateData = {
             type: 'premium_ad',
-            imageUrl,
-            linkUrl,
-            title,
-            enabled: enabled !== false,
             updatedAt: new Date().toISOString()
-        }, { merge: true })
+        }
+
+        if (typeof body.enabled !== 'undefined') {
+            updateData.enabled = Boolean(body.enabled)
+        }
+        if (typeof body.imageUrl !== 'undefined') updateData.imageUrl = body.imageUrl
+        if (typeof body.linkUrl !== 'undefined') updateData.linkUrl = body.linkUrl
+        if (typeof body.title !== 'undefined') updateData.title = body.title
+
+        await db.collection('site_settings').doc('premium_ad').set(updateData, { merge: true })
 
         // Invalidate cache so next GET returns fresh data
         purgeCache('premium');

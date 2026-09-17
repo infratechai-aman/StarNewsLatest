@@ -107,12 +107,18 @@ export const saveContentSettings = (settings) => {
 // Premium Ad helpers
 export const getPremiumAdSettings = async () => {
     try {
-        const res = await fetch('/api/ads/premium')
+        const res = await fetch('/api/ads/premium', { cache: 'no-store' })
         const data = await res.json()
-        return (data.enabled && data.imageUrl) ? data : defaultSettings.premiumAd
+        if (data.enabled === false) {
+            return { enabled: false, imageUrl: '', linkUrl: '', title: '' }
+        }
+        if (data.enabled && data.imageUrl) {
+            return data
+        }
+        return { ...defaultSettings.premiumAd, enabled: false }
     } catch (error) {
         console.error('Error fetching premium ad settings:', error)
-        return defaultSettings.premiumAd
+        return { ...defaultSettings.premiumAd, enabled: false }
     }
 }
 
@@ -127,6 +133,12 @@ export const savePremiumAdSettings = async (adSettings) => {
             },
             body: JSON.stringify(adSettings)
         })
+        const settings = getContentSettings()
+        settings.premiumAd = { ...settings.premiumAd, ...adSettings }
+        saveContentSettings(settings)
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('adSettingsChanged'))
+        }
         return res.ok
     } catch (error) {
         console.error('Error saving premium ad settings:', error)
@@ -136,24 +148,31 @@ export const savePremiumAdSettings = async (adSettings) => {
 
 export const getSidebarAdSettings = async () => {
     try {
-        const res = await fetch('/api/ads/sidebar')
+        const res = await fetch('/api/ads/sidebar', { cache: 'no-store' })
         const data = await res.json()
-        if (data.enabled !== undefined && data.items && data.items.length > 0) {
-            // Also update localStorage for instant access on next load
+        if (data.enabled === false) {
+            const settings = getContentSettings()
+            settings.sidebarAd = { ...(settings.sidebarAd || {}), ...data, enabled: false }
+            saveContentSettings(settings)
+            return { enabled: false, items: [] }
+        }
+        if (data.enabled && data.items && data.items.length > 0) {
             const settings = getContentSettings()
             settings.sidebarAd = data
             saveContentSettings(settings)
             return data
         }
-        return defaultSettings.sidebarAd
+        return { enabled: false, items: [] }
     } catch (error) {
         console.error('Error fetching sidebar ad settings:', error)
-        // Fallback to localStorage
         const settings = getContentSettings()
+        if (settings.sidebarAd && settings.sidebarAd.enabled === false) {
+            return { enabled: false, items: [] }
+        }
         if (settings.sidebarAd?.items && settings.sidebarAd.items.length > 0) {
             return settings.sidebarAd
         }
-        return defaultSettings.sidebarAd
+        return { enabled: false, items: [] }
     }
 }
 
@@ -168,10 +187,12 @@ export const saveSidebarAdSettings = async (adSettings) => {
             },
             body: JSON.stringify(adSettings)
         })
-        // Also save to localStorage for instant access
         const settings = getContentSettings()
         settings.sidebarAd = { ...settings.sidebarAd, ...adSettings }
         saveContentSettings(settings)
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('adSettingsChanged'))
+        }
         return res.ok
     } catch (error) {
         console.error('Error saving sidebar ad settings:', error)
@@ -183,30 +204,56 @@ export const saveSidebarAdSettings = async (adSettings) => {
 export const getArticleAdSettings = () => {
     const settings = getContentSettings()
     const adSettings = settings.articleAd || {};
-    if (!adSettings.banner?.imageUrl) adSettings.banner = defaultSettings.articleAd.banner;
-    if (!adSettings.sticky?.imageUrl) adSettings.sticky = defaultSettings.articleAd.sticky;
-    return adSettings;
+    const banner = adSettings.banner || {};
+    const sticky = adSettings.sticky || {};
+
+    return {
+        banner: {
+            enabled: banner.enabled === false ? false : Boolean(banner.imageUrl),
+            imageUrl: banner.imageUrl || '',
+            linkUrl: banner.linkUrl || '',
+            title: banner.title || defaultSettings.articleAd.banner.title
+        },
+        sticky: {
+            enabled: sticky.enabled === false ? false : Boolean(sticky.imageUrl),
+            imageUrl: sticky.imageUrl || '',
+            linkUrl: sticky.linkUrl || '',
+            title: sticky.title || defaultSettings.articleAd.sticky.title
+        }
+    };
 }
 
 export const saveArticleAdSettings = (adSettings) => {
     const settings = getContentSettings()
     settings.articleAd = { ...settings.articleAd, ...adSettings }
-    return saveContentSettings(settings)
+    const res = saveContentSettings(settings)
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('adSettingsChanged'))
+    }
+    return res
 }
 
 // Business Sidebar Ad helpers (Homepage - "BUSINESS Advertisement")
 export const getBusinessAdSettings = () => {
     const settings = getContentSettings()
-    if (!settings.businessAd || !settings.businessAd.imageUrl) {
-        return defaultSettings.businessAd
+    const bAd = settings.businessAd || {}
+    if (bAd.enabled === false) {
+        return { ...defaultSettings.businessAd, ...bAd, enabled: false }
     }
-    return settings.businessAd
+    if (bAd.imageUrl) {
+        return { ...defaultSettings.businessAd, ...bAd, enabled: true }
+    }
+    return { ...defaultSettings.businessAd, enabled: false }
 }
 
 export const saveBusinessAdSettings = (adSettings) => {
     const settings = getContentSettings()
     settings.businessAd = { ...settings.businessAd, ...adSettings }
-    return saveContentSettings(settings)
+    const res = saveContentSettings(settings)
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('adSettingsChanged'))
+    }
+    return res
 }
 
 // Trending section helpers

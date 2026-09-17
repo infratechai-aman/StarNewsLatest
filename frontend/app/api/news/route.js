@@ -16,9 +16,10 @@ export async function GET(request) {
         const featured = searchParams.get('featured')
         const limitParam = searchParams.get('limit')
         const pageParam = searchParams.get('page')
+        const queryParam = searchParams.get('q') || searchParams.get('search')
 
         // Generate a cache key directly from all search params
-        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '50'}_${pageParam || '1'}`
+        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '50'}_${pageParam || '1'}_${queryParam || ''}`
 
         const cached = getCache(cacheKey);
         if (cached) {
@@ -28,7 +29,7 @@ export async function GET(request) {
             return response;
         }
 
-        const limit = parseInt(limitParam || '50')
+        const limit = parseInt(limitParam || (queryParam ? '100' : '50'))
         const page = parseInt(pageParam || '1')
 
         let query = db.collection('news_articles')
@@ -122,10 +123,29 @@ export async function GET(request) {
             }
         }
 
-        const allDocs = snapshot.docs.map(doc => ({
+        let allDocs = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }))
+
+        // Keyword search filter across title, description, content, tags and category
+        if (queryParam && queryParam.trim()) {
+            const q = queryParam.trim().toLowerCase();
+            const getText = (val) => {
+                if (!val) return '';
+                if (typeof val === 'string') return val.toLowerCase();
+                if (typeof val === 'object') return Object.values(val).join(' ').toLowerCase();
+                return String(val).toLowerCase();
+            };
+            allDocs = allDocs.filter(doc => {
+                const title = getText(doc.title);
+                const desc = getText(doc.shortDescription || doc.metaDescription);
+                const content = getText(doc.content);
+                const tags = Array.isArray(doc.tags) ? doc.tags.join(' ').toLowerCase() : getText(doc.tags);
+                const category = getText(doc.category);
+                return title.includes(q) || desc.includes(q) || tags.includes(q) || category.includes(q) || content.includes(q);
+            });
+        }
 
         // fix(DEFECT-02): Check if there are more results by seeing if we got limit+1 docs
         const hasMore = allDocs.length > limit

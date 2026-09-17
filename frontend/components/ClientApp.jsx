@@ -257,6 +257,7 @@ const ClientApp = ({ initialNewsData }) => {
                     currentView={currentView}
                     setCurrentView={handleSetCurrentView}
                     handleLogout={handleLogout}
+                    setSelectedArticle={setSelectedArticle}
                 />
 
                 <BreakingNewsTicker />

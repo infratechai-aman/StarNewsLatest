@@ -53,9 +53,20 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
   // Load article ad settings on mount
   useEffect(() => {
-    const settings = getArticleAdSettings()
-    if (settings) {
-      setArticleAdSettings(settings)
+    const loadSettings = () => {
+      const settings = getArticleAdSettings()
+      if (settings) {
+        setArticleAdSettings(settings)
+      }
+    }
+    loadSettings()
+    if (typeof window !== 'undefined') {
+      window.addEventListener('adSettingsChanged', loadSettings)
+      window.addEventListener('storage', loadSettings)
+      return () => {
+        window.removeEventListener('adSettingsChanged', loadSettings)
+        window.removeEventListener('storage', loadSettings)
+      }
     }
   }, [])
 
