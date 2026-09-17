@@ -16,9 +16,14 @@ export async function GET(request) {
     // This runs 4 parallel Firestore queries on every admin mount and tab visit.
     // 60s is safe — all approval actions call loadPendingData() which triggers a
     // fresh fetch, so approved items will always appear immediately after action.
+    const { searchParams } = new URL(request.url);
+    const forceFresh = searchParams.get('fresh') === 'true';
+
     const CACHE_KEY = 'admin_pending';
-    const cached = getCache(CACHE_KEY);
-    if (cached) return NextResponse.json(cached);
+    if (!forceFresh) {
+        const cached = getCache(CACHE_KEY);
+        if (cached) return NextResponse.json(cached);
+    }
 
     const db = getDb();
 

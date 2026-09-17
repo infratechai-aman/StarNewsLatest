@@ -42,14 +42,14 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
   const [promotionOpen, setPromotionOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [promotionData, setPromotionData] = useState({
-    businessName: '', ownerName: '', phone: '', email: '', address: '', description: ''
+    businessName: '', ownerName: '', category: 'Services', phone: '', whatsapp: '', email: '', address: '', description: ''
   })
 
   const handlePromotionSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const res = await fetch('/api/business-promotions', {
+      const res = await fetch('/api/businesses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(promotionData)
@@ -58,11 +58,11 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
       const data = await res.json()
 
       if (res.ok) {
-        toast.success("Request Submitted!", {
-          description: "We will contact you shortly to verify your business."
+        toast.success("Business Submitted!", {
+          description: "Your listing has been sent to the Admin queue for approval."
         })
         setPromotionOpen(false)
-        setPromotionData({ businessName: '', ownerName: '', phone: '', email: '', address: '', description: '' })
+        setPromotionData({ businessName: '', ownerName: '', category: 'Services', phone: '', whatsapp: '', email: '', address: '', description: '' })
       } else {
         toast.error("Submission Failed", {
           description: data.error || "Please try again later."

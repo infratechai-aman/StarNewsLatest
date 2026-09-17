@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,10 @@ export async function POST(request) {
             active: status === 'approved',
             updatedAt: new Date().toISOString()
         });
+
+        // Purge pending and public businesses caches
+        purgeCache('admin_pending');
+        purgeCache('businesses');
 
         return NextResponse.json({ success: true, status });
     } catch (error) {

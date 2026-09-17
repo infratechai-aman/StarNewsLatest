@@ -185,8 +185,7 @@ export const classifieds = {
   getAll: (params) => apiRequest(`/classifieds?${new URLSearchParams(params || {})}`),
   getOne: (id) => apiRequest(`/classifieds/${id}`),
   create: (data) => apiRequest('/classifieds', { method: 'POST', body: JSON.stringify(data) }),
-  // fix(P2-API-04): Removed classifieds.submit — /api/classifieds/submit route does not exist.
-  // Use classifieds.create() which posts to /api/classifieds (the real, existing handler).
+  submit: (data) => apiRequest('/classifieds/submit', { method: 'POST', body: JSON.stringify(data) }),
 }
 
 export const liveTV = {
@@ -207,7 +206,7 @@ export const enewspaper = {
 
 export const admin = {
   getStats: () => apiRequest('/admin/stats'),
-  getPending: () => apiRequest('/admin/pending'),
+  getPending: (fresh = false) => apiRequest(`/admin/pending${fresh ? '?fresh=true' : ''}`),
   approveNews: (articleId, action, reason) => apiRequest('/admin/news/approve', { method: 'POST', body: JSON.stringify({ articleId, action, reason }) }),
   approveBusiness: (businessId, action) => apiRequest('/admin/businesses/approve', { method: 'POST', body: JSON.stringify({ businessId, action }) }),
   approveAd: (adId, action) => apiRequest('/admin/ads/approve', { method: 'POST', body: JSON.stringify({ adId, action }) }),

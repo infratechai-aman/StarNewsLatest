@@ -9,12 +9,23 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2, Upload, IndianRupee, Sparkles, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
+
+const CLASSIFIED_CATEGORIES = [
+  'IT Jobs', 'Real Estate', 'Vehicles', 'Electronics', 'Furniture', 'Fashion', 'Services', 'Other'
+]
+
+const BUSINESS_CATEGORIES = [
+  'Restaurant', 'Cafe', 'Electronics', 'Fashion', 'Healthcare', 'Education',
+  'Fitness', 'Beauty & Spa', 'Real Estate', 'Automotive', 'Services', 'Other'
+]
 
 const ROLES = { REPORTER: 'reporter', SUPER_ADMIN: 'super_admin', ADVERTISER: 'advertiser' }
 
@@ -61,15 +72,36 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
   const [hasSearched, setHasSearched] = useState(false)
   const searchInputRef = useRef(null)
 
+  // Post Your Ad / Promote Business State
+  const [postAdTab, setPostAdTab] = useState('classified')
+
+  const [classifiedForm, setClassifiedForm] = useState({
+    title: '',
+    category: 'Other',
+    price: '',
+    phone: '',
+    location: '',
+    description: '',
+    images: []
+  })
+  const [classifiedPreviews, setClassifiedPreviews] = useState([])
+  const [submittingClassified, setSubmittingClassified] = useState(false)
+  const classifiedFileInputRef = useRef(null)
+
   const [businessForm, setBusinessForm] = useState({
     businessName: '',
     ownerName: '',
+    category: 'Services',
     phone: '',
+    whatsapp: '',
     email: '',
     address: '',
-    description: ''
+    description: '',
+    coverImage: ''
   })
+  const [businessCoverPreview, setBusinessCoverPreview] = useState('')
   const [submittingBusiness, setSubmittingBusiness] = useState(false)
+  const businessCoverInputRef = useRef(null)
 
   const [reporterForm, setReporterForm] = useState({
     name: '',
@@ -164,22 +196,182 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     setAllNewsOpen(false)
   }
 
+  // Global listener to open Post Your Ad dialog from any button on site
+  useEffect(() => {
+    const handleOpen = (e) => {
+      if (e?.detail?.tab) {
+        setPostAdTab(e.detail.tab)
+      }
+      setPromoteDialogOpen(true)
+    }
+    window.addEventListener('openPostAdModal', handleOpen)
+    return () => window.removeEventListener('openPostAdModal', handleOpen)
+  }, [])
+
+  // Classified Ad Image Upload
+  const handleClassifiedImageUpload = async (e) => {
+    const files = Array.from(e.target.files)
+    if (files.length === 0) return
+
+    const totalImages = classifiedForm.images.length + files.length
+    if (totalImages > 8) {
+      alert('Maximum 8 images allowed')
+      return
+    }
+
+    const oversized = files.filter(f => f.size > 700 * 1024)
+    if (oversized.length > 0) {
+      alert('Each image must be under 700KB')
+      return
+    }
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setClassifiedPreviews(prev => [...prev, event.target.result])
+      }
+      reader.readAsDataURL(file)
+
+      try {
+        const formDataUpload = new FormData()
+        formDataUpload.append('file', file)
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
+          body: formDataUpload
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setClassifiedForm(prev => ({
+            ...prev,
+            images: [...prev.images, data.url]
+          }))
+        } else {
+          const err = await res.json().catch(() => ({}))
+          alert(err.error || 'Failed to upload image')
+        }
+      } catch (err) {
+        console.error('Image upload failed:', err)
+      }
+    }
+  }
+
+  const removeClassifiedImage = (idx) => {
+    setClassifiedForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== idx)
+    }))
+    setClassifiedPreviews(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  // Business Cover Image Upload
+  const handleBusinessCoverUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 700 * 1024) {
+      alert('Cover image must be under 700KB')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setBusinessCoverPreview(event.target.result)
+    }
+    reader.readAsDataURL(file)
+
+    try {
+      const formDataUpload = new FormData()
+      formDataUpload.append('file', file)
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
+        body: formDataUpload
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setBusinessForm(prev => ({ ...prev, coverImage: data.url }))
+      }
+    } catch (err) {
+      console.error('Cover upload failed:', err)
+    }
+  }
+
+  // Handle Classified Submit
+  const handleClassifiedSubmit = async (e) => {
+    e.preventDefault()
+    if (!classifiedForm.title?.trim() || !classifiedForm.price?.trim() || !classifiedForm.phone?.trim() || !classifiedForm.location?.trim()) {
+      alert('Please fill in all required fields: Title, Category, Price, Phone, and Location.')
+      return
+    }
+
+    setSubmittingClassified(true)
+    try {
+      const res = await fetch('/api/classifieds/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(classifiedForm)
+      })
+      const data = await res.json()
+      if (res.ok) {
+        alert('Success! Your classified ad has been submitted and is sent to the Admin Dashboard for approval.')
+        setPromoteDialogOpen(false)
+        setClassifiedForm({
+          title: '',
+          category: 'Other',
+          price: '',
+          phone: '',
+          location: '',
+          description: '',
+          images: []
+        })
+        setClassifiedPreviews([])
+      } else {
+        alert(data.error || 'Failed to submit classified ad. Please try again.')
+      }
+    } catch (err) {
+      console.error('Classified submission error:', err)
+      alert('Something went wrong. Please try again later.')
+    } finally {
+      setSubmittingClassified(false)
+    }
+  }
+
+  // Handle Business Submit
   const handleBusinessSubmit = async (e) => {
     e.preventDefault()
+    if (!businessForm.businessName?.trim() || !businessForm.phone?.trim() || !businessForm.address?.trim()) {
+      alert('Please fill in required fields: Business Name, Phone, and Address.')
+      return
+    }
+
     setSubmittingBusiness(true)
     try {
-      const res = await fetch('/api/business-promotions', {
+      const res = await fetch('/api/businesses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(businessForm)
       })
       const data = await res.json()
       if (res.ok) {
-        alert(`Thank you! Your business "${businessForm.businessName}" has been submitted for review. Our team will contact you soon.`)
+        alert(`Success! Your business "${businessForm.businessName}" has been submitted and sent to the Admin pending business queue for approval.`)
         setPromoteDialogOpen(false)
-        setBusinessForm({ businessName: '', ownerName: '', phone: '', email: '', address: '', description: '' })
+        setBusinessForm({
+          businessName: '',
+          ownerName: '',
+          category: 'Services',
+          phone: '',
+          whatsapp: '',
+          email: '',
+          address: '',
+          description: '',
+          coverImage: ''
+        })
+        setBusinessCoverPreview('')
       } else {
-        alert(data.error || 'Failed to submit request. Please try again.')
+        alert(data.error || 'Failed to submit business listing. Please try again.')
       }
     } catch (err) {
       console.error('Business promotion error:', err)
@@ -426,29 +618,302 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                     <Briefcase className="h-3.5 w-3.5" />{t('promoteYourBusiness')}
                   </button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-bold">{t('promoteYourBusiness')}</DialogTitle>
-                    <DialogDescription>Fill out this form to promote your business. We'll contact you within 24 hours.</DialogDescription>
+                <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+                  <DialogHeader className="mb-2">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                      <Tag className="h-5 w-5 text-[#E53935]" />
+                      Post Your Ad
+                    </DialogTitle>
+                    <DialogDescription>
+                      Submit a classified ad or promote your business directory listing.
+                    </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleBusinessSubmit}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2"><Label htmlFor="businessName">Business Name *</Label><Input id="businessName" value={businessForm.businessName} onChange={(e) => setBusinessForm({ ...businessForm, businessName: e.target.value })} placeholder="Enter business name" required /></div>
-                      <div className="grid gap-2"><Label htmlFor="ownerName">Owner Name *</Label><Input id="ownerName" value={businessForm.ownerName} onChange={(e) => setBusinessForm({ ...businessForm, ownerName: e.target.value })} placeholder="Enter owner name" required /></div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2"><Label htmlFor="phone">Phone *</Label><Input id="phone" type="tel" value={businessForm.phone} onChange={(e) => setBusinessForm({ ...businessForm, phone: e.target.value })} placeholder="+91 XXXXX" required /></div>
-                        <div className="grid gap-2"><Label htmlFor="email">Email *</Label><Input id="email" type="email" value={businessForm.email} onChange={(e) => setBusinessForm({ ...businessForm, email: e.target.value })} placeholder="email@example.com" required /></div>
-                      </div>
-                      <div className="grid gap-2"><Label htmlFor="address">Address *</Label><Input id="address" value={businessForm.address} onChange={(e) => setBusinessForm({ ...businessForm, address: e.target.value })} placeholder="Full address" required /></div>
-                      <div className="grid gap-2"><Label htmlFor="description">Description</Label><Textarea id="description" value={businessForm.description} onChange={(e) => setBusinessForm({ ...businessForm, description: e.target.value })} placeholder="About your business..." rows={3} /></div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingBusiness}>{t('cancel')}</Button>
-                      <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingBusiness}>
-                        {submittingBusiness ? 'Submitting...' : t('submit')}
-                      </Button>
-                    </DialogFooter>
-                  </form>
+
+                  <Tabs value={postAdTab} onValueChange={setPostAdTab} className="w-full">
+                    <TabsList className="grid grid-cols-2 mb-4 h-11 bg-gray-100 p-1 rounded-xl">
+                      <TabsTrigger value="classified" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                        Classified Ad
+                      </TabsTrigger>
+                      <TabsTrigger value="business" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+                        Promote Business
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* TAB 1: CLASSIFIED AD */}
+                    <TabsContent value="classified">
+                      <form onSubmit={handleClassifiedSubmit} className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="cTitle" className="text-sm font-semibold text-gray-700">Ad Title *</Label>
+                          <Input
+                            id="cTitle"
+                            placeholder="e.g., MacBook Pro M2 or 2BHK Flat for Rent"
+                            value={classifiedForm.title}
+                            onChange={(e) => setClassifiedForm({ ...classifiedForm, title: e.target.value })}
+                            required
+                            className="h-10 rounded-lg"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-sm font-semibold text-gray-700">Category *</Label>
+                            <Select
+                              value={classifiedForm.category}
+                              onValueChange={(val) => setClassifiedForm({ ...classifiedForm, category: val })}
+                            >
+                              <SelectTrigger className="h-10 rounded-lg">
+                                <SelectValue placeholder="Select Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CLASSIFIED_CATEGORIES.map(cat => (
+                                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="cPrice" className="text-sm font-semibold text-gray-700">Price *</Label>
+                            <Input
+                              id="cPrice"
+                              placeholder="e.g., ₹25,000"
+                              value={classifiedForm.price}
+                              onChange={(e) => setClassifiedForm({ ...classifiedForm, price: e.target.value })}
+                              required
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="cPhone" className="text-sm font-semibold text-gray-700">Phone Number *</Label>
+                            <Input
+                              id="cPhone"
+                              type="tel"
+                              placeholder="+91 98765 43210"
+                              value={classifiedForm.phone}
+                              onChange={(e) => setClassifiedForm({ ...classifiedForm, phone: e.target.value })}
+                              required
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="cLocation" className="text-sm font-semibold text-gray-700">Location (City/Area) *</Label>
+                            <Input
+                              id="cLocation"
+                              placeholder="e.g., Pune / Hinjewadi"
+                              value={classifiedForm.location}
+                              onChange={(e) => setClassifiedForm({ ...classifiedForm, location: e.target.value })}
+                              required
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="cDesc" className="text-sm font-semibold text-gray-700">Description</Label>
+                          <Textarea
+                            id="cDesc"
+                            placeholder="Provide details about your classified ad..."
+                            rows={3}
+                            value={classifiedForm.description}
+                            onChange={(e) => setClassifiedForm({ ...classifiedForm, description: e.target.value })}
+                            className="rounded-lg resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold text-gray-700">Upload Images</Label>
+                            <span className="text-xs text-gray-400 font-medium">(Max size: 700KB per image, max 8)</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 items-center">
+                            {classifiedPreviews.map((preview, idx) => (
+                              <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
+                                <img src={preview} alt="" className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  onClick={() => removeClassifiedImage(idx)}
+                                  className="absolute top-0.5 right-0.5 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            {classifiedForm.images.length < 8 && (
+                              <button
+                                type="button"
+                                onClick={() => classifiedFileInputRef.current?.click()}
+                                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-red-500 hover:bg-red-50/50 transition-colors cursor-pointer"
+                              >
+                                <Upload className="h-4 w-4 text-gray-400" />
+                                <span className="text-[9px] text-gray-500 mt-1 font-medium">+ Add</span>
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            ref={classifiedFileInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleClassifiedImageUpload}
+                            className="hidden"
+                          />
+                        </div>
+
+                        <DialogFooter className="pt-2">
+                          <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingClassified}>
+                            {t('cancel')}
+                          </Button>
+                          <Button type="submit" className="bg-[#E53935] hover:bg-red-700 text-white font-bold" disabled={submittingClassified}>
+                            {submittingClassified ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</> : 'Submit Ad'}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </TabsContent>
+
+                    {/* TAB 2: PROMOTE BUSINESS */}
+                    <TabsContent value="business">
+                      <form onSubmit={handleBusinessSubmit} className="space-y-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="bName" className="text-sm font-semibold text-gray-700">Business Name *</Label>
+                          <Input
+                            id="bName"
+                            placeholder="e.g., Royal Spices Restaurant"
+                            value={businessForm.businessName}
+                            onChange={(e) => setBusinessForm({ ...businessForm, businessName: e.target.value })}
+                            required
+                            className="h-10 rounded-lg"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-sm font-semibold text-gray-700">Category *</Label>
+                            <Select
+                              value={businessForm.category}
+                              onValueChange={(val) => setBusinessForm({ ...businessForm, category: val })}
+                            >
+                              <SelectTrigger className="h-10 rounded-lg">
+                                <SelectValue placeholder="Select Category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {BUSINESS_CATEGORIES.map(cat => (
+                                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="bOwner" className="text-sm font-semibold text-gray-700">Owner Name</Label>
+                            <Input
+                              id="bOwner"
+                              placeholder="e.g., Rajesh Sharma"
+                              value={businessForm.ownerName}
+                              onChange={(e) => setBusinessForm({ ...businessForm, ownerName: e.target.value })}
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="bPhone" className="text-sm font-semibold text-gray-700">Phone *</Label>
+                            <Input
+                              id="bPhone"
+                              type="tel"
+                              placeholder="+91 98765 43210"
+                              value={businessForm.phone}
+                              onChange={(e) => setBusinessForm({ ...businessForm, phone: e.target.value })}
+                              required
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="bWhatsapp" className="text-sm font-semibold text-gray-700">WhatsApp Number</Label>
+                            <Input
+                              id="bWhatsapp"
+                              type="tel"
+                              placeholder="+91 98765 43210"
+                              value={businessForm.whatsapp}
+                              onChange={(e) => setBusinessForm({ ...businessForm, whatsapp: e.target.value })}
+                              className="h-10 rounded-lg"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="bAddress" className="text-sm font-semibold text-gray-700">Full Address *</Label>
+                          <Input
+                            id="bAddress"
+                            placeholder="Shop 12, MG Road, Pune, Maharashtra"
+                            value={businessForm.address}
+                            onChange={(e) => setBusinessForm({ ...businessForm, address: e.target.value })}
+                            required
+                            className="h-10 rounded-lg"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label htmlFor="bDesc" className="text-sm font-semibold text-gray-700">About Business</Label>
+                          <Textarea
+                            id="bDesc"
+                            placeholder="Tell customers about your products or services..."
+                            rows={3}
+                            value={businessForm.description}
+                            onChange={(e) => setBusinessForm({ ...businessForm, description: e.target.value })}
+                            className="rounded-lg resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold text-gray-700">Cover Image / Logo</Label>
+                            <span className="text-xs text-gray-400 font-medium">(Max size: 700KB)</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {businessCoverPreview ? (
+                              <div className="relative w-20 h-16 rounded-lg overflow-hidden border border-gray-200">
+                                <img src={businessCoverPreview} alt="" className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  onClick={() => { setBusinessCoverPreview(''); setBusinessForm({ ...businessForm, coverImage: '' }) }}
+                                  className="absolute top-0.5 right-0.5 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => businessCoverInputRef.current?.click()}
+                                className="h-16 px-4 rounded-lg border-2 border-dashed border-gray-300 flex items-center gap-2 hover:border-blue-500 hover:bg-blue-50/50 transition-colors cursor-pointer text-xs text-gray-600 font-medium"
+                              >
+                                <Upload className="h-4 w-4 text-gray-400" />
+                                Upload Image
+                              </button>
+                            )}
+                          </div>
+                          <input
+                            ref={businessCoverInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleBusinessCoverUpload}
+                            className="hidden"
+                          />
+                        </div>
+
+                        <DialogFooter className="pt-2">
+                          <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingBusiness}>
+                            {t('cancel')}
+                          </Button>
+                          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold" disabled={submittingBusiness}>
+                            {submittingBusiness ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</> : 'Submit Business'}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </TabsContent>
+                  </Tabs>
                 </DialogContent>
               </Dialog>
 

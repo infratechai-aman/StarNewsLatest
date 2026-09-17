@@ -53,7 +53,8 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     // Filter news by city
     useEffect(() => {
         if (selectedCity && allArticles.length > 0) {
-            const filtered = allArticles.filter(a => a.city === selectedCity)
+            const normalized = selectedCity.trim().toLowerCase()
+            const filtered = allArticles.filter(a => a.city && a.city.trim().toLowerCase() === normalized)
             setCityNews(filtered)
         } else {
             setCityNews([])

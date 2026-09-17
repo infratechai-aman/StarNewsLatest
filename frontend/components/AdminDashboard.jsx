@@ -28,7 +28,7 @@ import {
   Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, MoreHorizontal,
   LogOut
 } from 'lucide-react'
-import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
+import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
 // News categories
 const NEWS_CATEGORIES = [
@@ -59,6 +59,7 @@ const getTextValue = (value) => {
 
 const AdminDashboard = ({ user, toast, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview')
+  const [pendingSubTab, setPendingSubTab] = useState('businesses')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
@@ -138,7 +139,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const [showNewsForm, setShowNewsForm] = useState(false)
   const [editingNews, setEditingNews] = useState(null)
   const [newsForm, setNewsForm] = useState({
-    title: '', category: '', content: '', mainImage: '', metaDescription: '',
+    title: '', category: '', city: '', content: '', mainImage: '', metaDescription: '',
     tags: '', genre: 'breaking', featured: false, showOnHome: true,
     youtubeUrl: '', thumbnails: [], authorName: ''
   })
@@ -194,10 +195,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }, [])
 
   // Load pending items
-  const loadPendingData = async () => {
+  const loadPendingData = async (fresh = false) => {
     try {
       setRefreshing(true)
-      const data = await admin.getPending()
+      const data = await admin.getPending(fresh)
       setPendingData(data)
     } catch (error) {
       // console.error('Failed to load pending data:', error)
@@ -666,6 +667,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   // Load data on tab change
   useEffect(() => {
     if (activeTab === 'overview') loadPendingTicker()
+    if (activeTab === 'pending-approvals') loadPendingData(true)
     if (activeTab === 'breaking') loadBreakingNews()
     if (activeTab === 'businesses') loadAllBusinesses()
     if (activeTab === 'classifieds') loadAllClassifieds()
@@ -1216,11 +1218,20 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     pendingData.ads.length + pendingData.classifieds.length +
     pendingData.users.length
 
-  const moreTabIds = ['businesses', 'classifieds', 'content', 'breaking', 'reporters', 'enewspaper', 'live-tv', 'navigation', 'settings']
+  const moreTabIds = ['pending-approvals', 'businesses', 'classifieds', 'content', 'breaking', 'reporters', 'enewspaper', 'live-tv', 'navigation', 'settings']
   const isMoreActive = showMoreMenu || moreTabIds.includes(activeTab)
   const morePendingCount = pendingData.businesses.length + pendingData.classifieds.length + pendingData.ads.length + pendingData.users.length
 
   const moreMenuItems = [
+    {
+      id: 'pending-approvals',
+      label: 'Pending Approvals',
+      desc: 'Approve ads, businesses & news',
+      icon: Clock,
+      iconGradient: 'from-[#F59E0B] via-[#D97706] to-[#B45309]',
+      iconShadow: 'shadow-amber-500/35',
+      badge: totalPending
+    },
     {
       id: 'businesses',
       label: 'Business Directory',
@@ -1319,6 +1330,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             <LayoutDashboard className="w-4 h-4" /> Overview
           </button>
           
+          <button onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('businesses'); }} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'pending-approvals' ? 'bg-amber-600 text-white shadow-md shadow-amber-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
+            <div className="flex items-center gap-3"><Clock className="w-4 h-4" /> Pending Approvals</div>
+            {totalPending > 0 && <span className="bg-amber-500 text-white py-0.5 px-2 rounded-full text-[10px] font-bold animate-pulse">{totalPending}</span>}
+          </button>
+
           <div className="px-3 mt-6 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Content Management</div>
           
           <button onClick={() => setActiveTab('manage-news')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'manage-news' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
@@ -1480,7 +1496,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Pending Items Card */}
-            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+            <Card onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('businesses'); }} className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 opacity-90"></div>
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Clock className="w-24 h-24 text-white" />
@@ -1496,13 +1512,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </div>
                 </div>
                 <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> Action required
+                  <AlertCircle className="w-3 h-3" /> Action required &bull; Click to review
                 </p>
               </CardContent>
             </Card>
 
             {/* Pending News Card */}
-            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+            <Card onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('news'); }} className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-indigo-600 opacity-90"></div>
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Newspaper className="w-24 h-24 text-white" />
@@ -1518,13 +1534,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </div>
                 </div>
                 <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
-                  <RefreshCw className="w-3 h-3" /> Awaiting review
+                  <RefreshCw className="w-3 h-3" /> Awaiting review &bull; Click to review
                 </p>
               </CardContent>
             </Card>
 
             {/* Pending Reporters Card */}
-            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+            <Card onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('reporters'); }} className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-teal-600 opacity-90"></div>
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Users className="w-24 h-24 text-white" />
@@ -1540,29 +1556,29 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </div>
                 </div>
                 <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
-                  <Check className="w-3 h-3" /> New applications
+                  <Check className="w-3 h-3" /> New applications &bull; Click to review
                 </p>
               </CardContent>
             </Card>
 
-            {/* Pending Ads Card */}
-            <Card className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300">
+            {/* Pending Businesses Card */}
+            <Card onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('businesses'); }} className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-pink-600 opacity-90"></div>
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
-                <Megaphone className="w-24 h-24 text-white" />
+                <Building2 className="w-24 h-24 text-white" />
               </div>
               <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending Ads</p>
-                    <h3 className="text-white text-4xl font-bold">{pendingData.ads.length}</h3>
+                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending Businesses</p>
+                    <h3 className="text-white text-4xl font-bold">{pendingData.businesses.length}</h3>
                   </div>
                   <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                    <Megaphone className="h-6 w-6 text-white" />
+                    <Building2 className="h-6 w-6 text-white" />
                   </div>
                 </div>
                 <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
-                  <Globe className="w-3 h-3" /> Promotions to approve
+                  <Globe className="w-3 h-3" /> Listings to approve &bull; Click to review
                 </p>
               </CardContent>
             </Card>
@@ -1721,7 +1737,434 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           )}
         </TabsContent>
 
+        {/* ─── PENDING APPROVALS TAB ─── */}
+        <TabsContent value="pending-approvals" className="space-y-6 mt-0">
+          <Card className="border-0 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="bg-white border-b border-gray-100 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shadow-sm">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    Pending Approvals Queue
+                    {totalPending > 0 && (
+                      <Badge className="bg-amber-500 text-white rounded-full px-2.5 text-xs font-bold">
+                        {totalPending} Total
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Review and approve submitted business directory listings, classified ads, news, and reporter requests
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => loadPendingData(true)}
+                  disabled={refreshing}
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-2 self-start sm:self-auto"
+                >
+                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-amber-500' : ''}`} />
+                  Refresh Queue
+                </Button>
+              </div>
 
+              {/* Sub-Tabs Pills */}
+              <div className="flex flex-wrap gap-2 pt-4 mt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setPendingSubTab('businesses')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    pendingSubTab === 'businesses'
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Pending Businesses</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    pendingSubTab === 'businesses' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>
+                    {pendingData.businesses.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPendingSubTab('classifieds')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    pendingSubTab === 'classifieds'
+                      ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Tag className="w-4 h-4" />
+                  <span>Pending Classifieds</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    pendingSubTab === 'classifieds' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>
+                    {pendingData.classifieds.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPendingSubTab('news')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    pendingSubTab === 'news'
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Newspaper className="w-4 h-4" />
+                  <span>Pending News</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    pendingSubTab === 'news' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>
+                    {pendingData.news.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPendingSubTab('reporters')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    pendingSubTab === 'reporters'
+                      ? 'bg-purple-600 text-white shadow-md shadow-purple-500/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Pending Reporters</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    pendingSubTab === 'reporters' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>
+                    {pendingData.users.length}
+                  </span>
+                </button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="bg-gray-50/50 p-6 min-h-[400px]">
+              {/* SUBTAB 1: PENDING BUSINESSES */}
+              {pendingSubTab === 'businesses' && (
+                <div>
+                  {pendingData.businesses.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 p-8 shadow-sm">
+                      <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-lg">No Pending Business Listings</h4>
+                      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                        All business submissions are reviewed. When users submit businesses via the "Post Your Ad" button or business directory, they appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingData.businesses.map((business) => (
+                        <Card key={business.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-blue-200 transition-all rounded-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
+                            <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 ring-1 ring-gray-900/5">
+                              <img
+                                src={business.coverImage || business.cover_image || business.image || business.images?.[0] || 'https://placehold.co/100?text=Business'}
+                                alt={business.name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = 'https://placehold.co/100?text=Business'; }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg text-gray-900">{business.name}</h3>
+                                <Badge className="bg-blue-50 text-blue-700 border-blue-200">{business.category || 'General'}</Badge>
+                                <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-semibold">PENDING APPROVAL</Badge>
+                              </div>
+                              {business.description && (
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{business.description}</p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                                {(business.ownerName || business.contactName) && (
+                                  <span className="flex items-center gap-1 font-medium text-gray-700">
+                                    <User className="w-3.5 h-3.5 text-gray-400" /> Owner: {business.ownerName || business.contactName}
+                                  </span>
+                                )}
+                                {business.phone && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="w-3.5 h-3.5 text-gray-400" /> {business.phone}
+                                  </span>
+                                )}
+                                {business.whatsapp && (
+                                  <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                                    <MessageCircle className="w-3.5 h-3.5" /> WhatsApp: {business.whatsapp}
+                                  </span>
+                                )}
+                                {(business.address || business.area || business.location) && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400" /> {business.address || business.area || business.location}
+                                  </span>
+                                )}
+                              </div>
+                              {business.submittedAt && (
+                                <p className="text-[11px] text-gray-400 mt-2 font-medium">
+                                  Submitted: {new Date(business.submittedAt).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                              <Button
+                                onClick={() => handleBusinessAction(business.id, 'approve')}
+                                disabled={loading}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-5 font-semibold"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" /> Approve Listing
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleBusinessAction(business.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-10 px-4 font-semibold"
+                              >
+                                <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUBTAB 2: PENDING CLASSIFIEDS */}
+              {pendingSubTab === 'classifieds' && (
+                <div>
+                  {pendingData.classifieds.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 p-8 shadow-sm">
+                      <div className="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-lg">No Pending Classified Ads</h4>
+                      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                        All classified ads are reviewed. When users submit classified ads via "Post Your Ad" or the Classifieds page, they appear here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingData.classifieds.map((classified) => (
+                        <Card key={classified.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-orange-200 transition-all rounded-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
+                            <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 ring-1 ring-gray-900/5">
+                              <img
+                                src={classified.image || classified.images?.[0] || 'https://placehold.co/100?text=Ad'}
+                                alt={getTextValue(classified.title)}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = 'https://placehold.co/100?text=Ad'; }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg text-gray-900">{getTextValue(classified.title)}</h3>
+                                <Badge className="bg-orange-50 text-orange-700 border-orange-200">{classified.category || 'General'}</Badge>
+                                {classified.price && (
+                                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
+                                    {typeof classified.price === 'number'
+                                      ? `₹${classified.price.toLocaleString('en-IN')}`
+                                      : String(classified.price).startsWith('₹')
+                                      ? classified.price
+                                      : `₹${classified.price}`}
+                                  </Badge>
+                                )}
+                                <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-semibold">PENDING APPROVAL</Badge>
+                              </div>
+                              {classified.description && (
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{classified.description}</p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                                {classified.sellerName && (
+                                  <span className="flex items-center gap-1 font-medium text-gray-700">
+                                    <User className="w-3.5 h-3.5 text-gray-400" /> Seller: {classified.sellerName}
+                                  </span>
+                                )}
+                                {(classified.phone || classified.contactPhone) && (
+                                  <span className="flex items-center gap-1">
+                                    <Phone className="w-3.5 h-3.5 text-gray-400" /> {classified.phone || classified.contactPhone}
+                                  </span>
+                                )}
+                                {classified.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400" /> {classified.location}
+                                  </span>
+                                )}
+                              </div>
+                              {classified.createdAt && (
+                                <p className="text-[11px] text-gray-400 mt-2 font-medium">
+                                  Submitted: {new Date(classified.createdAt).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                              <Button
+                                onClick={() => handleClassifiedAction(classified.id, 'approve')}
+                                disabled={loading}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-5 font-semibold"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" /> Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleClassifiedAction(classified.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-10 px-4 font-semibold"
+                              >
+                                <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUBTAB 3: PENDING NEWS */}
+              {pendingSubTab === 'news' && (
+                <div>
+                  {pendingData.news.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 p-8 shadow-sm">
+                      <div className="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-lg">No Pending News Articles</h4>
+                      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                        All reporter articles have been reviewed and published.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingData.news.map((item) => (
+                        <Card key={item.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-indigo-200 transition-all rounded-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
+                            <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 ring-1 ring-gray-900/5">
+                              <img
+                                src={item.mainImage || item.image || 'https://placehold.co/100?text=News'}
+                                alt={getTextValue(item.title)}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.target.src = 'https://placehold.co/100?text=News'; }}
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg text-gray-900">{getTextValue(item.title)}</h3>
+                                <Badge className="bg-indigo-50 text-indigo-700 border-indigo-200">{item.category}</Badge>
+                                {item.city && (
+                                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1 font-semibold">
+                                    <MapPin className="w-3 h-3" /> {item.city}
+                                  </Badge>
+                                )}
+                                <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-semibold">PENDING REVIEW</Badge>
+                              </div>
+                              {item.content && (
+                                <p className="text-sm text-gray-600 line-clamp-2 mb-2">{getTextValue(item.content)}</p>
+                              )}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                                {item.authorName && (
+                                  <span className="flex items-center gap-1 font-medium text-gray-700">
+                                    <User className="w-3.5 h-3.5 text-gray-400" /> Reporter: {item.authorName}
+                                  </span>
+                                )}
+                                {item.createdAt && (
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5 text-gray-400" /> {new Date(item.createdAt).toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                              <Button
+                                onClick={() => handleNewsAction(item.id, 'approve')}
+                                disabled={loading}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-5 font-semibold"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" /> Approve Article
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleNewsAction(item.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-10 px-4 font-semibold"
+                              >
+                                <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUBTAB 4: PENDING REPORTERS */}
+              {pendingSubTab === 'reporters' && (
+                <div>
+                  {pendingData.users.length === 0 ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 p-8 shadow-sm">
+                      <div className="w-16 h-16 bg-purple-50 text-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-lg">No Pending Reporter Applications</h4>
+                      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                        All reporter registration applications have been reviewed.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingData.users.map((item) => (
+                        <Card key={item.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-purple-200 transition-all rounded-2xl">
+                          <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
+                            <div className="w-14 h-14 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center text-xl font-bold flex-shrink-0">
+                              {item.name ? item.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h3 className="font-bold text-lg text-gray-900">{item.name || 'Unnamed Reporter'}</h3>
+                                <Badge className="bg-purple-50 text-purple-700 border-purple-200">{item.role || 'Reporter'}</Badge>
+                                <Badge className="bg-amber-50 text-amber-700 border-amber-200 text-xs font-semibold">PENDING VERIFICATION</Badge>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500 mt-1">
+                                {item.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5 text-gray-400" /> {item.email}</span>}
+                                {item.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5 text-gray-400" /> {item.phone}</span>}
+                                {item.city && <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-gray-400" /> {item.city}</span>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                              <Button
+                                onClick={() => handleUserAction(item.id, 'approve')}
+                                disabled={loading}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-5 font-semibold"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" /> Approve Reporter
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleUserAction(item.id, 'reject')}
+                                disabled={loading}
+                                className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-10 px-4 font-semibold"
+                              >
+                                <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Breaking News Tab */}
         <TabsContent value="breaking" className="space-y-6 mt-0">
@@ -4332,6 +4775,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                 <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
                                   {getTextValue(article.category) || article.genre || 'Article'}
                                 </Badge>
+                                {article.city && (
+                                  <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" /> {article.city}
+                                  </Badge>
+                                )}
                                 <span className="text-xs font-semibold text-blue-700 bg-blue-50/80 px-2.5 py-1 rounded-md border border-blue-100 flex items-center gap-1">
                                   <Users className="h-3 w-3" />
                                   By: {article.authorName || 'Reporter'}
@@ -4355,6 +4803,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                     title: getTextValue(article.title),
                                     content: getTextValue(article.content),
                                     category: article.category || article.categoryId || 'City News',
+                                    city: article.city || '',
                                     mainImage: article.mainImage || '',
                                     youtubeUrl: article.youtubeUrl || article.videoUrl || '',
                                     thumbnails: article.thumbnails || (article.thumbnailUrl ? [article.thumbnailUrl] : []),
@@ -4476,6 +4925,12 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 ${article.enabled === false ? 'border-gray-200 text-gray-400' : 'bg-gray-50 text-gray-700 border-gray-200'}`}>
                                 {getTextValue(article.category) || article.categoryId}
                               </Badge>
+                              {article.city && (
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 bg-indigo-50 text-indigo-700 border-indigo-200 flex items-center gap-1 font-semibold">
+                                  <MapPin className="h-2.5 w-2.5" />
+                                  {article.city}
+                                </Badge>
+                              )}
                               
                               <Badge className={`text-[10px] px-1.5 py-0 h-5 shadow-none border-0 ${
                                 article.approvalStatus === 'approved' ? 'bg-green-100 text-green-700' : 
@@ -4906,7 +5361,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               />
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="space-y-3">
                 <Label className="text-sm font-bold text-gray-700">Category * (Mandatory)</Label>
                 <Select value={newsForm.category} onValueChange={(val) => setNewsForm({ ...newsForm, category: val })}>
@@ -4916,6 +5371,28 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   <SelectContent className="rounded-xl border-gray-100 shadow-xl">
                     {['Crime', 'Politics', 'Education', 'Sports', 'Entertainment', 'Trending', 'Business', 'Nation', 'City News', 'Murder', 'General'].map((cat) => (
                       <SelectItem key={cat} value={cat} className="rounded-lg">{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center justify-between">
+                  <span>Assign City</span>
+                  <span className="text-[11px] text-gray-400 font-normal">For City News</span>
+                </Label>
+                <Select value={newsForm.city || 'none'} onValueChange={(val) => setNewsForm({ ...newsForm, city: val === 'none' ? '' : val })}>
+                  <SelectTrigger className="h-12 bg-gray-50/50 rounded-xl border-gray-200">
+                    <SelectValue placeholder="Select City / National" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-gray-100 shadow-xl max-h-64">
+                    <SelectItem value="none" className="rounded-lg font-semibold text-gray-500">None / National News</SelectItem>
+                    <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Popular Cities</div>
+                    {POPULAR_CITIES.map((city) => (
+                      <SelectItem key={`pop-${city}`} value={city} className="rounded-lg font-medium">{city}</SelectItem>
+                    ))}
+                    <div className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">All Indian Cities</div>
+                    {INDIAN_CITIES_SORTED.filter(c => !POPULAR_CITIES.includes(c)).map((city) => (
+                      <SelectItem key={`all-${city}`} value={city} className="rounded-lg">{city}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

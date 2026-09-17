@@ -230,8 +230,13 @@ const BusinessAdWidget = ({ settings, t, onClick }) => {
             <p className="text-2xl font-bold mb-2">🏢 {settings?.title || 'BUSINESS'}</p>
             <p className="text-lg font-semibold">{settings?.subtitle || t('advertisement')}</p>
             <div className="mt-4 border-t border-white/30 pt-4">
-              <p className="text-sm">{t('advertiseYourBusiness')}</p>
-              <Button size="sm" className="mt-3 bg-white text-orange-600 hover:bg-gray-100 font-bold">{settings?.buttonText || t('postYourAd')}</Button>
+              <Button
+                size="sm"
+                onClick={() => window.dispatchEvent(new CustomEvent('openPostAdModal'))}
+                className="mt-3 bg-white text-orange-600 hover:bg-gray-100 font-bold cursor-pointer shadow-sm active:scale-95 transition-transform"
+              >
+                {settings?.buttonText || t('postYourAd')}
+              </Button>
             </div>
           </div>
         )}

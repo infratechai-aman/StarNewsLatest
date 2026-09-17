@@ -13,13 +13,14 @@ export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url)
         const categoryParam = searchParams.get('category')
+        const cityParam = searchParams.get('city')
         const featured = searchParams.get('featured')
         const limitParam = searchParams.get('limit')
         const pageParam = searchParams.get('page')
         const queryParam = searchParams.get('q') || searchParams.get('search')
 
         // Generate a cache key directly from all search params
-        const cacheKey = `news_${categoryParam || 'all'}_${featured || 'false'}_${limitParam || '50'}_${pageParam || '1'}_${queryParam || ''}`
+        const cacheKey = `news_${categoryParam || 'all'}_${cityParam || 'all'}_${featured || 'false'}_${limitParam || '50'}_${pageParam || '1'}_${queryParam || ''}`
 
         const cached = getCache(cacheKey);
         if (cached) {
@@ -35,6 +36,10 @@ export async function GET(request) {
         let query = db.collection('news_articles')
             .where('approvalStatus', '==', 'approved')
             .where('active', '==', true)
+
+        if (cityParam) {
+            query = query.where('city', '==', cityParam);
+        }
 
         let targetCategoryId = null;
 

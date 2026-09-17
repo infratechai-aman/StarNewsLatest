@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap, ShoppingBag, Sparkles, ArrowRight, Search, Clock, Heart, LayoutGrid, Home, Car, Briefcase, Laptop, Wrench, GraduationCap, MoreHorizontal, Armchair, Dog } from 'lucide-react'
 import Image from 'next/image'
@@ -18,8 +19,10 @@ import { useLanguage } from '@/contexts/LanguageContext'
 const USD_TO_INR_RATE = 83
 
 // Helper: Convert USD to INR
-const convertToINR = (priceStr) => {
-  if (!priceStr) return null
+const convertToINR = (price) => {
+  if (price === null || price === undefined || price === '') return null
+  if (typeof price === 'number') return `₹${price.toLocaleString('en-IN')}`
+  const priceStr = String(price)
 
   // Already INR
   if (priceStr.includes('₹')) {
@@ -46,6 +49,10 @@ const mockClassifieds = [
   { id: '4', title: 'MacBook Pro M2 - Like New', category: 'Electronics', price: '$1,500', description: 'Apple MacBook Pro 14" M2 Pro, 16GB RAM, 512GB SSD. With original box and charger. Under warranty.', location: 'Viman Nagar, Pune', phone: '+91 98765 43213', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400', postedBy: 'GadgetStore', condition: 'Like New' },
 ]
 
+const CLASSIFIED_CATEGORIES = [
+  'IT Jobs', 'Real Estate', 'Vehicles', 'Electronics', 'Furniture', 'Fashion', 'Services', 'Other'
+]
+
 const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView }) => {
   const { t, language } = useLanguage()
   const [classifieds, setClassifieds] = useState([])
@@ -57,6 +64,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   const [submitted, setSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
+    category: 'Other',
     price: '',
     description: '',
     location: '',
@@ -458,7 +466,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               <div className="relative z-10">
                 <h3 className="font-black text-xl leading-tight mb-2">Local People<br/><span className="text-red-400">Real Opportunities</span></h3>
                 <p className="text-xs text-gray-300 mb-5 leading-relaxed">From homes to jobs, find it all on StarNews Classifieds.</p>
-                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm">Post Your Ad →</Button>
+                <Button size="sm" onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform">Post Your Ad →</Button>
               </div>
             </div>
 
@@ -517,16 +525,34 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 />
               </div>
 
-              {/* Price */}
-              <div className="space-y-2">
-                <Label htmlFor="price">Price *</Label>
-                <Input
-                  id="price"
-                  placeholder="e.g., ₹5,000 or Price on Request"
-                  value={formData.price}
-                  onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                  required
-                />
+              {/* Category & Price */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Category *</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLASSIFIED_CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    placeholder="e.g., ₹5,000 or Price on Request"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    required
+                  />
+                </div>
               </div>
 
               {/* Images Upload */}

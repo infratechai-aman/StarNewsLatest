@@ -1,6 +1,6 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
-import { getCache, setCache } from '@/lib/cache';
+import { getCache, setCache, purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,8 +55,20 @@ export async function GET(request) {
             }
         }
 
-        const snapshot = await paginatedQuery.limit(limit + 1).get(); // Fetch 1 extra to check hasMore
-        const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let allDocs = [];
+        try {
+            const snapshot = await paginatedQuery.limit(limit + 1).get(); // Fetch 1 extra to check hasMore
+            allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (indexErr) {
+            console.warn('Classifieds query orderBy failed (likely missing index), falling back to in-memory sort:', indexErr.message);
+            const fallbackSnap = await query.limit(limit * 2).get();
+            allDocs = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allDocs.sort((a, b) => {
+                const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt) || 0;
+                const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt) || 0;
+                return dateB - dateA;
+            });
+        }
         
         const hasMore = allDocs.length > limit;
         const paginatedAds = hasMore ? allDocs.slice(0, limit) : allDocs;
@@ -83,5 +95,55 @@ export async function GET(request) {
     } catch (error) {
         console.error('Error fetching classifieds:', error.message);
         return NextResponse.json({ error: 'Failed to fetch classifieds' }, { status: 500 });
+    }
+}
+
+// POST: Create / Submit Classified Ad (Public or Authenticated)
+export async function POST(request) {
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database not available' }, { status: 503 });
+    }
+    try {
+        const body = await request.json();
+        const { title, description, category, price, contactName, contactPhone, phone, contactEmail, location, images } = body;
+
+        if (!title || !title.trim()) {
+            return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+        }
+
+        const phoneVal = (phone || contactPhone || '').trim();
+        const imageList = Array.isArray(images) ? images.slice(0, 8) : (images ? [images] : []);
+
+        const newAd = {
+            title: title.trim(),
+            description: (description || '').slice(0, 5000),
+            category: (category || 'Other').slice(0, 100),
+            price: price || 'Price on Request',
+            contactName: (contactName || '').slice(0, 100),
+            contactPhone: phoneVal,
+            phone: phoneVal,
+            contactEmail: (contactEmail || '').slice(0, 100),
+            location: (location || '').slice(0, 200),
+            images: imageList,
+            image: imageList[0] || '',
+            approvalStatus: 'pending',
+            active: false,
+            userId: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        const docRef = await db.collection('classified_ads').add(newAd);
+        await docRef.update({ id: docRef.id });
+
+        // Purge pending and public classified caches
+        purgeCache('admin_pending');
+        purgeCache('classifieds');
+
+        return NextResponse.json({ id: docRef.id, ...newAd });
+    } catch (error) {
+        console.error('Error in classifieds POST:', error);
+        return NextResponse.json({ error: 'Failed to submit classified' }, { status: 500 });
     }
 }

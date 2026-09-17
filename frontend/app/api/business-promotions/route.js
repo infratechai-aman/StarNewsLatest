@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // Helper for Admin check
 
@@ -9,19 +10,22 @@ export async function POST(request) {
     const db = getDb();
     try {
         const body = await request.json();
-        const { businessName, ownerName, phone, email, address, description } = body;
+        const { businessName, name, ownerName, phone, email, address, description, category, whatsapp } = body;
 
-        if (!businessName || !phone) {
+        const finalName = (businessName || name || '').trim();
+        const finalPhone = (phone || '').trim();
+
+        if (!finalName || !finalPhone) {
             return NextResponse.json({ error: 'Business Name and Phone are required' }, { status: 400 });
         }
 
         const newPromo = {
-            businessName,
-            ownerName: ownerName || '',
-            phone,
-            email: email || '',
-            address: address || '',
-            description: description || '',
+            businessName: finalName,
+            ownerName: (ownerName || '').trim(),
+            phone: finalPhone,
+            email: (email || '').trim(),
+            address: (address || '').trim(),
+            description: (description || '').trim(),
             status: 'PENDING',
             submittedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -29,6 +33,33 @@ export async function POST(request) {
 
         const docRef = await db.collection('business_promotions').add(newPromo);
         await docRef.update({ id: docRef.id });
+
+        // Also add to businesses collection with approvalStatus: 'pending' so it appears in Admin's pending businesses queue
+        try {
+            const newBiz = {
+                name: finalName,
+                businessName: finalName,
+                ownerName: (ownerName || '').trim(),
+                category: category || 'Services',
+                phone: finalPhone,
+                whatsapp: (whatsapp || finalPhone).trim(),
+                email: (email || '').trim(),
+                address: (address || '').trim(),
+                description: (description || '').trim(),
+                approvalStatus: 'pending',
+                active: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            const bizRef = await db.collection('businesses').add(newBiz);
+            await bizRef.update({ id: bizRef.id });
+        } catch (bizErr) {
+            console.warn('Could not mirror promotion to businesses collection:', bizErr.message);
+        }
+
+        // Purge pending and businesses caches
+        purgeCache('admin_pending');
+        purgeCache('businesses');
 
         return NextResponse.json({ id: docRef.id, ...newPromo });
     } catch (error) {
