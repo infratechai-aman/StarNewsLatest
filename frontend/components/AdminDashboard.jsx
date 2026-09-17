@@ -1205,7 +1205,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     pendingData.users.length
 
   return (
-    <div className="flex h-screen bg-[#F5F6FA] overflow-hidden -m-6 w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
+    <div className="flex h-screen w-full bg-[#F5F6FA] overflow-hidden">
       {/* ─── DARK SIDEBAR (desktop only) ─── */}
       <aside className="hidden lg:flex w-[260px] bg-[#111827] text-gray-300 flex-col h-full shrink-0 shadow-2xl z-20">
         <div className="h-16 flex items-center px-6 bg-[#0B101E] border-b border-gray-800">
