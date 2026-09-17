@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2, Upload, IndianRupee, Sparkles, CheckCircle } from 'lucide-react'
+import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, LogIn, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2, Upload, IndianRupee, Sparkles, CheckCircle } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
@@ -494,7 +494,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                {user && (
+                {user ? (
                   <>
                     <div className="w-px h-8 bg-gray-200" />
                     <DropdownMenu>
@@ -515,6 +515,18 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 rounded-lg"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-px h-8 bg-gray-200" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentView('login')}
+                      className="border-gray-200 text-gray-700 hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-full font-semibold px-4 h-9 shadow-sm"
+                    >
+                      <LogIn className="h-4 w-4 mr-1.5 text-red-600" /> Login
+                    </Button>
                   </>
                 )}
               </div>
@@ -1063,7 +1075,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
 
                 <div className="my-2 border-t border-gray-100"></div>
 
-                {user && (
+                {user ? (
                   <div className="px-2 py-2 bg-gray-50 rounded-lg mx-2">
                     <div className="flex items-center gap-3 mb-3">
                       <Avatar className="h-10 w-10"><AvatarImage src={user.profileImage} /><AvatarFallback className="bg-red-100 text-red-600">{user.name?.[0]?.toUpperCase()}</AvatarFallback></Avatar>
@@ -1072,8 +1084,29 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         <p className="text-xs text-gray-500 truncate max-w-[140px]">{user.email}</p>
                       </div>
                     </div>
+                    {user.role === ROLES.REPORTER && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full justify-center bg-red-600 hover:bg-red-700 text-white mb-2"
+                        onClick={() => { setCurrentView('reporter-dashboard'); setMobileMenuOpen(false); }}
+                      >
+                        <Newspaper className="mr-2 h-4 w-4" /> Reporter Dashboard
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50" onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />{t('logout')}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="px-2 mx-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-center border-red-200 text-red-600 hover:bg-red-50 font-bold h-10 rounded-xl"
+                      onClick={() => { setCurrentView('login'); setMobileMenuOpen(false); }}
+                    >
+                      <LogIn className="mr-2 h-4 w-4" /> Login / Reporter Login
                     </Button>
                   </div>
                 )}

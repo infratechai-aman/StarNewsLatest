@@ -18,15 +18,32 @@ export async function GET(request) {
         }
 
         // Fetch latest data from Firestore
-        const userDoc = await db.collection('users').doc(user.userId).get()
+        let userDoc = await db.collection('users').doc(user.userId).get();
 
-        if (!userDoc.exists) {
-            return NextResponse.json({ error: 'User profile not found' }, { status: 404 })
+        if (!userDoc.exists && user.email) {
+            // Check if document was created with an alternate ID or email
+            const emailSnap = await db.collection('users')
+                .where('email', '==', user.email.toLowerCase().trim())
+                .get();
+
+            if (!emailSnap.empty) {
+                userDoc = emailSnap.docs[0];
+                // Sync to user.userId for future direct lookups
+                await db.collection('users').doc(user.userId).set({
+                    ...userDoc.data(),
+                    id: user.userId,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
         }
 
-        // fix(P2-AUTH-01): Only return safe, known fields — never expose raw Firestore doc.
-        // This prevents leaking internal tokens, admin notes, or any unexpected fields.
-        const d = userDoc.data();
+        const d = userDoc.exists ? userDoc.data() : {
+            id: user.userId,
+            email: user.email || '',
+            name: user.name || '',
+            role: user.role || 'registered',
+            status: 'active'
+        };
         return NextResponse.json({
             id: d.id || user.userId,
             email: d.email || '',

@@ -1,16 +1,14 @@
-import { getDb } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 // POST: Approve, Reject, or Ban a User (Admin only)
-// fix(P3-BE-01): Extended to support 'approve', 'reject', and 'ban' actions.
-// Previously only mapped 'approve' -> 'active' and everything else -> 'inactive',
-// which meant there was no way to distinguish a banned user from a rejected one.
-// Also uncommented error logging (P2-BE-02 pattern).
 export async function POST(request) {
     const db = getDb();
+    const auth = getAuth();
     try {
         const authResult = await requireSuperAdmin(request);
         if (authResult.error) {
@@ -39,17 +37,58 @@ export async function POST(request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        const userData = doc.data();
         const statusMap = { approve: 'active', reject: 'rejected', ban: 'banned' };
         const newStatus = statusMap[action];
 
-        await docRef.update({
+        const updateData = {
             status: newStatus,
             updatedAt: new Date().toISOString()
-        });
+        };
 
-        return NextResponse.json({ success: true, userId, status: newStatus });
+        if (action === 'approve') {
+            if (!userData.role || userData.role === 'registered') {
+                updateData.role = 'reporter';
+            }
+        }
+
+        await docRef.update(updateData);
+        const finalRole = updateData.role || userData.role || 'reporter';
+
+        // Set Firebase Auth custom claims
+        if (auth && action === 'approve') {
+            try {
+                await auth.setCustomUserClaims(userId, { role: finalRole });
+            } catch (err) {
+                console.warn('Could not set custom user claims on approved user:', err.message);
+            }
+        }
+
+        // Also sync any matching reporter_applications
+        if (userData.email) {
+            try {
+                const emailNorm = userData.email.toLowerCase().trim();
+                const appSnaps = await db.collection('reporter_applications')
+                    .where('email', '==', emailNorm)
+                    .get();
+
+                for (const appDoc of appSnaps.docs) {
+                    await appDoc.ref.update({
+                        status: action === 'approve' ? 'APPROVED' : action === 'reject' ? 'REJECTED' : appDoc.data().status,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+            } catch (e) {
+                console.warn('Could not sync reporter applications:', e.message);
+            }
+        }
+
+        purgeCache('admin_pending');
+
+        return NextResponse.json({ success: true, userId, status: newStatus, role: finalRole });
     } catch (error) {
         console.error('Error approving/banning user:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+

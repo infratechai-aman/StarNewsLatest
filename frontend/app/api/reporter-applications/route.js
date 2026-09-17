@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
+import { purgeCache } from '@/lib/cache';
 
 export async function POST(request) {
     try {
@@ -73,6 +74,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
     const db = getDb();
+    const auth = getAuth();
     try {
         const authResult = await requireSuperAdmin(request);
         if (authResult.error) {
@@ -85,17 +87,95 @@ export async function PUT(request) {
         const body = await request.json();
         const { id, status, adminNote } = body;
 
-        if (!id || !status || !['PENDING', 'CONTACTED', 'REJECTED'].includes(status)) {
-            return NextResponse.json({ error: 'ID and valid status are required' }, { status: 400 });
+        const validStatuses = ['PENDING', 'CONTACTED', 'APPROVED', 'REJECTED'];
+        if (!id || !status || !validStatuses.includes(status)) {
+            return NextResponse.json({ error: `ID and valid status (${validStatuses.join(', ')}) are required` }, { status: 400 });
         }
 
-        await db.collection('reporter_applications').doc(id).update({
+        const appRef = db.collection('reporter_applications').doc(id);
+        const appDoc = await appRef.get();
+        if (!appDoc.exists) {
+            return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+        }
+        const appData = appDoc.data();
+        const appEmail = (appData.email || '').toLowerCase().trim();
+
+        // If approving, update or create user record with role: 'reporter' and status: 'active'
+        if (status === 'APPROVED' && appEmail) {
+            // Check if user exists in Firestore users collection
+            const userSnap = await db.collection('users')
+                .where('email', '==', appEmail)
+                .get();
+
+            let targetUserId = null;
+
+            if (!userSnap.empty) {
+                // User already has a document in 'users'
+                const userDoc = userSnap.docs[0];
+                targetUserId = userDoc.id;
+                await userDoc.ref.update({
+                    role: 'reporter',
+                    status: 'active',
+                    name: appData.fullName || userDoc.data().name || '',
+                    phone: appData.phone || userDoc.data().phone || '',
+                    updatedAt: new Date().toISOString()
+                });
+            } else {
+                // Check if user exists in Firebase Auth by email
+                if (auth) {
+                    try {
+                        const existingAuthUser = await auth.getUserByEmail(appEmail);
+                        if (existingAuthUser) {
+                            targetUserId = existingAuthUser.uid;
+                        }
+                    } catch (e) {
+                        // User not in Firebase Auth yet
+                    }
+                }
+
+                // If not in Firebase Auth, create doc in 'users' with new ID
+                const userDocRef = targetUserId
+                    ? db.collection('users').doc(targetUserId)
+                    : db.collection('users').doc();
+
+                targetUserId = userDocRef.id;
+
+                await userDocRef.set({
+                    id: targetUserId,
+                    email: appEmail,
+                    name: appData.fullName || '',
+                    phone: appData.phone || '',
+                    role: 'reporter',
+                    status: 'active',
+                    createdAt: appData.submittedAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+            }
+
+            // Set Firebase Auth custom claims role = 'reporter'
+            if (auth && targetUserId) {
+                try {
+                    await auth.setCustomUserClaims(targetUserId, { role: 'reporter' });
+                } catch (err) {
+                    console.warn('Could not set custom user claims on approved reporter:', err.message);
+                }
+            }
+
+            // Purge caches so reporter lists and pending queues update immediately
+            purgeCache('admin_pending');
+        }
+
+        await appRef.update({
             status,
             adminNote: adminNote || '',
             updatedAt: new Date().toISOString()
         });
 
-        return NextResponse.json({ success: true, message: 'Application updated' });
+        return NextResponse.json({
+            success: true,
+            message: status === 'APPROVED' ? 'Reporter application approved and user upgraded to reporter' : `Application marked as ${status}`,
+            status
+        });
     } catch (error) {
         console.error('Reporter application PUT error:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });

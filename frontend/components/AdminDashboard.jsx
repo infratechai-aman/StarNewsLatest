@@ -103,6 +103,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const [newsCategories, setNewsCategories] = useState([])
   const [reporterApplications, setReporterApplications] = useState([])
   const [loadingReporterApps, setLoadingReporterApps] = useState(false)
+  const [reporterAppFilter, setReporterAppFilter] = useState('ALL')
 
   // Create Reporter Form State
   const [showCreateReporterForm, setShowCreateReporterForm] = useState(false)
@@ -270,12 +271,21 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const handleUserAction = async (userId, action) => {
     try {
       setLoading(true)
+      const appItem = pendingData.users?.find(u => u.id === userId && u.isApplication)
+      if (appItem) {
+        await handleReporterAppAction(userId, action === 'approve' ? 'APPROVED' : 'REJECTED')
+        return
+      }
       await admin.approveUser(userId, action)
       toast({
         title: action === 'approve' ? 'User Approved' : 'User Rejected',
         description: action === 'approve' ? 'User can now access their dashboard.' : 'User account rejected.'
       })
-      loadPendingData()
+      await Promise.all([
+        loadPendingData(true),
+        loadAllReporters(),
+        loadReporterApplications()
+      ])
     } catch (error) {
       toast({ title: 'Action Failed', description: error.message, variant: 'destructive' })
     } finally {
@@ -464,11 +474,19 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ id, status })
       })
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        toast({ title: `Application marked as ${status}` })
-        loadReporterApplications()
+        toast({
+          title: status === 'APPROVED' ? 'Application Approved' : `Application marked as ${status}`,
+          description: status === 'APPROVED' ? 'User role updated to Reporter in database.' : undefined
+        })
+        await Promise.all([
+          loadReporterApplications(),
+          loadAllReporters(),
+          loadPendingData(true)
+        ])
       } else {
-        throw new Error('Failed to update')
+        throw new Error(data.error || 'Failed to update')
       }
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
@@ -672,8 +690,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     if (activeTab === 'businesses') loadAllBusinesses()
     if (activeTab === 'classifieds') loadAllClassifieds()
     if (activeTab === 'manage-news') loadAllNews()
-    if (activeTab === 'reporter-apps') loadReporterApplications()
-    if (activeTab === 'reporters') loadAllReporters()
+    if (activeTab === 'reporter-apps' || activeTab === 'reporters') {
+      loadReporterApplications()
+      loadAllReporters()
+      loadPendingData(true)
+    }
     if (activeTab === 'enewspaper') loadAllEnewspapers()
     if (activeTab === 'content') {
       loadSidebarAd()
@@ -1270,7 +1291,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     },
     {
       id: 'reporters',
-      label: 'Reporters',
+      label: 'Reporters & Users',
       desc: 'Applications & team roster',
       icon: Users,
       iconGradient: 'from-[#007AFF] via-[#0284C7] to-[#0055B3]',
@@ -1357,7 +1378,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </button>
           
           <button onClick={() => setActiveTab('reporters')} className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'reporters' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
-            <div className="flex items-center gap-3"><Users className="w-4 h-4" /> Reporters</div>
+            <div className="flex items-center gap-3"><Users className="w-4 h-4" /> Reporters & Users</div>
             {pendingData.users.length > 0 && <span className="bg-red-500/20 text-red-400 py-0.5 px-2 rounded-full text-[10px] font-bold">{pendingData.users.length}</span>}
           </button>
 
@@ -3187,6 +3208,34 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               </div>
             </CardHeader>
             <CardContent className="bg-white p-6">
+              {/* Status Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-gray-100 pb-4">
+                {[
+                  { id: 'ALL', label: 'All Applications', count: reporterApplications.length },
+                  { id: 'PENDING', label: 'Pending', count: reporterApplications.filter(a => a.status === 'PENDING').length },
+                  { id: 'CONTACTED', label: 'Contacted', count: reporterApplications.filter(a => a.status === 'CONTACTED').length },
+                  { id: 'APPROVED', label: 'Approved', count: reporterApplications.filter(a => a.status === 'APPROVED').length },
+                  { id: 'REJECTED', label: 'Rejected', count: reporterApplications.filter(a => a.status === 'REJECTED').length },
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setReporterAppFilter(tab.id)}
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      reporterAppFilter === tab.id
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span>{tab.label}</span>
+                    <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                      reporterAppFilter === tab.id ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               {loadingReporterApps ? (
                 <div className="text-center py-12 text-muted-foreground bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
                   <RefreshCw className="h-8 w-8 text-purple-300 mx-auto mb-3 animate-spin" />
@@ -3201,18 +3250,38 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {reporterApplications.map((app) => (
-                    <Card key={app.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${app.status === 'PENDING' ? 'ring-yellow-200 hover:ring-yellow-300' : app.status === 'CONTACTED' ? 'ring-blue-200 hover:ring-blue-300' : 'ring-red-200 hover:ring-red-300'}`}>
+                  {reporterApplications
+                    .filter(app => {
+                      if (reporterAppFilter === 'ALL') return true
+                      return app.status === reporterAppFilter
+                    })
+                    .sort((a, b) => {
+                      const rank = { PENDING: 1, CONTACTED: 2, APPROVED: 3, REJECTED: 4 }
+                      return (rank[a.status] || 5) - (rank[b.status] || 5)
+                    })
+                    .map((app) => (
+                    <Card key={app.id} className={`border-0 shadow-sm ring-1 overflow-hidden transition-all rounded-xl ${
+                      app.status === 'PENDING' ? 'ring-yellow-200 hover:ring-yellow-300' :
+                      app.status === 'CONTACTED' ? 'ring-blue-200 hover:ring-blue-300' :
+                      app.status === 'APPROVED' ? 'ring-emerald-200 hover:ring-emerald-300' :
+                      'ring-red-200 hover:ring-red-300'
+                    }`}>
                       <div className="flex h-full">
-                        <div className={`w-1.5 ${app.status === 'PENDING' ? 'bg-yellow-500' : app.status === 'CONTACTED' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
+                        <div className={`w-1.5 ${
+                          app.status === 'PENDING' ? 'bg-yellow-500' :
+                          app.status === 'CONTACTED' ? 'bg-blue-500' :
+                          app.status === 'APPROVED' ? 'bg-emerald-500' :
+                          'bg-red-500'
+                        }`}></div>
                         <CardContent className="p-5 flex-1 flex flex-col justify-between">
                           <div>
                             <div className="flex items-center justify-between mb-3">
                               <h3 className="font-bold text-gray-800 text-lg truncate pr-2">{app.fullName}</h3>
                               <Badge variant="outline" className={
                                 app.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                  app.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    'bg-red-50 text-red-700 border-red-200'
+                                app.status === 'CONTACTED' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                app.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                'bg-red-50 text-red-700 border-red-200'
                               }>
                                 {app.status}
                               </Badge>
@@ -3241,18 +3310,42 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                             <p className="text-[11px] text-gray-400 mt-3 font-medium">Submitted: {new Date(app.submittedAt).toLocaleDateString()}</p>
                           </div>
                           
-                          <div className="flex flex-wrap gap-2 mt-4">
+                          <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                             {app.status === 'PENDING' && (
                               <>
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg flex-1" onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}>
-                                  <Check className="h-3.5 w-3.5 mr-1" /> Contact
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
+                                <Button size="sm" variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}>
+                                  <Phone className="h-3.5 w-3.5 mr-1" /> Contacted
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
                                   <X className="h-3.5 w-3.5 mr-1" /> Reject
                                 </Button>
                               </>
                             )}
-                            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9" onClick={() => handleDeleteReporterApp(app.id)}>
+                            {app.status === 'CONTACTED' && (
+                              <>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
+                                  <X className="h-3.5 w-3.5 mr-1" /> Reject
+                                </Button>
+                              </>
+                            )}
+                            {app.status === 'APPROVED' && (
+                              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex-1">
+                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                <span>Approved Reporter</span>
+                              </div>
+                            )}
+                            {app.status === 'REJECTED' && (
+                              <Button size="sm" variant="outline" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Re-approve
+                              </Button>
+                            )}
+                            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9 shrink-0" onClick={() => handleDeleteReporterApp(app.id)} title="Delete Application">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

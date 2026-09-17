@@ -29,21 +29,40 @@ export async function GET(request) {
 
     try {
         // Run all pending queries in parallel
-        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers] = await Promise.all([
+        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers, pendingApplications] = await Promise.all([
             db.collection('news_articles').where('approvalStatus', '==', 'pending').get(),
             db.collection('businesses').where('approvalStatus', '==', 'pending').get(),
             db.collection('classified_ads').where('approvalStatus', '==', 'pending').get(),
-            db.collection('users').where('status', '==', 'pending').get()
+            db.collection('users').where('status', '==', 'pending').get(),
+            db.collection('reporter_applications').where('status', '==', 'PENDING').get()
         ]);
 
         const mapDocs = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.id }));
+
+        // Map pending applications into users format so they appear in pending reporter queues
+        const existingEmails = new Set(pendingUsers.docs.map(d => (d.data().email || '').toLowerCase().trim()));
+        const extraAppUsers = pendingApplications.docs
+            .filter(d => !existingEmails.has((d.data().email || '').toLowerCase().trim()))
+            .map(d => {
+                const data = d.data();
+                return {
+                    id: d.id,
+                    isApplication: true,
+                    name: data.fullName || 'Reporter Applicant',
+                    email: data.email,
+                    phone: data.phone,
+                    role: 'reporter',
+                    status: 'pending',
+                    createdAt: data.submittedAt || new Date().toISOString()
+                };
+            });
 
         const result = {
             news: mapDocs(pendingNews),
             businesses: mapDocs(pendingBusinesses),
             classifieds: mapDocs(pendingClassifieds),
             ads: [],
-            users: mapDocs(pendingUsers)
+            users: [...mapDocs(pendingUsers), ...extraAppUsers]
         };
 
         setCache(CACHE_KEY, result, 60 * 1000); // 60s TTL
