@@ -451,16 +451,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
 
               {/* RIGHT: Search, Social Media & Profile — clean & refined */}
               <div className="flex items-center gap-4">
-                {/* Desktop Search Button */}
-                <button
-                  onClick={() => setSearchModalOpen(true)}
-                  className="flex items-center gap-2 bg-gray-100 hover:bg-red-50 hover:border-red-200 border border-gray-200/80 rounded-full px-3.5 py-1.5 text-gray-500 hover:text-red-600 transition-all duration-200 group text-xs shadow-sm cursor-pointer"
-                  title="Search news articles (Ctrl+K)"
-                >
-                  <Search className="h-3.5 w-3.5 text-gray-400 group-hover:text-red-600 transition-colors" />
-                  <span className="font-medium text-gray-600 group-hover:text-red-700">Search news...</span>
-                  <kbd className="hidden xl:inline-block bg-white border border-gray-200 text-[10px] font-semibold text-gray-400 px-1.5 py-0.5 rounded shadow-[0_1px_1px_rgba(0,0,0,0.05)]">Ctrl+K</kbd>
-                </button>
+
 
                 {/* Social icons in a subtle pill container */}
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-3 py-1.5">
@@ -926,6 +917,23 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                       </form>
                     </TabsContent>
                   </Tabs>
+
+                  {/* Contact CTA — for custom / premium ads */}
+                  <div className="mt-4 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3.5 flex items-center gap-3">
+                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-red-600 flex items-center justify-center shadow-sm">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold text-red-700 uppercase tracking-wide">Want a Custom / Premium Ad?</p>
+                      <p className="text-[12px] text-gray-600 mt-0.5">Contact us directly for better placement &amp; reach</p>
+                    </div>
+                    <a
+                      href="tel:7028033763"
+                      className="flex-shrink-0 bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+                    >
+                      📞 70280 33763
+                    </a>
+                  </div>
                 </DialogContent>
               </Dialog>
 
