@@ -147,72 +147,52 @@ export default function ShortsPage({ setCurrentView }) {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-1">
                   {shorts.map((short, idx) => {
+                    const isImage = short.mediaType === 'image';
                     const isYT = short.mediaUrl?.includes('youtube') || short.mediaUrl?.includes('youtu.be');
                     const ytMatch = short.mediaUrl?.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
                     const ytId = ytMatch?.[1];
-                    const thumb = short.mediaType === 'image' ? short.mediaUrl : (ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : short.thumbnailUrl);
-                    const catColors = ['bg-red-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
-                    const catColor = catColors[idx % catColors.length];
+                    const thumb = isImage ? short.mediaUrl : (ytId ? `https://img.youtube.com/vi/${ytId}/mqdefault.jpg` : short.thumbnailUrl);
 
                     return (
                       <div
                         key={short.id || idx}
-                        className="cursor-pointer group relative"
+                        className="cursor-pointer group relative aspect-square bg-gray-100 overflow-hidden"
                         onClick={() => openPlayer(idx)}
                       >
-                        {/* Thumbnail */}
-                        <div className="relative aspect-[9/16] rounded-xl overflow-hidden bg-gray-900">
-                          {thumb ? (
-                            <img src={thumb} alt={short.title || 'Short'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display = 'none'} />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                              <Play className="w-10 h-10 text-white/40" />
-                            </div>
-                          )}
-                          {/* Gradient overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                          {/* Category badge */}
-                          {short.category && (
-                            <span className={`absolute top-2 left-2 text-[9px] font-black text-white px-2 py-0.5 rounded shadow-sm ${catColor}`}>
-                              {short.category.toUpperCase()}
-                            </span>
-                          )}
-                          {/* Duration */}
-                          <span className="absolute top-2 right-2 text-[9px] font-bold text-white bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded shadow-sm">
-                            {short.duration || (idx % 3 === 0 ? '0:45' : idx % 2 === 0 ? '1:12' : '0:58')}
+                        {/* Image */}
+                        {thumb ? (
+                          <img src={thumb} alt={short.title || 'Post'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display = 'none'} />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                            <Play className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                        {/* Video indicator */}
+                        {!isImage && (
+                          <div className="absolute top-2 right-2">
+                            <Play className="w-4 h-4 text-white drop-shadow-lg fill-white" />
+                          </div>
+                        )}
+                        {/* Hover overlay — Instagram style */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-5">
+                          <span className="flex items-center gap-1.5 text-white font-bold text-sm">
+                            <Heart className="w-5 h-5 fill-white" />
+                            {short.likes || Math.floor(Math.random() * 999 + 100)}
                           </span>
-                          {/* Play button */}
-                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40 shadow-lg">
-                              <Play className="w-5 h-5 text-white ml-0.5" />
-                            </div>
-                          </div>
-                          {/* Title + stats at bottom */}
-                          <div className="absolute bottom-0 left-0 right-0 p-3">
-                            <p className="text-white text-[11px] font-bold line-clamp-2 leading-snug mb-2">{short.title || 'News Short'}</p>
-                            <div className="flex items-center gap-3 text-white/80">
-                              <span className="flex items-center gap-1 text-[10px] font-semibold">
-                                <Heart className="w-3 h-3" />
-                                {short.likes || Math.floor(Math.random() * 2000 + 100)}
-                              </span>
-                              <span className="flex items-center gap-1 text-[10px] font-semibold">
-                                <Bookmark className="w-3 h-3" />
-                              </span>
-                              <span className="flex items-center gap-1 text-[10px] font-semibold ml-auto">
-                                <Share2 className="w-3 h-3" />
-                              </span>
-                            </div>
-                          </div>
+                          <span className="flex items-center gap-1.5 text-white font-bold text-sm">
+                            <MessageCircle className="w-5 h-5 fill-white" />
+                            {short.comments || Math.floor(Math.random() * 99 + 5)}
+                          </span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                <div className="text-center mt-8 mb-4">
+                <div className="text-center mt-6 mb-4">
                   <button className="border border-gray-200 text-gray-700 text-xs font-bold px-6 py-2.5 rounded-full hover:bg-gray-50 transition-colors">
-                    Load More Shorts ↓
+                    Load More Posts ↓
                   </button>
                 </div>
               </>

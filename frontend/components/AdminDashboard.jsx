@@ -1206,8 +1206,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
   return (
     <div className="flex h-screen bg-[#F5F6FA] overflow-hidden -m-6 w-[100vw] relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]">
-      {/* ─── DARK SIDEBAR ─── */}
-      <aside className="w-[260px] bg-[#111827] text-gray-300 flex flex-col h-full shrink-0 shadow-2xl z-20">
+      {/* ─── DARK SIDEBAR (desktop only) ─── */}
+      <aside className="hidden lg:flex w-[260px] bg-[#111827] text-gray-300 flex-col h-full shrink-0 shadow-2xl z-20">
         <div className="h-16 flex items-center px-6 bg-[#0B101E] border-b border-gray-800">
           <img src="/starnews-logo.png" alt="StarNews India" className="h-9 w-auto object-contain pointer-events-none drop-shadow-md" />
         </div>
@@ -1286,9 +1286,23 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
       {/* ─── MAIN CONTENT AREA ─── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F5F6FA]">
-        
-        {/* TOP HEADER */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 shrink-0 z-10">
+
+        {/* ─── MOBILE TOP HEADER (mobile only) ─── */}
+        <header className="lg:hidden h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 shrink-0 z-20 shadow-sm">
+          <div className="flex items-center gap-2">
+            <img src="/starnews-logo.png" alt="StarNews" className="h-8 w-auto object-contain" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Bell className="w-5 h-5 text-gray-600" />
+              {totalPending > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{totalPending}</span>}
+            </div>
+            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">A</div>
+          </div>
+        </header>
+
+        {/* TOP HEADER (desktop only) */}
+        <header className="hidden lg:flex h-16 bg-white border-b border-gray-200 items-center justify-between px-8 shrink-0 z-10">
           <div className="flex items-center w-96 relative">
              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -1325,7 +1339,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         </header>
 
         {/* PAGE SCROLL AREA */}
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-8 pb-20 lg:pb-8 custom-scrollbar">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* The TabsList has been moved to the sidebar above! */}
 
@@ -4933,6 +4947,42 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── MOBILE BOTTOM NAV (mobile only) ─── */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50" style={{ background: 'rgba(17,24,39,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
+          {[
+            { tab: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Home' },
+            { tab: 'manage-news', icon: <Newspaper className="w-5 h-5" />, label: 'News' },
+            { tab: 'classifieds', icon: <Tag className="w-5 h-5" />, label: 'Add', isCenter: true },
+            { tab: 'shorts', icon: <Video className="w-5 h-5" />, label: 'Shorts' },
+            { tab: 'settings', icon: <Settings className="w-5 h-5" />, label: 'More' },
+          ].map(({ tab, icon, label, isCenter }) => (
+            isCenter ? (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex flex-col items-center -mt-6"
+              >
+                <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-900/40 border-2 border-gray-900">
+                  <Plus className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-[10px] mt-1 font-semibold text-gray-400">Add</span>
+              </button>
+            ) : (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all ${activeTab === tab ? 'text-red-500' : 'text-gray-500'}`}
+              >
+                {icon}
+                <span className="text-[10px] font-semibold">{label}</span>
+                {activeTab === tab && <span className="w-1 h-1 rounded-full bg-red-500 absolute -bottom-0.5" />}
+              </button>
+            )
+          ))}
+        </div>
+      </nav>
     </div >
   )
 }
