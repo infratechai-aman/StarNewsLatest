@@ -123,11 +123,12 @@ const LiveTVPage = ({ setCurrentView }) => {
                 {youtubeId ? (
                   <iframe
                     key={youtubeId}
-                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`}
+                    src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : ''}`}
                     title={activeStream?.title || 'Live TV'}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
                     style={{ border: 'none' }}
                   />
                 ) : (

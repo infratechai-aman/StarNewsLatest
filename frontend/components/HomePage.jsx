@@ -921,21 +921,21 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             </div>
 
             {/* Today's E-Paper widget */}
-            <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
-              <div className="p-3 pb-2 relative z-10 bg-white">
-                <h3 className="font-black text-sm text-gray-900">Today's E-Paper</h3>
-                <p className="text-[11px] text-gray-500">Read the latest edition</p>
+            <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
+              <div className="p-4 pb-2 relative z-10 bg-white">
+                <h3 className="font-black text-base text-gray-900">Today's E-Paper</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Read the latest edition</p>
               </div>
-              <div className="relative w-full overflow-hidden flex justify-center items-center -mt-2 -mb-2" style={{ height: '170px' }}>
+              <div className="relative w-full overflow-hidden flex justify-center items-center" style={{ height: '280px' }}>
                 <Image 
-                  src="/epaper_widget_mockup_1789524453621.jpg" 
-                  alt="E-Paper Preview" 
+                  src="/star_news_epaper.jpg" 
+                  alt="Star News India E-Paper" 
                   fill
-                  className="object-contain group-hover:scale-105 transition-transform duration-500" 
+                  className="object-contain group-hover:scale-105 transition-transform duration-500 p-2" 
                 />
               </div>
               <button
-                className="w-full mt-0 bg-[#0f111a] hover:bg-red-600 text-white text-[12px] font-bold py-3 px-4 transition-colors flex items-center justify-between relative z-10 shadow-lg rounded-b-xl"
+                className="w-full mt-0 bg-[#0f111a] hover:bg-red-600 text-white text-sm font-bold py-3.5 px-4 transition-colors flex items-center justify-between relative z-10 shadow-lg rounded-b-xl"
               >
                 Read E-Paper <ChevronRight className="w-4 h-4" />
               </button>
@@ -1255,46 +1255,37 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       </section>
 
-      {/* BE A PART OF THE STORY — CTA Banner */}
-      <section className="w-full bg-gray-50 border-t border-b border-gray-200 py-6 mb-10 hidden lg:block">
-        <div className="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-8">
+      {/* BE A PART OF THE STORY — Premium iOS-Style CTA Banner */}
+      <section className="w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-5 mb-10 hidden lg:block relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.08),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(220,38,38,0.05),transparent_50%)]"></div>
+        <div className="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-8 relative z-10">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-900/30">
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-black text-lg text-gray-900">Be a Part of the Story</h3>
-              <p className="text-gray-500 text-xs">Share news, photos or video from your area. Because every story matters.</p>
+              <h3 className="font-black text-lg text-white">Be a Part of the Story</h3>
+              <p className="text-gray-400 text-xs">Share news, photos or video from your area. Because every story matters.</p>
             </div>
           </div>
           <button
             onClick={() => { window.open('/reporter', '_self') }}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-black text-sm px-6 py-3 transition-colors flex-shrink-0"
+            className="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-900 font-black text-sm px-7 py-3 rounded-full transition-all flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-[1.02]"
           >
             Join as Reporter <ChevronRight className="w-4 h-4" />
           </button>
-          <div className="flex gap-8 flex-shrink-0">
-            <div className="text-center">
-              <div className="flex items-center gap-1 justify-center">
-                <Users className="w-4 h-4 text-red-600" />
-                <span className="font-black text-xl text-gray-900">10K+</span>
+          <div className="flex gap-3 flex-shrink-0">
+            {[
+              { icon: '🛡️', label: 'Verified Platform' },
+              { icon: '📱', label: 'Instant Publishing' },
+              { icon: '🌍', label: 'Pan-India Reach' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+                <span className="text-sm">{item.icon}</span>
+                <span className="text-xs font-semibold text-gray-300 whitespace-nowrap">{item.label}</span>
               </div>
-              <p className="text-[10px] text-gray-500 font-bold">Citizen Reporters</p>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center gap-1 justify-center">
-                <BookOpen className="w-4 h-4 text-red-600" />
-                <span className="font-black text-xl text-gray-900">500+</span>
-              </div>
-              <p className="text-[10px] text-gray-500 font-bold">Stories Every Day</p>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center gap-1 justify-center">
-                <MapPin className="w-4 h-4 text-red-600" />
-                <span className="font-black text-xl text-gray-900">Real</span>
-              </div>
-              <p className="text-[10px] text-gray-500 font-bold">Impact Across India</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
