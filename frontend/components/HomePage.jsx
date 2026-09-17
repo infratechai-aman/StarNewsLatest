@@ -1224,22 +1224,18 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <button onClick={() => setCurrentView('live-tv')} className="text-red-600 text-[11px] font-black uppercase tracking-wider hover:underline flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-full">Watch Now <ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
             <div
-              onClick={() => setCurrentView('live-tv')}
               className="block relative aspect-video bg-gray-900 overflow-hidden group cursor-pointer rounded-lg shadow-sm"
             >
-              <img
-                src="/placeholder-news.svg"
-                alt="StarNews Live"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={(e) => { e.target.style.display = 'none' }}
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/GFjuqQmfVIU?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1"
+                title="StarNews Live"
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                style={{ border: 'none' }}
               />
-              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/0 transition-colors"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-10 bg-red-600/90 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform backdrop-blur-sm">
-                  <Play className="w-6 h-6 text-white fill-white ml-0.5" />
-                </div>
-              </div>
-              <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 uppercase rounded flex items-center gap-1.5 shadow-md">
+              <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 uppercase rounded flex items-center gap-1.5 shadow-md pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                 LIVE
               </div>

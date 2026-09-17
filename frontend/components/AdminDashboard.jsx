@@ -22,10 +22,10 @@ import {
 } from '@/lib/contentStore'
 import {
   LayoutDashboard, Newspaper, AlertCircle, Megaphone, Navigation,
-  Building2, Tag, Users, FileText, Settings, Eye, Check, X,
-  Edit, Trash2, Plus, GripVertical, RefreshCw, Lock, Bell,
+  Building2, Tag, Users, FileText, Settings, Eye, EyeOff, Check, X,
+  Edit, Trash2, Plus, PlusCircle, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
