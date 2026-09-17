@@ -1226,8 +1226,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Business Directory',
       desc: 'Local businesses & stores',
       icon: Building2,
-      iconBg: 'bg-emerald-500/15 text-emerald-400',
-      iconColor: 'text-emerald-400',
+      iconGradient: 'from-[#34C759] via-[#30B34D] to-[#248A3D]',
+      iconShadow: 'shadow-emerald-500/35',
       badge: pendingData.businesses.length
     },
     {
@@ -1235,8 +1235,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Classifieds',
       desc: 'Jobs, property & vehicles',
       icon: Tag,
-      iconBg: 'bg-amber-500/15 text-amber-400',
-      iconColor: 'text-amber-400',
+      iconGradient: 'from-[#FF9500] via-[#F57C00] to-[#E07000]',
+      iconShadow: 'shadow-orange-500/35',
       badge: pendingData.classifieds.length
     },
     {
@@ -1244,8 +1244,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Advertisements',
       desc: 'Sidebar, banners & ads',
       icon: Megaphone,
-      iconBg: 'bg-purple-500/15 text-purple-400',
-      iconColor: 'text-purple-400',
+      iconGradient: 'from-[#AF52DE] via-[#9333EA] to-[#7B2CBF]',
+      iconShadow: 'shadow-purple-500/35',
       badge: pendingData.ads.length
     },
     {
@@ -1253,8 +1253,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Breaking News',
       desc: 'Flash ticker & alerts',
       icon: AlertCircle,
-      iconBg: 'bg-rose-500/15 text-rose-400',
-      iconColor: 'text-rose-400',
+      iconGradient: 'from-[#FF3B30] via-[#E63946] to-[#D70015]',
+      iconShadow: 'shadow-red-500/35',
       badge: 0
     },
     {
@@ -1262,8 +1262,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Reporters',
       desc: 'Applications & team roster',
       icon: Users,
-      iconBg: 'bg-blue-500/15 text-blue-400',
-      iconColor: 'text-blue-400',
+      iconGradient: 'from-[#007AFF] via-[#0284C7] to-[#0055B3]',
+      iconShadow: 'shadow-blue-500/35',
       badge: pendingData.users.length
     },
     {
@@ -1271,8 +1271,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'E-Paper',
       desc: 'Digital daily editions',
       icon: FileText,
-      iconBg: 'bg-teal-500/15 text-teal-400',
-      iconColor: 'text-teal-400',
+      iconGradient: 'from-[#30B0C7] via-[#0891B2] to-[#00838F]',
+      iconShadow: 'shadow-teal-500/35',
       badge: 0
     },
     {
@@ -1280,8 +1280,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Live TV',
       desc: 'Broadcast streams',
       icon: Monitor,
-      iconBg: 'bg-indigo-500/15 text-indigo-400',
-      iconColor: 'text-indigo-400',
+      iconGradient: 'from-[#5856D6] via-[#6366F1] to-[#3634A3]',
+      iconShadow: 'shadow-indigo-500/35',
       badge: 0
     },
     {
@@ -1289,8 +1289,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Navigation Bar',
       desc: 'Header links & menu',
       icon: Navigation,
-      iconBg: 'bg-cyan-500/15 text-cyan-400',
-      iconColor: 'text-cyan-400',
+      iconGradient: 'from-[#32ADE6] via-[#0EA5E9] to-[#0071A4]',
+      iconShadow: 'shadow-sky-500/35',
       badge: 0
     },
     {
@@ -1298,14 +1298,14 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       label: 'Settings',
       desc: 'Admin password & info',
       icon: Settings,
-      iconBg: 'bg-slate-500/15 text-slate-300',
-      iconColor: 'text-slate-300',
+      iconGradient: 'from-[#8E8E93] via-[#6B7280] to-[#48484A]',
+      iconShadow: 'shadow-slate-500/35',
       badge: 0
     }
   ]
 
   return (
-    <div className="flex h-screen w-full bg-[#F5F6FA] overflow-hidden">
+    <div className="flex h-screen w-full bg-[#F5F6FA] overflow-hidden admin-glass-panel">
       {/* ─── DARK SIDEBAR (desktop only) ─── */}
       <aside className="hidden lg:flex w-[260px] bg-[#111827] text-gray-300 flex-col h-full shrink-0 shadow-2xl z-20">
         <div className="h-16 flex items-center px-6 bg-[#0B101E] border-b border-gray-800">
@@ -5125,18 +5125,22 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           {/* Centre FAB — Add */}
           <button 
             onClick={() => { resetNewsForm(); setShowNewsForm(true); }} 
-            className="flex flex-col items-center gap-1 min-w-[52px] -mt-5"
+            className="flex flex-col items-center gap-1 min-w-[52px] -mt-5 group"
           >
             <div
-              className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shadow-2xl"
+              className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shadow-2xl relative overflow-hidden transition-all duration-200 group-active:scale-95"
               style={{
-                background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
-                boxShadow: '0 4px 20px rgba(239,68,68,0.55), 0 0 0 3px rgba(239,68,68,0.15)',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.96) 0%, rgba(185, 28, 28, 0.94) 100%)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                boxShadow: '0 8px 24px rgba(239,68,68,0.5), inset 0 1px 1.5px rgba(255,255,255,0.45)',
+                border: '1px solid rgba(255,255,255,0.3)'
               }}
             >
-              <Plus className="w-6 h-6 text-white" strokeWidth={2.5} />
+              <div className="absolute inset-0 bg-gradient-to-br from-white/35 via-white/10 to-transparent pointer-events-none rounded-[18px]" />
+              <Plus className="w-6 h-6 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)] relative z-10" strokeWidth={2.6} />
             </div>
-            <span className="text-[10px] font-semibold text-gray-400 tracking-tight mt-0.5">Add</span>
+            <span className="text-[10px] font-bold text-gray-400 tracking-tight mt-0.5">Add</span>
           </button>
 
           {/* Shorts */}
@@ -5179,26 +5183,28 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
           {/* Mini Window (Bottom Sheet) */}
           <div
-            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-[28px] border-t border-white/10 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
+            className="lg:hidden fixed bottom-0 left-0 right-0 z-50 rounded-t-[32px] border-t border-white/20 shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300"
             style={{
-              background: 'rgba(15, 23, 42, 0.97)',
-              backdropFilter: 'saturate(180%) blur(24px)',
-              WebkitBackdropFilter: 'saturate(180%) blur(24px)',
+              background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(10, 15, 30, 0.98) 100%)',
+              backdropFilter: 'saturate(190%) blur(32px)',
+              WebkitBackdropFilter: 'saturate(190%) blur(32px)',
               maxHeight: '85vh',
-              boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.65)'
+              boxShadow: '0 -16px 48px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
             }}
           >
             {/* Pill & Header */}
-            <div className="pt-3 pb-3 px-5 border-b border-white/10 bg-slate-900/40">
-              <div className="w-12 h-1.5 bg-gray-500/60 rounded-full mx-auto mb-3" />
+            <div className="pt-3.5 pb-3 px-5 border-b border-white/10 bg-white/[0.03] backdrop-blur-md">
+              <div className="w-10 h-1.5 bg-white/30 rounded-full mx-auto mb-3" />
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white tracking-tight">Admin Sections</h3>
-                  <p className="text-xs text-gray-400">Select a section to manage</p>
+                  <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                    Admin Sections
+                  </h3>
+                  <p className="text-xs text-slate-400">Select a section to manage</p>
                 </div>
                 <button
                   onClick={() => setShowMoreMenu(false)}
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-gray-300 transition-all"
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 border border-white/15 backdrop-blur-md flex items-center justify-center text-slate-300 hover:text-white transition-all"
                   aria-label="Close"
                 >
                   <X className="w-4 h-4" />
@@ -5208,7 +5214,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
             {/* Grid of Sections */}
             <div className="p-4 overflow-y-auto space-y-2 max-h-[calc(85vh-150px)] custom-scrollbar">
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 {moreMenuItems.map((item) => {
                   const Icon = item.icon
                   const isSelected = activeTab === item.id
@@ -5219,24 +5225,32 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         setActiveTab(item.id)
                         setShowMoreMenu(false)
                       }}
-                      className={`flex flex-col items-start p-3 rounded-2xl border transition-all text-left relative group ${
+                      className={`group relative flex flex-col items-start p-3.5 rounded-[22px] border text-left transition-all duration-200 active:scale-[0.96] overflow-hidden ${
                         isSelected
-                          ? 'bg-red-600/20 border-red-500/60 text-white shadow-lg shadow-red-950/40'
-                          : 'bg-white/5 hover:bg-white/10 active:scale-[0.98] border-white/5 text-gray-200'
+                          ? 'bg-white/[0.14] border-white/30 text-white shadow-xl shadow-black/40 ring-1 ring-red-500/50 backdrop-blur-2xl'
+                          : 'bg-white/[0.05] hover:bg-white/[0.09] border-white/[0.08] hover:border-white/20 text-slate-100 backdrop-blur-xl shadow-md'
                       }`}
                     >
-                      <div className="flex items-center justify-between w-full mb-2">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${item.iconBg}`}>
-                          <Icon className={`w-4 h-4 ${item.iconColor}`} />
+                      {/* Specular gloss top highlight */}
+                      <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none rounded-t-[22px]" />
+
+                      <div className="flex items-center justify-between w-full mb-2.5 relative z-10">
+                        {/* iOS Touch-Style Squircle Icon */}
+                        <div
+                          className={`w-11 h-11 rounded-[14px] bg-gradient-to-br ${item.iconGradient} flex items-center justify-center shadow-lg ${item.iconShadow} ring-1 ring-white/30 relative overflow-hidden transition-transform duration-200 group-hover:scale-105`}
+                        >
+                          {/* iOS icon top diagonal gloss reflection */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/10 to-transparent pointer-events-none rounded-[14px]" />
+                          <Icon className="w-5 h-5 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)] relative z-10" strokeWidth={2.2} />
                         </div>
                         {item.badge > 0 && (
-                          <span className="bg-red-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm">
+                          <span className="bg-gradient-to-r from-red-500 to-rose-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-md shadow-red-500/40 ring-1 ring-white/30 animate-pulse">
                             {item.badge}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs font-bold leading-tight line-clamp-1">{item.label}</span>
-                      <span className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{item.desc}</span>
+                      <span className="text-[13px] font-bold leading-tight text-white line-clamp-1 relative z-10">{item.label}</span>
+                      <span className="text-[10px] text-slate-400 font-medium mt-0.5 line-clamp-1 relative z-10">{item.desc}</span>
                     </button>
                   )
                 })}
@@ -5245,7 +5259,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
             {/* Sign Out Footer */}
             <div
-              className="p-4 pt-3 border-t border-white/10 bg-[#0B101E]"
+              className="p-4 pt-3 border-t border-white/10 bg-slate-950/80 backdrop-blur-xl"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 12px) + 8px)' }}
             >
               <button
@@ -5253,9 +5267,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   setShowMoreMenu(false)
                   handleLogoutClick()
                 }}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 active:scale-[0.98] text-red-400 border border-red-500/20 rounded-xl h-11 text-xs font-semibold flex items-center justify-center gap-2 transition-all"
+                className="w-full relative overflow-hidden bg-gradient-to-r from-red-500/15 via-red-600/20 to-rose-500/15 hover:from-red-500/25 hover:via-red-600/30 hover:to-rose-500/25 active:scale-[0.98] text-red-300 hover:text-red-200 border border-red-500/30 hover:border-red-500/50 rounded-2xl h-12 text-xs font-bold tracking-wide flex items-center justify-center gap-2.5 backdrop-blur-2xl shadow-lg shadow-red-950/50 transition-all group"
               >
-                <LogOut className="w-4 h-4" /> Sign Out of Admin Panel
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-400/40 to-transparent" />
+                <LogOut className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                <span>Sign Out of Admin Panel</span>
               </button>
             </div>
           </div>
