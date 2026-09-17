@@ -108,6 +108,13 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       return
     }
 
+    // Check size limit: 700KB
+    const oversizedFiles = files.filter(f => f.size > 700 * 1024)
+    if (oversizedFiles.length > 0) {
+      toast?.({ title: 'Image must be under 700KB', variant: 'destructive' })
+      return
+    }
+
     // Create previews and upload
     for (const file of files) {
       if (!file.type.startsWith('image/')) continue
@@ -134,9 +141,13 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             ...prev,
             images: [...prev.images, data.url]
           }))
+        } else {
+          const errData = await response.json().catch(() => ({}))
+          toast?.({ title: errData.error || 'Upload failed', variant: 'destructive' })
         }
       } catch (error) {
         console.error('Upload failed:', error)
+        toast?.({ title: 'Upload failed. Please try again.', variant: 'destructive' })
       }
     }
   }
@@ -520,7 +531,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Images Upload */}
               <div className="space-y-2">
-                <Label>Images * (Minimum 1, Maximum 8, Max 1 MB)</Label>
+                <Label>Images * (Minimum 1, Maximum 8, Max 700KB each)</Label>
                 <p className="text-xs text-muted-foreground mt-1 mb-2">Recommended size: 800x600px (Landscape)</p>
                 <div className="grid grid-cols-4 gap-3">
                   {imagePreviews.map((preview, index) => (

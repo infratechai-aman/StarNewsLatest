@@ -2178,7 +2178,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       <Input value={businessForm.googleMapsLink} onChange={(e) => setBusinessForm({ ...businessForm, googleMapsLink: e.target.value })} placeholder="https://maps.google.com/..." className="bg-gray-50/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Cover Image</Label>
+                      <Label className="text-gray-700 font-semibold">Cover Image <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
                       <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center bg-gray-50/50 hover:border-emerald-400 transition-colors h-40 relative group">
                         {businessForm.coverImage ? (
                           <>
@@ -2204,8 +2204,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               onChange={async (e) => {
                                 const file = e.target.files?.[0]
                                 if (!file) return
-                                if (file.size > 5 * 1024 * 1024) {
-                                  toast({ title: 'Image must be under 5MB', variant: 'destructive' })
+                                if (file.size > 700 * 1024) {
+                                  toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                                   return
                                 }
                                 try {
@@ -2229,7 +2229,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Gallery Images (up to 8)</Label>
+                      <Label className="text-gray-700 font-semibold">Gallery Images (up to 8) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB each)</span></Label>
                       <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = businessForm.images?.[index] || ''
@@ -2259,8 +2259,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 5 * 1024 * 1024) {
-                                        toast({ title: 'Image must be under 5MB', variant: 'destructive' })
+                                      if (file.size > 700 * 1024) {
+                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                                         return
                                       }
                                       try {
@@ -2526,7 +2526,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Images (up to 8)</Label>
+                      <Label className="text-gray-700 font-semibold">Images (up to 8) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB each)</span></Label>
                       <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = classifiedForm.images?.[index] || ''
@@ -2556,8 +2556,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 5 * 1024 * 1024) {
-                                        toast({ title: 'Image must be under 5MB', variant: 'destructive' })
+                                      if (file.size > 700 * 1024) {
+                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                                         return
                                       }
                                       try {
@@ -3462,7 +3462,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="grid gap-6 md:grid-cols-2 mb-6">
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Ad Image URL or Upload</Label>
+                      <Label className="text-gray-700 font-semibold">Ad Image URL or Upload <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
                       <div className="flex gap-2">
                         <Input
                           placeholder="https://example.com/ad-image.jpg"
@@ -3481,8 +3481,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (!file) return
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                            if (file.size > 700 * 1024) {
+                              toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                               return
                             }
                             setUploadingPremiumAd(true)
@@ -3662,7 +3662,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
                               {/* Image URL Input */}
                               <div className="space-y-1.5">
-                                <Label className="text-sm font-semibold text-gray-700">Image URL</Label>
+                                <Label className="text-sm font-semibold text-gray-700">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max: 700KB)</span></Label>
                                 <div className="flex gap-2">
                                   <Input
                                     placeholder="Paste image URL..."
@@ -3686,8 +3686,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 5 * 1024 * 1024) {
-                                        toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                                      if (file.size > 700 * 1024) {
+                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                                         return
                                       }
                                       try {
@@ -3804,7 +3804,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Image URL</Label>
+                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/banner.jpg"
@@ -3829,8 +3829,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (!file) return
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                            if (file.size > 700 * 1024) {
+                              toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                               return
                             }
                             try {
@@ -3911,7 +3911,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Image URL</Label>
+                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/sticky-ad.jpg"
@@ -3936,8 +3936,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (!file) return
-                          if (file.size > 5 * 1024 * 1024) {
-                            toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                          if (file.size > 700 * 1024) {
+                            toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                             return
                           }
                           try {
@@ -4091,7 +4091,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Custom Image URL (Optional - replaces default gradient)</Label>
+                    <Label className="text-gray-700 font-semibold">Custom Image URL (Optional - replaces default gradient) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/business-ad.jpg"
@@ -4110,8 +4110,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (!file) return
-                          if (file.size > 5 * 1024 * 1024) {
-                            toast({ title: 'Image size must be under 5MB', variant: 'destructive' })
+                          if (file.size > 700 * 1024) {
+                            toast({ title: 'Image must be under 700KB', variant: 'destructive' })
                             return
                           }
                           try {
