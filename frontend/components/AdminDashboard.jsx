@@ -25,7 +25,7 @@ import {
   Building2, Tag, Users, FileText, Settings, Eye, EyeOff, Check, X,
   Edit, Trash2, Plus, PlusCircle, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, MoreHorizontal
 } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 
@@ -4948,39 +4948,71 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         </DialogContent>
       </Dialog>
 
-      {/* ─── MOBILE BOTTOM NAV (mobile only) ─── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50" style={{ background: 'rgba(17,24,39,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center justify-around px-2 py-2 safe-area-bottom">
-          {[
-            { tab: 'overview', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Home' },
-            { tab: 'manage-news', icon: <Newspaper className="w-5 h-5" />, label: 'News' },
-            { tab: 'classifieds', icon: <Tag className="w-5 h-5" />, label: 'Add', isCenter: true },
-            { tab: 'shorts', icon: <Video className="w-5 h-5" />, label: 'Shorts' },
-            { tab: 'settings', icon: <Settings className="w-5 h-5" />, label: 'More' },
-          ].map(({ tab, icon, label, isCenter }) => (
-            isCenter ? (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className="flex flex-col items-center -mt-6"
-              >
-                <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center shadow-lg shadow-red-900/40 border-2 border-gray-900">
-                  <Plus className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-[10px] mt-1 font-semibold text-gray-400">Add</span>
-              </button>
-            ) : (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all ${activeTab === tab ? 'text-red-500' : 'text-gray-500'}`}
-              >
-                {icon}
-                <span className="text-[10px] font-semibold">{label}</span>
-                {activeTab === tab && <span className="w-1 h-1 rounded-full bg-red-500 absolute -bottom-0.5" />}
-              </button>
-            )
-          ))}
+      {/* ─── MOBILE BOTTOM NAV — Premium iOS Style ─── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
+        style={{
+          background: 'rgba(10, 10, 20, 0.72)',
+          backdropFilter: 'saturate(180%) blur(28px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(28px)',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: '20px 20px 0 0',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.45)',
+          paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+        }}
+      >
+        <div className="flex items-end justify-around px-4 pt-3 pb-2">
+
+          {/* Home */}
+          <button onClick={() => setActiveTab('overview')} className="flex flex-col items-center gap-1 min-w-[52px] relative">
+            <div className={`p-1.5 rounded-2xl transition-all duration-200 ${activeTab === 'overview' ? 'bg-red-600/20' : ''}`}>
+              <LayoutDashboard className={`w-[22px] h-[22px] transition-colors ${activeTab === 'overview' ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
+            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${activeTab === 'overview' ? 'text-red-400' : 'text-gray-500'}`}>Home</span>
+            {activeTab === 'overview' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
+          </button>
+
+          {/* News */}
+          <button onClick={() => setActiveTab('manage-news')} className="flex flex-col items-center gap-1 min-w-[52px] relative">
+            <div className={`p-1.5 rounded-2xl transition-all duration-200 ${activeTab === 'manage-news' ? 'bg-red-600/20' : ''}`}>
+              <Newspaper className={`w-[22px] h-[22px] transition-colors ${activeTab === 'manage-news' ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
+            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${activeTab === 'manage-news' ? 'text-red-400' : 'text-gray-500'}`}>News</span>
+            {activeTab === 'manage-news' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
+          </button>
+
+          {/* Centre FAB — Add */}
+          <button onClick={() => setActiveTab('add-news')} className="flex flex-col items-center gap-1 min-w-[52px] -mt-5">
+            <div
+              className="w-[52px] h-[52px] rounded-[18px] flex items-center justify-center shadow-2xl"
+              style={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+                boxShadow: '0 4px 20px rgba(239,68,68,0.55), 0 0 0 3px rgba(239,68,68,0.15)',
+              }}
+            >
+              <Plus className="w-6 h-6 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-[10px] font-semibold text-gray-400 tracking-tight mt-0.5">Add</span>
+          </button>
+
+          {/* Shorts */}
+          <button onClick={() => setActiveTab('shorts')} className="flex flex-col items-center gap-1 min-w-[52px] relative">
+            <div className={`p-1.5 rounded-2xl transition-all duration-200 ${activeTab === 'shorts' ? 'bg-red-600/20' : ''}`}>
+              <Video className={`w-[22px] h-[22px] transition-colors ${activeTab === 'shorts' ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
+            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${activeTab === 'shorts' ? 'text-red-400' : 'text-gray-500'}`}>Shorts</span>
+            {activeTab === 'shorts' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
+          </button>
+
+          {/* More — using dots icon, NOT settings */}
+          <button onClick={() => setActiveTab('settings')} className="flex flex-col items-center gap-1 min-w-[52px] relative">
+            <div className={`p-1.5 rounded-2xl transition-all duration-200 ${activeTab === 'settings' ? 'bg-red-600/20' : ''}`}>
+              <MoreHorizontal className={`w-[22px] h-[22px] transition-colors ${activeTab === 'settings' ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
+            <span className={`text-[10px] font-semibold tracking-tight transition-colors ${activeTab === 'settings' ? 'text-red-400' : 'text-gray-500'}`}>More</span>
+            {activeTab === 'settings' && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-red-500" />}
+          </button>
+
         </div>
       </nav>
     </div >
