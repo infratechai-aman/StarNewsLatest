@@ -154,7 +154,7 @@ export async function requireSuperAdmin(request) {
     };
   } catch (error) {
     console.error('Admin auth error:', error.code || error.message);
-    return { error: 'Invalid or expired token', status: 401 };
+    return { error: `Auth Error: ${error.message}`, status: 401 };
   }
 }
 
@@ -201,6 +201,6 @@ export async function requireReporterOrAdmin(request) {
     };
   } catch (error) {
     console.error('Auth error:', error.code || error.message);
-    return { error: 'Invalid or expired token', status: 401 };
+    return { error: `Auth Error: ${error.message}`, status: 401 };
   }
 }
