@@ -1,7 +1,12 @@
 'use client';
 
 import ShortsPage from '@/components/ShortsPage';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 export default function Page() {
-  return <ShortsPage />;
+  return (
+    <LanguageProvider>
+      <ShortsPage />
+    </LanguageProvider>
+  );
 }

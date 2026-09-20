@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { liveTV } from '@/lib/api'
 import { getSidebarAdSettings } from '@/lib/contentStore'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 // Extract YouTube video ID
 const extractYouTubeId = (url) => {
@@ -19,6 +20,7 @@ const extractYouTubeId = (url) => {
 }
 
 const LiveTVPage = ({ setCurrentView }) => {
+  const { t } = useLanguage()
   const [config, setConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeStreamId, setActiveStreamId] = useState(null)
@@ -117,10 +119,10 @@ const LiveTVPage = ({ setCurrentView }) => {
                 <div className="absolute top-4 left-4 z-20 flex gap-2">
                   <span className="flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md text-white text-[11px] font-black tracking-wide px-3 py-1.5 rounded shadow-lg">
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    ((•)) LIVE
+                    ((•)) {t('live') || 'LIVE'}
                   </span>
                   <span className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white/90 text-[11px] font-bold tracking-wide px-3 py-1.5 rounded shadow-lg">
-                    2.4K watching
+                    2.4K {t('watchingLive') || 'watching'}
                   </span>
                 </div>
               )}
@@ -148,7 +150,7 @@ const LiveTVPage = ({ setCurrentView }) => {
             <div className="mt-3 flex items-center bg-[#141724] border border-white/10 rounded-xl overflow-hidden shadow-lg">
               <div className="bg-red-600 text-white text-xs font-black uppercase tracking-wider px-4 py-3 shrink-0 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                BREAKING NEWS
+                {t('breakingNews') || 'BREAKING NEWS'}
               </div>
               <div className="px-4 py-2.5 overflow-hidden flex-1">
                 <p className="text-white text-sm font-bold truncate">
@@ -207,10 +209,10 @@ const LiveTVPage = ({ setCurrentView }) => {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-[16px] font-black text-white flex items-center gap-2">
                     <span className="w-1 h-5 bg-red-600 rounded-full block" />
-                    Latest from Star News
+                    {t('latestFrom') ? `${t('latestFrom')} Star News` : 'Latest from Star News'}
                   </h2>
                   <button onClick={() => setCurrentView && setCurrentView('news')} className="text-white/60 text-xs font-bold hover:text-white flex items-center gap-1 transition-colors">
-                    View All →
+                    {t('viewAll') || 'View All'} →
                   </button>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -252,8 +254,8 @@ const LiveTVPage = ({ setCurrentView }) => {
             {/* Live Now / Program Schedule tabs */}
             <div className="border border-white/5 bg-[#141724] rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/5">
               <div className="grid grid-cols-2">
-                <div className="bg-red-600 text-white text-[11px] font-black text-center py-3.5 tracking-wider uppercase">Live Now</div>
-                <div className="bg-[#0f111a] text-white/50 border-b border-white/5 text-[11px] font-bold text-center py-3.5 hover:text-white/80 transition-colors cursor-pointer">Program Schedule</div>
+                <div className="bg-red-600 text-white text-[11px] font-black text-center py-3.5 tracking-wider uppercase">{t('liveNow') || 'Live Now'}</div>
+                <div className="bg-[#0f111a] text-white/50 border-b border-white/5 text-[11px] font-bold text-center py-3.5 hover:text-white/80 transition-colors cursor-pointer">{t('programSchedule') || 'Program Schedule'}</div>
               </div>
               <div className="divide-y divide-white/5">
                 {programSchedule.map((prog, idx) => (
@@ -289,7 +291,7 @@ const LiveTVPage = ({ setCurrentView }) => {
               </div>
               <div className="p-4 border-t border-white/5 bg-black/20">
                 <button className="w-full text-center text-white/60 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-1">
-                  View Full Schedule →
+                  {t('viewFullSchedule') || 'View Full Schedule'} →
                 </button>
               </div>
             </div>

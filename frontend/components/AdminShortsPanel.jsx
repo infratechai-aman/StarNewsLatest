@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus, Loader2, Image as ImageIcon, Video as VideoIcon, Pencil, X } from 'lucide-react';
+import { admin, authenticatedFetch } from '@/lib/api';
 
 export default function AdminShortsPanel({ toast }) {
     const [shorts, setShorts] = useState([]);
@@ -36,15 +37,11 @@ export default function AdminShortsPanel({ toast }) {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/admin/shorts', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.shorts) setShorts(data.shorts);
+            const data = await admin.getShorts();
+            if (data && data.shorts) setShorts(data.shorts);
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            toast({ title: 'Error', description: 'Failed to load shorts data', variant: 'destructive' });
+            toast({ title: 'Error', description: error.message || 'Failed to load shorts data', variant: 'destructive' });
         } finally {
             setLoading(false);
         }
@@ -100,19 +97,16 @@ export default function AdminShortsPanel({ toast }) {
         formData.append('file', selectedFile);
 
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch('/api/upload-large', {
+            const res = await authenticatedFetch('/api/upload-large', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
             const data = await res.json();
             if (!res.ok) {
                 // If Vercel, fallback to /api/upload (Firestore base64 route)
                 if (res.status === 501) {
-                    const res2 = await fetch('/api/upload', {
+                    const res2 = await authenticatedFetch('/api/upload', {
                         method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` },
                         body: formData
                     });
                     const data2 = await res2.json();
@@ -151,37 +145,28 @@ export default function AdminShortsPanel({ toast }) {
                 finalMediaUrl = editingShort.mediaUrl;
             }
 
-            const token = localStorage.getItem('token');
             const isEditing = !!editingShort;
-            const url = isEditing ? `/api/admin/shorts/${editingShort.id}` : '/api/admin/shorts';
-            const method = isEditing ? 'PUT' : 'POST';
+            const payload = {
+                mediaType,
+                mediaUrl: finalMediaUrl,
+                title,
+                caption,
+                active: isActive
+            };
 
-            const res = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    mediaType,
-                    mediaUrl: finalMediaUrl,
-                    title,
-                    caption,
-                    active: isActive
-                })
-            });
-
-            if (res.ok) {
-                toast({ title: 'Success', description: isEditing ? 'Short updated successfully' : 'Short published successfully' });
-                resetForm();
-                fetchData();
+            if (isEditing) {
+                await admin.updateShort(editingShort.id, payload);
+                toast({ title: 'Success', description: 'Short updated successfully' });
             } else {
-                const data = await res.json();
-                toast({ title: 'Error', description: data.error || 'Failed to save short', variant: 'destructive' });
+                await admin.createShort(payload);
+                toast({ title: 'Success', description: 'Short published successfully' });
             }
+
+            resetForm();
+            fetchData();
         } catch (error) {
             console.error(error);
-            toast({ title: 'Error', description: 'Server error while saving short', variant: 'destructive' });
+            toast({ title: 'Error', description: error.message || 'Failed to save short', variant: 'destructive' });
             setUploadingImage(false);
         } finally {
             setSaving(false);
@@ -191,38 +176,20 @@ export default function AdminShortsPanel({ toast }) {
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this short?')) return;
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/shorts/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                toast({ title: 'Success', description: 'Short deleted' });
-                setShorts(shorts.filter(s => s.id !== id));
-            }
+            await admin.deleteShort(id);
+            toast({ title: 'Success', description: 'Short deleted' });
+            setShorts(shorts.filter(s => s.id !== id));
         } catch (error) {
-            toast({ title: 'Error', description: 'Failed to delete short', variant: 'destructive' });
+            toast({ title: 'Error', description: error.message || 'Failed to delete short', variant: 'destructive' });
         }
     };
 
     const handleToggle = async (id, currentStatus) => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/admin/shorts/${id}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ active: !currentStatus })
-            });
-            if (res.ok) {
-                setShorts(shorts.map(s => s.id === id ? { ...s, active: !currentStatus } : s));
-            } else {
-                toast({ title: 'Error', description: 'Failed to toggle status', variant: 'destructive' });
-            }
+            await admin.toggleShort(id, !currentStatus);
+            setShorts(shorts.map(s => s.id === id ? { ...s, active: !currentStatus } : s));
         } catch (error) {
-            toast({ title: 'Error', description: 'Failed to toggle status', variant: 'destructive' });
+            toast({ title: 'Error', description: error.message || 'Failed to toggle status', variant: 'destructive' });
         }
     };
 

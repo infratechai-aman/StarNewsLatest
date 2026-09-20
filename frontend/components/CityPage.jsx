@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, ChevronRight, Eye, Search, Flame, TrendingUp, PlaySquare, Calendar, Bookmark, MessageSquare, LayoutGrid } from 'lucide-react'
+import { MapPin, ChevronRight, Eye, Search, Flame, TrendingUp, PlaySquare, Calendar, Bookmark, MessageSquare, LayoutGrid, Newspaper } from 'lucide-react'
 import Image from 'next/image'
 import { news } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -29,7 +29,7 @@ const CITY_ICONS = {
 
 const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     const { language, t } = useLanguage()
-    const [selectedCity, setSelectedCity] = useState('')
+    const [selectedCity, setSelectedCity] = useState('Mumbai')
     const [cityNews, setCityNews] = useState([])
     const [allArticles, setAllArticles] = useState([])
     const [loading, setLoading] = useState(true)
@@ -142,16 +142,16 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                             <LayoutGrid className="w-5 h-5 text-red-600" />
-                            Popular Cities
+                            {t('popularCities') || 'Popular Cities'}
                         </h2>
                         <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
-                            View All Cities <ChevronRight className="w-4 h-4" />
+                            {t('viewAllCities') || 'View All Cities'} <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                     
                     <div className="flex overflow-x-auto pb-4 hide-scrollbar gap-4 md:gap-6 justify-between px-2">
                         {POPULAR_CITIES.map(city => {
-                            const isSelected = selectedCity === city || (!selectedCity && city === 'Mumbai')
+                            const isSelected = selectedCity === city
                             return (
                                 <div 
                                     key={city} 
@@ -186,7 +186,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                             value={selectedCity}
                             onChange={(e) => setSelectedCity(e.target.value)}
                         >
-                            <option value="">Search or select a city...</option>
+                            <option value="">{t('chooseCity') || 'Search or select a city...'}</option>
                             {INDIAN_CITIES_SORTED.map(city => (
                                 <option key={city} value={city}>{city}</option>
                             ))}
@@ -198,19 +198,19 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                     
                     <div className="flex flex-wrap items-center gap-2">
                         <Button variant="default" className="bg-red-600 hover:bg-red-700 text-white rounded-full px-5 h-10 text-xs font-black shadow-md flex items-center gap-1.5">
-                            <LayoutGrid className="w-3.5 h-3.5" /> Latest
+                            <LayoutGrid className="w-3.5 h-3.5" /> {t('latest') || 'Latest'}
                         </Button>
                         <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
-                            <TrendingUp className="w-3.5 h-3.5" /> Trending
+                            <TrendingUp className="w-3.5 h-3.5" /> {t('trending') || 'Trending'}
                         </Button>
                         <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
-                            <Flame className="w-3.5 h-3.5 text-orange-500" /> Most Read
+                            <Flame className="w-3.5 h-3.5 text-orange-500" /> {t('mostRead') || 'Most Read'}
                         </Button>
                         <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
-                            <PlaySquare className="w-3.5 h-3.5" /> Videos
+                            <PlaySquare className="w-3.5 h-3.5" /> {t('videos') || 'Videos'}
                         </Button>
                         <Button variant="outline" className="bg-white hover:bg-gray-50 text-gray-600 border-gray-200 rounded-full px-5 h-10 text-xs font-bold shadow-sm flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" /> Events
+                            <Calendar className="w-3.5 h-3.5" /> {t('events') || 'Events'}
                         </Button>
                     </div>
                 </div>
@@ -219,18 +219,20 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-red-600 rounded-full block"></span>
-                        Latest from {selectedCity || 'Mumbai'}
+                        {selectedCity ? `${t('latestFrom') || 'Latest from'} ${selectedCity}` : (t('selectCityTitle') || 'City News')}
                     </h2>
-                    <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
-                        View All {selectedCity || 'Mumbai'} News <ChevronRight className="w-4 h-4" />
-                    </button>
+                    {cityNews.length > 0 && (
+                        <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
+                            {t('viewAll') || 'View All'} {selectedCity} {t('news') || 'News'} <ChevronRight className="w-4 h-4" />
+                        </button>
+                    )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Main Big Article */}
-                    {cityNews.length > 0 && (
+                {cityNews.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        {/* Main Big Article */}
                         <div 
-                            className="lg:col-span-5 relative bg-white rounded-2xl overflow-hidden shadow-md group cursor-pointer"
+                            className={`${cityNews.length > 1 ? 'lg:col-span-5' : 'lg:col-span-12'} relative bg-white rounded-2xl overflow-hidden shadow-md group cursor-pointer`}
                             onClick={() => handleNewsClick(cityNews[0])}
                             style={{ minHeight: '480px' }}
                         >
@@ -243,7 +245,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/40 to-transparent"></div>
                             
                             <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-md">
-                                {selectedCity || 'MUMBAI'}
+                                {selectedCity || cityNews[0].city || 'MUMBAI'}
                             </div>
                             <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded shadow-md flex items-center gap-1">
                                 2 hrs ago
@@ -261,48 +263,98 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                 </button>
                             </div>
                         </div>
-                    )}
 
-                    {/* Smaller Articles Grid */}
-                    <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {cityNews.slice(1, 5).map((item, idx) => (
-                            <div key={item.id} onClick={() => handleNewsClick(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col border border-gray-100">
-                                <div className="relative h-40 overflow-hidden bg-gray-100">
-                                    <Image 
-                                        src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} 
-                                        alt={getLocalizedText(item.title, language)}
-                                        fill 
-                                        className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                                    />
-                                    <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
-                                        {selectedCity || 'MUMBAI'}
-                                    </div>
-                                    <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
-                                        {idx + 1 * 4} {idx % 2 === 0 ? 'hrs' : 'days'} ago
-                                    </div>
-                                </div>
-                                <div className="p-4 flex-1 flex flex-col justify-between">
-                                    <h4 className="font-bold text-[15px] leading-tight text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 mb-4">
-                                        {getLocalizedText(item.title, language)}
-                                    </h4>
-                                    <div className="flex items-center justify-between text-gray-500 text-[11px] font-semibold border-t border-gray-50 pt-3">
-                                        <div className="flex items-center gap-4">
-                                            <span className="flex items-center gap-1.5">
-                                                <Eye className="w-3.5 h-3.5" />
-                                                {item.views || (1200 + idx * 300)}{idx === 1 ? 'K' : ''}
-                                            </span>
-                                            <span className="flex items-center gap-1.5">
-                                                <MessageSquare className="w-3.5 h-3.5" />
-                                                {15 + idx * 5}
-                                            </span>
+                        {/* Smaller Articles Grid */}
+                        {cityNews.length > 1 && (
+                            <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {cityNews.slice(1, 5).map((item, idx) => (
+                                    <div key={item.id} onClick={() => handleNewsClick(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col border border-gray-100">
+                                        <div className="relative h-40 overflow-hidden bg-gray-100">
+                                            <Image 
+                                                src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} 
+                                                alt={getLocalizedText(item.title, language)}
+                                                fill 
+                                                className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                            />
+                                            <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
+                                                {selectedCity || item.city || 'MUMBAI'}
+                                            </div>
+                                            <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
+                                                {idx + 1 * 4} {idx % 2 === 0 ? 'hrs' : 'days'} ago
+                                            </div>
                                         </div>
-                                        <Bookmark className="w-4 h-4 hover:text-red-600" />
+                                        <div className="p-4 flex-1 flex flex-col justify-between">
+                                            <h4 className="font-bold text-[15px] leading-tight text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 mb-4">
+                                                {getLocalizedText(item.title, language)}
+                                            </h4>
+                                            <div className="flex items-center justify-between text-gray-500 text-[11px] font-semibold border-t border-gray-50 pt-3">
+                                                <div className="flex items-center gap-4">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        {item.views || (1200 + idx * 300)}{idx === 1 ? 'K' : ''}
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <MessageSquare className="w-3.5 h-3.5" />
+                                                        {15 + idx * 5}
+                                                    </span>
+                                                </div>
+                                                <Bookmark className="w-4 h-4 hover:text-red-600" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                </div>
+                ) : (
+                    /* Empty State */
+                    <div 
+                        id="city-news-empty-state" 
+                        className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 md:p-14 text-center my-2 transition-all duration-300"
+                    >
+                        <div className="w-20 h-20 bg-red-50 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6 ring-8 ring-red-50/50 shadow-inner">
+                            <Newspaper className="w-10 h-10 text-red-500" />
+                        </div>
+                        
+                        <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2.5">
+                            {selectedCity 
+                                ? (language === 'en' 
+                                    ? `No News Available for ${selectedCity}` 
+                                    : (t('noCityNews') || `No news available from ${selectedCity} yet.`))
+                                : (t('selectCityPrompt') || 'Select a city to view local news')
+                            }
+                        </h3>
+                        
+                        <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto mb-8 leading-relaxed font-medium">
+                            {selectedCity 
+                                ? (t('cityNewsTag') || `We couldn't find any articles or local updates for ${selectedCity} right now. News articles tagged with this city will appear here as soon as they are published.`)
+                                : (t('cityPromptDesc') || 'Choose from popular cities above or select from the dropdown to explore city-specific updates.')
+                            }
+                        </p>
+
+                        <div className="pt-6 border-t border-gray-100 max-w-md mx-auto">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                                Explore other popular cities
+                            </p>
+                            <div className="flex flex-wrap items-center justify-center gap-2">
+                                {['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Kolkata'].map(city => (
+                                    <button
+                                        key={city}
+                                        type="button"
+                                        onClick={() => setSelectedCity(city)}
+                                        className={`text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all duration-200 ${
+                                            selectedCity === city
+                                                ? 'bg-red-600 text-white border-red-600 shadow-sm'
+                                                : 'bg-gray-50 hover:bg-red-50 text-gray-700 hover:text-red-600 border-gray-200 hover:border-red-200'
+                                        }`}
+                                    >
+                                        {city}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

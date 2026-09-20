@@ -148,8 +148,32 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
     setFilteredBusinesses(filtered)
   }
 
+  const getCategoryLabel = (label) => {
+    switch (label) {
+      case 'All Categories': return t('allCategories') || 'All Categories'
+      case 'Restaurants & Cafes':
+      case 'Restaurant':
+      case 'Cafe': return t('restaurantsAndCafes') || 'Restaurants & Cafes'
+      case 'Healthcare': return t('health') || 'Healthcare'
+      case 'Education': return t('education') || 'Education'
+      case 'Real Estate': return t('property') || 'Real Estate'
+      case 'Automotive': return t('vehicles') || 'Automotive'
+      case 'Electronics': return t('electronics') || 'Electronics'
+      case 'Beauty & Wellness':
+      case 'Beauty & Spa': return t('beautyAndWellness') || 'Beauty & Wellness'
+      case 'Travel & Tourism': return t('travelAndTourism') || 'Travel & Tourism'
+      case 'Professional Services': return t('professionalServices') || 'Professional Services'
+      case 'Home Services': return t('homeServices') || 'Home Services'
+      case 'Services': return t('services') || 'Services'
+      case 'Fitness': return t('fitness') || 'Fitness'
+      case 'Fashion': return t('fashion') || 'Fashion'
+      case 'More': return t('more') || 'More'
+      default: return label
+    }
+  }
+
   if (loading) {
-    return <div className="text-center py-12">Loading businesses...</div>
+    return <div className="text-center py-12">{t('loading') || 'Loading businesses...'}</div>
   }
 
   return (
@@ -160,17 +184,17 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
         <Image src="/business_dir_banner_1789519372349.jpg" alt="Business Directory" fill className="absolute inset-0 object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
         <div className="relative z-10 w-full px-4 md:px-12 flex flex-col justify-center h-full">
-          <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">BUSINESS DIRECTORY</p>
+          <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">{t('businessDirectory') || 'BUSINESS DIRECTORY'}</p>
           <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-2">
-            Discover Local <span className="text-red-500">Businesses</span>
+            {t('discoverLocalBusinesses') || 'Discover Local Businesses'}
           </h1>
-          <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">Find trusted businesses, services and professionals across Pune and beyond.</p>
+          <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">{t('businessDirectoryDesc') || 'Find trusted businesses, services and professionals across Pune and beyond.'}</p>
           <div className="hidden md:flex flex-wrap gap-6">
             {[
-              { icon: '🏢', value: '5,000+', label: 'Listed Businesses' },
-              { icon: '📂', value: '100+', label: 'Categories' },
-              { icon: '✅', value: 'Verified', label: 'Listings Trusted & Authentic' },
-              { icon: '📈', value: 'Local Growth', label: 'Stronger Communities' },
+              { icon: '🏢', value: '5,000+', label: t('listedBusinesses') || 'Listed Businesses' },
+              { icon: '📂', value: '100+', label: t('categories') || 'Categories' },
+              { icon: '✅', value: t('verified') || 'Verified', label: t('trustedAuthentic') || 'Listings Trusted & Authentic' },
+              { icon: '📈', value: t('localGrowth') || 'Local Growth', label: t('strongerCommunities') || 'Stronger Communities' },
             ].map(s => (
               <div key={s.label} className="flex items-center gap-2">
                 <span className="text-xl">{s.icon}</span>
@@ -191,7 +215,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search for business, service or keyword..."
+                placeholder={t('searchBusinessPlaceholder') || "Search for business, service or keyword..."}
                 className="h-11 pl-10 rounded-lg border-gray-200 text-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -202,7 +226,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               <span>Pune, Maharashtra</span>
             </div>
             <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
-              Search →
+              {t('search') || 'Search'} →
             </Button>
           </div>
         </div>
@@ -238,7 +262,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
                     {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
                   </div>
-                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'} text-center px-1 leading-tight`}>{cat.label}</span>
+                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'} text-center px-1 leading-tight`}>{getCategoryLabel(cat.label)}</span>
                 </button>
               )
             })}
@@ -253,13 +277,13 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
           {/* LEFT: Filters */}
           <div className="space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="font-black text-sm text-gray-900">Filters</h3>
-              <button className="text-red-600 text-xs font-bold">Clear All</button>
+              <h3 className="font-black text-sm text-gray-900">{t('filters') || 'Filters'}</h3>
+              <button className="text-red-600 text-xs font-bold">{t('clearAll') || 'Clear All'}</button>
             </div>
 
             {/* Location */}
             <div>
-              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><MapPin className="w-3 h-3" /> Location</p>
+              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><MapPin className="w-3 h-3" /> {t('location') || 'Location'}</p>
               <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
                 <option>Pune, Maharashtra</option>
                 <option>Mumbai, Maharashtra</option>
@@ -269,44 +293,55 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
             {/* Category */}
             <div>
-              <p className="text-xs font-black text-gray-700 mb-2">Category</p>
+              <p className="text-xs font-black text-gray-700 mb-2">{t('category') || 'Category'}</p>
               <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
-                {BUSINESS_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {BUSINESS_CATEGORIES.map(c => <option key={c} value={c}>{getCategoryLabel(c)}</option>)}
               </select>
             </div>
 
             {/* Rating */}
             <div>
-              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><Star className="w-3 h-3" /> Rating</p>
-              {['4.5 & above', '4.0 & above', '3.0 & above', 'Any rating'].map(r => (
-                <label key={r} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
-                  <input type="radio" name="rating" className="accent-red-600" /> {r}
+              <p className="text-xs font-black text-gray-700 mb-2 flex items-center gap-1"><Star className="w-3 h-3" /> {t('rating') || 'Rating'}</p>
+              {[
+                { val: '4.5 & above', label: `4.5 ${t('andAbove') || '& above'}` },
+                { val: '4.0 & above', label: `4.0 ${t('andAbove') || '& above'}` },
+                { val: '3.0 & above', label: `3.0 ${t('andAbove') || '& above'}` },
+                { val: 'Any rating', label: t('anyRating') || 'Any rating' },
+              ].map(r => (
+                <label key={r.val} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
+                  <input type="radio" name="rating" className="accent-red-600" /> {r.label}
                 </label>
               ))}
             </div>
 
             {/* Business Type */}
             <div>
-              <p className="text-xs font-black text-gray-700 mb-2">Business Type</p>
-              {['Verified Business', 'Open Now', 'Offers & Deals', 'Home Delivery', 'Online Booking'].map(bt => (
-                <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
-                  <input type="checkbox" className="accent-red-600" /> {bt}
+              <p className="text-xs font-black text-gray-700 mb-2">{t('businessType') || 'Business Type'}</p>
+              {[
+                { id: 'verified', label: t('verifiedBusiness') || 'Verified Business' },
+                { id: 'open', label: t('openNow') || 'Open Now' },
+                { id: 'deals', label: t('offersAndDeals') || 'Offers & Deals' },
+                { id: 'delivery', label: t('homeDelivery') || 'Home Delivery' },
+                { id: 'booking', label: t('onlineBooking') || 'Online Booking' },
+              ].map(bt => (
+                <label key={bt.id} className="flex items-center gap-2 text-xs text-gray-600 py-1 cursor-pointer">
+                  <input type="checkbox" className="accent-red-600" /> {bt.label}
                 </label>
               ))}
             </div>
 
-            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm">Apply Filters</Button>
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm">{t('applyFilters') || 'Apply Filters'}</Button>
           </div>
 
           {/* CENTER: Results Grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-500">Showing 1-12 of {filteredBusinesses.length} businesses</p>
+              <p className="text-sm text-gray-500">{t('showing') || 'Showing'} 1-12 {t('of') || 'of'} {filteredBusinesses.length} {t('businesses') || 'businesses'}</p>
               <div className="flex items-center gap-2">
                 <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700">
-                  <option>Most Relevant</option>
-                  <option>Highest Rated</option>
-                  <option>Newest First</option>
+                  <option>{t('mostRelevant') || 'Most Relevant'}</option>
+                  <option>{t('highestRated') || 'Highest Rated'}</option>
+                  <option>{t('newestFirst') || 'Newest First'}</option>
                 </select>
               </div>
             </div>
@@ -326,17 +361,17 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                       onError={e => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=250&fit=crop' }}
                     />
                     {business.isOpen !== false && (
-                      <span className="absolute top-2 left-2 text-[9px] font-black bg-green-500 text-white px-2 py-0.5 rounded">Open Now</span>
+                      <span className="absolute top-2 left-2 text-[9px] font-black bg-green-500 text-white px-2 py-0.5 rounded">{t('openNow') || 'Open Now'}</span>
                     )}
                     {business.verified && (
-                      <span className="absolute top-2 left-2 text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">✓ Verified</span>
+                      <span className="absolute top-2 left-2 text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded">✓ {t('verified') || 'Verified'}</span>
                     )}
                   </div>
                   <div className="p-3">
                     <div className="flex items-start justify-between mb-1">
                       <div className="min-w-0 flex-1">
                         <h3 className="font-black text-sm text-gray-900 leading-tight group-hover:text-red-600 transition-colors line-clamp-1">{business.name}</h3>
-                        <p className="text-[10px] text-red-500 font-bold mt-0.5">{business.category}</p>
+                        <p className="text-[10px] text-red-500 font-bold mt-0.5">{getCategoryLabel(business.category)}</p>
                       </div>
                       {business.logo && (
                         <div className="w-9 h-9 rounded-lg border border-gray-100 overflow-hidden shrink-0 ml-2 bg-white">
@@ -351,7 +386,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                         ))}
                       </div>
                       <span className="text-[10px] font-bold text-gray-700">{business.rating || '4.5'}</span>
-                      <span className="text-[10px] text-gray-400">({business.reviewCount || '320'} reviews)</span>
+                      <span className="text-[10px] text-gray-400">({business.reviewCount || '320'} {t('reviews') || 'reviews'})</span>
                     </div>
                     <p className="text-[10px] text-gray-500 flex items-center gap-1">
                       <MapPin className="w-3 h-3 shrink-0" />
@@ -368,7 +403,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
             {filteredBusinesses.length === 0 && (
               <div className="text-center py-12">
                 <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-400 font-bold">No businesses found matching your criteria</p>
+                <p className="text-gray-400 font-bold">{t('noBusinessesFound') || 'No businesses found matching your criteria'}</p>
               </div>
             )}
           </div>
@@ -380,10 +415,15 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center mb-3">
                 <Store className="w-5 h-5 text-red-600" />
               </div>
-              <h3 className="font-black text-sm text-gray-900 mb-1">List Your Business</h3>
-              <p className="text-[11px] text-gray-500 mb-3">Reach thousands of potential customers across India.</p>
+              <h3 className="font-black text-sm text-gray-900 mb-1">{t('listYourBusiness') || 'List Your Business'}</h3>
+              <p className="text-[11px] text-gray-500 mb-3">{t('listYourBusinessDesc') || 'Reach thousands of potential customers across India.'}</p>
               <ul className="space-y-1 mb-4">
-                {['Get discovered locally','Boost your brand visibility','Easy and quick listing','Trusted by the StarNews community'].map(p => (
+                {[
+                  t('getDiscoveredLocally') || 'Get discovered locally',
+                  t('boostBrandVisibility') || 'Boost your brand visibility',
+                  t('easyAndQuickListing') || 'Easy and quick listing',
+                  t('trustedByCommunity') || 'Trusted by the StarNews community'
+                ].map(p => (
                   <li key={p} className="flex items-center gap-2 text-[11px] text-gray-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />{p}
                   </li>
@@ -391,24 +431,24 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               </ul>
               <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
                 <DialogTrigger asChild>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-lg">+ Add Your Business</Button>
+                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-lg">{t('addYourBusiness') || '+ Add Your Business'}</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[500px] p-8 rounded-2xl shadow-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">Promote Your Business</DialogTitle>
-                    <DialogDescription className="text-gray-600">Fill out the form and our team will contact you to help promote your business.</DialogDescription>
+                    <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">{t('promoteYourBusinessTitle') || 'Promote Your Business'}</DialogTitle>
+                    <DialogDescription className="text-gray-600">{t('promoteYourBusinessDesc') || 'Fill out the form and our team will contact you to help promote your business.'}</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handlePromotionSubmit} className="grid gap-4 py-4">
-                    <div className="grid gap-2"><Label htmlFor="businessName2">Business Name</Label><Input id="businessName2" placeholder="e.g., My Awesome Restaurant" value={promotionData.businessName} onChange={e => setPromotionData({...promotionData, businessName: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    <div className="grid gap-2"><Label htmlFor="ownerName2">Your Name</Label><Input id="ownerName2" placeholder="e.g., John Doe" value={promotionData.ownerName} onChange={e => setPromotionData({...promotionData, ownerName: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="businessName2">{t('businessName') || 'Business Name'}</Label><Input id="businessName2" placeholder="e.g., My Awesome Restaurant" value={promotionData.businessName} onChange={e => setPromotionData({...promotionData, businessName: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="ownerName2">{t('yourName') || 'Your Name'}</Label><Input id="ownerName2" placeholder="e.g., John Doe" value={promotionData.ownerName} onChange={e => setPromotionData({...promotionData, ownerName: e.target.value})} required className="h-11 rounded-lg" /></div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="grid gap-2"><Label htmlFor="phone2">Phone</Label><Input id="phone2" type="tel" placeholder="+91 98765 43210" value={promotionData.phone} onChange={e => setPromotionData({...promotionData, phone: e.target.value})} required className="h-11 rounded-lg" /></div>
-                      <div className="grid gap-2"><Label htmlFor="email2">Email</Label><Input id="email2" type="email" placeholder="you@example.com" value={promotionData.email} onChange={e => setPromotionData({...promotionData, email: e.target.value})} required className="h-11 rounded-lg" /></div>
+                      <div className="grid gap-2"><Label htmlFor="phone2">{t('phone') || 'Phone'}</Label><Input id="phone2" type="tel" placeholder="+91 98765 43210" value={promotionData.phone} onChange={e => setPromotionData({...promotionData, phone: e.target.value})} required className="h-11 rounded-lg" /></div>
+                      <div className="grid gap-2"><Label htmlFor="email2">{t('email') || 'Email'}</Label><Input id="email2" type="email" placeholder="you@example.com" value={promotionData.email} onChange={e => setPromotionData({...promotionData, email: e.target.value})} required className="h-11 rounded-lg" /></div>
                     </div>
-                    <div className="grid gap-2"><Label htmlFor="address2">Business Address</Label><Input id="address2" placeholder="123 Main St, Pune" value={promotionData.address} onChange={e => setPromotionData({...promotionData, address: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    <div className="grid gap-2"><Label htmlFor="description2">Description</Label><Textarea id="description2" placeholder="Tell us more about your business..." value={promotionData.description} onChange={e => setPromotionData({...promotionData, description: e.target.value})} rows={3} className="rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="address2">{t('address') || 'Business Address'}</Label><Input id="address2" placeholder="123 Main St, Pune" value={promotionData.address} onChange={e => setPromotionData({...promotionData, address: e.target.value})} required className="h-11 rounded-lg" /></div>
+                    <div className="grid gap-2"><Label htmlFor="description2">{t('description') || 'Description'}</Label><Textarea id="description2" placeholder="Tell us more about your business..." value={promotionData.description} onChange={e => setPromotionData({...promotionData, description: e.target.value})} rows={3} className="rounded-lg" /></div>
                     <Button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">
-                      {isSubmitting ? 'Submitting...' : 'Submit Request'}
+                      {isSubmitting ? (t('submitting') || 'Submitting...') : (t('submitRequest') || 'Submit Request')}
                     </Button>
                   </form>
                 </DialogContent>
@@ -418,26 +458,26 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
             {/* Good Businesses Banner */}
             <div className="bg-gray-900 rounded-xl p-4 relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Good Businesses</p>
-                <h3 className="text-white font-black text-base leading-tight mb-2">Build Great<br/>Cities</h3>
-                <p className="text-gray-400 text-[11px] mb-3">Let your business be part of a stronger, informed India.</p>
-                <button className="bg-white text-gray-900 text-xs font-black px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">List Now →</button>
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">{t('goodBusinesses') || 'Good Businesses'}</p>
+                <h3 className="text-white font-black text-base leading-tight mb-2">{t('buildGreatCities') || 'Build Great Cities'}</h3>
+                <p className="text-gray-400 text-[11px] mb-3">{t('goodBusinessesDesc') || 'Let your business be part of a stronger, informed India.'}</p>
+                <button className="bg-white text-gray-900 text-xs font-black px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">{t('listNow') || 'List Now →'}</button>
               </div>
             </div>
 
             {/* Businesses Near You */}
             <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="font-black text-sm text-gray-900 mb-3">Businesses Near You</h3>
+              <h3 className="font-black text-sm text-gray-900 mb-3">{t('businessesNearYou') || 'Businesses Near You'}</h3>
               <div className="bg-gray-100 rounded-lg h-40 flex items-center justify-center mb-3">
                 <div className="text-center">
                   <MapPin className="w-6 h-6 text-red-500 mx-auto mb-1" />
-                  <p className="text-xs text-gray-500">Map View</p>
+                  <p className="text-xs text-gray-500">{t('mapView') || 'Map View'}</p>
                   <div className="flex gap-1 mt-2 justify-center">
                     {['🔴','🔴','🔴'].map((pin, i) => <span key={i}>{pin}</span>)}
                   </div>
                 </div>
               </div>
-              <button className="w-full border border-gray-200 text-gray-700 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">View on Map →</button>
+              <button className="w-full border border-gray-200 text-gray-700 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition-colors">{t('viewOnMap') || 'View on Map →'}</button>
             </div>
           </div>
         </div>

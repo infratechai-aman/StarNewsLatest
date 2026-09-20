@@ -35,6 +35,7 @@ export async function PUT(request, { params }) {
 
         // Invalidate public cache
         purgeCache('public_shorts_reels_l');
+        purgeCache('shorts');
 
         return NextResponse.json({ success: true, id, ...updates });
     } catch (error) {
@@ -57,6 +58,7 @@ export async function DELETE(request, { params }) {
 
         // Invalidate public cache so deleted short is removed immediately
         purgeCache('public_shorts_reels_l');
+        purgeCache('shorts');
 
         return NextResponse.json({ success: true });
     } catch (error) {

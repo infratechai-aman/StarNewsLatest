@@ -20,7 +20,7 @@ export async function POST(request) {
 
     try {
         const body = await request.json();
-        const { title, description, category, price, contactName, contactPhone, phone, contactEmail, location, images } = body;
+        const { title, description, category, price, contactName, contactPhone, phone, contactEmail, location, images, image, condition, whatsapp, sellerName } = body;
 
         // Input validation
         if (!title || !title.trim()) {
@@ -32,7 +32,7 @@ export async function POST(request) {
         if (description && description.length > 5000) {
             return NextResponse.json({ error: 'Description must be under 5000 characters' }, { status: 400 });
         }
-        if (images && images.length > 8) {
+        if (images && Array.isArray(images) && images.length > 8) {
             return NextResponse.json({ error: 'Maximum 8 images allowed' }, { status: 400 });
         }
 
@@ -44,19 +44,27 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Email too long' }, { status: 400 });
         }
 
-        const imageList = Array.isArray(images) ? images.slice(0, 8) : (images ? [images] : []);
-        const firstImage = imageList[0] || '';
+        const imageList = Array.isArray(images)
+            ? images.filter(Boolean).slice(0, 8)
+            : (images ? [images] : (image ? [image] : []));
+        const firstImage = (typeof image === 'string' && image) || imageList[0] || '';
+        if (firstImage && !imageList.includes(firstImage)) {
+            imageList.unshift(firstImage);
+        }
 
         const newAd = {
             title: title.trim(),
             description: (description || '').slice(0, 5000),
             category: (category || 'Other').slice(0, 100),
             price: price || 'Price on Request',
-            contactName: (contactName || '').slice(0, 100),
+            contactName: (contactName || sellerName || '').slice(0, 100),
+            sellerName: (sellerName || contactName || '').slice(0, 100),
             contactPhone: phoneVal,
             phone: phoneVal,
+            whatsapp: whatsapp || '',
             contactEmail: (contactEmail || '').slice(0, 100),
             location: (location || '').slice(0, 200),
+            condition: condition || 'Good',
             images: imageList,
             image: firstImage,
             approvalStatus: 'pending',

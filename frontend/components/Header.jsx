@@ -441,10 +441,10 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 {/* Date display */}
                 <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200" suppressHydrationWarning>
                   <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider" suppressHydrationWarning>
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                    {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { weekday: 'long' })}
                   </span>
                   <span className="text-[13px] font-bold text-gray-700 tracking-tight" suppressHydrationWarning>
-                    {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                   </span>
                 </div>
               </div>
@@ -516,7 +516,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                       onClick={() => setCurrentView('login')}
                       className="border-gray-200 text-gray-700 hover:text-red-600 hover:border-red-200 hover:bg-red-50 rounded-full font-semibold px-4 h-9 shadow-sm"
                     >
-                      <LogIn className="h-4 w-4 mr-1.5 text-red-600" /> Login
+                      <LogIn className="h-4 w-4 mr-1.5 text-red-600" /> {t('login') || 'Login'}
                     </Button>
                   </>
                 )}
@@ -578,7 +578,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 onClick={() => setCurrentView('shorts')}
                 className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center text-white/95 hover:text-white transition-all duration-200 ${currentView === 'shorts' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
-                Shorts
+                {t('shorts') || 'Shorts'}
               </button>
               <div className="w-px h-4 bg-white/20" />
               <button
@@ -600,7 +600,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 className={`relative text-[13px] font-semibold tracking-wide px-4 h-full flex items-center gap-2 text-white/95 hover:text-white transition-all duration-200 ${currentView === 'live-tv' ? 'after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-white after:rounded-full' : ''}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                Live TV
+                {t('liveTv') || 'Live TV'}
               </button>
             </div>
 
@@ -612,7 +612,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 title="Search published articles"
               >
                 <Search className="h-3.5 w-3.5 text-white" />
-                <span>Search</span>
+                <span>{t('search') || 'Search'}</span>
               </button>
 
               <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
@@ -1026,11 +1026,11 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
             <button onClick={() => setCurrentView('enewspaper')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'enewspaper' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('eNewspaper')}</button>
             <button onClick={() => setCurrentView('city')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'city' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('cityNews')}</button>
-            <button onClick={() => setCurrentView('shorts')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'shorts' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>Shorts</button>
+            <button onClick={() => setCurrentView('shorts')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'shorts' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('shorts') || 'Shorts'}</button>
             <button onClick={() => setCurrentView('classifieds')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'classifieds' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('classified')}</button>
             <button onClick={() => setCurrentView('businesses')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'businesses' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('businessDirectory')}</button>
             <button onClick={() => setCurrentView('live-tv')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all flex items-center gap-1.5 ${currentView === 'live-tv' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>
-              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />Live TV
+              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />{t('liveTv') || 'Live TV'}
             </button>
           </div>
         </div>

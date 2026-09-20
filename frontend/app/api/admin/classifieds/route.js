@@ -47,20 +47,53 @@ export async function POST(request) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
         const body = await request.json();
-        const { title, description, category, price, contact, city, images, status } = body;
+        const {
+            title,
+            description,
+            category,
+            price,
+            contact,
+            phone,
+            whatsapp,
+            city,
+            location,
+            images,
+            image,
+            sellerName,
+            condition,
+            status
+        } = body;
 
-        if (!title) {
+        if (!title || !title.trim()) {
             return NextResponse.json({ error: 'Title is required' }, { status: 400 });
         }
 
+        const imageList = Array.isArray(images)
+            ? images.filter(Boolean)
+            : (images ? [images] : []);
+        const primaryImage = (typeof image === 'string' && image) || imageList[0] || '';
+        if (primaryImage && !imageList.includes(primaryImage)) {
+            imageList.unshift(primaryImage);
+        }
+
+        const phoneVal = (phone || contact || '').trim();
+        const locVal = (location || city || '').trim();
+
         const newAd = {
-            title,
+            title: title.trim(),
             description: description || '',
-            category: category || '',
+            category: category || 'Other',
             price: price || '',
-            contact: contact || '',
-            city: city || '',
-            images: images || [],
+            contact: phoneVal,
+            contactPhone: phoneVal,
+            phone: phoneVal,
+            whatsapp: whatsapp || '',
+            city: locVal,
+            location: locVal,
+            sellerName: sellerName || '',
+            condition: condition || 'Good',
+            images: imageList,
+            image: primaryImage,
             status: status || 'approved',
             approvalStatus: 'approved',
             active: true,
@@ -71,6 +104,7 @@ export async function POST(request) {
         const docRef = await db.collection('classified_ads').add(newAd);
         await docRef.update({ id: docRef.id });
         purgeCache('admin_classifieds_list'); // Invalidate admin list cache
+        purgeCache('classifieds'); // Invalidate public classifieds cache
 
         return NextResponse.json({ id: docRef.id, ...newAd });
     } catch (error) {

@@ -37,85 +37,150 @@ function invalidateClientCache(pattern) {
   }
 }
 
-export async function apiRequest(endpoint, options = {}) {
-  let token = localStorage.getItem('token')
-  
-  // Refresh token automatically if Firebase client auth is initialized
-  if (firebaseAuth && firebaseAuth.currentUser) {
+/**
+ * Retrieve a fresh Firebase ID token.
+ * If Firebase Auth is initialized and the user is logged in, this will
+ * automatically refresh the token if it is expired (or force refresh if requested).
+ */
+export async function getFreshToken(forceRefresh = false) {
+  if (typeof window === 'undefined') return null;
+
+  if (firebaseAuth) {
     try {
-      const freshToken = await firebaseAuth.currentUser.getIdToken(false)
-      if (freshToken) {
-        token = freshToken
-        localStorage.setItem('token', token)
+      if (typeof firebaseAuth.authStateReady === 'function') {
+        await firebaseAuth.authStateReady();
+      }
+      if (firebaseAuth.currentUser) {
+        const freshToken = await firebaseAuth.currentUser.getIdToken(forceRefresh);
+        if (freshToken) {
+          localStorage.setItem('token', freshToken);
+          return freshToken;
+        }
       }
     } catch (e) {
-      console.warn("Failed to refresh Firebase token:", e)
+      console.warn("Failed to get fresh Firebase token:", e);
     }
   }
 
-  const method = (options.method || 'GET').toUpperCase()
+  return localStorage.getItem('token');
+}
+
+/**
+ * Authenticated fetch helper for raw requests (e.g. multipart FormData file uploads).
+ * Automatically injects fresh Bearer token and retries once on 401 with a force-refreshed token.
+ */
+export async function authenticatedFetch(url, options = {}) {
+  let token = await getFreshToken(false);
+  const headers = {
+    ...options.headers,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+
+  let response = await fetch(url, { ...options, headers });
+
+  // If 401 Unauthorized, automatically force-refresh token and retry once
+  if (response.status === 401 && firebaseAuth?.currentUser) {
+    try {
+      const refreshedToken = await getFreshToken(true);
+      if (refreshedToken && refreshedToken !== token) {
+        const retryHeaders = {
+          ...options.headers,
+          'Authorization': `Bearer ${refreshedToken}`
+        };
+        response = await fetch(url, { ...options, headers: retryHeaders });
+      }
+    } catch (refreshErr) {
+      console.warn('authenticatedFetch auto-retry failed:', refreshErr);
+    }
+  }
+
+  return response;
+}
+
+export async function apiRequest(endpoint, options = {}) {
+  let token = await getFreshToken(false);
+
+  const method = (options.method || 'GET').toUpperCase();
 
   // Client-side cache: only for GET requests
   if (method === 'GET') {
-    const cached = getClientCache(endpoint)
-    if (cached) return cached
+    const cached = getClientCache(endpoint);
+    if (cached) return cached;
   }
 
-  const headers = {
+  const buildHeaders = (authToken) => ({
     'Content-Type': 'application/json',
-    ...((token && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) && { Authorization: `Bearer ${token}` }),
+    ...((authToken && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) && { Authorization: `Bearer ${authToken}` }),
     ...options.headers
-  }
+  });
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  let response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
-    headers
-  })
+    headers: buildHeaders(token)
+  });
+
+  // Auto-retry once on 401 with force-refreshed token
+  if (response.status === 401 && firebaseAuth?.currentUser) {
+    try {
+      const refreshedToken = await getFreshToken(true);
+      if (refreshedToken && refreshedToken !== token) {
+        token = refreshedToken;
+        response = await fetch(`${API_BASE}${endpoint}`, {
+          ...options,
+          headers: buildHeaders(refreshedToken)
+        });
+      }
+    } catch (refreshErr) {
+      console.warn('apiRequest auto token refresh failed:', refreshErr);
+    }
+  }
 
   if (!response.ok) {
     // SECURITY/RELIABILITY: Handle non-JSON error responses (e.g., HTML 502 pages)
-    let errorMessage = `Request failed (${response.status})`
+    let errorMessage = `Request failed (${response.status})`;
     try {
-      const contentType = response.headers.get('content-type') || ''
+      const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
-        const errorData = await response.json()
-        errorMessage = errorData.error || errorMessage
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
       }
     } catch {
       // Response body couldn't be parsed — use generic message
     }
-    throw new Error(errorMessage)
+    throw new Error(errorMessage);
   }
 
   // Handle empty responses (e.g., 204 No Content)
-  const contentType = response.headers.get('content-type') || ''
+  const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('application/json')) {
-    return {}
+    return {};
   }
 
-  const data = await response.json()
+  const data = await response.json();
 
   // Cache GET responses
   if (method === 'GET') {
-    setClientCache(endpoint, data)
+    setClientCache(endpoint, data);
   }
 
   // Invalidate related cache on mutations
   if (['POST', 'PUT', 'DELETE'].includes(method)) {
     // Extract the base path (e.g., /admin/news/123 -> /news, /admin/news)
-    const baseParts = endpoint.split('/')
+    const baseParts = endpoint.split('/');
     if (baseParts.length >= 2) {
-      const resourceType = baseParts[baseParts.length - 1] === 'approve' ? baseParts[baseParts.length - 2] : baseParts[baseParts.length - 1]
-      invalidateClientCache(resourceType)
+      const resourceType = baseParts[baseParts.length - 1] === 'approve' ? baseParts[baseParts.length - 2] : baseParts[baseParts.length - 1];
+      invalidateClientCache(resourceType);
     }
     // Also always invalidate common patterns
-    invalidateClientCache('/news')
-    invalidateClientCache('/pending')
-    invalidateClientCache('/businesses')
-    invalidateClientCache('/classifieds')
+    invalidateClientCache('/news');
+    invalidateClientCache('/pending');
+    invalidateClientCache('/businesses');
+    invalidateClientCache('/classifieds');
+    invalidateClientCache('/shorts');
+    invalidateClientCache('/admin/shorts');
   }
 
-  return data
+  return data;
 }
 
 export const auth = {
@@ -264,4 +329,11 @@ export const admin = {
   // Layout (legacy)
   getLayout: () => apiRequest('/admin/layout'),
   updateLayout: (data) => apiRequest('/admin/layout', { method: 'PUT', body: JSON.stringify(data) }),
+
+  // Shorts / Reels Management
+  getShorts: () => apiRequest('/admin/shorts'),
+  createShort: (data) => apiRequest('/admin/shorts', { method: 'POST', body: JSON.stringify(data) }),
+  updateShort: (id, data) => apiRequest(`/admin/shorts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteShort: (id) => apiRequest(`/admin/shorts/${id}`, { method: 'DELETE' }),
+  toggleShort: (id, active) => apiRequest(`/admin/shorts/${id}/toggle`, { method: 'POST', body: JSON.stringify({ active }) }),
 }

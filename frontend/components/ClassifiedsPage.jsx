@@ -12,11 +12,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, CheckCircle, ChevronRight, Zap, ShoppingBag, Sparkles, ArrowRight, Search, Clock, Heart, LayoutGrid, Home, Car, Briefcase, Laptop, Wrench, GraduationCap, MoreHorizontal, Armchair, Dog } from 'lucide-react'
 import Image from 'next/image'
-import { classifieds as classifiedsApi } from '@/lib/api'
+import { classifieds as classifiedsApi, getFreshToken } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 // Fixed conversion rate (1 USD = 83 INR)
 const USD_TO_INR_RATE = 83
+
+// Category-based fallback images matching ClassifiedDetailPage
+const CATEGORY_FALLBACK_IMAGES = {
+  'Vehicles': 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800',
+  'Real Estate': 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+  'Property': 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+  'IT Jobs': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
+  'Jobs': 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
+  'Electronics': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
+  'Furniture': 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800',
+  'Fashion': 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=800',
+  'Services': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800',
+  'Education': 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800',
+  'Pets': 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800',
+  'Other': 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=800',
+}
+
+const getAdCardImage = (ad) => {
+  if (ad.image && typeof ad.image === 'string' && !ad.image.includes('placehold.co')) return ad.image
+  if (Array.isArray(ad.images) && ad.images.length > 0 && typeof ad.images[0] === 'string' && !ad.images[0].includes('placehold.co')) return ad.images[0]
+  if (ad.imageUrl && typeof ad.imageUrl === 'string' && !ad.imageUrl.includes('placehold.co')) return ad.imageUrl
+  return CATEGORY_FALLBACK_IMAGES[ad.category] || CATEGORY_FALLBACK_IMAGES['Other'] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'
+}
 
 // Helper: Convert USD to INR
 const convertToINR = (price) => {
@@ -58,9 +81,40 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   const [classifieds, setClassifieds] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const getCategoryLabel = (label) => {
+    const map = {
+      'All Categories': 'allCategories',
+      'Property': 'property',
+      'Vehicles': 'vehicles',
+      'Jobs': 'jobs',
+      'Electronics': 'electronics',
+      'Furniture': 'furniture',
+      'Services': 'services',
+      'Education': 'education',
+      'Pets': 'pets',
+      'Others': 'others'
+    }
+    const key = map[label]
+    return key ? (t(key) || label) : label
+  }
+
+  const getConditionLabel = (c) => {
+    if (c === 'New') return t('newCondition') || 'New'
+    if (c === 'Used') return t('usedCondition') || 'Used'
+    if (c === 'Refurbished') return t('refurbishedCondition') || 'Refurbished'
+    return c
+  }
+
+  const getPostedByLabel = (p) => {
+    if (p === 'Individual') return t('individual') || 'Individual'
+    if (p === 'Business') return t('business') || 'Business'
+    return p
+  }
+
   // Modal and Form State
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingImages, setUploadingImages] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
@@ -109,6 +163,10 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
     const files = Array.from(e.target.files)
     if (files.length === 0) return
 
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+
     // Check total images limit
     const totalImages = formData.images.length + files.length
     if (totalImages > 8) {
@@ -123,40 +181,47 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       return
     }
 
-    // Create previews and upload
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) continue
+    setUploadingImages(true)
+    try {
+      const token = await getFreshToken() || (typeof window !== 'undefined' ? localStorage.getItem('token') : null)
 
-      // Create preview
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        setImagePreviews(prev => [...prev, event.target.result])
-      }
-      reader.readAsDataURL(file)
+      // Create previews and upload
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue
 
-      // Upload to server
-      try {
-        const formDataUpload = new FormData()
-        formDataUpload.append('file', file)
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
-          body: formDataUpload
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setFormData(prev => ({
-            ...prev,
-            images: [...prev.images, data.url]
-          }))
-        } else {
-          const errData = await response.json().catch(() => ({}))
-          toast?.({ title: errData.error || 'Upload failed', variant: 'destructive' })
+        // Create preview
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          setImagePreviews(prev => [...prev, event.target.result])
         }
-      } catch (error) {
-        console.error('Upload failed:', error)
-        toast?.({ title: 'Upload failed. Please try again.', variant: 'destructive' })
+        reader.readAsDataURL(file)
+
+        // Upload to server
+        try {
+          const formDataUpload = new FormData()
+          formDataUpload.append('file', file)
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            body: formDataUpload
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setFormData(prev => ({
+              ...prev,
+              images: [...prev.images, data.url]
+            }))
+          } else {
+            const errData = await response.json().catch(() => ({}))
+            toast?.({ title: errData.error || 'Upload failed', variant: 'destructive' })
+          }
+        } catch (error) {
+          console.error('Upload failed:', error)
+          toast?.({ title: 'Upload failed. Please try again.', variant: 'destructive' })
+        }
       }
+    } finally {
+      setUploadingImages(false)
     }
   }
 
@@ -176,6 +241,11 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
     // Validate
     if (!formData.title || !formData.price || !formData.description || !formData.location || !formData.phone) {
       toast?.({ title: 'Please fill all required fields', variant: 'destructive' })
+      return
+    }
+
+    if (uploadingImages) {
+      toast?.({ title: 'Please wait for image upload to complete', variant: 'default' })
       return
     }
 
@@ -202,6 +272,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
     setSubmitted(false)
     setFormData({
       title: '',
+      category: 'Other',
       price: '',
       description: '',
       location: '',
@@ -251,11 +322,11 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
         <div className="relative z-10 w-full px-4 md:px-12 flex flex-col justify-center h-full">
           <div>
-            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">CLASSIFIEDS</p>
+            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">{t('classifieds') || 'CLASSIFIEDS'}</p>
             <h1 className="text-white text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-2">
-              Buy. Sell. Rent. <span className="text-red-500">Find Opportunities.</span>
+              {t('classifiedHeroTitle') || 'Buy. Sell. Rent. Find Opportunities.'}
             </h1>
-            <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">Post your classified ad and reach thousands across Pune and beyond.</p>
+            <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">{t('classifiedHeroSubtitle') || 'Post your classified ad and reach thousands across Pune and beyond.'}</p>
             <div className="hidden md:flex flex-wrap gap-5">
               {[
                 { icon: '📋', title: 'Easy Posting', sub: 'List in minutes' },
@@ -282,7 +353,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search for products, services, jobs, properties and more..."
+                placeholder={t('searchClassifiedsPlaceholder') || 'Search for products, services, jobs, properties and more...'}
                 className="h-11 pl-10 rounded-lg border-gray-200 text-sm"
               />
             </div>
@@ -291,7 +362,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               <span>Pune, Maharashtra</span>
             </div>
             <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
-              Search →
+              {t('search') || 'Search'} →
             </Button>
           </div>
         </div>
@@ -324,14 +395,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
                     {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
                   </div>
-                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'}`}>{cat.label}</span>
+                  <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'}`}>{getCategoryLabel(cat.label)}</span>
                 </button>
               )
             })}
           </div>
           <button onClick={() => setShowCreateModal(true)} className="shrink-0 h-[90px] px-8 bg-red-600 hover:bg-red-700 text-white rounded-[18px] shadow-lg shadow-red-200 flex flex-col items-center justify-center gap-1 transition-all hover:-translate-y-1 w-full md:w-auto">
-            <span className="font-black text-sm flex items-center gap-1"><Plus className="w-4 h-4"/> Post a Classified Ad</span>
-            <span className="text-[10px] opacity-80 font-medium">It's free and easy</span>
+            <span className="font-black text-sm flex items-center gap-1"><Plus className="w-4 h-4"/> {t('postClassifiedAd') || 'Post a Classified Ad'}</span>
+            <span className="text-[10px] opacity-80 font-medium">{t('freeAndEasy') || "It's free and easy"}</span>
           </button>
         </div>
       </div>
@@ -343,13 +414,13 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           {/* LEFT: Filters */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="font-black text-sm text-gray-900">Filters</h3>
-              <button className="text-red-600 text-[11px] font-bold">Clear All</button>
+              <h3 className="font-black text-sm text-gray-900">{t('filters') || 'Filters'}</h3>
+              <button className="text-red-600 text-[11px] font-bold">{t('clearAll') || 'Clear All'}</button>
             </div>
             
             {/* Location */}
             <div>
-              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> Location</p>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> {t('location') || 'Location'}</p>
               <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
                 <option>Pune, Maharashtra</option>
               </select>
@@ -357,15 +428,15 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
             {/* Category */}
             <div>
-              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Tag className="w-3 h-3" /> Category</p>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Tag className="w-3 h-3" /> {t('category') || 'Category'}</p>
               <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
-                <option>All Categories</option>
+                <option>{t('allCategories') || 'All Categories'}</option>
               </select>
             </div>
 
             {/* Price Range */}
             <div>
-              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><IndianRupee className="w-3 h-3" /> Price Range</p>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><IndianRupee className="w-3 h-3" /> {t('priceRange') || 'Price Range'}</p>
               <div className="flex gap-2 text-sm">
                 <Input placeholder="₹ Min" className="h-9" />
                 <span className="text-gray-400 mt-1">-</span>
@@ -375,37 +446,37 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
             {/* Condition */}
             <div>
-              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Sparkles className="w-3 h-3" /> Condition</p>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><Sparkles className="w-3 h-3" /> {t('condition') || 'Condition'}</p>
               {['New', 'Used', 'Refurbished'].map(bt => (
                 <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1.5 cursor-pointer">
-                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {bt}
+                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {getConditionLabel(bt)}
                 </label>
               ))}
             </div>
 
             {/* Posted By */}
             <div>
-              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> Posted By</p>
+              <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> {t('postedBy') || 'Posted By'}</p>
               {['Individual', 'Business'].map(bt => (
                 <label key={bt} className="flex items-center gap-2 text-xs text-gray-600 py-1.5 cursor-pointer">
-                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {bt}
+                  <input type="checkbox" className="accent-red-600 w-4 h-4 rounded border-gray-300" /> {getPostedByLabel(bt)}
                 </label>
               ))}
             </div>
             
-            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg h-11 text-sm mt-4">Apply Filters</Button>
+            <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg h-11 text-sm mt-4">{t('applyFilters') || 'Apply Filters'}</Button>
           </div>
 
           {/* CENTER: Grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-500 font-medium">Showing 1-12 of {classifieds.length > 0 ? classifieds.length * 370 : 1482} ads</p>
+              <p className="text-sm text-gray-500 font-medium">{t('showing') || 'Showing'} 1-12 {t('of') || 'of'} {classifieds.length > 0 ? classifieds.length * 370 : 1482} {t('ads') || 'ads'}</p>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Sort by</span>
+                <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{t('sortBy') || 'Sort by'}</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white">
-                  <option>Latest First</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
+                  <option>{t('latestFirst') || 'Latest First'}</option>
+                  <option>{t('priceLowHigh') || 'Price: Low to High'}</option>
+                  <option>{t('priceHighLow') || 'Price: High to Low'}</option>
                 </select>
               </div>
             </div>
@@ -413,25 +484,32 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {classifieds.map((ad, idx) => {
                 const displayPrice = convertToINR(ad.price)
+                const cardImg = getAdCardImage(ad)
                 return (
-                  <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all" onClick={() => handleContactSeller(ad)}>
+                  <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all flex flex-col" onClick={() => handleContactSeller(ad)}>
                     <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                      <Image src={ad.image || ad.images?.[0] || 'https://images.unsplash.com/photo-1572375992501-4b089b9be8ec?w=400'} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                      <Image src={cardImg} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
                       <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>{ad.condition === 'New' ? 'NEW' : ad.condition === 'Excellent' ? 'FEATURED' : 'URGENT'}</Badge>
                       <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
                         <Heart className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <div className="p-3">
+                    <div className="p-3 flex flex-col flex-1">
                       <h4 className="font-black text-[15px] text-gray-900 leading-tight mb-1">{displayPrice || '₹0'}</h4>
                       <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[32px]">{ad.title}</p>
                       <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1 mt-auto">
                         <MapPin className="w-3 h-3 shrink-0" />
                         <span className="truncate">{ad.location}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
                         <Clock className="w-3 h-3 shrink-0" />
                         <span>{idx + 1 + (idx * 2)} hours ago</span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-100 mt-auto flex items-center justify-between">
+                        <span className="text-xs font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
+                          {t('viewDetails') || 'View Details'}
+                          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -444,9 +522,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           <div className="space-y-6">
             {/* Why Post on StarNews */}
             <div className="bg-red-50/30 border border-red-100 rounded-2xl p-5 relative overflow-hidden">
-              <h3 className="font-black text-base text-gray-900 mb-4">Why Post on StarNews?</h3>
+              <h3 className="font-black text-base text-gray-900 mb-4">{t('whyPostOnStarNews') || 'Why Post on StarNews?'}</h3>
               <ul className="space-y-3 relative z-10">
-                {['Reach genuine buyers & sellers', 'Trusted by the community', 'Free and easy to use', 'Wide local reach across Maharashtra'].map(p => (
+                {[
+                  t('whyPostPoint1') || 'Reach genuine buyers & sellers',
+                  t('whyPostPoint2') || 'Trusted by the community',
+                  t('whyPostPoint3') || 'Free and easy to use',
+                  t('whyPostPoint4') || 'Wide local reach across Maharashtra'
+                ].map(p => (
                   <li key={p} className="flex gap-2 text-xs text-gray-700 font-bold">
                     <div className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-black shadow-sm">✓</div>
                     {p}
@@ -464,15 +547,15 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div className="bg-[#1a1c29] rounded-2xl p-6 relative overflow-hidden text-white shadow-md">
               <img src="https://images.unsplash.com/photo-1596706059432-850f865f1a58?w=400&q=80" alt="Pune" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] mix-blend-overlay" />
               <div className="relative z-10">
-                <h3 className="font-black text-xl leading-tight mb-2">Local People<br/><span className="text-red-400">Real Opportunities</span></h3>
-                <p className="text-xs text-gray-300 mb-5 leading-relaxed">From homes to jobs, find it all on StarNews Classifieds.</p>
-                <Button size="sm" onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform">Post Your Ad →</Button>
+                <h3 className="font-black text-xl leading-tight mb-2">{t('localPeople') || 'Local People'}<br/><span className="text-red-400">{t('realOpportunities') || 'Real Opportunities'}</span></h3>
+                <p className="text-xs text-gray-300 mb-5 leading-relaxed">{t('classifiedSideDesc') || 'From homes to jobs, find it all on StarNews Classifieds.'}</p>
+                <Button size="sm" onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform">{t('postYourAd') || 'Post Your Ad'} →</Button>
               </div>
             </div>
 
             {/* Popular Searches */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <h3 className="font-black text-sm text-gray-900 mb-4">Popular Searches</h3>
+              <h3 className="font-black text-sm text-gray-900 mb-4">{t('popularSearches') || 'Popular Searches'}</h3>
               <div className="space-y-3">
                 {['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets'].map(search => (
                   <div key={search} className="flex items-center gap-3 cursor-pointer group">
@@ -655,9 +738,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 <Button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-                  disabled={submitting}
+                  disabled={submitting || uploadingImages}
                 >
-                  {submitting ? (
+                  {uploadingImages ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Uploading Image...
+                    </>
+                  ) : submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Submitting...

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
 import { Radio, Newspaper, LogOut, Edit, Trash2, Clock, X, MessageSquare, AlertTriangle, Check, FileText, Upload, File } from 'lucide-react'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
+import { getFreshToken, authenticatedFetch } from '@/lib/api'
 
 // Fast auto-compress images to <= 500KB using Canvas API
 const compressImage = (file, maxSizeKB = 500, maxWidth = 900) => {
@@ -101,17 +103,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
     showOnHome: true
   })
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : ''
-
   const fetchTicker = async () => {
     try {
-      const res = await fetch('/api/reporter/breaking-ticker', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/reporter/breaking-ticker')
       const data = await res.json()
-      if (res.ok) {
+      if (res.ok && data.ticker) {
         setTicker(data.ticker)
-        setTickerText(data.ticker?.text || '')
+        setTickerText(data.ticker.pendingText || data.ticker.text || '')
       } else {
         console.error('Ticker fetch error:', res.status, data)
       }
@@ -122,9 +120,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
   const fetchMyNews = async () => {
     try {
-      const res = await fetch('/api/reporter/news', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/reporter/news')
       const data = await res.json()
       if (res.ok) {
         setMyNews(data.articles || [])
@@ -138,9 +134,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
   const fetchMyPapers = async () => {
     try {
-      const res = await fetch('/api/reporter/enewspaper', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/reporter/enewspaper')
       const data = await res.json()
       if (res.ok) {
         setMyPapers(data.papers || [])
@@ -161,17 +155,18 @@ const ReporterDashboard = ({ user, onLogout }) => {
     loadData()
   }, [])
 
-  const handleSaveTicker = async () => {
+  const handleSaveTicker = async (e) => {
+    if (e) e.preventDefault()
     if (!tickerText.trim()) {
-      alert('Please enter breaking news text')
+      alert('Please enter a breaking news headline')
       return
     }
     setSavingTicker(true)
     try {
-      const res = await fetch('/api/reporter/breaking-ticker', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ text: tickerText })
+      const res = await authenticatedFetch('/api/reporter/breaking-ticker', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: tickerText.trim() })
       })
       const data = await res.json()
       if (res.ok && data.success) {
@@ -179,13 +174,14 @@ const ReporterDashboard = ({ user, onLogout }) => {
         setIsEditingTicker(false)
         setTickerSaved(true)
         setTimeout(() => setTickerSaved(false), 3000)
-        const msg = (user?.role === 'super_admin') ? 'Ticker updated successfully!' : 'Ticker submitted for approval!';
+        const msg = (user?.role === 'super_admin') 
+          ? 'Breaking ticker updated and published live!' 
+          : 'Breaking headline submitted for Admin approval!';
         alert(msg)
       } else {
-        alert('Failed to save: ' + (data.error || 'Unknown error'))
+        alert('Failed to submit headline: ' + (data.error || 'Unknown error'))
       }
     } catch (err) {
-      // console.error('Failed to save ticker:', err)
       alert('Failed to save ticker: ' + err.message)
     } finally {
       setSavingTicker(false)
@@ -224,9 +220,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
           const formData = new FormData()
           formData.append('file', blob, `image.${mimeStr.split('/')[1]}`)
 
-          const uploadRes = await fetch('/api/upload', {
+          const uploadRes = await authenticatedFetch('/api/upload', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
             body: formData
           })
 
@@ -269,9 +264,9 @@ const ReporterDashboard = ({ user, onLogout }) => {
         authorName: newsFormData.authorName || ''
       }
 
-      const res = await fetch(url, {
+      const res = await authenticatedFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
@@ -333,9 +328,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
       const formData = new FormData()
       formData.append('file', pdfFile)
 
-      const uploadRes = await fetch('/api/upload-large', {
+      const uploadRes = await authenticatedFetch('/api/upload-large', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       })
 
@@ -348,9 +342,9 @@ const ReporterDashboard = ({ user, onLogout }) => {
       setUploadingPdf(false)
 
       // Now save the e-newspaper record
-      const res = await fetch('/api/reporter/enewspaper', {
+      const res = await authenticatedFetch('/api/reporter/enewspaper', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: paperFormData.title,
           editionDate: paperFormData.editionDate,
@@ -381,9 +375,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
   const handleDeletePaper = async (id) => {
     if (!confirm('Are you sure you want to delete this E-Newspaper?')) return
     try {
-      await fetch(`/api/reporter/enewspaper/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await authenticatedFetch(`/api/reporter/enewspaper/${id}`, {
+        method: 'DELETE'
       })
       await fetchMyPapers()
     } catch (err) {
@@ -479,6 +472,12 @@ const ReporterDashboard = ({ user, onLogout }) => {
                 className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-all flex items-center gap-2 whitespace-nowrap"
               >
                 <Clock className="h-4 w-4" /> My Submissions
+              </TabsTrigger>
+              <TabsTrigger 
+                value="breaking-ticker" 
+                className="data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-all flex items-center gap-2 whitespace-nowrap"
+              >
+                <Radio className="h-4 w-4 text-red-500" /> Breaking Ticker
               </TabsTrigger>
             </TabsList>
           </div>
@@ -923,7 +922,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 if (confirm('Are you sure you want to delete this article? This action cannot be undone.')) {
-                                  await fetch(`/api/reporter/news/${article.id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+                                  await authenticatedFetch(`/api/reporter/news/${article.id}`, { method: 'DELETE' });
                                   fetchMyNews();
                                 }
                               }}
@@ -939,6 +938,130 @@ const ReporterDashboard = ({ user, onLogout }) => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* BREAKING TICKER TAB */}
+          <TabsContent value="breaking-ticker" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-6">
+              <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="border-b border-gray-100 pb-5 bg-gradient-to-r from-red-50/60 to-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
+                      <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm">
+                        <Radio className="h-5 w-5 animate-pulse" />
+                      </div>
+                      <div>
+                        <span>Breaking News Ticker</span>
+                        <p className="text-xs font-normal text-gray-500 mt-0.5">Live marquee bar running at the top of the StarNews website</p>
+                      </div>
+                    </CardTitle>
+                    <Badge className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                      Live on Site
+                    </Badge>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-6 md:p-8 space-y-6">
+                  {/* Current Live Headline */}
+                  <div className="p-4 bg-gray-50/80 border border-gray-200 rounded-2xl">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                        <Radio className="h-3.5 w-3.5 text-red-500" /> Current Live Headline
+                      </span>
+                      {ticker?.updatedAt && (
+                        <span className="text-xs text-gray-400">
+                          Updated {new Date(ticker.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-base md:text-lg font-semibold text-gray-900 leading-relaxed">
+                      {ticker?.text || 'No live breaking news active at the moment.'}
+                    </p>
+                  </div>
+
+                  {/* Pending Submission Alert (if reporter submitted) */}
+                  {ticker?.pendingText && (
+                    <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 text-amber-600" /> Your Pending Submission
+                        </span>
+                        <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                          Pending Admin Approval
+                        </Badge>
+                      </div>
+                      <p className="text-sm md:text-base font-semibold text-amber-950 mb-2">
+                        {ticker.pendingText}
+                      </p>
+                      <p className="text-xs text-amber-700 font-medium">
+                        Your submission has been sent to the editorial desk. It will automatically update the live ticker once approved by an Admin.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Submission Form */}
+                  <form onSubmit={handleSaveTicker} className="space-y-4 pt-2">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-bold text-gray-800">
+                          Enter New Breaking Headline *
+                        </label>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {tickerText.length} / 500 characters
+                        </span>
+                      </div>
+                      <Textarea
+                        value={tickerText}
+                        onChange={(e) => setTickerText(e.target.value)}
+                        placeholder="e.g. BREAKING: Maharashtra Cabinet announces new development package • Rescue operations complete in coastal districts..."
+                        rows={3}
+                        maxLength={500}
+                        className="rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500 text-base resize-none"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
+                        <span>💡 <strong>Tip:</strong> Keep it concise and urgent. Separate multiple news items with bullet <code>•</code>.</span>
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <Button
+                        type="submit"
+                        disabled={savingTicker || !tickerText.trim()}
+                        className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 px-6 font-semibold shadow-sm flex items-center gap-2"
+                      >
+                        {savingTicker ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Submitting...
+                          </>
+                        ) : tickerSaved ? (
+                          <>
+                            <Check className="h-4 w-4" /> Submitted for Approval!
+                          </>
+                        ) : (
+                          <>
+                            <Radio className="h-4 w-4" /> Submit Breaking Headline
+                          </>
+                        )}
+                      </Button>
+
+                      {tickerText && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setTickerText(ticker?.pendingText || ticker?.text || '')}
+                          className="rounded-xl h-11 px-4 border-gray-200 text-gray-600 hover:bg-gray-50"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>

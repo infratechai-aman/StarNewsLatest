@@ -12,7 +12,7 @@ import Image from 'next/image'
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 const EnewspaperPage = () => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [newspapers, setNewspapers] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedPaper, setSelectedPaper] = useState(null)
@@ -242,7 +242,8 @@ const EnewspaperPage = () => {
   // Date helpers
   const getFormattedDate = (date) => {
     if (!date) return ''
-    return new Date(date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+    const loc = language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN'
+    return new Date(date).toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
   }
 
   // ─── Loading skeleton ───
@@ -281,9 +282,9 @@ const EnewspaperPage = () => {
           <Image src="/enewspaper_banner_1789519347864.jpg" alt="E-Newspaper" fill className="absolute inset-0 object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
           <div className="relative z-10 max-w-[1400px] mx-auto px-4 md:px-6 flex flex-col justify-center h-full">
-            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-3">E-Newspaper</p>
+            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-3">{t('eNewspaper') || 'E-Newspaper'}</p>
             <h1 className="text-white text-3xl md:text-4xl font-black leading-tight mb-2">
-              Read the Latest <span className="text-red-500 italic">Edition</span>
+              {t('readLatestEdition') || 'Read the Latest Edition'}
             </h1>
             <p className="text-gray-300 text-xs md:text-sm max-w-md mb-3 md:mb-5 hidden sm:block">Your trusted source for in-depth news, analysis and stories from across India.</p>
             <div className="hidden md:flex flex-wrap gap-6">
@@ -315,7 +316,7 @@ const EnewspaperPage = () => {
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
                 <span className="text-gray-500">📅</span>
-                <h3 className="font-black text-sm text-gray-900">Select Edition</h3>
+                <h3 className="font-black text-sm text-gray-900">{t('selectEdition') || 'Select Edition'}</h3>
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -340,18 +341,18 @@ const EnewspaperPage = () => {
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
                 <span className="text-gray-500">📄</span>
-                <h3 className="font-black text-sm text-gray-900">Quick Access</h3>
+                <h3 className="font-black text-sm text-gray-900">{t('quickAccess') || 'Quick Access'}</h3>
               </div>
               <div className="p-2 space-y-1">
                 {[
-                  { name: 'Front Page', pages: 'Page 1', active: true },
-                  { name: 'National', pages: 'Pages 2-4' },
-                  { name: 'Maharashtra', pages: 'Pages 5-7' },
-                  { name: 'City News', pages: 'Pages 8-10' },
-                  { name: 'Business & Economy', pages: 'Pages 11-12' },
-                  { name: 'Sports', pages: 'Pages 13-14' },
-                  { name: 'Entertainment', pages: 'Pages 15-16' },
-                  { name: 'Editorial & Opinion', pages: 'Pages 17-18' },
+                  { name: t('frontPage') || 'Front Page', pages: 'Page 1', active: true },
+                  { name: t('nation') || 'National', pages: 'Pages 2-4' },
+                  { name: t('maharashtra') || 'Maharashtra', pages: 'Pages 5-7' },
+                  { name: t('cityNews') || 'City News', pages: 'Pages 8-10' },
+                  { name: t('business') || 'Business & Economy', pages: 'Pages 11-12' },
+                  { name: t('sports') || 'Sports', pages: 'Pages 13-14' },
+                  { name: t('entertainment') || 'Entertainment', pages: 'Pages 15-16' },
+                  { name: t('editorial') || 'Editorial & Opinion', pages: 'Pages 17-18' },
                 ].map(item => (
                   <button key={item.name} className={`w-full text-left px-3 py-2 rounded-lg flex flex-col transition-colors ${item.active ? 'bg-red-600 text-white' : 'hover:bg-gray-50 text-gray-700'}`}>
                     <span className="font-bold text-sm">{item.name}</span>
@@ -473,17 +474,17 @@ const EnewspaperPage = () => {
             <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden p-5">
               <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
                 <FileText className="w-4 h-4 text-gray-500" />
-                <h3 className="font-black text-sm text-gray-900">Today's Edition</h3>
+                <h3 className="font-black text-sm text-gray-900">{t('todaysEdition') || "Today's Edition"}</h3>
               </div>
               <p className="text-xs font-bold text-gray-800 mb-1">Wednesday, 16 September 2026</p>
               <p className="text-[11px] text-gray-500 mb-1">Pune Edition</p>
               <p className="text-[11px] text-gray-400 mb-5">12 Pages | ₹5</p>
               
               <button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
-                <BookOpen className="w-4 h-4" /> Read Now
+                <BookOpen className="w-4 h-4" /> {t('readNow') || 'Read Now'}
               </button>
               <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold py-2.5 rounded-lg transition-colors">
-                <Download className="w-4 h-4" /> Download PDF
+                <Download className="w-4 h-4" /> {t('downloadPdf') || 'Download PDF'}
               </button>
             </div>
 
@@ -492,9 +493,9 @@ const EnewspaperPage = () => {
               <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-500">📅</span>
-                  <h3 className="font-black text-sm text-gray-900">Other Editions</h3>
+                  <h3 className="font-black text-sm text-gray-900">{t('otherEditions') || 'Other Editions'}</h3>
                 </div>
-                <button className="text-[10px] font-bold text-red-600">View All →</button>
+                <button className="text-[10px] font-bold text-red-600">{t('viewAll') || 'View All'} →</button>
               </div>
               
               <div className="space-y-4">

@@ -7,8 +7,8 @@ import { purgeCache } from '@/lib/cache';
 const ALLOWED_CLASSIFIED_FIELDS = [
     'title', 'description', 'category', 'price', 'condition',
     'contactName', 'contactPhone', 'contactEmail', 'location',
-    'images', 'approvalStatus', 'active', 'featured',
-    'sellerName', 'whatsapp', 'phone'
+    'images', 'image', 'approvalStatus', 'active', 'featured',
+    'sellerName', 'whatsapp', 'phone', 'city', 'contact'
 ];
 
 function sanitizeBody(body, allowedFields) {
@@ -37,10 +37,19 @@ export async function PUT(request, { params }) {
 
         // Whitelist fields to prevent mass assignment
         const updateData = sanitizeBody(body, ALLOWED_CLASSIFIED_FIELDS);
+        if (updateData.images && Array.isArray(updateData.images)) {
+            updateData.images = updateData.images.filter(Boolean);
+            if (!updateData.image && updateData.images.length > 0) {
+                updateData.image = updateData.images[0];
+            }
+        } else if (updateData.image && (!updateData.images || !updateData.images.length)) {
+            updateData.images = [updateData.image];
+        }
         updateData.updatedAt = new Date().toISOString();
 
         await db.collection('classified_ads').doc(id).update(updateData);
         purgeCache('admin_classifieds_list'); // Invalidate admin list cache
+        purgeCache('classifieds'); // Invalidate public list cache
 
         return NextResponse.json({ success: true });
     } catch (error) {

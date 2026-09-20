@@ -5,6 +5,7 @@ import ShortsVideoPlayer from '@/components/ShortsVideoPlayer';
 import { Loader2, Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Play } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const CATEGORIES = ['For You', 'Latest', 'Trending', 'Maharashtra', 'India', 'Politics', 'Business', 'Sports', 'Technology', 'Entertainment', 'More+'];
 
@@ -22,9 +23,33 @@ const TRENDING = [
 ];
 
 export default function ShortsPage({ setCurrentView }) {
+  const { t, language } = useLanguage();
   const [shorts, setShorts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState('For You');
+
+  const getCatLabel = (cat) => {
+    const keyMap = {
+      'For You': 'forYou',
+      'Latest': 'latest',
+      'Trending': 'trending',
+      'Maharashtra': 'nation',
+      'India': 'nation',
+      'Politics': 'politics',
+      'Business': 'business',
+      'Sports': 'sports',
+      'Technology': 'technology',
+      'Entertainment': 'entertainment',
+      'More+': 'showMore',
+      'City News': 'cityNews',
+      'Education': 'education',
+      'Health': 'health',
+      'Defense': 'nation',
+      'International': 'nation'
+    };
+    const key = keyMap[cat];
+    return key ? (t(key) || cat) : cat;
+  };
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'player'
   const [activeShortIndex, setActiveShortIndex] = useState(0);
   const containerRef = useRef(null);
@@ -118,12 +143,12 @@ export default function ShortsPage({ setCurrentView }) {
                   activeCategory === cat ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                {cat}
+                {getCatLabel(cat)}
               </button>
             ))}
             <div className="flex-1" />
             <div className="relative shrink-0">
-              <input type="text" placeholder="Search shorts..." className="h-8 pl-3 pr-8 border border-gray-200 rounded-full text-xs bg-white focus:outline-none focus:border-red-400 w-40" />
+              <input type="text" placeholder={t('searchShorts') || 'Search shorts...'} className="h-8 pl-3 pr-8 border border-gray-200 rounded-full text-xs bg-white focus:outline-none focus:border-red-400 w-40" />
               <svg className="absolute right-2.5 top-2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </div>
           </div>
@@ -142,8 +167,8 @@ export default function ShortsPage({ setCurrentView }) {
               </div>
             ) : shorts.length === 0 ? (
               <div className="text-center py-20">
-                <p className="text-gray-400 font-bold text-lg mb-2">No Shorts Available</p>
-                <p className="text-gray-300 text-sm">Check back soon for quick news updates!</p>
+                <p className="text-gray-400 font-bold text-lg mb-2">{t('noNews') || 'No Shorts Available'}</p>
+                <p className="text-gray-300 text-sm">{t('checkBackLater') || 'Check back soon for quick news updates!'}</p>
               </div>
             ) : (
               <>
@@ -192,7 +217,7 @@ export default function ShortsPage({ setCurrentView }) {
                 </div>
                 <div className="text-center mt-6 mb-4">
                   <button className="border border-gray-200 text-gray-700 text-xs font-bold px-6 py-2.5 rounded-full hover:bg-gray-50 transition-colors">
-                    Load More Posts ↓
+                    {t('loadMorePosts') || 'Load More Posts ↓'}
                   </button>
                 </div>
               </>
@@ -205,9 +230,9 @@ export default function ShortsPage({ setCurrentView }) {
             <div className="border border-gray-100 rounded-xl p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-black text-sm text-gray-900 flex items-center gap-2">
-                  <span className="text-red-500">⚡</span> Trending Topics
+                  <span className="text-red-500">⚡</span> {t('trendingTopics') || 'Trending Topics'}
                 </h3>
-                <button className="text-red-600 text-[10px] font-bold">View All</button>
+                <button className="text-red-600 text-[10px] font-bold">{t('viewAll') || 'View All'}</button>
               </div>
               <div className="space-y-2">
                 {TRENDING.map((topic, idx) => (
@@ -226,21 +251,21 @@ export default function ShortsPage({ setCurrentView }) {
                   <span className="text-white text-xs font-black">★</span>
                 </div>
                 <div>
-                  <p className="text-white text-xs font-black">Small Stories</p>
-                  <p className="text-gray-400 text-[10px]">Big Impact.</p>
+                  <p className="text-white text-xs font-black">{t('smallStories') || 'Small Stories'}</p>
+                  <p className="text-gray-400 text-[10px]">{t('bigImpact') || 'Big Impact.'}</p>
                 </div>
               </div>
-              <p className="text-gray-400 text-[11px] mb-3">News that matters — in a format you love.</p>
-              <button className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-black py-2 rounded-lg transition-colors">Watch Now →</button>
+              <p className="text-gray-400 text-[11px] mb-3">{t('smallStoriesDesc') || 'News that matters — in a format you love.'}</p>
+              <button className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-black py-2 rounded-lg transition-colors">{t('watchNow') || 'Watch Now →'}</button>
             </div>
 
             {/* Categories */}
             <div className="border border-gray-100 rounded-xl p-4 shadow-sm">
-              <h3 className="font-black text-sm text-gray-900 mb-3">Categories</h3>
+              <h3 className="font-black text-sm text-gray-900 mb-3">{t('categories') || 'Categories'}</h3>
               <div className="grid grid-cols-2 gap-2">
                 {['Politics','City News','Business','Sports','Technology','Entertainment','Education','Health','Defense','International'].map(cat => (
                   <button key={cat} className="text-left text-[11px] text-gray-600 hover:text-red-600 font-bold py-1 flex items-center gap-1.5 transition-colors">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />{cat}
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0" />{getCatLabel(cat)}
                   </button>
                 ))}
               </div>
@@ -248,10 +273,10 @@ export default function ShortsPage({ setCurrentView }) {
 
             {/* Be a Part of the Story */}
             <div className="border border-gray-200 rounded-xl p-4">
-              <h3 className="font-black text-sm text-gray-900 mb-1">Be a Part of the Story</h3>
-              <p className="text-[11px] text-gray-500 mb-3">Share news insights or photos from your area.</p>
+              <h3 className="font-black text-sm text-gray-900 mb-1">{t('beAPartOfTheStory') || 'Be a Part of the Story'}</h3>
+              <p className="text-[11px] text-gray-500 mb-3">{t('beAPartDesc') || 'Share news insights or photos from your area.'}</p>
               <button onClick={() => setCurrentView && setCurrentView('home')} className="w-full block bg-red-600 hover:bg-red-700 text-white text-xs font-black py-2 rounded-lg text-center transition-colors">
-                Back to Home →
+                {t('backToHome') || 'Back to Home →'}
               </button>
             </div>
           </div>

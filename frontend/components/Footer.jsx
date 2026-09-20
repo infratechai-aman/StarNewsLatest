@@ -3,7 +3,7 @@
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const Footer = ({ setCurrentView }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   return (
     <footer className="bg-gray-900 text-gray-300 mt-12">
@@ -12,9 +12,7 @@ const Footer = ({ setCurrentView }) => {
           <div>
             <h3 className="font-bold text-xl text-white mb-4">StarNews</h3>
             <p className="text-sm mb-4">
-              {t('language') === 'भाषा' ? 'भारत भर से ब्रेकिंग न्यूज़, स्थानीय अपडेट और व्यापार समाचार का आपका विश्वसनीय स्रोत।' :
-                t('language') === 'भाषा' ? 'भारतभरातील ब्रेकिंग न्यूज, स्थानिक अपडेट्स आणि व्यावसायिक बातम्यांचा तुमचा विश्वासू स्त्रोत.' :
-                  'Your trusted source for breaking news, local updates, and business stories from across India.'}
+              {t('footerAbout')}
             </p>
             <div className="flex gap-3">
               <a href="https://www.facebook.com/share/1Fd1BR94tW/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Shield, Eye, EyeOff, Loader2, LogOut } from 'lucide-react'
-import { auth } from '@/lib/api'
+import { auth, getFreshToken } from '@/lib/api'
 import AdminDashboard from '@/components/AdminDashboard'
 import { useToast } from '@/hooks/use-toast'
 
@@ -24,7 +24,7 @@ export default function AdminLoginPage() {
     const [user, setUser] = useState(null)
     const { toast } = useToast()
 
-    // Setup Firebase token refresh listener
+    // Setup Firebase token refresh listener and periodic refresher
     useEffect(() => {
         if (!firebaseClientAuth) return
         const unsubscribe = onIdTokenChanged(firebaseClientAuth, async (firebaseUser) => {
@@ -37,14 +37,47 @@ export default function AdminLoginPage() {
                 }
             }
         })
-        return () => unsubscribe()
+
+        // Periodically refresh token (every 30 minutes) to prevent expiration during admin sessions
+        const refreshInterval = setInterval(async () => {
+            if (firebaseClientAuth.currentUser) {
+                try {
+                    const freshToken = await firebaseClientAuth.currentUser.getIdToken(true)
+                    if (freshToken) localStorage.setItem('token', freshToken)
+                } catch (err) {
+                    console.warn('Periodic admin token refresh failed:', err)
+                }
+            }
+        }, 30 * 60 * 1000)
+
+        // Refresh token when tab regains focus
+        const handleFocus = async () => {
+            if (firebaseClientAuth.currentUser) {
+                try {
+                    const freshToken = await firebaseClientAuth.currentUser.getIdToken()
+                    if (freshToken) localStorage.setItem('token', freshToken)
+                } catch (err) {
+                    console.warn('Focus token refresh failed:', err)
+                }
+            }
+        }
+        window.addEventListener('focus', handleFocus)
+
+        return () => {
+            unsubscribe()
+            clearInterval(refreshInterval)
+            window.removeEventListener('focus', handleFocus)
+        }
     }, [])
 
     useEffect(() => {
         // Check if already logged in
         const checkAuth = async () => {
             try {
-                const token = localStorage.getItem('token')
+                if (firebaseClientAuth && typeof firebaseClientAuth.authStateReady === 'function') {
+                    await firebaseClientAuth.authStateReady()
+                }
+                const token = await getFreshToken()
                 if (token) {
                     const userData = await auth.getMe()
                     if (userData.role === 'super_admin') {
@@ -53,7 +86,10 @@ export default function AdminLoginPage() {
                     }
                 }
             } catch (error) {
-                localStorage.removeItem('token')
+                console.warn('checkAuth error:', error)
+                if (!firebaseClientAuth?.currentUser) {
+                    localStorage.removeItem('token')
+                }
             }
         }
         checkAuth()

@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { admin, news, auth, categories } from '@/lib/api'
+import { admin, news, auth, categories, authenticatedFetch, getFreshToken } from '@/lib/api'
 import {
   getContentSettings, saveContentSettings, savePremiumAdSettings, saveSidebarAdSettings,
   saveTrendingSettings, markNewsAsTrending, getTrendingNewsIds, saveArticleAdSettings, saveBusinessAdSettings
@@ -428,10 +428,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
   const loadAllEnewspapers = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/admin/enewspaper', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/admin/enewspaper')
       const data = await res.json()
       setAllEnewspapers(data.papers || [])
     } catch (error) {
@@ -452,10 +449,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const loadReporterApplications = async () => {
     try {
       setLoadingReporterApps(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/reporter-applications', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/reporter-applications')
       const data = await res.json()
       setReporterApplications(data.applications || [])
     } catch (error) {
@@ -615,10 +609,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const loadPendingTicker = async () => {
     try {
       setLoadingPendingTicker(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/admin/pending-ticker', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await authenticatedFetch('/api/admin/pending-ticker')
       const data = await res.json()
       setPendingTicker(data.ticker)
     } catch (error) {
@@ -631,10 +622,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   // Approve pending ticker
   const handleApproveTicker = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/admin/pending-ticker/approve', {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await authenticatedFetch('/api/admin/pending-ticker/approve', {
+        method: 'PUT'
       })
       if (res.ok) {
         toast({ title: 'Ticker Approved', description: 'The ticker is now live!' })
@@ -648,10 +637,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   // Reject pending ticker
   const handleRejectTicker = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/admin/pending-ticker/reject', {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await authenticatedFetch('/api/admin/pending-ticker/reject', {
+        method: 'PUT'
       })
       if (res.ok) {
         toast({ title: 'Ticker Rejected', description: 'The pending ticker has been rejected' })
@@ -891,11 +878,17 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     }
     try {
       setLoading(true)
+      const cleanedImages = (classifiedForm.images || []).filter(Boolean)
+      const payload = {
+        ...classifiedForm,
+        images: cleanedImages,
+        image: cleanedImages[0] || ''
+      }
       if (editingClassified) {
-        await admin.updateClassified(editingClassified.id, classifiedForm)
+        await admin.updateClassified(editingClassified.id, payload)
         toast({ title: 'Classified Updated' })
       } else {
-        await admin.createClassified(classifiedForm)
+        await admin.createClassified(payload)
         toast({ title: 'Classified Created' })
       }
       setShowClassifiedForm(false)
@@ -910,6 +903,9 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
   const handleEditClassified = (classified) => {
     setEditingClassified(classified)
+    const existingImages = Array.isArray(classified.images) && classified.images.length > 0
+      ? classified.images
+      : (classified.image ? [classified.image] : [])
     setClassifiedForm({
       title: classified.title || '',
       category: classified.category || '',
@@ -920,7 +916,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       location: classified.location || '',
       sellerName: classified.sellerName || '',
       condition: classified.condition || 'Good',
-      images: classified.images || []
+      images: existingImages
     })
     setShowClassifiedForm(true)
   }
@@ -940,10 +936,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }
 
   const handleToggleClassified = async (id) => {
-    // Optimistic update
+    // Optimistic update — use `active` field to match API + Firestore
     const previousClassifieds = [...allClassifieds]
     setAllClassifieds(prev => prev.map(c =>
-      c.id === id ? { ...c, enabled: c.enabled === false ? true : false } : c
+      c.id === id ? { ...c, active: !c.active } : c
     ))
 
     try {
@@ -3027,7 +3023,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                       try {
                                         const formData = new FormData()
                                         formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
+                                        const token = await getFreshToken() || localStorage.getItem('token')
+                                        const res = await fetch('/api/upload', { method: 'POST', headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }, body: formData })
                                         const data = await res.json()
                                         if (res.ok) {
                                           const newImages = [...(classifiedForm.images || [])]
@@ -3048,7 +3045,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           )
                         })}
                       </div>
-                      <p className="text-xs text-gray-500">Click each slot to upload an image. Max 5MB per image.</p>
+                      <p className="text-xs text-gray-500">Click each slot to upload an image. Max 700KB per image.</p>
                     </div>
                   </div>
                   <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
@@ -3077,7 +3074,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       ) : (
                         <div className="space-y-2">
                           {allClassifieds.filter(c => c.approvalStatus === 'approved').map(classified => (
-                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.enabled === false ? 'opacity-60' : ''}`}>
+                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.active === false ? 'opacity-60' : ''}`}>
                               <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                                   {(classified.images?.[0] || classified.image) ? <img src={classified.images?.[0] || classified.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Tag className="w-6 h-6"/></div>}
@@ -3097,10 +3094,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               </div>
                               <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                                  <span className={`text-xs font-semibold ${classified.enabled !== false ? 'text-green-600' : 'text-gray-500'}`}>
-                                    {classified.enabled === false ? 'Disabled' : 'Enabled'}
+                                  <span className={`text-xs font-semibold ${classified.active !== false ? 'text-green-600' : 'text-gray-500'}`}>
+                                    {classified.active === false ? 'Disabled' : 'Enabled'}
                                   </span>
-                                  <Switch checked={classified.enabled !== false} onCheckedChange={() => handleToggleClassified(classified.id)} className="data-[state=checked]:bg-green-500 scale-90" />
+                                  <Switch checked={classified.active !== false} onCheckedChange={() => handleToggleClassified(classified.id)} className="data-[state=checked]:bg-green-500 scale-90" />
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg" onClick={() => handleEditClassified(classified)}><Edit className="h-4 w-4" /></Button>
@@ -3123,7 +3120,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                       ) : (
                         <div className="space-y-2">
                           {allClassifieds.filter(c => c.approvalStatus === 'pending' || !c.approvalStatus).map(classified => (
-                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.enabled === false ? 'opacity-60' : ''}`}>
+                            <div key={classified.id} className={`border border-gray-100 rounded-xl p-4 flex items-center justify-between hover:bg-gray-50 transition-colors bg-white ${classified.active === false ? 'opacity-60' : ''}`}>
                               <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden flex-shrink-0">
                                   {(classified.images?.[0] || classified.image) ? <img src={classified.images?.[0] || classified.image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-gray-300"><Tag className="w-6 h-6"/></div>}

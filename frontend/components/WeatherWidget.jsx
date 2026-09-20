@@ -65,7 +65,7 @@ const WeatherWidget = () => {
                 <div>
                     <h3 className="text-2xl font-black tracking-tight">{translatedData.location}</h3>
                     <p className="text-sm text-sky-100 font-medium opacity-80 min-h-[20px]">
-                        {mounted ? new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}
+                        {mounted ? new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'short' }) : ''}
                     </p>
                 </div>
                 <CloudSun className="w-12 h-12 text-yellow-300 drop-shadow-lg" />

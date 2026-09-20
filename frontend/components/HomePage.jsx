@@ -127,7 +127,7 @@ const NewsBox = ({ item, onClick, language }) => {
           <span className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5" suppressHydrationWarning>
             <Clock className="w-3.5 h-3.5" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
           </span>
-          <span className="text-[11px] md:text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Read Full Story →</span>
+          <span className="text-[11px] md:text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">{t('readFullStory') || 'Read Full Story →'}</span>
         </div>
       </div>
     </div>
@@ -873,7 +873,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     {getLocalizedText(cleanMainNews[0].content, language)?.substring(0, 180)}...
                   </p>
                   <button className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-5 py-2.5 rounded-full transition-colors shadow-lg">
-                    Read Full Story <ChevronRight className="w-4 h-4" />
+                    {t('readMore') || 'Read Full Story'} <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -943,8 +943,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             {/* Today's E-Paper widget */}
             <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
               <div className="p-4 pb-2 relative z-10 bg-white">
-                <h3 className="font-black text-base text-gray-900">Today's E-Paper</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Read the latest edition</p>
+                <h3 className="font-black text-base text-gray-900">{t('todaysEpaper') || "Today's E-Paper"}</h3>
+                <p className="text-xs text-gray-500 mt-0.5">{t('readLatestEdition') || 'Read the latest edition'}</p>
               </div>
               <div className="relative w-full overflow-hidden flex justify-center items-center" style={{ height: '280px' }}>
                 <Image 
@@ -1173,7 +1173,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="lg:col-span-4 pt-4 px-4 lg:px-0">
               <div className="flex items-center justify-between mb-3 border-b-2 border-red-600 pb-2">
                 <h2 className="text-lg font-black text-gray-900">{t('nationalPolitics') || 'National Politics'}</h2>
-                <button onClick={() => handleCategoryClick('politics')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+                <button onClick={() => handleCategoryClick('politics')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">{t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" /></button>
               </div>
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="cursor-pointer group mb-3">
@@ -1205,8 +1205,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           {cleanCrimeNews.length > 0 && (
             <div className="lg:col-span-4 pt-4 px-4 lg:px-0 lg:border-l lg:border-l-gray-200 lg:pl-6">
               <div className="flex items-center justify-between mb-3 border-b-2 border-gray-800 pb-2">
-                <h2 className="text-lg font-black text-gray-900">Crime &amp; Justice</h2>
-                <button onClick={() => handleCategoryClick('crime')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+                <h2 className="text-lg font-black text-gray-900">{t('crimeAndJustice') || 'Crime & Justice'}</h2>
+                <button onClick={() => handleCategoryClick('crime')} className="text-red-600 text-xs font-bold hover:underline flex items-center gap-0.5">{t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" /></button>
               </div>
               {cleanCrimeNews[0] && (
                 <div onClick={() => handleNewsClick(cleanCrimeNews[0])} className="cursor-pointer group mb-3">
@@ -1239,9 +1239,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="flex items-center justify-between mb-4 border-b-2 border-red-600 pb-2">
               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
-                Live TV
+                {t('liveTv') || 'Live TV'}
               </h2>
-              <button onClick={() => setCurrentView('live-tv')} className="text-red-600 text-[11px] font-black uppercase tracking-wider hover:underline flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-full">Watch Now <ChevronRight className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setCurrentView('live-tv')} className="text-red-600 text-[11px] font-black uppercase tracking-wider hover:underline flex items-center gap-1 bg-red-50 px-2.5 py-1 rounded-full">{t('watchNow') || 'Watch Now'} <ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
             <div
               className="block relative aspect-video bg-gray-900 overflow-hidden group cursor-pointer rounded-lg shadow-sm"
@@ -1257,14 +1257,14 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               />
               <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 uppercase rounded flex items-center gap-1.5 shadow-md pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                LIVE
+                {t('live') || 'LIVE'}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-600"></span>
               <div>
                 <h3 className="font-black text-gray-900 leading-none">StarNews Live</h3>
-                <p className="text-[11px] text-gray-500 font-medium mt-1">Real News. Real Time.</p>
+                <p className="text-[11px] text-gray-500 font-medium mt-1">{t('realNewsRealTime') || 'Real News. Real Time.'}</p>
               </div>
             </div>
           </div>
@@ -1281,21 +1281,21 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="font-black text-lg text-white">Be a Part of the Story</h3>
-              <p className="text-gray-400 text-xs">Share news, photos or video from your area. Because every story matters.</p>
+              <h3 className="font-black text-lg text-white">{t('beAPartOfTheStory') || 'Be a Part of the Story'}</h3>
+              <p className="text-gray-400 text-xs">{t('beAPartDesc') || 'Share news, photos or video from your area. Because every story matters.'}</p>
             </div>
           </div>
           <button
             onClick={() => { window.open('/reporter', '_self') }}
             className="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-900 font-black text-sm px-7 py-3 rounded-full transition-all flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-[1.02]"
           >
-            Join as Reporter <ChevronRight className="w-4 h-4" />
+            {t('joinAsReporter') || 'Join as Reporter'} <ChevronRight className="w-4 h-4" />
           </button>
           <div className="flex gap-3 flex-shrink-0">
             {[
-              { icon: '🛡️', label: 'Verified Platform' },
-              { icon: '📱', label: 'Instant Publishing' },
-              { icon: '🌍', label: 'Pan-India Reach' },
+              { icon: '🛡️', label: t('verifiedPlatform') || 'Verified Platform' },
+              { icon: '📱', label: t('instantPublishing') || 'Instant Publishing' },
+              { icon: '🌍', label: t('panIndiaReach') || 'Pan-India Reach' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
                 <span className="text-sm">{item.icon}</span>
@@ -1342,13 +1342,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
             <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
               <span className="w-1.5 h-5 bg-green-600 rounded-full block" />
-              Sports News
+              {t('sportsNews') || 'Sports News'}
             </h2>
             <button
               onClick={() => handleCategoryClick('sports')}
               className="text-green-600 hover:text-green-700 text-xs font-bold flex items-center gap-1 hover:underline"
             >
-              View All <ChevronRight className="w-3.5 h-3.5" />
+              {t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1365,13 +1365,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
             <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
               <span className="w-1.5 h-5 bg-blue-600 rounded-full block" />
-              Education & Learning
+              {t('educationAndLearning') || 'Education & Learning'}
             </h2>
             <button
               onClick={() => handleCategoryClick('education')}
               className="text-blue-600 hover:text-blue-700 text-xs font-bold flex items-center gap-1 hover:underline"
             >
-              View All <ChevronRight className="w-3.5 h-3.5" />
+              {t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1388,13 +1388,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
             <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
               <span className="w-1.5 h-5 bg-emerald-600 rounded-full block" />
-              Health & Wellness
+              {t('healthAndWellness') || 'Health & Wellness'}
             </h2>
             <button
               onClick={() => handleCategoryClick('health')}
               className="text-emerald-600 hover:text-emerald-700 text-xs font-bold flex items-center gap-1 hover:underline"
             >
-              View All <ChevronRight className="w-3.5 h-3.5" />
+              {t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1411,13 +1411,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           <div className="flex items-center justify-between mb-5 border-b border-gray-100 pb-3">
             <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
               <span className="w-1.5 h-5 bg-purple-600 rounded-full block" />
-              Technology & Innovation
+              {t('technologyAndInnovation') || 'Technology & Innovation'}
             </h2>
             <button
               onClick={() => handleCategoryClick('technology')}
               className="text-purple-600 hover:text-purple-700 text-xs font-bold flex items-center gap-1 hover:underline"
             >
-              View All <ChevronRight className="w-3.5 h-3.5" />
+              {t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1436,7 +1436,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         className="fixed bottom-6 right-6 z-50 group active:scale-90 transition-transform hidden lg:block"
       >
         <div className="absolute right-16 bg-white text-gray-900 text-[10px] font-black px-4 py-2 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block border border-gray-100 italic">
-          Need help? <span className="text-green-600 underline">Chat with us</span>
+          {t('needHelpChat') || 'Need help? Chat with us'}
         </div>
         <div className="bg-[#25D366] p-4 rounded-full shadow-[0_10px_40px_-10px_rgba(37,211,102,0.6)] hover:bg-[#128C7E] transition-all hover:scale-110 flex items-center justify-center">
           <WhatsAppIcon className="w-7 h-7 text-white fill-current" />
@@ -1451,7 +1451,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <span className="w-1.5 h-5 bg-red-600 rounded-full block" />
             {t('moreStories') || 'More Stories'}
           </h2>
-          <span className="text-xs text-gray-400 font-medium">Explore all categories & archives</span>
+          <span className="text-xs text-gray-400 font-medium">{t('exploreAllCategories') || 'Explore all categories & archives'}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {oldNews.slice(6, visibleMoreStories + 6).map((item) => (

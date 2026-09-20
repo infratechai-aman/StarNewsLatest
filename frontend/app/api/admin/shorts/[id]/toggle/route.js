@@ -24,6 +24,7 @@ export async function POST(request, { params }) {
 
         // Invalidate public shorts cache so users see updated active state immediately
         purgeCache('public_shorts_reels_l');
+        purgeCache('shorts');
 
         return NextResponse.json({ success: true });
     } catch (error) {

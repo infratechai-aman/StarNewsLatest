@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import ReporterDashboard from '@/components/ReporterDashboard'
 
-import { auth } from '@/lib/api'
+import { auth, getFreshToken } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 
 export default function ReporterPage() {
@@ -23,7 +23,7 @@ export default function ReporterPage() {
 
         // Always validate token against server (never trust localStorage alone)
         const validateSession = async () => {
-            const token = localStorage.getItem('token')
+            const token = await getFreshToken()
             
             // Basic JWT validation: a valid Firebase ID token has 3 dot-separated parts
             const isValidJWT = token && token.split('.').length === 3

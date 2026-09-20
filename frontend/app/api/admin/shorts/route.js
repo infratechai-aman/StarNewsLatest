@@ -61,6 +61,7 @@ export async function POST(request) {
 
         // Invalidate public shorts cache so new short appears immediately
         purgeCache('public_shorts_reels_l');
+        purgeCache('shorts');
 
         return NextResponse.json({ id: docRef.id, ...newShort });
     } catch (error) {
