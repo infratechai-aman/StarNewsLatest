@@ -18,15 +18,27 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
+                video.muted = true;
+                video.defaultMuted = true;
                 video.playbackRate = 2.0; // Adjusted playback speed based on user feedback
                 if (video.paused) {
                     await video.play();
                 }
             } catch (err) {
-                console.warn("Autoplay was prevented by the browser. Interaction may be required.", err);
+                // Ignore benign browser power-saving interruptions (AbortError / NotAllowedError)
+                if (err?.name !== 'AbortError' && err?.name !== 'NotAllowedError') {
+                    console.debug("VideoLogo autoplay note:", err?.message || err);
+                }
             }
         };
         playVideo();
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && video && video.paused) {
+                playVideo();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         const processFrame = () => {
             if (video && !video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
@@ -86,6 +98,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, []);
 
@@ -98,7 +111,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 loop
                 muted
                 playsInline
-                className="absolute w-[1px] h-[1px] opacity-0 pointer-events-none -z-10"
+                style={{ position: 'fixed', top: -9999, left: -9999, width: '320px', height: '180px', opacity: 0.01, pointerEvents: 'none' }}
             />
             <canvas
                 ref={canvasRef}
