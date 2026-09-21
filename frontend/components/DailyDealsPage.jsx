@@ -5,8 +5,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Clock, MapPin, Phone, Globe, Star, Tag, TrendingUp } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 const DailyDealsPage = () => {
+  const { t, language } = useLanguage()
   const [deals, setDeals] = useState([])
 
   useEffect(() => {
@@ -107,6 +109,11 @@ const DailyDealsPage = () => {
     return { hours, minutes, isExpiring: hours < 6 }
   }
 
+  const getTranslatedCategory = (cat) => {
+    const key = cat?.toLowerCase()
+    return t(key) || cat
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
@@ -115,8 +122,8 @@ const DailyDealsPage = () => {
             <Tag className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">Daily Deals</h1>
-            <p className="text-muted-foreground">24-Hour Flash Sales & Offers</p>
+            <h1 className="text-3xl font-bold">{t('dailyDeals') || 'Daily Deals'}</h1>
+            <p className="text-muted-foreground">{t('flashSalesSubtitle') || '24-Hour Flash Sales & Offers'}</p>
           </div>
         </div>
 
@@ -125,10 +132,10 @@ const DailyDealsPage = () => {
             <div>
               <h2 className="text-xl font-bold mb-2 flex items-center gap-2">
                 <TrendingUp className="h-6 w-6 text-orange-600" />
-                Limited Time Offers - Grab Them Fast!
+                {t('limitedTimeOffers') || 'Limited Time Offers - Grab Them Fast!'}
               </h2>
               <p className="text-muted-foreground">
-                All deals expire within 24 hours. Don't miss out!
+                {t('allDealsExpire') || "All deals expire within 24 hours. Don't miss out!"}
               </p>
             </div>
             <Clock className="h-12 w-12 text-orange-600 animate-pulse" />
@@ -148,7 +155,7 @@ const DailyDealsPage = () => {
                   className="w-full h-48 object-cover"
                 />
                 <Badge className="absolute top-3 left-3 bg-gradient-to-r from-orange-600 to-red-600 text-white text-lg px-3 py-1">
-                  {deal.discount}% OFF
+                  {deal.discount}% {t('off') || 'OFF'}
                 </Badge>
                 <Badge
                   variant={timeLeft.isExpiring ? 'destructive' : 'default'}
@@ -156,13 +163,13 @@ const DailyDealsPage = () => {
                   suppressHydrationWarning
                 >
                   <Clock className="h-3 w-3 mr-1" />
-                  {timeLeft.hours}h {timeLeft.minutes}m left
+                  {timeLeft.hours}{t('hoursShort') || 'h'} {timeLeft.minutes}{t('minutesShort') || 'm'} {t('left') || 'left'}
                 </Badge>
               </div>
 
               <CardContent className="p-5 space-y-4">
                 <div>
-                  <Badge variant="outline" className="mb-2">{deal.category}</Badge>
+                  <Badge variant="outline" className="mb-2">{getTranslatedCategory(deal.category)}</Badge>
                   <h3 className="font-bold text-xl mb-2 line-clamp-2">
                     {deal.title}
                   </h3>
@@ -193,7 +200,7 @@ const DailyDealsPage = () => {
                 </div>
 
                 <Button className="w-full bg-gradient-to-r from-orange-600 to-red-600">
-                  Grab This Deal
+                  {t('grabThisDeal') || 'Grab This Deal'}
                 </Button>
               </CardContent>
             </Card>

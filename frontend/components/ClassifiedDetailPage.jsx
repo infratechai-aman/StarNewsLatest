@@ -137,7 +137,7 @@ const getClassifiedImages = (classified) => {
 }
 
 const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
-    const { t } = useLanguage()
+    const { t, language } = useLanguage()
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const [isFavorite, setIsFavorite] = useState(false)
     const [imageErrors, setImageErrors] = useState({})
@@ -182,10 +182,16 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
 
     // Format date (or fallback)
     const postedDate = classified.createdAt
-        ? new Date(classified.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-        : 'Recently posted'
+        ? new Date(classified.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+        : (t('recentlyPosted') || 'Recently posted')
 
     const sellerDisplayName = classified.sellerName || classified.postedBy || classified.contactName || 'StarNews User'
+
+    const getTranslatedCategory = (cat) => {
+        if (!cat) return ''
+        const key = cat.toLowerCase()
+        return t(key) || cat
+    }
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-6">
@@ -315,11 +321,11 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                             <div className="flex flex-wrap gap-2 mb-3">
                                 <Badge className="bg-red-50 text-red-700 border-red-200 font-bold">
                                     <Tag className="h-3 w-3 mr-1" />
-                                    {classified.category}
+                                    {getTranslatedCategory(classified.category)}
                                 </Badge>
                                 <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 font-bold">
                                     <CheckCircle className="h-3 w-3 mr-1" />
-                                    {classified.condition || t('goodCondition') || 'Good Condition'}
+                                    {classified.condition ? (t(classified.condition.toLowerCase()) || classified.condition) : (t('goodCondition') || 'Good Condition')}
                                 </Badge>
                             </div>
 
@@ -336,7 +342,7 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                                     </p>
                                     {classified.price?.includes('$') && (
                                         <p className="text-xs text-gray-500 mt-1">
-                                            (Converted from {classified.price} at 1 USD = ₹{USD_TO_INR_RATE})
+                                            ({t('convertedFrom') || 'Converted from'} {classified.price} at 1 USD = ₹{USD_TO_INR_RATE})
                                         </p>
                                     )}
                                 </div>
@@ -366,9 +372,7 @@ const ClassifiedDetailPage = ({ classified, setCurrentView }) => {
                             <div className="text-gray-700 leading-relaxed space-y-3 text-sm md:text-base">
                                 <p className="whitespace-pre-line font-medium text-gray-800">{classified.description}</p>
                                 <p className="text-gray-500 text-xs">
-                                    This item is available for immediate purchase. Contact the seller for more details,
-                                    negotiation, or to arrange a viewing. All items are as described and in the
-                                    condition mentioned above.
+                                    {t('immediatePurchaseNotice') || 'This item is available for immediate purchase. Contact the seller for more details, negotiation, or to arrange a viewing. All items are as described and in the condition mentioned above.'}
                                 </p>
                             </div>
                         </CardContent>

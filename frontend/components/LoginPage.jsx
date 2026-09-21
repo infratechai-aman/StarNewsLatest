@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { auth } from '@/lib/api'
 import { Mail, Lock, LogIn } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 const LoginPage = ({ setUser, setCurrentView, toast }) => {
+  const { t } = useLanguage()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [showForgotPassword, setShowForgotPassword] = useState(false)
@@ -88,16 +90,16 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-full flex items-center justify-center mb-2">
             <LogIn className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome to StarNews</CardTitle>
+          <CardTitle className="text-2xl font-bold">StarNews</CardTitle>
           <CardDescription>
-            {showForgotPassword ? 'Enter your email to reset your password' : 'Enter your credentials to access your account'}
+            {showForgotPassword ? (t('resetPasswordDesc') || 'Enter your email to receive a password reset link') : (t('signInToAccount') || 'Sign in to access your dashboard')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {showForgotPassword ? (
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reset-email">Email Address</Label>
+                <Label htmlFor="reset-email">{t('email') || 'Email Address'}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -117,7 +119,7 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
                 className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
                 disabled={resetSending}
               >
-                {resetSending ? 'Sending...' : 'Send Reset Link'}
+                {resetSending ? (t('sending') || 'Sending...') : (t('sendResetLink') || 'Send Reset Link')}
               </Button>
 
               <div className="text-center">
@@ -126,7 +128,7 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
                   onClick={() => setShowForgotPassword(false)}
                   className="text-sm text-muted-foreground hover:text-red-600 hover:underline"
                 >
-                  ← Back to Login
+                  ← {t('backToLogin') || 'Back to Login'}
                 </button>
               </div>
             </form>
@@ -134,7 +136,7 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
             <>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email / Username</Label>
+                  <Label htmlFor="email">{t('emailOrUsername') || 'Email / Username'}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -151,13 +153,13 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t('password') || 'Password'}</Label>
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
                       className="text-xs text-red-600 hover:underline font-medium"
                     >
-                      Forgot Password?
+                      {t('forgotPassword') || 'Forgot Password?'}
                     </button>
                   </div>
                   <div className="relative">
@@ -179,18 +181,18 @@ const LoginPage = ({ setUser, setCurrentView, toast }) => {
                   className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
                   disabled={loading}
                 >
-                  {loading ? 'Logging in...' : 'Login'}
+                  {loading ? (t('loggingIn') || 'Logging in...') : (t('login') || 'Login')}
                 </Button>
               </form>
 
               <div className="mt-6 text-center text-sm">
                 <p className="text-muted-foreground">
-                  Are you a reporter?{' '}
+                  {t('areYouReporter') || 'Are you a reporter?'}{' '}
                   <button
                     onClick={() => setCurrentView('register')}
                     className="text-red-600 hover:underline font-medium"
                   >
-                    Register here
+                    {t('registerHere') || 'Register here'}
                   </button>
                 </p>
               </div>

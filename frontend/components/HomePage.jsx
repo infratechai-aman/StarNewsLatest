@@ -245,32 +245,35 @@ const BusinessAdWidget = ({ settings, t, onClick }) => {
   )
 }
 
-const SubscribeWidget = () => (
-  <Card className="overflow-hidden border-2 border-red-100 shadow-lg bg-white mb-4">
-    <CardContent className="p-4 flex flex-col items-center text-center space-y-4">
-      <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg mb-2 cursor-pointer hover:scale-110 transition-transform">
-        <Youtube className="w-8 h-8 text-white" />
-      </div>
-      <div>
-        <h3 className="font-bold text-xl text-gray-900">Subscribe Now!</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          Join our YouTube channel for breaking news and live updates.
-        </p>
-      </div>
-      <a
-        href="https://www.youtube.com/@starnewsindialive?sub_confirmation=1"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="w-full"
-      >
-        <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold text-lg h-12 shadow-md transition-transform hover:scale-105">
-          <Youtube className="mr-2 h-5 w-5" />
-          Subscribe
-        </Button>
-      </a>
-    </CardContent>
-  </Card>
-)
+const SubscribeWidget = () => {
+  const { t } = useLanguage()
+  return (
+    <Card className="overflow-hidden border-2 border-red-100 shadow-lg bg-white mb-4">
+      <CardContent className="p-4 flex flex-col items-center text-center space-y-4">
+        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-lg mb-2 cursor-pointer hover:scale-110 transition-transform">
+          <Youtube className="w-8 h-8 text-white" />
+        </div>
+        <div>
+          <h3 className="font-bold text-xl text-gray-900">{t('subscribeNow') || 'Subscribe Now!'}</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            {t('subscribeDesc') || 'Join our YouTube channel for breaking news and live updates.'}
+          </p>
+        </div>
+        <a
+          href="https://www.youtube.com/@starnewsindialive?sub_confirmation=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full"
+        >
+          <Button className="w-full bg-[#FF0000] hover:bg-[#CC0000] text-white font-bold text-lg h-12 shadow-md transition-transform hover:scale-105">
+            <Youtube className="mr-2 h-5 w-5" />
+            {t('subscribe') || 'Subscribe'}
+          </Button>
+        </a>
+      </CardContent>
+    </Card>
+  )
+}
 
 const ContactWidget = ({ t }) => (
   <Card className="overflow-hidden border-2 border-gray-200 shadow-lg bg-gradient-to-br from-gray-800 via-gray-900 to-black mb-4">
@@ -861,7 +864,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent rounded-xl"></div>
                 <div className="absolute bottom-0 left-0 p-6 w-full">
                   <div className="flex gap-2 mb-3">
-                    <Badge className="bg-red-600 text-white border-none text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-sm">Top Story</Badge>
+                    <Badge className="bg-red-600 text-white border-none text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-sm">{t('topStory') || 'Top Story'}</Badge>
                     {cleanMainNews[0].category && (
                       <Badge className="bg-white/20 backdrop-blur-sm text-white border-none text-[10px] font-bold uppercase px-3 py-1 rounded-sm">{getTranslatedCategory(cleanMainNews[0].category, t, language)}</Badge>
                     )}
@@ -873,7 +876,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     {getLocalizedText(cleanMainNews[0].content, language)?.substring(0, 180)}...
                   </p>
                   <button className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-[12px] font-black px-5 py-2.5 rounded-full transition-colors shadow-lg">
-                    {t('readMore') || 'Read Full Story'} <ChevronRight className="w-4 h-4" />
+                    {t('readFullStory') || t('readMore') || 'Read Full Story'} <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -889,7 +892,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 className="flex flex-col flex-1 cursor-pointer group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative"
               >
                 <div className="absolute top-2 left-2 z-10">
-                  <span className="bg-white/90 backdrop-blur text-gray-900 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">{getTranslatedCategory(item.category, t, language) || 'News'}</span>
+                  <span className="bg-white/90 backdrop-blur text-gray-900 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">{getTranslatedCategory(item.category, t, language) || t('news') || 'News'}</span>
                 </div>
                 <div className="relative w-full h-[120px] flex-shrink-0 overflow-hidden bg-gray-100">
                   <Image
@@ -913,32 +916,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           {/* RIGHT SIDEBAR: Weather + E-Paper */}
           <div className="col-span-3 flex flex-col gap-4">
             {/* Weather widget */}
-            <div className="bg-gradient-to-br from-sky-500 to-blue-600 text-white p-5 relative overflow-hidden rounded-xl shadow-lg">
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-400/20 rounded-full blur-3xl"></div>
-              <div className="flex items-start justify-between relative z-10">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <MapPin className="w-3.5 h-3.5 text-sky-200" />
-                    <span className="text-sm font-black">Pune, MH</span>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <span className="text-6xl font-black leading-none">28<span className="text-3xl">°C</span></span>
-                  </div>
-                  <div className="mt-1">
-                    <span className="block text-sm font-bold text-sky-100">Mostly Sunny</span>
-                    <span className="text-[11px] text-sky-200">Feels like 30°</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-2 text-[11px] text-sky-200">
-                    <span>H: 31°</span>
-                    <span>L: 24°</span>
-                    <span className="text-sky-100 font-bold">| AQI 62 <span className="text-green-300">Good</span></span>
-                  </div>
-                </div>
-                <div className="text-right flex flex-col items-end">
-                  <svg className="w-16 h-16 text-yellow-300 drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2"/></svg>
-                </div>
-              </div>
-            </div>
+            <WeatherWidget className="rounded-xl shadow-lg p-5 mb-0 w-full" />
 
             {/* Today's E-Paper widget */}
             <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
@@ -957,7 +935,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <button
                 className="w-full mt-0 bg-[#0f111a] hover:bg-red-600 text-white text-sm font-bold py-3.5 px-4 transition-colors flex items-center justify-between relative z-10 shadow-lg rounded-b-xl"
               >
-                Read E-Paper <ChevronRight className="w-4 h-4" />
+                {t('readEpaper') || 'Read E-Paper'} <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
@@ -984,9 +962,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
-                Latest News
+                {t('latestNews') || 'Latest News'}
               </h2>
-              <button onClick={() => setCurrentView('news')} className="text-red-600 text-xs font-black hover:underline flex items-center gap-1">View All <ChevronRight className="w-3.5 h-3.5" /></button>
+              <button onClick={() => setCurrentView('news')} className="text-red-600 text-xs font-black hover:underline flex items-center gap-1">{t('viewAll') || 'View All'} <ChevronRight className="w-3.5 h-3.5" /></button>
             </div>
             <div className="grid grid-cols-4 gap-4">
               {cleanLatestNews.slice(0, 4).map((item, idx) => (
@@ -1009,7 +987,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     <Clock className="w-3 h-3 text-gray-300" />
                     {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
                     <span className="text-gray-300 mx-0.5">•</span>
-                    <span>{idx + 1}h ago</span>
+                    <span>{idx + 1} {t('hoursAgo') || 'h ago'}</span>
                   </div>
                 </div>
               ))}
@@ -1021,7 +999,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
                 <span className="w-1 h-5 bg-red-600 rounded-full block"></span>
-                Must Read
+                {t('mustRead') || 'Must Read'}
               </h2>
               <div className="flex gap-1">
                 <button className="w-7 h-7 border border-gray-300 rounded flex items-center justify-center text-gray-500 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors text-sm">&#8249;</button>
@@ -1050,7 +1028,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         <section className="mb-10 w-full lg:container lg:mx-auto px-0 md:px-6 lg:hidden">
           <div className="mag-section-header mb-6 md:mb-8 px-4 md:px-0 flex items-center justify-between">
             <h2 className="text-4xl md:text-5xl font-heading font-black tracking-tighter">
-              <span className="text-red-600">Latest</span> Update
+              <span className="text-red-600">{t('latestNews') || 'Latest'}</span> {t('update') || 'Update'}
             </h2>
             <div className="h-px flex-1 bg-gray-100 mx-4 md:mx-8"></div>
           </div>
@@ -1085,12 +1063,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <div className="flex items-end justify-between mb-6 relative z-10">
                 <div>
                   <h2 className="font-black text-3xl lg:text-4xl leading-tight">
-                    Business &amp; <span className="text-green-400 italic font-serif">Economy</span>
+                    {t('business') || 'Business'} &amp; <span className="text-green-400 italic font-serif">{t('economy') || 'Economy'}</span>
                   </h2>
-                  <p className="text-[12px] text-gray-400 mt-1">Markets. Policy. Business. Your edge in a changing economy.</p>
+                  <p className="text-[12px] text-gray-400 mt-1">{t('businessTagline') || 'Markets. Policy. Business. Your edge in a changing economy.'}</p>
                 </div>
                 <Button variant="outline" size="sm" className="text-white border-white/20 bg-white/5 hover:bg-green-600 hover:border-green-500 hover:text-white font-black text-xs px-5 h-9 rounded-lg transition-all backdrop-blur-sm" onClick={() => handleCategoryClick('business')}>
-                  View All <ChevronRight className="ml-1 w-3.5 h-3.5" />
+                  {t('viewAll') || 'View All'} <ChevronRight className="ml-1 w-3.5 h-3.5" />
                 </Button>
               </div>
 
@@ -1118,7 +1096,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {/* Business news cards */}
               <div className="grid grid-cols-3 gap-5 relative z-10">
                 {cleanBusinessNews.slice(0, 3).map((item, idx) => {
-                  const labels = ['Markets', 'Economy', 'Corporate']
+                  const labels = [t('markets') || 'Markets', t('economy') || 'Economy', t('corporate') || 'Corporate']
                   const labelColors = ['bg-red-600', 'bg-green-600', 'bg-blue-600']
                   return (
                     <div
@@ -1179,7 +1157,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
                     <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Politics" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">Politics</Badge>
+                    <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('politics') || 'Politics'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
                   <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanPoliticsNews[0].publishedAt ? new Date(cleanPoliticsNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
@@ -1212,7 +1190,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <div onClick={() => handleNewsClick(cleanCrimeNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
                     <Image src={proxyImageUrl(cleanCrimeNews[0].mainImage || '/placeholder-news.svg')} alt="Crime" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">Crime</Badge>
+                    <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('crime') || 'Crime'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanCrimeNews[0].title, language)}</h3>
                   <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanCrimeNews[0].publishedAt ? new Date(cleanCrimeNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
@@ -1325,7 +1303,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         <section className="mb-10 w-full px-4 lg:hidden">
           <div className="mag-section-header mb-4">
             <h2 className="text-3xl font-heading font-black tracking-tighter">
-              <span className="text-red-700">Crime</span> &amp; Justice
+              <span className="text-red-700">{t('crime') || 'Crime'}</span> &amp; {t('justice') || 'Justice'}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-10">
