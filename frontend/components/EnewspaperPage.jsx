@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Image from 'next/image'
+import { MONTH_NAMES, DAY_NAMES, CALENDAR_DAY_HEADERS, getLocalizedCity } from '@/lib/translations'
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 const EnewspaperPage = () => {
@@ -286,12 +287,14 @@ const EnewspaperPage = () => {
             <h1 className="text-white text-3xl md:text-4xl font-black leading-tight mb-2">
               {t('readLatestEdition') || 'Read the Latest Edition'}
             </h1>
-            <p className="text-gray-300 text-xs md:text-sm max-w-md mb-3 md:mb-5 hidden sm:block">Your trusted source for in-depth news, analysis and stories from across India.</p>
+            <p className="text-gray-300 text-xs md:text-sm max-w-md mb-3 md:mb-5 hidden sm:block">
+              {language === 'mr' ? 'भारतभरातील सखोल बातम्या, विश्लेषण आणि कथांसाठी तुमचा विश्वासू स्रोत.' : language === 'hi' ? 'पूरे भारत से गहन समाचार, विश्लेषण और कहानियों के लिए आपका विश्वसनीय स्रोत।' : 'Your trusted source for in-depth news, analysis and stories from across India.'}
+            </p>
             <div className="hidden md:flex flex-wrap gap-6">
               {[
-                { icon: '📖', title: 'Daily Editions', sub: 'Read anytime, anywhere' },
-                { icon: '📱', title: 'Multi-Device', sub: 'Desktop, tablet, mobile' },
-                { icon: '⬇️', title: 'Download', sub: 'Save for offline reading' },
+                { icon: '📖', title: t('dailyEditions') || 'Daily Editions', sub: t('readAnytimeAnywhere') || 'Read anytime, anywhere' },
+                { icon: '📱', title: t('multiDevice') || 'Multi-Device', sub: t('desktopTabletMobile') || 'Desktop, tablet, mobile' },
+                { icon: '⬇️', title: t('download') || 'Download', sub: t('saveOffline') || 'Save for offline reading' },
               ].map(item => (
                 <div key={item.title} className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-lg border border-white/20 bg-white/10 flex items-center justify-center text-lg">{item.icon}</div>
@@ -321,11 +324,15 @@ const EnewspaperPage = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
                   <button className="text-gray-400 hover:text-gray-900"><ChevronLeft className="w-4 h-4" /></button>
-                  <span className="font-bold text-sm text-gray-900">September 2026</span>
+                  <span className="font-bold text-sm text-gray-900">
+                    {(MONTH_NAMES[language] || MONTH_NAMES.en)[8]} 2026
+                  </span>
                   <button className="text-gray-400 hover:text-gray-900"><ChevronRight className="w-4 h-4" /></button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-[11px] mb-2">
-                  {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <div key={d} className="text-gray-400 font-bold">{d}</div>)}
+                  {(CALENDAR_DAY_HEADERS[language] || CALENDAR_DAY_HEADERS.en).map(d => (
+                    <div key={d} className="text-gray-400 font-bold">{d}</div>
+                  ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
                   {Array.from({length: 30}, (_,i) => i+1).map(d => (
@@ -400,7 +407,7 @@ const EnewspaperPage = () => {
 
           {/* Sub-toolbar: Pages Strip */}
           <div className="bg-[#111] border-t border-[#2a2a2a] px-4 py-2 flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider hidden sm:block w-[50px]">PAGES</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider hidden sm:block w-[50px]">{t('pages') || 'PAGES'}</span>
             <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-thin px-4 max-w-xl mx-auto">
               {Array.from({ length: totalPages || 1 }, (_, idx) => (
                 <button
@@ -429,7 +436,9 @@ const EnewspaperPage = () => {
             {pdfLoading && (
               <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-100/90 backdrop-blur-sm">
                 <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin mb-3" />
-                <p className="text-sm font-bold text-gray-800">Loading {pageImages.length}/{totalPages || '...'} pages</p>
+                <p className="text-sm font-bold text-gray-800">
+                  {language === 'mr' ? `${pageImages.length}/${totalPages || '...'} पृष्ठे लोड होत आहेत` : language === 'hi' ? `${pageImages.length}/${totalPages || '...'} पृष्ठ लोड हो रहे हैं` : `Loading ${pageImages.length}/${totalPages || '...'} pages`}
+                </p>
               </div>
             )}
 
@@ -448,7 +457,7 @@ const EnewspaperPage = () => {
                 </div>
               ) : !pdfLoading ? (
                 <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400 font-bold">Select an edition to read</p>
+                  <p className="text-gray-400 font-bold">{t('selectEditionToRead') || 'Select an edition to read'}</p>
                 </div>
               ) : null}
             </div>
@@ -476,9 +485,15 @@ const EnewspaperPage = () => {
                 <FileText className="w-4 h-4 text-gray-500" />
                 <h3 className="font-black text-sm text-gray-900">{t('todaysEdition') || "Today's Edition"}</h3>
               </div>
-              <p className="text-xs font-bold text-gray-800 mb-1">Wednesday, 16 September 2026</p>
-              <p className="text-[11px] text-gray-500 mb-1">Pune Edition</p>
-              <p className="text-[11px] text-gray-400 mb-5">12 Pages | ₹5</p>
+              <p className="text-xs font-bold text-gray-800 mb-1">
+                {(DAY_NAMES[language] || DAY_NAMES.en)[3]}, 16 {(MONTH_NAMES[language] || MONTH_NAMES.en)[8]} 2026
+              </p>
+              <p className="text-[11px] text-gray-500 mb-1">
+                {getLocalizedCity('Pune', language)} {t('edition') || 'Edition'}
+              </p>
+              <p className="text-[11px] text-gray-400 mb-5">
+                {language === 'mr' ? '12 पृष्ठे | ₹5' : language === 'hi' ? '12 पृष्ठ | ₹5' : '12 Pages | ₹5'}
+              </p>
               
               <button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
                 <BookOpen className="w-4 h-4" /> {t('readNow') || 'Read Now'}
@@ -500,22 +515,28 @@ const EnewspaperPage = () => {
               
               <div className="space-y-4">
                 {[
-                  { day: 'Tuesday', date: '15 September 2026', img: '/epaper-thumb-1.jpg' },
-                  { day: 'Monday', date: '14 September 2026', img: '/epaper-thumb-2.jpg' },
-                  { day: 'Sunday', date: '13 September 2026', img: '/epaper-thumb-3.jpg' },
-                  { day: 'Saturday', date: '12 September 2026', img: '/epaper-thumb-4.jpg' },
-                  { day: 'Friday', date: '11 September 2026', img: '/epaper-thumb-5.jpg' },
-                ].map(ed => (
-                  <div key={ed.day} className="flex gap-3 cursor-pointer group">
-                    <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded overflow-hidden shadow-sm group-hover:border-red-400 transition-colors shrink-0 flex items-center justify-center">
-                      <Newspaper className="w-5 h-5 text-gray-300" />
+                  { dayOffset: 1, img: '/epaper-thumb-1.jpg' },
+                  { dayOffset: 2, img: '/epaper-thumb-2.jpg' },
+                  { dayOffset: 3, img: '/epaper-thumb-3.jpg' },
+                  { dayOffset: 4, img: '/epaper-thumb-4.jpg' },
+                  { dayOffset: 5, img: '/epaper-thumb-5.jpg' },
+                ].map(ed => {
+                  const d = new Date(2026, 8, 16 - ed.dayOffset)
+                  const dayName = (DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()]
+                  const monthName = (MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]
+                  const dateStr = `${d.getDate()} ${monthName} ${d.getFullYear()}`
+                  return (
+                    <div key={ed.dayOffset} className="flex gap-3 cursor-pointer group">
+                      <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded overflow-hidden shadow-sm group-hover:border-red-400 transition-colors shrink-0 flex items-center justify-center">
+                        <Newspaper className="w-5 h-5 text-gray-300" />
+                      </div>
+                      <div className="flex-1 py-1">
+                        <h4 className="font-black text-xs text-gray-900 group-hover:text-red-600 transition-colors">{dayName}</h4>
+                        <p className="text-[10px] text-gray-500">{dateStr}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 py-1">
-                      <h4 className="font-black text-xs text-gray-900 group-hover:text-red-600 transition-colors">{ed.day}</h4>
-                      <p className="text-[10px] text-gray-500">{ed.date}</p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>

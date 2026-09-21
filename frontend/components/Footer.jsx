@@ -58,7 +58,7 @@ const Footer = ({ setCurrentView }) => {
             <ul className="space-y-2 text-sm">
               <li className="flex items-start gap-2">
                 <span>📍</span>
-                <span>123 MG Road, Pune, Maharashtra 411001</span>
+                <span>{language === 'mr' ? '१२३ एमजी रोड, पुणे, महाराष्ट्र ४११००१' : language === 'hi' ? '123 एमजी रोड, पुणे, महाराष्ट्र 411001' : '123 MG Road, Pune, Maharashtra 411001'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span>📞</span>
@@ -88,7 +88,7 @@ const Footer = ({ setCurrentView }) => {
             </button>
           </div>
           <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-500">
-            Made by InfraTech.AI
+            {language === 'mr' ? 'InfraTech.AI द्वारे निर्मित' : language === 'hi' ? 'InfraTech.AI द्वारा निर्मित' : 'Made by InfraTech.AI'}
           </p>
         </div>
       </div>

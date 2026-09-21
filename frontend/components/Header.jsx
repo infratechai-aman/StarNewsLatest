@@ -625,20 +625,20 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   <DialogHeader className="mb-2">
                     <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900">
                       <Tag className="h-5 w-5 text-[#E53935]" />
-                      Post Your Ad
+                      {t('postYourAd') || (language === 'mr' ? 'तुमची जाहिरात पोस्ट करा' : language === 'hi' ? 'अपना विज्ञापन पोस्ट करें' : 'Post Your Ad')}
                     </DialogTitle>
                     <DialogDescription>
-                      Submit a classified ad or promote your business directory listing.
+                      {language === 'mr' ? 'वर्गीकृत जाहिरात सबमिट करा किंवा तुमच्या व्यवसायाची यादी प्रचारित करा.' : language === 'hi' ? 'वर्गीकृत विज्ञापन सबमिट करें या अपनी व्यावसायिक लिस्टिंग का प्रचार करें।' : 'Submit a classified ad or promote your business directory listing.'}
                     </DialogDescription>
                   </DialogHeader>
 
                   <Tabs value={postAdTab} onValueChange={setPostAdTab} className="w-full">
                     <TabsList className="grid grid-cols-2 mb-4 h-11 bg-gray-100 p-1 rounded-xl">
                       <TabsTrigger value="classified" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
-                        Classified Ad
+                        {language === 'mr' ? 'वर्गीकृत जाहिरात' : language === 'hi' ? 'वर्गीकृत विज्ञापन' : 'Classified Ad'}
                       </TabsTrigger>
                       <TabsTrigger value="business" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
-                        Promote Business
+                        {language === 'mr' ? 'व्यवसाय प्रचार' : language === 'hi' ? 'व्यापार प्रचार' : 'Promote Business'}
                       </TabsTrigger>
                     </TabsList>
 
@@ -951,17 +951,17 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   </DialogHeader>
                   <form onSubmit={handleReporterSubmit}>
                     <div className="grid gap-4 py-4">
-                      <div className="grid gap-2"><Label htmlFor="reporterName">Full Name *</Label><Input id="reporterName" value={reporterForm.name} onChange={(e) => setReporterForm({ ...reporterForm, name: e.target.value })} placeholder="Enter your full name" required /></div>
+                      <div className="grid gap-2"><Label htmlFor="reporterName">{language === 'mr' ? 'पूर्ण नाव *' : language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}</Label><Input id="reporterName" value={reporterForm.name} onChange={(e) => setReporterForm({ ...reporterForm, name: e.target.value })} placeholder={language === 'mr' ? 'तुमचे पूर्ण नाव प्रविष्ट करा' : language === 'hi' ? 'अपना पूरा नाम दर्ज करें' : 'Enter your full name'} required /></div>
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2"><Label htmlFor="reporterPhone">Phone *</Label><Input id="reporterPhone" type="tel" value={reporterForm.phone} onChange={(e) => setReporterForm({ ...reporterForm, phone: e.target.value })} placeholder="+91 XXXXX" required /></div>
-                        <div className="grid gap-2"><Label htmlFor="reporterEmail">Email *</Label><Input id="reporterEmail" type="email" value={reporterForm.email} onChange={(e) => setReporterForm({ ...reporterForm, email: e.target.value })} placeholder="email@example.com" required /></div>
+                        <div className="grid gap-2"><Label htmlFor="reporterPhone">{language === 'mr' ? 'फोन *' : language === 'hi' ? 'फ़ोन *' : 'Phone *'}</Label><Input id="reporterPhone" type="tel" value={reporterForm.phone} onChange={(e) => setReporterForm({ ...reporterForm, phone: e.target.value })} placeholder="+91 XXXXX" required /></div>
+                        <div className="grid gap-2"><Label htmlFor="reporterEmail">{language === 'mr' ? 'ईमेल *' : language === 'hi' ? 'ईमेल *' : 'Email *'}</Label><Input id="reporterEmail" type="email" value={reporterForm.email} onChange={(e) => setReporterForm({ ...reporterForm, email: e.target.value })} placeholder="email@example.com" required /></div>
                       </div>
-                      <div className="grid gap-2"><Label htmlFor="experience">Experience (Years)</Label><Input id="experience" value={reporterForm.experience} onChange={(e) => setReporterForm({ ...reporterForm, experience: e.target.value })} placeholder="e.g., 2 years in journalism" /></div>
-                      <div className="grid gap-2"><Label htmlFor="portfolio">Portfolio/Social Media Link</Label><Input id="portfolio" value={reporterForm.portfolio} onChange={(e) => setReporterForm({ ...reporterForm, portfolio: e.target.value })} placeholder="https://your-portfolio.com" /></div>
-                      <div className="grid gap-2"><Label htmlFor="reporterMessage">Why do you want to join?</Label><Textarea id="reporterMessage" value={reporterForm.message} onChange={(e) => setReporterForm({ ...reporterForm, message: e.target.value })} placeholder="Tell us about yourself..." rows={3} /></div>
+                      <div className="grid gap-2"><Label htmlFor="experience">{language === 'mr' ? 'अनुभव (वर्षे)' : language === 'hi' ? 'अनुभव (वर्ष)' : 'Experience (Years)'}</Label><Input id="experience" value={reporterForm.experience} onChange={(e) => setReporterForm({ ...reporterForm, experience: e.target.value })} placeholder={language === 'mr' ? 'उदा., पत्रकारितेत २ वर्षे' : language === 'hi' ? 'उदा., पत्रकारिता में 2 वर्ष' : 'e.g., 2 years in journalism'} /></div>
+                      <div className="grid gap-2"><Label htmlFor="portfolio">{language === 'mr' ? 'पोर्टफोलिओ/सोशल मीडिया लिंक' : language === 'hi' ? 'पोर्टफोलियो/सोशल मीडिया लिंक' : 'Portfolio/Social Media Link'}</Label><Input id="portfolio" value={reporterForm.portfolio} onChange={(e) => setReporterForm({ ...reporterForm, portfolio: e.target.value })} placeholder="https://your-portfolio.com" /></div>
+                      <div className="grid gap-2"><Label htmlFor="reporterMessage">{language === 'mr' ? 'तुम्हाला सामील का व्हायचे आहे?' : language === 'hi' ? 'आप क्यों जुड़ना चाहते हैं?' : 'Why do you want to join?'}</Label><Textarea id="reporterMessage" value={reporterForm.message} onChange={(e) => setReporterForm({ ...reporterForm, message: e.target.value })} placeholder={language === 'mr' ? 'तुमच्याबद्दल थोडी माहिती द्या...' : language === 'hi' ? 'अपने बारे में बताएं...' : 'Tell us about yourself...'} rows={3} /></div>
                     </div>
                     <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setReporterDialogOpen(false)} disabled={submittingReporter}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={() => setReporterDialogOpen(false)} disabled={submittingReporter}>{t('cancel') || 'Cancel'}</Button>
                       <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingReporter}>
                         {submittingReporter ? t('pleaseWait') : t('submitApplication')}
                       </Button>
@@ -1047,30 +1047,30 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   alt="Star News"
                   className="h-10 w-auto object-contain"
                 />
-                <span className="font-bold text-lg text-gray-900 absolute left-1/2 -translate-x-1/2">Menu</span>
+                <span className="font-bold text-lg text-gray-900 absolute left-1/2 -translate-x-1/2">{t('menu') || (language === 'mr' ? 'मेनू' : language === 'hi' ? 'मेनू' : 'Menu')}</span>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-200 transition-colors"><X className="h-5 w-5 text-gray-600" /></button>
               </div>
 
               <div className="flex flex-col p-2">
-                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Main</div>
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">{language === 'mr' ? 'मुख्य' : language === 'hi' ? 'मुख्य' : 'Main'}</div>
                 <Button variant="ghost" className="justify-start text-base font-semibold h-12 hover:bg-red-50 hover:text-red-600 text-red-600" onClick={() => { setMobileMenuOpen(false); setSearchModalOpen(true) }}>
-                  <Search className="mr-3 h-5 w-5 text-red-600" />Search News
+                  <Search className="mr-3 h-5 w-5 text-red-600" />{t('searchNews') || (language === 'mr' ? 'बातम्या शोधा' : language === 'hi' ? 'समाचार खोजें' : 'Search News')}
                 </Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('home'); setMobileMenuOpen(false) }}><Home className="mr-3 h-5 w-5" />{t('home')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('news'); setMobileMenuOpen(false) }}><Newspaper className="mr-3 h-5 w-5" />{t('news')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('enewspaper'); setMobileMenuOpen(false) }}><FileText className="mr-3 h-5 w-5" />{t('eNewspaper')}</Button>
-                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('city'); setMobileMenuOpen(false) }}><MapPin className="mr-3 h-5 w-5" />City News</Button>
+                <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('city'); setMobileMenuOpen(false) }}><MapPin className="mr-3 h-5 w-5" />{t('cityNews')}</Button>
                 <Button variant="ghost" className="w-full justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('shorts'); setMobileMenuOpen(false) }}>
-                  <Zap className="mr-3 h-5 w-5" />Shorts
+                  <Zap className="mr-3 h-5 w-5" />{t('shorts') || 'Shorts'}
                 </Button>
 
                 <div className="my-2 border-t border-gray-100"></div>
-                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Services</div>
+                <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">{language === 'mr' ? 'सेवा' : language === 'hi' ? 'सेवाएं' : 'Services'}</div>
 
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('classifieds'); setMobileMenuOpen(false) }}><Tag className="mr-3 h-5 w-5" />{t('classified')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('businesses'); setMobileMenuOpen(false) }}><Building2 className="mr-3 h-5 w-5" />{t('businessDirectory')}</Button>
                 <Button variant="ghost" className="justify-start text-base font-medium h-12 hover:bg-red-50 hover:text-red-600" onClick={() => { setCurrentView('live-tv'); setMobileMenuOpen(false) }}>
-                  <span className="mr-3 flex items-center justify-center h-5 w-5"><span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" /></span>Live TV
+                  <span className="mr-3 flex items-center justify-center h-5 w-5"><span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse" /></span>{t('liveTv') || 'Live TV'}
                 </Button>
 
                 <div className="my-2"></div>
@@ -1099,7 +1099,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         className="w-full justify-center bg-red-600 hover:bg-red-700 text-white mb-2"
                         onClick={() => { setCurrentView('reporter-dashboard'); setMobileMenuOpen(false); }}
                       >
-                        <Newspaper className="mr-2 h-4 w-4" /> Reporter Dashboard
+                        <Newspaper className="mr-2 h-4 w-4" /> {t('reporterDashboard') || 'Reporter Dashboard'}
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50" onClick={handleLogout}>
@@ -1114,7 +1114,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                       className="w-full justify-center border-red-200 text-red-600 hover:bg-red-50 font-bold h-10 rounded-xl"
                       onClick={() => { setCurrentView('login'); setMobileMenuOpen(false); }}
                     >
-                      <LogIn className="mr-2 h-4 w-4" /> Login / Reporter Login
+                      <LogIn className="mr-2 h-4 w-4" /> {language === 'mr' ? 'लॉगिन / रिपोर्टर लॉगिन' : language === 'hi' ? 'लॉगिन / रिपोर्टर लॉगिन' : 'Login / Reporter Login'}
                     </Button>
                   </div>
                 )}
@@ -1147,7 +1147,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             <Input
               ref={searchInputRef}
               type="text"
-              placeholder="Search published news, topics, keywords..."
+              placeholder={t('searchPublishedNewsPlaceholder') || (language === 'mr' ? 'बातम्या, विषय, कीवर्ड शोधा...' : language === 'hi' ? 'समाचार, विषय, कीवर्ड खोजें...' : 'Search published news, topics, keywords...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base font-medium placeholder:text-gray-400 h-10 px-0 shadow-none"
@@ -1157,7 +1157,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
               <button
                 onClick={() => setSearchQuery('')}
                 className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
-                title="Clear"
+                title={language === 'mr' ? 'साफ करा' : language === 'hi' ? 'साफ़ करें' : 'Clear'}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1168,9 +1168,16 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             {/* Quick Topic Chips when empty */}
             {!searchQuery.trim() && (
               <div className="py-3 px-2">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Popular Topics</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+                  {language === 'mr' ? 'लोकप्रिय विषय' : language === 'hi' ? 'लोकप्रिय विषय' : 'Popular Topics'}
+                </p>
                 <div className="flex flex-wrap gap-2">
-                  {['Politics', 'Crime', 'Maharashtra', 'Sports', 'Entertainment', 'Business', 'Technology', 'Live TV'].map((topic) => (
+                  {(language === 'mr'
+                    ? ['राजकारण', 'गुन्हे', 'महाराष्ट्र', 'खेळ', 'मनोरंजन', 'व्यापार', 'तंत्रज्ञान', 'लाइव्ह टीव्ही']
+                    : language === 'hi'
+                    ? ['राजनीति', 'अपराध', 'महाराष्ट्र', 'खेल', 'मनोरंजन', 'व्यापार', 'तकनीक', 'लाइव टीवी']
+                    : ['Politics', 'Crime', 'Maharashtra', 'Sports', 'Entertainment', 'Business', 'Technology', 'Live TV']
+                  ).map((topic) => (
                     <button
                       key={topic}
                       onClick={() => setSearchQuery(topic)}
@@ -1188,7 +1195,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             {searching && searchResults.length === 0 && (
               <div className="py-8 text-center text-gray-400 space-y-2">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto text-red-600" />
-                <p className="text-sm">Searching published news articles...</p>
+                <p className="text-sm">
+                  {language === 'mr' ? 'प्रकाशित बातम्या शोधत आहे...' : language === 'hi' ? 'प्रकाशित समाचार लेख खोजे जा रहे हैं...' : 'Searching published news articles...'}
+                </p>
               </div>
             )}
 
@@ -1196,8 +1205,12 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             {searchResults.length > 0 && (
               <div className="space-y-2 pt-2">
                 <div className="flex items-center justify-between px-2 pb-1 text-xs font-semibold text-gray-400">
-                  <span>Found {searchResults.length} published article{searchResults.length === 1 ? '' : 's'}</span>
-                  <span className="text-[11px] text-gray-400">Click to open</span>
+                  <span>
+                    {language === 'mr' ? `${searchResults.length} प्रकाशित बातम्या सापडल्या` : language === 'hi' ? `${searchResults.length} प्रकाशित समाचार मिले` : `Found ${searchResults.length} published article${searchResults.length === 1 ? '' : 's'}`}
+                  </span>
+                  <span className="text-[11px] text-gray-400">
+                    {language === 'mr' ? 'उघडण्यासाठी क्लिक करा' : language === 'hi' ? 'खोलने के लिए क्लिक करें' : 'Click to open'}
+                  </span>
                 </div>
                 {searchResults.map((article) => {
                   const title = getLocalizedText(article.title, language) || article.title || 'Untitled Article'
@@ -1246,23 +1259,25 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             {hasSearched && !searching && searchResults.length === 0 && (
               <div className="py-12 text-center text-gray-500">
                 <Search className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                <p className="font-bold text-gray-700">No articles found</p>
+                <p className="font-bold text-gray-700">
+                  {language === 'mr' ? 'कोणतेही लेख सापडले नाहीत' : language === 'hi' ? 'कोई लेख नहीं मिला' : 'No articles found'}
+                </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  We couldn't find anything for "{searchQuery}". Try a different keyword or topic.
+                  {language === 'mr' ? `"${searchQuery}" साठी काहीही सापडले नाही. दुसरा कीवर्ड वापरून पहा.` : language === 'hi' ? `"${searchQuery}" के लिए कुछ नहीं मिला। भिन्न कीवर्ड आज़माएं।` : `We couldn't find anything for "${searchQuery}". Try a different keyword or topic.`}
                 </p>
               </div>
             )}
           </div>
 
           <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span className="hidden sm:inline">Press <kbd className="bg-white border px-1.5 py-0.5 rounded text-[10px] font-semibold">ESC</kbd> to close</span>
+            <span className="hidden sm:inline">{language === 'mr' ? 'बंद करण्यासाठी ESC दाबा' : language === 'hi' ? 'बंद करने के लिए ESC दबाएं' : 'Press ESC to close'}</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleViewAllInNews}
               className="ml-auto text-red-600 hover:text-red-700 hover:bg-red-50 font-bold text-xs"
             >
-              Browse all articles in News →
+              {language === 'mr' ? 'सर्व बातम्या पहा →' : language === 'hi' ? 'समाचार में सभी लेख देखें →' : 'Browse all articles in News →'}
             </Button>
           </div>
         </DialogContent>

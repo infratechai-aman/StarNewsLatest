@@ -195,7 +195,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
           {/* Left Text */}
           <div className="max-w-md">
             <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter mb-2 text-gray-900 leading-none drop-shadow-sm">
-              All <span className="text-red-600">News</span>
+              {language === 'mr' ? <>सर्व <span className="text-red-600">बातम्या</span></> : language === 'hi' ? <>सभी <span className="text-red-600">समाचार</span></> : <>All <span className="text-red-600">News</span></>}
             </h1>
             <p className="text-gray-600 font-medium text-xs md:text-sm leading-relaxed hidden sm:block">
               {language === 'hi' ? 'भारत और विश्व से ताज़ा ख़बरें' : language === 'mr' ? 'भारत आणि जगातील ताज्या बातम्या' : 'Explore the latest news, in-depth analysis and stories that matter from across India and around the world.'}
@@ -206,7 +206,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
           {heroArticle && (
             <div className="hidden lg:block w-[380px] bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-xl border border-white/60 relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all" onClick={() => viewArticle(heroArticle)}>
               <Badge className="bg-red-600 text-white border-none font-bold text-[9px] uppercase tracking-widest px-2.5 py-1 mb-3 shadow-sm">
-                TOP STORY
+                {t('topStory') || (language === 'mr' ? 'टॉप स्टोरी' : language === 'hi' ? 'टॉप स्टोरी' : 'TOP STORY')}
               </Badge>
               <h3 className="font-heading font-black text-lg text-gray-900 leading-tight tracking-tight mb-3 group-hover:text-red-600 transition-colors line-clamp-2">
                 {getLocalizedText(heroArticle.title, language) || heroArticle.title}
@@ -214,7 +214,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   <Clock className="w-3.5 h-3.5 text-red-500" />
-                  {new Date(heroArticle.publishedAt || heroArticle.createdAt).toLocaleDateString()}
+                  {new Date(heroArticle.publishedAt || heroArticle.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
                 <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center text-white shadow-md transform group-hover:translate-x-1 transition-transform">
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -233,9 +233,9 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               <Search className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">Search Results</p>
+              <p className="text-[11px] font-bold text-red-600 uppercase tracking-wider">{t('searchResults') || 'Search Results'}</p>
               <h3 className="text-base font-black text-gray-900 leading-tight">
-                Showing articles for &ldquo;{searchQuery}&rdquo;
+                {language === 'mr' ? `"${searchQuery}" साठी बातम्या दाखवत आहे` : language === 'hi' ? `"${searchQuery}" के लिए समाचार दिखा रहे हैं` : `Showing articles for "${searchQuery}"`}
               </h3>
             </div>
           </div>
@@ -243,7 +243,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             onClick={() => setSearchQuery('')}
             className="px-3.5 py-1.5 bg-white border border-gray-200 hover:border-red-600 text-xs font-bold text-gray-700 hover:text-red-600 rounded-full transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
-            <X className="w-3.5 h-3.5" /> Clear Search
+            <X className="w-3.5 h-3.5" /> {t('clearSearch') || 'Clear Search'}
           </button>
         </div>
       )}
@@ -256,7 +256,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             onClick={() => handleCategoryChange('all')}
             className={`px-4 py-1.5 rounded-full text-[11px] uppercase tracking-wide font-black whitespace-nowrap transition-all border shadow-sm ${currentCategory === 'all' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
           >
-            All
+            {t('all') || (language === 'mr' ? 'सर्व' : language === 'hi' ? 'सभी' : 'All')}
           </button>
           {categoriesData.map((cat) => (
             <button
@@ -264,7 +264,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               onClick={() => handleCategoryChange(cat.slug)}
               className={`px-4 py-1.5 rounded-full text-[11px] uppercase tracking-wide font-black whitespace-nowrap transition-all border shadow-sm ${currentCategory === cat.slug ? 'bg-red-600 text-white border-red-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
             >
-              {cat.name}
+              {getTranslatedCategory(cat.name, language)}
             </button>
           ))}
         </div>
@@ -273,12 +273,12 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-between md:justify-end">
           <Select defaultValue="latest">
             <SelectTrigger className="w-[130px] h-8 bg-white border-gray-200 rounded-md text-[11px] font-bold text-gray-600 focus:ring-0 shadow-sm uppercase tracking-wide">
-              <SelectValue placeholder="Latest First" />
+              <SelectValue placeholder={t('latestFirst') || 'Latest First'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="latest" className="text-xs font-bold">Latest First</SelectItem>
-              <SelectItem value="oldest" className="text-xs font-bold">Oldest First</SelectItem>
-              <SelectItem value="popular" className="text-xs font-bold">Most Popular</SelectItem>
+              <SelectItem value="latest" className="text-xs font-bold">{t('latestFirst') || 'Latest First'}</SelectItem>
+              <SelectItem value="oldest" className="text-xs font-bold">{t('oldestFirst') || 'Oldest First'}</SelectItem>
+              <SelectItem value="popular" className="text-xs font-bold">{t('mostPopular') || 'Most Popular'}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -335,7 +335,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2">
                 <Clock className="w-3.5 h-3.5 text-red-500" />
                 <span suppressHydrationWarning>
-                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                 </span>
               </div>
 
@@ -352,7 +352,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               {/* Read More */}
               <div className="mt-auto pt-1">
                 <span className="font-bold text-red-600 text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Read More <ArrowRight className="w-3.5 h-3.5" />
+                  {t('readMore') || 'Read More'} <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
             </div>
@@ -371,11 +371,11 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             {loadingMore ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading...
+                {t('pleaseWait') || 'Loading...'}
               </>
             ) : (
               <>
-                Show More News
+                {t('showMore') || 'Show More News'}
                 <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </>
             )}
@@ -387,7 +387,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
         <div className="text-center py-24 bg-gray-50 rounded-[32px] border border-dashed border-gray-200">
           <Newspaper className="h-16 w-16 mx-auto mb-6 text-gray-200" />
           <h3 className="text-xl font-heading font-black text-gray-400 mb-2">{t('noResults') || 'No articles found'}</h3>
-          <p className="text-sm text-gray-400">Try selecting a different category</p>
+          <p className="text-sm text-gray-400">{language === 'mr' ? 'दुसरी श्रेणी निवडून पहा' : language === 'hi' ? 'कोई अन्य श्रेणी चुनकर देखें' : 'Try selecting a different category'}</p>
         </div>
       )}
     </div>

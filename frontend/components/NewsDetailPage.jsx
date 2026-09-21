@@ -386,8 +386,10 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
           {/* Tags */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-5 border-t border-gray-200 w-full min-w-0">
-            <span className="text-xs sm:text-sm font-bold text-gray-500 shrink-0">Tags:</span>
-            {['Tablighi Jamaat', 'Delhi High Court', 'Corona', 'Judiciary', 'India News'].map((tag, idx) => (
+            <span className="text-xs sm:text-sm font-bold text-gray-500 shrink-0">
+              {language === 'mr' ? 'टॅग्ज:' : language === 'hi' ? 'टैग:' : 'Tags:'}
+            </span>
+            {['Maharashtra', 'Mumbai', 'Pune', 'India News', 'Live TV'].map((tag, idx) => (
               <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-3 sm:px-4 py-1 text-xs rounded-full hover:bg-gray-50 transition-colors">
                 {tag}
               </Badge>
@@ -407,7 +409,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
                   </svg>
                 </div>
-                <p className="text-xs sm:text-sm text-gray-500 font-medium">News Desk</p>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium">
+                  {language === 'mr' ? 'वृत्त कक्ष' : language === 'hi' ? 'समाचार कक्ष' : 'News Desk'}
+                </p>
               </div>
             </div>
             
@@ -422,7 +426,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 </button>
                 <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></button>
               </div>
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Trusted, Unbiased, For the People.</p>
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                {language === 'mr' ? 'विश्वासार्ह, निष्पक्ष, जनतेसाठी.' : language === 'hi' ? 'विश्वसनीय, निष्पक्ष, जनता के लिए।' : 'Trusted, Unbiased, For the People.'}
+              </p>
             </div>
           </div>
 
@@ -431,14 +437,22 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             <button className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-left group w-full min-w-0 overflow-hidden">
               <ArrowLeft className="w-5 h-5 text-red-500 group-hover:-translate-x-1 transition-transform shrink-0" />
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">Previous Article</p>
-                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">Nitish Kumar took oath as the Chief Minister of Bihar for the 10th time</p>
+                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">
+                  {language === 'mr' ? 'मागील बातमी' : language === 'hi' ? 'पिछला समाचार' : 'Previous Article'}
+                </p>
+                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">
+                  {relatedNews[0] ? getLocalizedText(relatedNews[0].title, language) : (language === 'mr' ? 'महाराष्ट्र राजकीय आणि सामाजिक घडामोडी' : language === 'hi' ? 'महाराष्ट्र राजनीतिक और सामाजिक घटनाक्रम' : 'Maharashtra political and social updates')}
+                </p>
               </div>
             </button>
             <button className="flex items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-right group w-full min-w-0 overflow-hidden">
               <div className="min-w-0 flex-1 text-left sm:text-right">
-                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">Next Article</p>
-                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">No time limit for governors, no endless delays: Supreme Court</p>
+                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">
+                  {language === 'mr' ? 'पुढील बातमी' : language === 'hi' ? 'अगला समाचार' : 'Next Article'}
+                </p>
+                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">
+                  {relatedNews[1] ? getLocalizedText(relatedNews[1].title, language) : (language === 'mr' ? 'सर्वोच्च न्यायालयातील ताज्या सुनावण्या' : language === 'hi' ? 'सुप्रीम कोर्ट की ताज़ा सुनवाई' : 'Latest updates from Supreme Court hearings')}
+                </p>
               </div>
               <ArrowLeft className="w-5 h-5 text-red-500 rotate-180 group-hover:translate-x-1 transition-transform shrink-0" />
             </button>
@@ -454,7 +468,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                 {t('relatedStories')}
               </h3>
-              <button className="ml-auto text-xs font-bold text-blue-600 hover:underline shrink-0">View All +</button>
+              <button onClick={() => setCurrentView('news')} className="ml-auto text-xs font-bold text-blue-600 hover:underline shrink-0">{t('viewAll') || 'View All'} +</button>
             </div>
             
             <div className="space-y-3 sm:space-y-4 w-full min-w-0">
@@ -491,7 +505,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             <div className="flex items-center gap-2 mb-4 sm:mb-6">
               <svg className="w-5 h-5 text-red-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
               <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
-                Trending Now
+                {t('trending') || (language === 'mr' ? 'सध्या ट्रेंडिंग' : language === 'hi' ? 'ट्रेंडिंग समाचार' : 'Trending Now')}
               </h3>
             </div>
             
@@ -525,20 +539,20 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           <div className="bg-red-600 rounded-2xl p-6 sm:p-8 relative overflow-hidden text-white shadow-xl w-full min-w-0">
             <div className="relative z-10 w-full min-w-0">
               <h3 className="text-xl sm:text-2xl font-black leading-tight mb-2 break-words">
-                Stay Informed<br/>with StarNews
+                {language === 'mr' ? <>स्टार न्यूजसह<br/>माहितीपूर्ण राहा</> : language === 'hi' ? <>स्टार न्यूज़ के साथ<br/>अपडेट रहें</> : <>Stay Informed<br/>with StarNews</>}
               </h3>
               <p className="text-red-100 text-xs sm:text-sm mb-5 sm:mb-6 leading-relaxed">
-                Get the latest news, breaking updates and top stories delivered to you.
+                {language === 'mr' ? 'ताज्या बातम्या, ब्रेकिंग अपडेट्स आणि प्रमुख घडामोडी थेट मिळवा.' : language === 'hi' ? 'ताज़ा ख़बरें, ब्रेकिंग अपडेट्स और शीर्ष कहानियां सीधे प्राप्त करें।' : 'Get the latest news, breaking updates and top stories delivered to you.'}
               </p>
               
               <form className="flex flex-col gap-3 w-full" onSubmit={(e) => e.preventDefault()}>
                 <input 
                   type="email" 
-                  placeholder="Enter your email" 
+                  placeholder={language === 'mr' ? 'तुमचा ईमेल प्रविष्ट करा' : language === 'hi' ? 'अपना ईमेल दर्ज करें' : 'Enter your email'} 
                   className="w-full px-4 py-3 rounded-xl text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                 />
                 <Button className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-3 rounded-xl transition-colors">
-                  Subscribe
+                  {language === 'mr' ? 'सदस्यता घ्या' : language === 'hi' ? 'सब्सक्राइब करें' : 'Subscribe'}
                 </Button>
               </form>
             </div>

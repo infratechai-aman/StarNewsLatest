@@ -15,11 +15,22 @@ const WeatherWidget = () => {
         aqi: 45 // Good
     }
 
+    const LOCATION_MAP = {
+        mr: 'पुणे, महाराष्ट्र',
+        hi: 'पुणे, महाराष्ट्र',
+        en: 'Pune, MH'
+    }
+    const CONDITION_MAP = {
+        mr: 'अंशतः ढगाळ',
+        hi: 'आंशिक रूप से बादल',
+        en: 'Partly Cloudy'
+    }
+
     const { language } = useLanguage()
     const [mounted, setMounted] = useState(false)
     const [translatedData, setTranslatedData] = useState({
-        location: weather.location,
-        condition: weather.condition
+        location: LOCATION_MAP[language] || weather.location,
+        condition: CONDITION_MAP[language] || weather.condition
     })
 
     useEffect(() => {
@@ -27,27 +38,11 @@ const WeatherWidget = () => {
     }, [])
 
     useEffect(() => {
-        let isMounted = true;
-        const updateTranslation = async () => {
-            if (language === 'en') {
-                if (isMounted) setTranslatedData({ location: weather.location, condition: weather.condition });
-                return;
-            }
-            try {
-                const { translateText } = await import('@/lib/translation');
-                const locRes = await translateText(weather.location, 'en');
-                const condRes = await translateText(weather.condition, 'en');
-                if (isMounted) setTranslatedData({
-                    location: locRes[language] || weather.location,
-                    condition: condRes[language] || weather.condition
-                });
-            } catch (err) {
-                console.error('Translation failed', err);
-            }
-        };
-        updateTranslation();
-        return () => { isMounted = false; };
-    }, [language]);
+        setTranslatedData({
+            location: LOCATION_MAP[language] || weather.location,
+            condition: CONDITION_MAP[language] || weather.condition
+        })
+    }, [language])
 
     // Helper for AQI Color
     const getAqiColor = (aqi) => {
@@ -75,7 +70,9 @@ const WeatherWidget = () => {
                 <span className="text-7xl font-black tracking-tighter drop-shadow-xl">{weather.temp}°</span>
                 <div className="ml-6">
                     <span className="block text-xl font-black leading-none">{translatedData.condition}</span>
-                    <span className="block text-sm text-sky-100 font-bold opacity-80 mt-1">H: {weather.high}° L: {weather.low}°</span>
+                    <span className="block text-sm text-sky-100 font-bold opacity-80 mt-1">
+                        {language === 'mr' ? `कमाल: ${weather.high}° किमान: ${weather.low}°` : language === 'hi' ? `अधिकतम: ${weather.high}° न्यूनतम: ${weather.low}°` : `H: ${weather.high}° L: ${weather.low}°`}
+                    </span>
                 </div>
             </div>
 

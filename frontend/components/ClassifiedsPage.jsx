@@ -99,16 +99,30 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
   }
 
   const getConditionLabel = (c) => {
-    if (c === 'New') return t('newCondition') || 'New'
-    if (c === 'Used') return t('usedCondition') || 'Used'
-    if (c === 'Refurbished') return t('refurbishedCondition') || 'Refurbished'
+    if (c === 'New') return t('newCondition') || (language === 'mr' ? 'नवीन' : language === 'hi' ? 'नया' : 'New')
+    if (c === 'Used') return t('usedCondition') || (language === 'mr' ? 'वापरलेले' : language === 'hi' ? 'इस्तेमाल किया हुआ' : 'Used')
+    if (c === 'Refurbished') return t('refurbishedCondition') || (language === 'mr' ? 'नूतनीकृत' : language === 'hi' ? 'नवीनीकृत' : 'Refurbished')
     return c
   }
 
   const getPostedByLabel = (p) => {
-    if (p === 'Individual') return t('individual') || 'Individual'
-    if (p === 'Business') return t('business') || 'Business'
+    if (p === 'Individual') return t('individual') || (language === 'mr' ? 'वैयक्तिक' : language === 'hi' ? 'व्यक्तिगत' : 'Individual')
+    if (p === 'Business') return t('business') || (language === 'mr' ? 'व्यवसाय' : language === 'hi' ? 'व्यापार' : 'Business')
     return p
+  }
+
+  const getLocalizedClassifiedCategory = (cat) => {
+    const map = {
+      'IT Jobs': language === 'mr' ? 'आयटी नोकऱ्या' : language === 'hi' ? 'आईटी नौकरियां' : 'IT Jobs',
+      'Real Estate': language === 'mr' ? 'रिअल इस्टेट' : language === 'hi' ? 'रियल एस्टेट' : 'Real Estate',
+      'Vehicles': language === 'mr' ? 'वाहने' : language === 'hi' ? 'वाहन' : 'Vehicles',
+      'Electronics': language === 'mr' ? 'इलेक्ट्रॉनिक्स' : language === 'hi' ? 'इलेक्ट्रॉनिक्स' : 'Electronics',
+      'Furniture': language === 'mr' ? 'फर्निचर' : language === 'hi' ? 'फर्नीचर' : 'Furniture',
+      'Fashion': language === 'mr' ? 'फॅशन' : language === 'hi' ? 'फैशन' : 'Fashion',
+      'Services': language === 'mr' ? 'सेवा' : language === 'hi' ? 'सेवाएं' : 'Services',
+      'Other': language === 'mr' ? 'इतर' : language === 'hi' ? 'अन्य' : 'Other'
+    }
+    return map[cat] || cat
   }
 
   // Modal and Form State
@@ -329,9 +343,9 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <p className="hidden sm:block text-gray-300 text-xs md:text-sm mb-3 md:mb-5 max-w-lg">{t('classifiedHeroSubtitle') || 'Post your classified ad and reach thousands across Pune and beyond.'}</p>
             <div className="hidden md:flex flex-wrap gap-5">
               {[
-                { icon: '📋', title: 'Easy Posting', sub: 'List in minutes' },
-                { icon: '📡', title: 'Wide Reach', sub: 'Get noticed locally' },
-                { icon: '🛡️', title: 'Trusted Platform', sub: 'Powered by StarNews' },
+                { icon: '📋', title: t('easyPosting') || 'Easy Posting', sub: t('listInMinutes') || 'List in minutes' },
+                { icon: '📡', title: t('wideReach') || 'Wide Reach', sub: t('getNoticedLocally') || 'Get noticed locally' },
+                { icon: '🛡️', title: t('trustedPlatform') || 'Trusted Platform', sub: t('poweredByStarNews') || 'Powered by StarNews' },
               ].map(f => (
                 <div key={f.title} className="flex items-center gap-2">
                   <div className="w-9 h-9 rounded-lg border border-white/20 bg-white/10 flex items-center justify-center text-lg">{f.icon}</div>
@@ -359,7 +373,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             </div>
             <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 text-sm text-gray-600 bg-white">
               <MapPin className="w-4 h-4 text-gray-400" />
-              <span>Pune, Maharashtra</span>
+              <span>{language === 'mr' ? 'पुणे, महाराष्ट्र' : language === 'hi' ? 'पुणे, महाराष्ट्र' : 'Pune, Maharashtra'}</span>
             </div>
             <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
               {t('search') || 'Search'} →
@@ -422,7 +436,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div>
               <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> {t('location') || 'Location'}</p>
               <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white">
-                <option>Pune, Maharashtra</option>
+                <option>{language === 'mr' ? 'पुणे, महाराष्ट्र' : language === 'hi' ? 'पुणे, महाराष्ट्र' : 'Pune, Maharashtra'}</option>
               </select>
             </div>
 
@@ -489,7 +503,9 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all flex flex-col" onClick={() => handleContactSeller(ad)}>
                     <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                       <Image src={cardImg} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
-                      <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>{ad.condition === 'New' ? 'NEW' : ad.condition === 'Excellent' ? 'FEATURED' : 'URGENT'}</Badge>
+                      <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>
+                        {ad.condition === 'New' ? (t('newCondition') || 'NEW') : ad.condition === 'Excellent' ? (language === 'mr' ? 'खास' : language === 'hi' ? 'विशेष' : 'FEATURED') : (language === 'mr' ? 'तातडीचे' : language === 'hi' ? 'तत्काल' : 'URGENT')}
+                      </Badge>
                       <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
                         <Heart className="w-3.5 h-3.5" />
                       </button>
@@ -503,7 +519,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                       </div>
                       <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
                         <Clock className="w-3 h-3 shrink-0" />
-                        <span>{idx + 1 + (idx * 2)} hours ago</span>
+                        <span>{language === 'mr' ? `${idx + 1 + (idx * 2)} तासांपूर्वी` : language === 'hi' ? `${idx + 1 + (idx * 2)} घंटे पहले` : `${idx + 1 + (idx * 2)} hours ago`}</span>
                       </div>
                       <div className="pt-2 border-t border-gray-100 mt-auto flex items-center justify-between">
                         <span className="text-xs font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
@@ -557,7 +573,12 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
               <h3 className="font-black text-sm text-gray-900 mb-4">{t('popularSearches') || 'Popular Searches'}</h3>
               <div className="space-y-3">
-                {['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets'].map(search => (
+                {(language === 'mr'
+                  ? ['२ बीएचके फ्लॅट', 'वापरलेल्या गाड्या', 'पुण्यात नोकऱ्या', 'लॅपटॉप', 'घरगुती शिकवणी', 'व्यावसायिक जागा', 'फर्निचर', 'रॉयल एनफील्ड', 'एसी विक्रीसाठी', 'पाळीव प्राणी']
+                  : language === 'hi'
+                  ? ['2 बीएचके फ्लैट', 'पुरानी कारें', 'पुणे में नौकरियां', 'लैपटॉप', 'होम ट्यूशन', 'कमर्शियल स्पेस', 'फर्नीचर', 'रॉयल एनफील्ड', 'बिक्री के लिए एसी', 'पालतू जानवर']
+                  : ['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets']
+                ).map(search => (
                   <div key={search} className="flex items-center gap-3 cursor-pointer group">
                     <Search className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500 transition-colors" />
                     <span className="text-xs font-semibold text-gray-700 group-hover:text-red-600 transition-colors">{search}</span>
@@ -573,9 +594,9 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       <Dialog open={showCreateModal} onOpenChange={closeModal}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{t('postClassified')}</DialogTitle>
+            <DialogTitle className="text-2xl">{t('postClassified') || (language === 'mr' ? 'वर्गीकृत जाहिरात पोस्ट करा' : language === 'hi' ? 'वर्गीकृत विज्ञापन पोस्ट करें' : 'Post Classified')}</DialogTitle>
             <DialogDescription>
-              Fill in the details below to submit your classified ad for review
+              {language === 'mr' ? 'तुमची जाहिरात पुनरावलोकनासाठी पाठवण्यासाठी खालील तपशील भरा' : language === 'hi' ? 'अपनी वर्गीकृत विज्ञापन समीक्षा के लिए सबमिट करने के लिए नीचे विवरण भरें' : 'Fill in the details below to submit your classified ad for review'}
             </DialogDescription>
           </DialogHeader>
 
@@ -585,12 +606,12 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
-              <h3 className="text-xl font-bold text-green-700">{t('submissionSuccess')}</h3>
+              <h3 className="text-xl font-bold text-green-700">{t('submissionSuccess') || (language === 'mr' ? 'यशस्वीरित्या सबमिट झाले!' : language === 'hi' ? 'सफलतापूर्वक सबमिट किया गया!' : 'Submission Successful!')}</h3>
               <p className="text-muted-foreground">
-                Your classified ad has been sent for admin approval. You will be notified once it's live.
+                {language === 'mr' ? 'तुमची जाहिरात प्रशासक मंजुरीसाठी पाठवली गेली आहे. ती थेट झाल्यावर तुम्हाला सूचित केले जाईल.' : language === 'hi' ? 'आपका विज्ञापन व्यवस्थापक की स्वीकृति के लिए भेज दिया गया है। लाइव होने पर आपको सूचित किया जाएगा।' : "Your classified ad has been sent for admin approval. You will be notified once it's live."}
               </p>
               <Button onClick={closeModal} className="mt-4">
-                {t('close')}
+                {t('close') || 'Close'}
               </Button>
             </div>
           ) : (
@@ -598,10 +619,10 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Title *</Label>
+                <Label htmlFor="title">{language === 'mr' ? 'शीर्षक *' : language === 'hi' ? 'शीर्षक *' : 'Title *'}</Label>
                 <Input
                   id="title"
-                  placeholder="Enter a descriptive title for your ad"
+                  placeholder={language === 'mr' ? 'तुमच्या जाहिरातीसाठी वर्णनात्मक शीर्षक प्रविष्ट करा' : language === 'hi' ? 'अपने विज्ञापन के लिए एक वर्णनात्मक शीर्षक दर्ज करें' : 'Enter a descriptive title for your ad'}
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   required
@@ -611,26 +632,26 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               {/* Category & Price */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Category *</Label>
+                  <Label>{language === 'mr' ? 'श्रेणी *' : language === 'hi' ? 'श्रेणी *' : 'Category *'}</Label>
                   <Select
                     value={formData.category}
                     onValueChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
                   >
                     <SelectTrigger className="h-10">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={language === 'mr' ? 'श्रेणी निवडा' : language === 'hi' ? 'श्रेणी चुनें' : 'Select category'} />
                     </SelectTrigger>
                     <SelectContent>
                       {CLASSIFIED_CATEGORIES.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        <SelectItem key={cat} value={cat}>{getLocalizedClassifiedCategory(cat)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="price">{language === 'mr' ? 'किंमत *' : language === 'hi' ? 'मूल्य *' : 'Price *'}</Label>
                   <Input
                     id="price"
-                    placeholder="e.g., ₹5,000 or Price on Request"
+                    placeholder={language === 'mr' ? 'उदा., ₹५,००० किंवा विनंतीनुसार' : language === 'hi' ? 'उदा., ₹5,000 या अनुरोध पर मूल्य' : 'e.g., ₹5,000 or Price on Request'}
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                     required
@@ -640,8 +661,8 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Images Upload */}
               <div className="space-y-2">
-                <Label>Images * (Minimum 1, Maximum 8, Max 700KB each)</Label>
-                <p className="text-xs text-muted-foreground mt-1 mb-2">Recommended size: 800x600px (Landscape)</p>
+                <Label>{language === 'mr' ? 'छायाचित्रे * (किमान १, कमाल ८, प्रत्येकी जास्तीत जास्त ७००केबी)' : language === 'hi' ? 'छवियां * (न्यूनतम 1, अधिकतम 8, अधिकतम 700KB प्रत्येक)' : 'Images * (Minimum 1, Maximum 8, Max 700KB each)'}</Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-2">{language === 'mr' ? 'शिफारस केलेले आकार: ८००x६००px (लँडस्केप)' : language === 'hi' ? 'अनुशंसित आकार: 800x600px (लैंडस्केप)' : 'Recommended size: 800x600px (Landscape)'}</p>
                 <div className="grid grid-cols-4 gap-3">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative aspect-video rounded-lg overflow-hidden border-2 border-gray-200">
@@ -663,7 +684,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                       className="aspect-video rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-orange-500 hover:bg-orange-50 transition-colors"
                     >
                       <Upload className="h-6 w-6 text-gray-400" />
-                      <span className="text-xs text-gray-500 mt-1">Add Image</span>
+                      <span className="text-xs text-gray-500 mt-1">{language === 'mr' ? 'छायाचित्र जोडा' : language === 'hi' ? 'छवि जोड़ें' : 'Add Image'}</span>
                     </button>
                   )}
                 </div>
@@ -682,10 +703,10 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Description *</Label>
+                <Label htmlFor="description">{language === 'mr' ? 'वर्णन *' : language === 'hi' ? 'विवरण *' : 'Description *'}</Label>
                 <Textarea
                   id="description"
-                  placeholder="Describe your item or service in detail..."
+                  placeholder={language === 'mr' ? 'तुमच्या वस्तू किंवा सेवेचे तपशीलवार वर्णन करा...' : language === 'hi' ? 'अपने उत्पाद या सेवा का विस्तार से वर्णन करें...' : 'Describe your item or service in detail...'}
                   rows={4}
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -695,10 +716,10 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Location */}
               <div className="space-y-2">
-                <Label htmlFor="location">Location (Area, City) *</Label>
+                <Label htmlFor="location">{language === 'mr' ? 'स्थान (परिसर, शहर) *' : language === 'hi' ? 'स्थान (क्षेत्र, शहर) *' : 'Location (Area, City) *'}</Label>
                 <Input
                   id="location"
-                  placeholder="e.g., Hinjewadi, Pune"
+                  placeholder={language === 'mr' ? 'उदा., हिंजवडी, पुणे' : language === 'hi' ? 'उदा., हिंजेवाड़ी, पुणे' : 'e.g., Hinjewadi, Pune'}
                   value={formData.location}
                   onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                   required
@@ -707,7 +728,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Phone */}
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number *</Label>
+                <Label htmlFor="phone">{language === 'mr' ? 'फोन नंबर *' : language === 'hi' ? 'फ़ोन नंबर *' : 'Phone Number *'}</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -726,14 +747,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, whatsappEnabled: checked }))}
                 />
                 <Label htmlFor="whatsapp" className="text-sm font-normal cursor-pointer">
-                  This number is on WhatsApp
+                  {language === 'mr' ? 'हा नंबर व्हॉट्सअॅपवर आहे' : language === 'hi' ? 'यह नंबर व्हाट्सएप पर है' : 'This number is on WhatsApp'}
                 </Label>
               </div>
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={closeModal} className="flex-1">
-                  Cancel
+                  {t('cancel') || 'Cancel'}
                 </Button>
                 <Button
                   type="submit"
@@ -743,15 +764,15 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                   {uploadingImages ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Uploading Image...
+                      {language === 'mr' ? 'छायाचित्र अपलोड होत आहे...' : language === 'hi' ? 'छवि अपलोड हो रही है...' : 'Uploading Image...'}
                     </>
                   ) : submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Submitting...
+                      {language === 'mr' ? 'सबमिट होत आहे...' : language === 'hi' ? 'सबमिट हो रहा है...' : 'Submitting...'}
                     </>
                   ) : (
-                    'Submit for Approval'
+                    language === 'mr' ? 'मंजुरीसाठी सबमिट करा' : language === 'hi' ? 'स्वीकृति के लिए सबमिट करें' : 'Submit for Approval'
                   )}
                 </Button>
               </div>

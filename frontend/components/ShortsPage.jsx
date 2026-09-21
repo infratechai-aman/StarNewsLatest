@@ -35,15 +35,35 @@ const CATEGORIES = [
   'Entertainment'
 ];
 
-const TRENDING = [
-  'Mumbai BMC Elections',
-  'Maharashtra Monsoon Alert',
-  'Supreme Court Hearing',
-  'ISRO Space Mission',
-  'Pune Metro Update',
-  'Cricket World Championship',
-  'Tech AI Innovations'
-];
+const TRENDING_BY_LANG = {
+  en: [
+    'Mumbai BMC Elections',
+    'Maharashtra Monsoon Alert',
+    'Supreme Court Hearing',
+    'ISRO Space Mission',
+    'Pune Metro Update',
+    'Cricket World Championship',
+    'Tech AI Innovations'
+  ],
+  mr: [
+    'मुंबई महापालिका निवडणुका',
+    'महाराष्ट्र मान्सून अलर्ट',
+    'सर्वोच्च न्यायालय सुनावणी',
+    'इस्रो अंतराळ मोहीम',
+    'पुणे मेट्रो अपडेट',
+    'क्रिकेट विश्व अजिंक्यपद',
+    'टेक आणि एआय क्रांती'
+  ],
+  hi: [
+    'मुंबई बीएमसी चुनाव',
+    'महाराष्ट्र मानसून अलर्ट',
+    'सुप्रीम कोर्ट सुनवाई',
+    'इसरो अंतरिक्ष मिशन',
+    'पुणे मेट्रो अपडेट',
+    'क्रिकेट विश्व चैंपियनशिप',
+    'टेक एआई नवाचार'
+  ]
+};
 
 export default function ShortsPage({ setCurrentView }) {
   const { t, language } = useLanguage();
@@ -61,13 +81,15 @@ export default function ShortsPage({ setCurrentView }) {
   const containerRef = useRef(null);
   const activeIndexRef = useRef(0);
 
+  const trendingList = TRENDING_BY_LANG[language] || TRENDING_BY_LANG.en;
+
   // Translate categories
   const getCatLabel = (cat) => {
     const keyMap = {
       'All': 'allNews',
       'Latest': 'latest',
       'Trending': 'trending',
-      'Maharashtra': 'nation',
+      'Maharashtra': 'maharashtra',
       'Politics': 'politics',
       'City News': 'cityNews',
       'Crime': 'crime',
@@ -76,6 +98,9 @@ export default function ShortsPage({ setCurrentView }) {
       'Entertainment': 'entertainment'
     };
     const key = keyMap[cat];
+    if (cat === 'Maharashtra' && !t('maharashtra')) {
+      return language === 'mr' ? 'महाराष्ट्र' : language === 'hi' ? 'महाराष्ट्र' : 'Maharashtra';
+    }
     return key ? (t(key) || cat) : cat;
   };
 
@@ -291,16 +316,20 @@ export default function ShortsPage({ setCurrentView }) {
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3">
               <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
-              <p className="text-neutral-400 text-xs font-semibold">Loading Shorts...</p>
+              <p className="text-neutral-400 text-xs font-semibold">
+                {language === 'mr' ? 'शॉर्ट्स लोड होत आहेत...' : language === 'hi' ? 'शॉर्ट्स लोड हो रहे हैं...' : 'Loading Shorts...'}
+              </p>
             </div>
           ) : filteredShorts.length === 0 ? (
             <div className="text-center p-8">
-              <p className="text-white font-bold text-lg mb-2">No Shorts in this category</p>
+              <p className="text-white font-bold text-lg mb-2">
+                {language === 'mr' ? 'या श्रेणीत कोणतेही शॉर्ट्स नाहीत' : language === 'hi' ? 'इस श्रेणी में कोई शॉर्ट्स नहीं हैं' : 'No Shorts in this category'}
+              </p>
               <button
                 onClick={() => setActiveCategory('All')}
                 className="px-4 py-2 bg-red-600 rounded-full text-xs font-bold text-white hover:bg-red-700"
               >
-                View All Shorts
+                {language === 'mr' ? 'सर्व शॉर्ट्स पहा' : language === 'hi' ? 'सभी शॉर्ट्स देखें' : 'View All Shorts'}
               </button>
             </div>
           ) : (
@@ -351,15 +380,27 @@ export default function ShortsPage({ setCurrentView }) {
             <span className="bg-red-600 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full">
               STARNEWS
             </span>
-            <span className="text-neutral-400 text-xs font-semibold">Short Video Portal</span>
+            <span className="text-neutral-400 text-xs font-semibold">
+              {language === 'mr' ? 'शॉर्ट व्हिडिओ पोर्टल' : language === 'hi' ? 'शॉर्ट वीडियो पोर्टल' : 'Short Video Portal'}
+            </span>
           </div>
           
           <h1 className="text-white text-3xl md:text-5xl font-black leading-tight flex items-center gap-2 mb-1">
-            <span className="text-red-500">Shorts</span> & Reels
+            {language === 'mr' ? (
+              <><span className="text-red-500">शॉर्ट्स</span> आणि रील्स</>
+            ) : language === 'hi' ? (
+              <><span className="text-red-500">शॉर्ट्स</span> और रील्स</>
+            ) : (
+              <><span className="text-red-500">Shorts</span> & Reels</>
+            )}
           </h1>
           
           <p className="text-neutral-300 text-xs md:text-sm max-w-xl">
-            Quick news bulletins, viral stories, and breaking ground reports in 60 seconds.
+            {language === 'mr'
+              ? '६० सेकंदात झटपट वृत्त बुलेटिन, व्हायरल कथा आणि थेट ग्राउंड रिपोर्ट.'
+              : language === 'hi'
+              ? '60 सेकंड में त्वरित समाचार बुलेटिन, वायरल कहानियां और ग्राउंड रिपोर्ट।'
+              : 'Quick news bulletins, viral stories, and breaking ground reports in 60 seconds.'}
           </p>
 
           {/* Quick Launch Mobile Reels Mode */}
@@ -369,7 +410,7 @@ export default function ShortsPage({ setCurrentView }) {
               className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg flex items-center gap-1.5 transition-all active:scale-95"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
-              <span>Watch Reels Feed</span>
+              <span>{language === 'mr' ? 'रील्स फीड पहा' : language === 'hi' ? 'रील्स फीड देखें' : 'Watch Reels Feed'}</span>
             </button>
           </div>
         </div>
@@ -399,7 +440,7 @@ export default function ShortsPage({ setCurrentView }) {
           <div className="relative shrink-0 hidden sm:block">
             <input
               type="text"
-              placeholder={t('searchShorts') || 'Search shorts...'}
+              placeholder={t('searchShorts') || (language === 'mr' ? 'शॉर्ट्स शोधा...' : language === 'hi' ? 'शॉर्ट्स खोजें...' : 'Search shorts...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="h-8 pl-3 pr-8 border border-neutral-200 rounded-full text-xs bg-neutral-50 focus:bg-white focus:outline-none focus:border-red-500 w-44 transition-all"
@@ -422,10 +463,10 @@ export default function ShortsPage({ setCurrentView }) {
             ) : filteredShorts.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-2xl border border-neutral-200 p-8 shadow-sm">
                 <p className="text-neutral-500 font-bold text-base mb-2">
-                  {t('noNews') || 'No Shorts Available'}
+                  {t('noNews') || (language === 'mr' ? 'कोणतेही शॉर्ट्स उपलब्ध नाहीत' : language === 'hi' ? 'कोई शॉर्ट्स उपलब्ध नहीं' : 'No Shorts Available')}
                 </p>
                 <p className="text-neutral-400 text-xs mb-4">
-                  Try another category or clear your search query.
+                  {language === 'mr' ? 'दुसरी श्रेणी निवडा किंवा शोध क्वेरी साफ करा.' : language === 'hi' ? 'दूसरी श्रेणी चुनें या अपनी खोज क्वेरी साफ़ करें।' : 'Try another category or clear your search query.'}
                 </p>
                 <button
                   onClick={() => {
@@ -434,7 +475,7 @@ export default function ShortsPage({ setCurrentView }) {
                   }}
                   className="px-4 py-2 bg-neutral-900 text-white rounded-full text-xs font-bold hover:bg-neutral-800"
                 >
-                  Reset Filters
+                  {language === 'mr' ? 'फिल्टर रीसेट करा' : language === 'hi' ? 'फ़िल्टर रीसेट करें' : 'Reset Filters'}
                 </button>
               </div>
             ) : (
@@ -474,7 +515,7 @@ export default function ShortsPage({ setCurrentView }) {
                       {/* Top badge */}
                       <div className="absolute top-2.5 left-2.5 z-10">
                         <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/20">
-                          {short.category || 'Shorts'}
+                          {getCatLabel(short.category) || (language === 'mr' ? 'शॉर्ट्स' : language === 'hi' ? 'शॉर्ट्स' : 'Shorts')}
                         </span>
                       </div>
 
@@ -522,12 +563,12 @@ export default function ShortsPage({ setCurrentView }) {
             <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-extrabold text-sm text-neutral-900 flex items-center gap-2">
-                  <span className="text-red-500">⚡</span> Trending Topics
+                  <span className="text-red-500">⚡</span> {t('trendingTopics') || (language === 'mr' ? 'ट्रेंडिंग विषय' : language === 'hi' ? 'ट्रेंडिंग विषय' : 'Trending Topics')}
                 </h3>
-                <span className="text-neutral-400 text-[10px] font-bold uppercase">LIVE</span>
+                <span className="text-neutral-400 text-[10px] font-bold uppercase">{t('live') || 'LIVE'}</span>
               </div>
               <div className="space-y-2.5">
-                {TRENDING.map((topic, idx) => (
+                {trendingList.map((topic, idx) => (
                   <div
                     key={topic}
                     onClick={() => {
@@ -553,45 +594,53 @@ export default function ShortsPage({ setCurrentView }) {
                   <Smartphone className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm">Experience Reels UI</h4>
-                  <p className="text-neutral-400 text-[11px]">Seamless swipeable player</p>
+                  <h4 className="font-extrabold text-sm">
+                    {language === 'mr' ? 'रील्स अनुभवा' : language === 'hi' ? 'रील्स का अनुभव लें' : 'Experience Reels UI'}
+                  </h4>
+                  <p className="text-neutral-400 text-[11px]">
+                    {language === 'mr' ? 'अखंड स्वाइप करण्यायोग्य प्लेअर' : language === 'hi' ? 'सहज स्वाइप प्लेयर' : 'Seamless swipeable player'}
+                  </p>
                 </div>
               </div>
               <p className="text-neutral-300 text-xs mb-4 leading-relaxed">
-                Watch full-screen immersive video reels just like Instagram and YouTube Shorts on your browser.
+                {language === 'mr'
+                  ? 'तुमच्या ब्राउझरवर इंस्टाग्राम आणि यूट्यूब शॉर्ट्सप्रमाणेच फुल-स्क्रीन व्हिडिओ रील्स पहा.'
+                  : language === 'hi'
+                  ? 'अपने ब्राउज़र पर इंस्टाग्राम और यूट्यूब शॉर्ट्स की तरह फुल-स्क्रीन वीडियो रील्स देखें।'
+                  : 'Watch full-screen immersive video reels just like Instagram and YouTube Shorts on your browser.'}
               </p>
               <button
                 onClick={() => openInFeed(0)}
                 className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold py-2.5 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
               >
                 <Play className="w-4 h-4 fill-white" />
-                <span>Launch Reels Player</span>
+                <span>{language === 'mr' ? 'रील्स प्लेअर सुरू करा' : language === 'hi' ? 'रील्स प्लेयर शुरू करें' : 'Launch Reels Player'}</span>
               </button>
             </div>
 
             {/* Quick Links */}
             <div className="bg-white border border-neutral-200 rounded-2xl p-5 shadow-sm">
               <h4 className="font-extrabold text-xs uppercase tracking-wider text-neutral-500 mb-3">
-                Quick Navigation
+                {language === 'mr' ? 'जलद नेव्हिगेशन' : language === 'hi' ? 'त्वरित नेविगेशन' : 'Quick Navigation'}
               </h4>
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => setCurrentView && setCurrentView('home')}
                   className="w-full text-left text-xs font-bold text-neutral-700 hover:text-red-600 py-1.5 px-2 rounded-lg hover:bg-neutral-50 transition-colors"
                 >
-                  ← StarNews Home
+                  {language === 'mr' ? '← स्टार न्यूज मुख्यपृष्ठ' : language === 'hi' ? '← स्टार न्यूज़ होम' : '← StarNews Home'}
                 </button>
                 <button
                   onClick={() => setCurrentView && setCurrentView('news')}
                   className="w-full text-left text-xs font-bold text-neutral-700 hover:text-red-600 py-1.5 px-2 rounded-lg hover:bg-neutral-50 transition-colors"
                 >
-                  📰 All News Articles
+                  {language === 'mr' ? '📰 सर्व बातम्या' : language === 'hi' ? '📰 सभी समाचार लेख' : '📰 All News Articles'}
                 </button>
                 <button
                   onClick={() => setCurrentView && setCurrentView('live-tv')}
                   className="w-full text-left text-xs font-bold text-neutral-700 hover:text-red-600 py-1.5 px-2 rounded-lg hover:bg-neutral-50 transition-colors"
                 >
-                  🔴 Live TV Broadcast
+                  {language === 'mr' ? '🔴 थेट टीव्ही प्रक्षेपण' : language === 'hi' ? '🔴 लाइव टीवी प्रसारण' : '🔴 Live TV Broadcast'}
                 </button>
               </div>
             </div>

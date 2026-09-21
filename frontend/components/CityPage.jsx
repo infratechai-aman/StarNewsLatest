@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { proxyImageUrl } from '@/lib/imageProxy'
+import { getLocalizedCity } from '@/lib/translations'
 
 const CITY_ICONS = {
   Mumbai: '/city_icon_mumbai_1789524759210.jpg',
@@ -121,16 +122,16 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                     <div className="flex-1 mt-6 md:mt-0 text-center md:text-left">
                         <div className="flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-4 text-gray-300 tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-black">
                             <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                            INDIA'S CITIES. REAL STORIES.
+                            {language === 'mr' ? 'भारतातील शहरे. खऱ्या कथा.' : language === 'hi' ? 'भारत के शहर। सच्ची कहानियाँ।' : "INDIA'S CITIES. REAL STORIES."}
                         </div>
                         <h1 className="text-4xl md:text-[80px] font-black leading-none tracking-tighter mb-2 md:mb-4 drop-shadow-lg">
-                            City <span className="text-red-500">News</span>
+                            {language === 'mr' ? <>शहर <span className="text-red-500">बातम्या</span></> : language === 'hi' ? <>शहर <span className="text-red-500">समाचार</span></> : <>City <span className="text-red-500">News</span></>}
                         </h1>
                         <p className="hidden md:block text-xl md:text-2xl text-white font-medium mb-4">
-                            Local updates. Bigger perspectives.
+                            {language === 'mr' ? 'स्थानिक घडामोडी. व्यापक दृष्टिकोन.' : language === 'hi' ? 'स्थानीय अपडेट्स। व्यापक दृष्टिकोण।' : 'Local updates. Bigger perspectives.'}
                         </p>
                         <p className="text-xs md:text-base text-gray-300 font-medium max-w-lg leading-relaxed mx-auto md:mx-0">
-                            Explore the latest news, events, developments and stories from your city.
+                            {language === 'mr' ? 'तुमच्या शहरातील ताज्या बातम्या, कार्यक्रम, घडामोडी आणि कथा जाणून घ्या.' : language === 'hi' ? 'अपने शहर के ताज़ा समाचार, कार्यक्रम, विकास और कहानियाँ जानें।' : 'Explore the latest news, events, developments and stories from your city.'}
                         </p>
                     </div>
                 </div>
@@ -168,7 +169,9 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                             />
                                         </div>
                                     </div>
-                                    <span className={`text-[12px] font-black ${isSelected ? 'text-red-600' : 'text-gray-900'} transition-colors`}>{city}</span>
+                                    <span className={`text-[12px] font-black ${isSelected ? 'text-red-600' : 'text-gray-900'} transition-colors`}>
+                                        {getLocalizedCity(city, language)}
+                                    </span>
                                 </div>
                             )
                         })}
@@ -188,7 +191,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                         >
                             <option value="">{t('chooseCity') || 'Search or select a city...'}</option>
                             {INDIAN_CITIES_SORTED.map(city => (
-                                <option key={city} value={city}>{city}</option>
+                                <option key={city} value={city}>{getLocalizedCity(city, language)}</option>
                             ))}
                         </select>
                         <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -219,11 +222,11 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
                         <span className="w-1.5 h-6 bg-red-600 rounded-full block"></span>
-                        {selectedCity ? `${t('latestFrom') || 'Latest from'} ${selectedCity}` : (t('selectCityTitle') || 'City News')}
+                        {selectedCity ? `${t('latestFrom') || 'Latest from'} ${getLocalizedCity(selectedCity, language)}` : (t('selectCityTitle') || 'City News')}
                     </h2>
                     {cityNews.length > 0 && (
                         <button className="text-red-600 text-sm font-bold flex items-center gap-1 hover:underline">
-                            {t('viewAll') || 'View All'} {selectedCity} {t('news') || 'News'} <ChevronRight className="w-4 h-4" />
+                            {t('viewAll') || 'View All'} {getLocalizedCity(selectedCity, language)} {t('news') || 'News'} <ChevronRight className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -245,10 +248,10 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/40 to-transparent"></div>
                             
                             <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-md">
-                                {selectedCity || cityNews[0].city || 'MUMBAI'}
+                                {getLocalizedCity(selectedCity || cityNews[0].city || 'Mumbai', language).toUpperCase()}
                             </div>
                             <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded shadow-md flex items-center gap-1">
-                                2 hrs ago
+                                {language === 'mr' ? '२ तासांपूर्वी' : language === 'hi' ? '२ घंटे पहले' : '2 hrs ago'}
                             </div>
                             
                             <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -259,7 +262,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                     {getLocalizedText(cityNews[0].content, language)?.replace(/<[^>]*>/g, '').substring(0, 150)}...
                                 </p>
                                 <button className="bg-red-600 hover:bg-red-700 text-white text-[11px] font-black px-4 py-2 rounded-md transition-colors flex items-center gap-1.5 shadow-lg">
-                                    Read More <ChevronRight className="w-3.5 h-3.5" />
+                                    {t('readMore') || 'Read More'} <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
                         </div>
@@ -277,10 +280,10 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                                 className="object-cover group-hover:scale-105 transition-transform duration-500" 
                                             />
                                             <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
-                                                {selectedCity || item.city || 'MUMBAI'}
+                                                {getLocalizedCity(selectedCity || item.city || 'Mumbai', language).toUpperCase()}
                                             </div>
                                             <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
-                                                {idx + 1 * 4} {idx % 2 === 0 ? 'hrs' : 'days'} ago
+                                                {idx + 1 * 4} {language === 'mr' ? (idx % 2 === 0 ? 'तासांपूर्वी' : 'दिवसांपूर्वी') : language === 'hi' ? (idx % 2 === 0 ? 'घंटे पहले' : 'दिन पहले') : (idx % 2 === 0 ? 'hrs ago' : 'days ago')}
                                             </div>
                                         </div>
                                         <div className="p-4 flex-1 flex flex-col justify-between">
@@ -318,23 +321,29 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                         
                         <h3 className="text-xl md:text-2xl font-black text-gray-900 mb-2.5">
                             {selectedCity 
-                                ? (language === 'en' 
-                                    ? `No News Available for ${selectedCity}` 
-                                    : (t('noCityNews') || `No news available from ${selectedCity} yet.`))
+                                ? (language === 'mr' 
+                                    ? `${getLocalizedCity(selectedCity, language)} साठी कोणत्याही बातम्या उपलब्ध नाहीत`
+                                    : language === 'hi'
+                                    ? `${getLocalizedCity(selectedCity, language)} के लिए कोई समाचार उपलब्ध नहीं है`
+                                    : `No News Available for ${selectedCity}`)
                                 : (t('selectCityPrompt') || 'Select a city to view local news')
                             }
                         </h3>
                         
                         <p className="text-gray-500 text-sm md:text-base max-w-lg mx-auto mb-8 leading-relaxed font-medium">
                             {selectedCity 
-                                ? (t('cityNewsTag') || `We couldn't find any articles or local updates for ${selectedCity} right now. News articles tagged with this city will appear here as soon as they are published.`)
+                                ? (language === 'mr'
+                                    ? `आम्हाला सध्या ${getLocalizedCity(selectedCity, language)} साठी कोणतेही लेख किंवा स्थानिक अपडेट्स सापडले नाहीत. या शहराशी संबंधित बातम्या प्रकाशित होताच येथे दिसतील.`
+                                    : language === 'hi'
+                                    ? `हमें फ़िलहाल ${getLocalizedCity(selectedCity, language)} के लिए कोई लेख या स्थानीय अपडेट नहीं मिले। इस शहर से जुड़े समाचार प्रकाशित होते ही यहाँ दिखाई देंगे।`
+                                    : `We couldn't find any articles or local updates for ${selectedCity} right now. News articles tagged with this city will appear here as soon as they are published.`)
                                 : (t('cityPromptDesc') || 'Choose from popular cities above or select from the dropdown to explore city-specific updates.')
                             }
                         </p>
 
                         <div className="pt-6 border-t border-gray-100 max-w-md mx-auto">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
-                                Explore other popular cities
+                                {language === 'mr' ? 'इतर लोकप्रिय शहरे एक्सप्लोर करा' : language === 'hi' ? 'अन्य लोकप्रिय शहर देखें' : 'Explore other popular cities'}
                             </p>
                             <div className="flex flex-wrap items-center justify-center gap-2">
                                 {['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Kolkata'].map(city => (
@@ -348,7 +357,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                                 : 'bg-gray-50 hover:bg-red-50 text-gray-700 hover:text-red-600 border-gray-200 hover:border-red-200'
                                         }`}
                                     >
-                                        {city}
+                                        {getLocalizedCity(city, language)}
                                     </button>
                                 ))}
                             </div>
