@@ -251,7 +251,7 @@ const ClientApp = ({ initialNewsData }) => {
 
     return (
         <LanguageProvider>
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
                 <Header
                     user={user}
                     currentView={currentView}
@@ -263,7 +263,7 @@ const ClientApp = ({ initialNewsData }) => {
                 <BreakingNewsTicker />
 
                 <ErrorBoundary fallbackMessage="This section failed to load. Please try refreshing.">
-                <main className={['home', 'live-tv', 'news', 'classifieds', 'city', 'enewspaper', 'businesses', 'shorts'].includes(currentView) ? "w-full" : "container py-6"}>
+                <main className={['home', 'live-tv', 'news', 'news-detail', 'classifieds', 'classified-detail', 'city', 'enewspaper', 'businesses', 'business-detail', 'shorts', 'daily-deals'].includes(currentView) ? "w-full min-w-0 overflow-x-hidden" : "container py-6 min-w-0"}>
                     {currentView === 'home' && <HomePage setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
                     {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={handleSetCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
                     {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} />}

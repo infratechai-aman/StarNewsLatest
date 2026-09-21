@@ -84,7 +84,7 @@ const BreakingNewsTicker = () => {
   return (
     // NOTE: .ticker-wrapper and .ticker-content animation are defined in globals.css
     // (previously were in a <style jsx> tag which is NOT supported in App Router)
-    <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9 bg-[#1a1a1a]">
+    <div className="overflow-hidden sticky top-0 lg:top-auto z-40 flex h-9 bg-[#1a1a1a] w-full max-w-full min-w-0">
       {/* Left: Full Red BREAKING label with diagonal right edge */}
       <div className="breaking-label-container bg-[#E53935] flex items-center gap-2.5 pl-4 md:pl-5 pr-6 shrink-0 relative z-10">
         <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>

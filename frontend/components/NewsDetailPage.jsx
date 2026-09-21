@@ -40,6 +40,7 @@ function sanitizeHtml(html) {
 
 const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   const { language, t } = useLanguage()
+  const [fontSizeLevel, setFontSizeLevel] = useState('base') // 'sm' | 'base' | 'lg'
 
   // Article page ad settings state
   const [articleAdSettings, setArticleAdSettings] = useState({
@@ -158,38 +159,56 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-5 md:py-10" key={language}>
+    <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 min-w-0 overflow-x-hidden" key={language}>
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-6 md:mb-8 overflow-hidden whitespace-nowrap text-ellipsis">
-        <button onClick={handleBackToHome} className="hover:text-red-600 transition-colors cursor-pointer flex items-center gap-1">
+      <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-4 md:mb-6 overflow-hidden whitespace-nowrap min-w-0">
+        <button onClick={handleBackToHome} className="hover:text-red-600 transition-colors cursor-pointer flex items-center gap-1 shrink-0">
           <ArrowLeft className="w-3 md:w-3.5 h-3 md:h-3.5" /> Home
         </button>
-        <span>&gt;</span>
-        <button onClick={() => {if(setCurrentView) setCurrentView('news')}} className="hover:text-red-600 transition-colors cursor-pointer">
+        <span className="shrink-0 text-gray-400">&gt;</span>
+        <button onClick={() => {if(setCurrentView) setCurrentView('news')}} className="hover:text-red-600 transition-colors cursor-pointer shrink-0">
           News
         </button>
-        <span>&gt;</span>
-        <button className="hover:text-red-600 transition-colors cursor-pointer">
+        <span className="shrink-0 text-gray-400">&gt;</span>
+        <button className="hover:text-red-600 transition-colors cursor-pointer shrink-0">
           {category}
         </button>
-        <span>&gt;</span>
-        <span className="text-gray-900 truncate">{title}</span>
+        <span className="shrink-0 text-gray-400">&gt;</span>
+        <span className="text-gray-900 truncate min-w-0 flex-1">{title}</span>
       </div>
 
-      <div className="grid lg:grid-cols-12 gap-8 lg:gap-16">
+      <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 w-full min-w-0">
         {/* Main Article Content */}
-        <article className="lg:col-span-8 space-y-6 select-none" onContextMenu={(e) => e.preventDefault()}>
+        <article className="lg:col-span-8 space-y-5 sm:space-y-6 select-none w-full min-w-0 overflow-hidden" onContextMenu={(e) => e.preventDefault()}>
           {/* Header Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <Badge className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 font-bold uppercase text-[11px] border-none rounded-full">
+          <div className="space-y-3 sm:space-y-4 w-full min-w-0">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <Badge className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1 font-bold uppercase text-[11px] border-none rounded-full shrink-0 shadow-sm">
                 {category}
               </Badge>
-              <div className="flex items-center gap-3">
-                <div className="flex bg-gray-100 rounded-full p-1 border border-gray-200">
-                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A-</button>
-                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A</button>
-                  <button className="px-3 py-1 text-xs font-bold text-gray-600 hover:text-black hover:bg-white rounded-full transition-all">A+</button>
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div className="flex bg-gray-100 rounded-full p-0.5 sm:p-1 border border-gray-200">
+                  <button 
+                    onClick={() => setFontSizeLevel('sm')} 
+                    className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-full transition-all ${fontSizeLevel === 'sm' ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'}`}
+                    title="Small Font"
+                  >
+                    A-
+                  </button>
+                  <button 
+                    onClick={() => setFontSizeLevel('base')} 
+                    className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-full transition-all ${fontSizeLevel === 'base' ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'}`}
+                    title="Standard Font"
+                  >
+                    A
+                  </button>
+                  <button 
+                    onClick={() => setFontSizeLevel('lg')} 
+                    className={`px-2.5 sm:px-3 py-1 text-xs font-bold rounded-full transition-all ${fontSizeLevel === 'lg' ? 'bg-white text-black shadow-sm' : 'text-gray-600 hover:text-black'}`}
+                    title="Large Font"
+                  >
+                    A+
+                  </button>
                 </div>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-black bg-gray-100 rounded-full border border-gray-200 transition-all">
                   <Bookmark className="w-3.5 h-3.5" /> Save
@@ -197,52 +216,52 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-[40px] font-black text-gray-900 leading-[1.1] tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-[38px] font-black text-gray-900 leading-[1.15] tracking-tight break-words [overflow-wrap:anywhere] w-full">
               {title}
             </h1>
             
             {(article.metaDescription || article.shortDescription) && (
-              <p className="text-base sm:text-lg md:text-xl font-medium text-gray-600 leading-snug">
+              <p className="text-sm sm:text-base md:text-lg font-medium text-gray-600 leading-snug break-words [overflow-wrap:anywhere] w-full">
                 {getLocalizedText(article.metaDescription || article.shortDescription, language)}
               </p>
             )}
           </div>
 
           {/* Author & Meta */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-y border-gray-200">
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px] font-bold text-gray-500">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 sm:py-4 border-y border-gray-200 w-full min-w-0">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-5 text-[11px] font-bold text-gray-500 min-w-0">
               {(article.authorName || article.author?.name) && (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-sm">
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-sm shrink-0">
                     {(() => {
                       const name = article.authorName || article.author?.name
                       return (name === 'Pune Majha News' ? 'StarNews Admin' : name)?.charAt(0)
                     })()}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-gray-900 text-xs">
+                    <span className="text-gray-900 text-xs font-bold">
                       {(article.authorName || article.author?.name) === 'Pune Majha News' ? 'StarNews Admin' : (article.authorName || article.author?.name)}
                     </span>
-                    <svg className="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-3.5 h-3.5 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
                     </svg>
                   </div>
                 </div>
               )}
               
-              <div className="flex items-center gap-4 border-l border-gray-300 pl-4">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 border-l border-gray-300 pl-3 sm:pl-4 min-w-0">
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                   {formatDate(article.publishedAt || article.createdAt)}
                 </span>
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1.5 shrink-0">
+                  <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                   5 min read
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
               <span className="text-[11px] font-bold text-gray-500 mr-1">Share:</span>
               <button className="w-7 h-7 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80 transition-opacity"><Facebook className="w-3.5 h-3.5" /></button>
               <button className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:opacity-80 transition-opacity">
@@ -270,7 +289,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             }
             if (!videoId) return null
             return (
-              <div className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ paddingTop: '56.25%' }}>
+              <div className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm min-w-0" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
                   className="absolute top-0 left-0 w-full h-full"
@@ -282,7 +301,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </div>
             )
           })() : article.mainImage && (
-            <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100">
+            <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 w-full max-w-full min-w-0">
               <Image
                 src={article.mainImage}
                 alt={title}
@@ -290,21 +309,23 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 className="object-cover"
                 priority
               />
-              <div className="absolute top-4 right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-3 py-1 rounded">
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm">
                 FILE PHOTO
               </div>
             </div>
           )}
 
           {/* Article Body with Inline Gallery Images */}
-          <div className="text-gray-800 text-base md:text-lg leading-relaxed space-y-6 pb-6">
+          <div className={`text-gray-800 leading-relaxed space-y-6 pb-6 break-words [overflow-wrap:anywhere] article-prose-content w-full min-w-0 ${
+            fontSizeLevel === 'sm' ? 'text-sm sm:text-base' : fontSizeLevel === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'
+          }`}>
             {(() => {
               const galleryImgs = article.galleryImages && article.galleryImages.length > 0 ? article.galleryImages : []
 
               if (galleryImgs.length === 0) {
                 return (
                   <div
-                    className="space-y-6"
+                    className="space-y-6 article-prose-content break-words [overflow-wrap:anywhere] w-full min-w-0"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 )
@@ -321,12 +342,12 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 return (
                   <>
                     <div
-                      className="space-y-6"
+                      className="space-y-6 article-prose-content break-words [overflow-wrap:anywhere] w-full min-w-0"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                     />
-                    <div className="my-8 space-y-6">
+                    <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                       {galleryImgs.map((img, idx) => (
-                        <div key={idx} className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
+                        <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
                           <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                         </div>
                       ))}
@@ -342,19 +363,19 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               return (
                 <>
                   <div
-                    className="space-y-6"
+                    className="space-y-6 article-prose-content break-words [overflow-wrap:anywhere] w-full min-w-0"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(firstPart) }}
                   />
-                  <div className="my-8 space-y-6">
+                  <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                     {galleryImgs.map((img, idx) => (
-                      <div key={idx} className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
+                      <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
                         <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                       </div>
                     ))}
                   </div>
                   {secondPart && (
                     <div
-                      className="space-y-6"
+                      className="space-y-6 article-prose-content break-words [overflow-wrap:anywhere] w-full min-w-0"
                       dangerouslySetInnerHTML={{ __html: sanitizeHtml(secondPart) }}
                     />
                   )}
@@ -364,33 +385,33 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-gray-200">
-            <span className="text-sm font-bold text-gray-500">Tags:</span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-5 border-t border-gray-200 w-full min-w-0">
+            <span className="text-xs sm:text-sm font-bold text-gray-500 shrink-0">Tags:</span>
             {['Tablighi Jamaat', 'Delhi High Court', 'Corona', 'Judiciary', 'India News'].map((tag, idx) => (
-              <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-4 py-1.5 rounded-full hover:bg-gray-50 transition-colors">
+              <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-3 sm:px-4 py-1 text-xs rounded-full hover:bg-gray-50 transition-colors">
                 {tag}
               </Badge>
             ))}
           </div>
 
           {/* Author Box */}
-          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 my-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-2xl shadow-sm">
+          <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 my-6 sm:my-8 w-full min-w-0 overflow-hidden">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-xl sm:text-2xl shadow-sm shrink-0">
                 S
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-gray-900 text-lg">StarNews Admin</h4>
-                  <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate">StarNews Admin</h4>
+                  <svg className="w-4 h-4 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
                   </svg>
                 </div>
-                <p className="text-sm text-gray-500 font-medium">News Desk</p>
+                <p className="text-xs sm:text-sm text-gray-500 font-medium">News Desk</p>
               </div>
             </div>
             
-            <div className="flex flex-col items-start md:items-end gap-3">
+            <div className="flex flex-col items-start md:items-end gap-2.5 shrink-0 w-full md:w-auto">
               <div className="flex items-center gap-2">
                 <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors"><Facebook className="w-4 h-4" /></button>
                 <button className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 transition-colors">
@@ -406,18 +427,18 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Prev/Next Articles */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="flex items-center gap-4 p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-left group">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full min-w-0">
+            <button className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-left group w-full min-w-0 overflow-hidden">
               <ArrowLeft className="w-5 h-5 text-red-500 group-hover:-translate-x-1 transition-transform shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-gray-900 mb-1">Previous Article</p>
-                <p className="text-sm font-medium text-gray-600 line-clamp-2">Nitish Kumar took oath as the Chief Minister of Bihar for the 10th time</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">Previous Article</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">Nitish Kumar took oath as the Chief Minister of Bihar for the 10th time</p>
               </div>
             </button>
-            <button className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-right group">
-              <div>
-                <p className="text-xs font-bold text-gray-900 mb-1">Next Article</p>
-                <p className="text-sm font-medium text-gray-600 line-clamp-2">No time limit for governors, no endless delays: Supreme Court</p>
+            <button className="flex items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl border border-gray-200 hover:border-red-600 hover:bg-red-50/50 transition-colors text-right group w-full min-w-0 overflow-hidden">
+              <div className="min-w-0 flex-1 text-left sm:text-right">
+                <p className="text-[11px] font-bold text-gray-500 uppercase mb-0.5">Next Article</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-800 line-clamp-2 break-words">No time limit for governors, no endless delays: Supreme Court</p>
               </div>
               <ArrowLeft className="w-5 h-5 text-red-500 rotate-180 group-hover:translate-x-1 transition-transform shrink-0" />
             </button>
@@ -425,25 +446,25 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         </article>
 
         {/* Right Sidebar */}
-        <aside className="lg:col-span-4 space-y-8">
+        <aside className="lg:col-span-4 space-y-6 sm:space-y-8 w-full min-w-0 overflow-hidden">
           {/* Related Stories */}
-          <div>
+          <div className="w-full min-w-0">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-1 h-5 bg-red-600 rounded-full"></div>
-              <h3 className="text-lg font-bold text-gray-900">
+              <div className="w-1 h-5 bg-red-600 rounded-full shrink-0"></div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                 {t('relatedStories')}
               </h3>
-              <button className="ml-auto text-xs font-bold text-blue-600 hover:underline">View All +</button>
+              <button className="ml-auto text-xs font-bold text-blue-600 hover:underline shrink-0">View All +</button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4 w-full min-w-0">
               {relatedNews.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 group cursor-pointer bg-white p-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex gap-3 sm:gap-4 group cursor-pointer bg-white p-2 rounded-xl hover:bg-gray-50 transition-colors w-full min-w-0"
                   onClick={() => handleRelatedClick(item)}
                 >
-                  <div className="relative w-24 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                  <div className="relative w-20 sm:w-24 h-16 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <Image
                       src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
                       alt={getLocalizedText(item.title, language)}
@@ -451,12 +472,12 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex-1 py-1 flex flex-col">
+                  <div className="flex-1 py-0.5 sm:py-1 flex flex-col min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold text-red-600">{getTranslatedCategory(item.category, language)}</span>
-                      <span className="text-[10px] text-gray-400">{new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[10px] font-bold text-red-600 truncate">{getTranslatedCategory(item.category, language)}</span>
+                      <span className="text-[10px] text-gray-400 shrink-0">{new Date(item.publishedAt || item.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <h4 className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 leading-snug">
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug break-words">
                       {getLocalizedText(item.title, language)}
                     </h4>
                   </div>
@@ -466,25 +487,25 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Trending Now */}
-          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-            <div className="flex items-center gap-2 mb-6">
-              <svg className="w-5 h-5 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-              <h3 className="text-lg font-bold text-gray-900">
+          <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-100 w-full min-w-0">
+            <div className="flex items-center gap-2 mb-4 sm:mb-6">
+              <svg className="w-5 h-5 text-red-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 truncate">
                 Trending Now
               </h3>
             </div>
             
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5 w-full min-w-0">
               {sidebarLatest.slice(0, 5).map((newsItem, idx) => (
                 <div
                   key={newsItem.id}
-                  className="flex gap-4 items-center group cursor-pointer"
+                  className="flex gap-3 sm:gap-4 items-center group cursor-pointer w-full min-w-0"
                   onClick={() => handleRelatedClick(newsItem)}
                 >
-                  <div className="w-8 h-8 rounded-full bg-white text-gray-400 font-bold text-sm flex items-center justify-center shrink-0 border border-gray-200">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white text-gray-400 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0 border border-gray-200">
                     {idx + 1}
                   </div>
-                  <div className="relative w-16 h-12 shrink-0 rounded-md overflow-hidden bg-gray-100">
+                  <div className="relative w-14 sm:w-16 h-10 sm:h-12 shrink-0 rounded-md overflow-hidden bg-gray-100">
                     <Image
                       src={newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg'}
                       alt=""
@@ -492,7 +513,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       className="object-cover"
                     />
                   </div>
-                  <p className="font-bold text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug">
+                  <p className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug break-words flex-1 min-w-0">
                     {getLocalizedText(newsItem.title, language)}
                   </p>
                 </div>
@@ -501,16 +522,16 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Newsletter / Stay Informed */}
-          <div className="bg-red-600 rounded-2xl p-8 relative overflow-hidden text-white shadow-xl">
-            <div className="relative z-10">
-              <h3 className="text-2xl font-black leading-tight mb-2">
+          <div className="bg-red-600 rounded-2xl p-6 sm:p-8 relative overflow-hidden text-white shadow-xl w-full min-w-0">
+            <div className="relative z-10 w-full min-w-0">
+              <h3 className="text-xl sm:text-2xl font-black leading-tight mb-2 break-words">
                 Stay Informed<br/>with StarNews
               </h3>
-              <p className="text-red-100 text-sm mb-6 leading-relaxed">
+              <p className="text-red-100 text-xs sm:text-sm mb-5 sm:mb-6 leading-relaxed">
                 Get the latest news, breaking updates and top stories delivered to you.
               </p>
               
-              <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+              <form className="flex flex-col gap-3 w-full" onSubmit={(e) => e.preventDefault()}>
                 <input 
                   type="email" 
                   placeholder="Enter your email" 
@@ -522,15 +543,13 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               </form>
             </div>
             
-            <div className="absolute top-4 right-4 opacity-20 transform rotate-45">
+            <div className="absolute top-4 right-4 opacity-20 transform rotate-45 pointer-events-none">
               <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
               </svg>
             </div>
           </div>
         </aside>
-        <style jsx>{`
-      `}</style>
       </div>
     </div>
   )

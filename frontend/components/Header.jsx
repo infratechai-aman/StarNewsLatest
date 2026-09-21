@@ -975,9 +975,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       </header>
 
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
-      <div className="lg:hidden">
+      <div className="lg:hidden w-full max-w-full overflow-hidden">
         {/* Top Red Bar: Main Navigation */}
-        <div className="bg-[#E53935] text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden">
+        <div className="bg-[#E53935] text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden w-full max-w-full">
           {/* Glossy shine overlay */}
           <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
 
@@ -1020,7 +1020,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
         </div>
 
         {/* Scrolling Category Bar */}
-        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide py-0.5 sticky top-16 z-40">
+        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide py-0.5 sticky top-16 z-40 w-full max-w-full">
           <div className="flex items-center px-4 space-x-6 whitespace-nowrap">
             <button onClick={() => setCurrentView('home')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('home')}</button>
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>
