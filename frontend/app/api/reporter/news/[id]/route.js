@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireReporterOrAdmin } from '@/lib/auth';
+import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 // Whitelist of allowed fields for reporter news updates
@@ -25,8 +25,12 @@ export async function DELETE(request, { params }) {
 
         if (!doc.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+        const docData = doc.data();
+        const isAdmin = isSuperAdmin(authResult.user);
+        const isOwner = docData.authorId === authResult.user.userId || (docData.authorEmail && docData.authorEmail === authResult.user.email);
+
         // Ensure owner or admin
-        if (doc.data().authorId !== authResult.user.userId && authResult.user.role !== 'super_admin') {
+        if (!isOwner && !isAdmin) {
             return NextResponse.json({ error: 'Forbidden: You can only delete your own articles' }, { status: 403 });
         }
 
@@ -54,8 +58,12 @@ export async function PUT(request, { params }) {
 
         if (!doc.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+        const docData = doc.data();
+        const isAdmin = isSuperAdmin(authResult.user);
+        const isOwner = docData.authorId === authResult.user.userId || (docData.authorEmail && docData.authorEmail === authResult.user.email);
+
         // Ensure owner or admin
-        if (doc.data().authorId !== authResult.user.userId && authResult.user.role !== 'super_admin') {
+        if (!isOwner && !isAdmin) {
             return NextResponse.json({ error: 'Forbidden: You can only edit your own articles' }, { status: 403 });
         }
 

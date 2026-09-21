@@ -28,13 +28,14 @@ export async function GET(request) {
     const db = getDb();
 
     try {
-        // Run all pending queries in parallel
-        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers, pendingApplications] = await Promise.all([
+        // Run all pending queries in parallel (includes ticker change requests)
+        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers, pendingApplications, pendingTickers] = await Promise.all([
             db.collection('news_articles').where('approvalStatus', '==', 'pending').get(),
             db.collection('businesses').where('approvalStatus', '==', 'pending').get(),
             db.collection('classified_ads').where('approvalStatus', '==', 'pending').get(),
             db.collection('users').where('status', '==', 'pending').get(),
-            db.collection('reporter_applications').where('status', '==', 'PENDING').get()
+            db.collection('reporter_applications').where('status', '==', 'PENDING').get(),
+            db.collection('ticker_change_requests').where('status', '==', 'pending').get().catch(() => ({ docs: [] }))
         ]);
 
         const mapDocs = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -62,7 +63,8 @@ export async function GET(request) {
             businesses: mapDocs(pendingBusinesses),
             classifieds: mapDocs(pendingClassifieds),
             ads: [],
-            users: [...mapDocs(pendingUsers), ...extraAppUsers]
+            users: [...mapDocs(pendingUsers), ...extraAppUsers],
+            tickerRequests: mapDocs(pendingTickers)
         };
 
         setCache(CACHE_KEY, result, 60 * 1000); // 60s TTL

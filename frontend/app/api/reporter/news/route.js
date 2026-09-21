@@ -86,6 +86,7 @@ export async function POST(request) {
             tags: tags || [],
             metaDescription: metaDescription || '',
             authorId: authResult.user.userId,
+            authorEmail: authResult.user.email || '',
             authorName: authorName || authResult.user.name || '',
             thumbnailUrl: thumbnailUrl || '',
             featured: featured || false,

@@ -1,23 +1,37 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
+import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
 export async function DELETE(request, { params }) {
+    const authResult = await requireReporterOrAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const { id } = params;
     const db = getDb();
-    const auth = getAuth();
-    if (!db || !auth) return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 });
+    if (!db) return NextResponse.json({ error: 'Service Unavailable' }, { status: 503 });
 
     try {
-        const authHeader = request.headers.get('authorization');
-        const token = authHeader?.split(' ')[1];
-        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        const docRef = db.collection('enewspapers').doc(id);
+        const doc = await docRef.get();
 
-        await auth.verifyIdToken(token);
-        // Simplification: reporter/admin can delete from this endpoint
+        if (!doc.exists) {
+            return NextResponse.json({ error: 'E-newspaper not found' }, { status: 404 });
+        }
 
-        await db.collection('enewspapers').doc(id).delete();
+        const data = doc.data();
+        const isAdmin = isSuperAdmin(authResult.user);
+
+        // Enforce ownership: reporters can only delete their own e-newspapers
+        if (!isAdmin && data.authorId && data.authorId !== authResult.user.userId) {
+            return NextResponse.json({ error: 'Forbidden: You can only delete your own e-newspapers' }, { status: 403 });
+        }
+
+        await docRef.delete();
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error('Reporter enewspaper DELETE error:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }

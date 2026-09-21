@@ -66,12 +66,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
   const [selectedSubmission, setSelectedSubmission] = useState(null)
   const [editingNewsItem, setEditingNewsItem] = useState(null)
 
-  // Breaking Ticker State
-  const [ticker, setTicker] = useState(null)
+  // Breaking Ticker State — per-reporter isolated
+  const [ticker, setTicker] = useState(null) // live ticker
+  const [myTickerRequests, setMyTickerRequests] = useState([]) // my change-requests history
+  const [pendingTickerRequest, setPendingTickerRequest] = useState(null) // my current pending request
   const [tickerText, setTickerText] = useState('')
   const [isEditingTicker, setIsEditingTicker] = useState(false)
   const [savingTicker, setSavingTicker] = useState(false)
   const [tickerSaved, setTickerSaved] = useState(false)
+  const [tickerSuccessMsg, setTickerSuccessMsg] = useState('')
 
   // E-Newspaper State
   const [paperFormData, setPaperFormData] = useState({
@@ -107,9 +110,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
     try {
       const res = await authenticatedFetch('/api/reporter/breaking-ticker')
       const data = await res.json()
-      if (res.ok && data.ticker) {
-        setTicker(data.ticker)
-        setTickerText(data.ticker.pendingText || data.ticker.text || '')
+      if (res.ok) {
+        setTicker(data.liveTicker || null)
+        setMyTickerRequests(data.myRequests || [])
+        setPendingTickerRequest(data.pendingRequest || null)
+        // Pre-populate textarea with pending or live text
+        if (!tickerText) {
+          const preload = data.pendingRequest?.proposedTickerText || data.liveTicker?.text || ''
+          setTickerText(preload)
+        }
       } else {
         console.error('Ticker fetch error:', res.status, data)
       }
@@ -161,6 +170,10 @@ const ReporterDashboard = ({ user, onLogout }) => {
       alert('Please enter a breaking news headline')
       return
     }
+    // Prevent duplicate pending submission
+    if (pendingTickerRequest) {
+      if (!confirm('You already have a pending submission awaiting admin approval. Submit a new one anyway? (This will create another request)')) return
+    }
     setSavingTicker(true)
     try {
       const res = await authenticatedFetch('/api/reporter/breaking-ticker', {
@@ -173,11 +186,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
         await fetchTicker()
         setIsEditingTicker(false)
         setTickerSaved(true)
-        setTimeout(() => setTickerSaved(false), 3000)
-        const msg = (user?.role === 'super_admin') 
-          ? 'Breaking ticker updated and published live!' 
-          : 'Breaking headline submitted for Admin approval!';
-        alert(msg)
+        setTickerSuccessMsg(
+          (user?.role === 'super_admin')
+            ? '✅ Breaking ticker published live!'
+            : '⏳ Your headline has been submitted for Admin approval!'
+        )
+        setTimeout(() => { setTickerSaved(false); setTickerSuccessMsg('') }, 5000)
+        setTickerText('')
       } else {
         alert('Failed to submit headline: ' + (data.error || 'Unknown error'))
       }
@@ -478,6 +493,15 @@ const ReporterDashboard = ({ user, onLogout }) => {
                 className="data-[state=active]:bg-red-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-all flex items-center gap-2 whitespace-nowrap"
               >
                 <Radio className="h-4 w-4 text-red-500" /> Breaking Ticker
+                {pendingTickerRequest && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse ml-0.5" />
+                )}
+              </TabsTrigger>
+              <TabsTrigger
+                value="my-papers"
+                className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-all flex items-center gap-2 whitespace-nowrap"
+              >
+                <FileText className="h-4 w-4" /> E-Newspapers
               </TabsTrigger>
             </TabsList>
           </div>
@@ -940,9 +964,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* BREAKING TICKER TAB */}
+          {/* BREAKING TICKER TAB — Per-reporter isolated */}
           <TabsContent value="breaking-ticker" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="space-y-6">
+
+              {/* Current Live Ticker Card */}
               <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
                 <CardHeader className="border-b border-gray-100 pb-5 bg-gradient-to-r from-red-50/60 to-white">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -952,7 +978,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
                       </div>
                       <div>
                         <span>Breaking News Ticker</span>
-                        <p className="text-xs font-normal text-gray-500 mt-0.5">Live marquee bar running at the top of the StarNews website</p>
+                        <p className="text-xs font-normal text-gray-500 mt-0.5">Submit a new headline for Admin review — it goes live after approval</p>
                       </div>
                     </CardTitle>
                     <Badge className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit shadow-sm">
@@ -963,6 +989,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
                 </CardHeader>
 
                 <CardContent className="p-6 md:p-8 space-y-6">
+
                   {/* Current Live Headline */}
                   <div className="p-4 bg-gray-50/80 border border-gray-200 rounded-2xl">
                     <div className="flex items-center justify-between mb-2">
@@ -971,32 +998,48 @@ const ReporterDashboard = ({ user, onLogout }) => {
                       </span>
                       {ticker?.updatedAt && (
                         <span className="text-xs text-gray-400">
-                          Updated {new Date(ticker.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          Last updated {new Date(ticker.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </span>
                       )}
                     </div>
                     <p className="text-base md:text-lg font-semibold text-gray-900 leading-relaxed">
-                      {ticker?.text || 'No live breaking news active at the moment.'}
+                      {ticker?.text || <span className="italic text-gray-400">No live headline active at the moment.</span>}
                     </p>
                   </div>
 
-                  {/* Pending Submission Alert (if reporter submitted) */}
-                  {ticker?.pendingText && (
+                  {/* My Pending Request Banner */}
+                  {pendingTickerRequest && (
                     <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-2xl">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5 text-amber-600" /> Your Pending Submission
                         </span>
                         <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm">
-                          Pending Admin Approval
+                          Awaiting Admin Approval
                         </Badge>
                       </div>
-                      <p className="text-sm md:text-base font-semibold text-amber-950 mb-2">
-                        {ticker.pendingText}
-                      </p>
+                      {/* Before/After visual comparison */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div className="p-3 bg-white/70 rounded-xl border border-amber-100">
+                          <p className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wide">Current (Live)</p>
+                          <p className="text-sm font-semibold text-gray-700 leading-snug">{pendingTickerRequest.previousTickerText || '—'}</p>
+                        </div>
+                        <div className="p-3 bg-amber-100/60 rounded-xl border border-amber-200">
+                          <p className="text-xs font-bold text-amber-700 mb-1 uppercase tracking-wide">Proposed (Pending)</p>
+                          <p className="text-sm font-semibold text-amber-900 leading-snug">{pendingTickerRequest.proposedTickerText}</p>
+                        </div>
+                      </div>
                       <p className="text-xs text-amber-700 font-medium">
-                        Your submission has been sent to the editorial desk. It will automatically update the live ticker once approved by an Admin.
+                        Submitted {new Date(pendingTickerRequest.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · Waiting for editorial approval to go live.
                       </p>
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {tickerSuccessMsg && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3">
+                      <Check className="h-5 w-5 text-green-600 shrink-0" />
+                      <p className="text-sm font-semibold text-green-800">{tickerSuccessMsg}</p>
                     </div>
                   )}
 
@@ -1005,7 +1048,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-bold text-gray-800">
-                          Enter New Breaking Headline *
+                          Propose New Breaking Headline *
                         </label>
                         <span className="text-xs text-gray-400 font-medium">
                           {tickerText.length} / 500 characters
@@ -1020,8 +1063,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         className="rounded-xl border-gray-200 focus:border-red-500 focus:ring-red-500 text-base resize-none"
                         required
                       />
-                      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
-                        <span>💡 <strong>Tip:</strong> Keep it concise and urgent. Separate multiple news items with bullet <code>•</code>.</span>
+                      <p className="text-xs text-gray-500 mt-2">
+                        💡 <strong>Tip:</strong> Keep it concise and urgent. Separate multiple items with <code>•</code>. Your submission goes to admin for approval before going live.
                       </p>
                     </div>
 
@@ -1032,18 +1075,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 px-6 font-semibold shadow-sm flex items-center gap-2"
                       >
                         {savingTicker ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Submitting...
-                          </>
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Submitting...</>
                         ) : tickerSaved ? (
-                          <>
-                            <Check className="h-4 w-4" /> Submitted for Approval!
-                          </>
+                          <><Check className="h-4 w-4" /> Submitted!</>
                         ) : (
-                          <>
-                            <Radio className="h-4 w-4" /> Submit Breaking Headline
-                          </>
+                          <><Radio className="h-4 w-4" /> Submit for Admin Approval</>
                         )}
                       </Button>
 
@@ -1051,19 +1087,290 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => setTickerText(ticker?.pendingText || ticker?.text || '')}
+                          onClick={() => setTickerText('')}
                           className="rounded-xl h-11 px-4 border-gray-200 text-gray-600 hover:bg-gray-50"
                         >
-                          Reset
+                          Clear
                         </Button>
                       )}
                     </div>
                   </form>
                 </CardContent>
               </Card>
+
+              {/* My Ticker Request History */}
+              {myTickerRequests.length > 0 && (
+                <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                  <CardHeader className="border-b border-gray-100 pb-4 bg-gray-50/50">
+                    <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                      <Clock className="h-5 w-5 text-gray-500" /> My Submission History
+                    </CardTitle>
+                    <CardDescription className="text-xs text-gray-400">Only your own submissions are visible here</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            <th className="text-left px-5 py-3">Proposed Headline</th>
+                            <th className="text-left px-4 py-3 hidden md:table-cell">Previous</th>
+                            <th className="text-left px-4 py-3">Status</th>
+                            <th className="text-left px-4 py-3 hidden sm:table-cell">Submitted</th>
+                            <th className="text-left px-4 py-3 hidden lg:table-cell">Review Note</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {myTickerRequests.map((req) => (
+                            <tr key={req.id} className="hover:bg-gray-50/60 transition-colors">
+                              <td className="px-5 py-4 max-w-[200px]">
+                                <p className="font-semibold text-gray-800 line-clamp-2">{req.proposedTickerText}</p>
+                              </td>
+                              <td className="px-4 py-4 max-w-[160px] hidden md:table-cell">
+                                <p className="text-gray-400 text-xs line-clamp-2">{req.previousTickerText || '—'}</p>
+                              </td>
+                              <td className="px-4 py-4">
+                                <Badge className={`text-xs font-bold px-2.5 py-0.5 rounded-full border-0 ${
+                                  req.status === 'approved' ? 'bg-green-100 text-green-700'
+                                  : req.status === 'rejected' ? 'bg-red-100 text-red-700'
+                                  : 'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {req.status === 'pending' && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse mr-1 inline-block" />}
+                                  {req.status}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-4 hidden sm:table-cell">
+                                <span className="text-xs text-gray-400">
+                                  {new Date(req.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 hidden lg:table-cell">
+                                <span className="text-xs text-gray-500 italic">
+                                  {req.reviewNote || (req.status === 'approved' ? '✅ Approved by ' + (req.reviewedBy || 'Admin') : req.status === 'rejected' ? 'No reason given' : '—')}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
             </div>
           </TabsContent>
+
+          {/* E-NEWSPAPER TAB — Per-reporter isolated */}
+          <TabsContent value="my-papers" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="space-y-6">
+              {/* Upload Form */}
+              <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="border-b border-gray-100 pb-5 bg-gray-50/50">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-800">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    Upload E-Newspaper Edition
+                  </CardTitle>
+                  <CardDescription className="text-xs text-gray-500 mt-1">Upload a PDF edition — only your own uploads will appear in your list</CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 md:p-8">
+                  <form onSubmit={handleSubmitPaper} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Edition Title *</label>
+                        <input
+                          type="text"
+                          value={paperFormData.title}
+                          onChange={(e) => setPaperFormData({ ...paperFormData, title: e.target.value })}
+                          className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
+                          placeholder="e.g. StarNews - September 21 Edition"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-gray-700">Edition Date *</label>
+                        <input
+                          type="date"
+                          value={paperFormData.editionDate}
+                          onChange={(e) => setPaperFormData({ ...paperFormData, editionDate: e.target.value })}
+                          className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700">PDF File *</label>
+                      <div
+                        className="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          className="hidden"
+                          ref={fileInputRef}
+                          onChange={handlePdfFileChange}
+                        />
+                        {pdfFile ? (
+                          <div className="flex items-center justify-center gap-3">
+                            <File className="h-8 w-8 text-blue-500" />
+                            <div className="text-left">
+                              <p className="font-semibold text-gray-800">{pdfFile.name}</p>
+                              <p className="text-xs text-gray-500">{(pdfFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="ml-4 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={(e) => { e.stopPropagation(); setPdfFile(null); setPdfPreviewUrl(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                            <p className="font-semibold text-gray-600">Click to select PDF</p>
+                            <p className="text-xs text-gray-400 mt-1">Maximum size: 25MB</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700">Thumbnail URL (Optional)</label>
+                      <input
+                        type="url"
+                        value={paperFormData.thumbnailUrl}
+                        onChange={(e) => setPaperFormData({ ...paperFormData, thumbnailUrl: e.target.value })}
+                        className="w-full h-12 px-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-shadow"
+                        placeholder="https://cover-image-url.jpg"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-gray-700">Description (Optional)</label>
+                      <textarea
+                        value={paperFormData.description}
+                        onChange={(e) => setPaperFormData({ ...paperFormData, description: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-shadow resize-none"
+                        placeholder="Brief description of this edition..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <Button
+                        type="submit"
+                        disabled={savingPaper || !pdfFile}
+                        className="bg-blue-600 hover:bg-blue-700 text-white h-11 px-6 rounded-xl font-semibold shadow-sm flex items-center gap-2"
+                      >
+                        {uploadingPdf ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Uploading PDF...</>
+                        ) : savingPaper ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                        ) : paperSaved ? (
+                          <><Check className="h-4 w-4" /> Uploaded!</>
+                        ) : (
+                          <><Upload className="h-4 w-4" /> Upload Edition</>
+                        )}
+                      </Button>
+                      {pdfFile && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-11 px-6 rounded-xl border-gray-200 text-gray-600 hover:bg-gray-50"
+                          onClick={resetPaperForm}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* My E-Newspaper List */}
+              <Card className="border-0 shadow-sm rounded-2xl overflow-hidden bg-white">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100 pb-4 bg-gray-50/50">
+                  <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                    <FileText className="h-5 w-5 text-gray-500" /> My Editions
+                    <Badge className="ml-1 bg-blue-100 text-blue-700 border-0 text-xs font-bold">{myPapers.length}</Badge>
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchMyPapers}
+                    className="bg-white border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl h-9 px-4 font-medium shadow-sm"
+                  >
+                    <Clock className="h-4 w-4 mr-2" /> Refresh
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-6 md:p-8">
+                  {myPapers.length === 0 ? (
+                    <div className="text-center py-16 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                      <div className="w-16 h-16 bg-blue-50 text-blue-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FileText className="h-8 w-8" />
+                      </div>
+                      <p className="font-medium text-gray-600 text-lg">No editions yet</p>
+                      <p className="text-sm text-gray-500 mt-1">Upload your first e-newspaper using the form above.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {myPapers.map((paper) => (
+                        <div
+                          key={paper.id}
+                          className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all"
+                        >
+                          {paper.thumbnailUrl ? (
+                            <img src={paper.thumbnailUrl} alt={paper.title} className="w-14 h-14 object-cover rounded-xl border border-gray-100 shrink-0" />
+                          ) : (
+                            <div className="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+                              <FileText className="h-6 w-6 text-blue-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-800 truncate">{paper.title}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {paper.publishDate ? new Date(paper.publishDate).toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                            </p>
+                            {paper.description && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{paper.description}</p>}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {paper.pdfUrl && (
+                              <a
+                                href={paper.pdfUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center h-9 px-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-semibold transition-colors border border-blue-100"
+                              >
+                                View PDF
+                              </a>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-9 w-9 p-0 rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeletePaper(paper.id)}
+                              title="Delete Edition"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
         </Tabs>
+
       </main>
 
       {/* SUBMISSION DETAIL MODAL */}

@@ -80,7 +80,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     businesses: [],
     ads: [],
     classifieds: [],
-    users: []
+    users: [],
+    tickerRequests: []
   })
   const [breakingNews, setBreakingNews] = useState({
     enabled: false,
@@ -119,7 +120,8 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const [loadingPromotions, setLoadingPromotions] = useState(false)
 
   // Pending Ticker State
-  const [pendingTicker, setPendingTicker] = useState(null)
+  const [pendingTicker, setPendingTicker] = useState(null) // current live ticker object
+  const [pendingTickerRequests, setPendingTickerRequests] = useState([]) // all pending requests from reporters
   const [loadingPendingTicker, setLoadingPendingTicker] = useState(false)
 
   // Form States
@@ -605,13 +607,18 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     }
   }
 
-  // Load pending ticker
+  // Load pending ticker change requests (new per-reporter isolated system)
   const loadPendingTicker = async () => {
     try {
       setLoadingPendingTicker(true)
       const res = await authenticatedFetch('/api/admin/pending-ticker')
       const data = await res.json()
-      setPendingTicker(data.ticker)
+      if (res.ok) {
+        setPendingTicker(data.liveTicker || null)         // current live ticker
+        setPendingTickerRequests(data.pendingRequests || []) // all pending change requests
+        // Update the pendingData for badge count
+        setPendingData(prev => ({ ...prev, tickerRequests: data.pendingRequests || [] }))
+      }
     } catch (error) {
       // console.error('Failed to load pending ticker:', error)
     } finally {
@@ -619,30 +626,40 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
     }
   }
 
-  // Approve pending ticker
-  const handleApproveTicker = async () => {
+  // Approve a specific ticker change request by requestId
+  const handleApproveTicker = async (requestId) => {
     try {
       const res = await authenticatedFetch('/api/admin/pending-ticker/approve', {
-        method: 'PUT'
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId })
       })
+      const data = await res.json()
       if (res.ok) {
-        toast({ title: 'Ticker Approved', description: 'The ticker is now live!' })
+        toast({ title: 'Ticker Approved ✅', description: data.message || 'The ticker is now live!' })
         loadPendingTicker()
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to approve', variant: 'destructive' })
       }
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     }
   }
 
-  // Reject pending ticker
-  const handleRejectTicker = async () => {
+  // Reject a specific ticker change request by requestId
+  const handleRejectTicker = async (requestId, reason = '') => {
     try {
       const res = await authenticatedFetch('/api/admin/pending-ticker/reject', {
-        method: 'PUT'
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, reason })
       })
+      const data = await res.json()
       if (res.ok) {
-        toast({ title: 'Ticker Rejected', description: 'The pending ticker has been rejected' })
+        toast({ title: 'Ticker Rejected', description: 'The pending ticker has been rejected. Live ticker unchanged.' })
         loadPendingTicker()
+      } else {
+        toast({ title: 'Error', description: data.error || 'Failed to reject', variant: 'destructive' })
       }
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
@@ -672,7 +689,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   // Load data on tab change
   useEffect(() => {
     if (activeTab === 'overview') loadPendingTicker()
-    if (activeTab === 'pending-approvals') loadPendingData(true)
+    if (activeTab === 'pending-approvals') {
+      loadPendingData(true)
+      loadPendingTicker()
+    }
     if (activeTab === 'breaking') loadBreakingNews()
     if (activeTab === 'businesses') loadAllBusinesses()
     if (activeTab === 'classifieds') loadAllClassifieds()
@@ -1233,7 +1253,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   // Calculate stats
   const totalPending = pendingData.news.length + pendingData.businesses.length +
     pendingData.ads.length + pendingData.classifieds.length +
-    pendingData.users.length
+    pendingData.users.length + (pendingData.tickerRequests?.length || 0)
 
   const moreTabIds = ['pending-approvals', 'businesses', 'classifieds', 'content', 'breaking', 'reporters', 'enewspaper', 'live-tv', 'navigation', 'settings']
   const isMoreActive = showMoreMenu || moreTabIds.includes(activeTab)
@@ -1689,65 +1709,92 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             </div>
           </div>
 
-          {/* Pending Breaking Ticker Approval */}
-          {pendingTicker?.pendingText && pendingTicker?.pendingStatus === 'pending' && (
-            <Card className="border-2 border-red-300 bg-red-50">
+          {/* Pending Breaking Ticker Approval Queue (per-reporter isolated, multi-request) */}
+          {pendingTickerRequests.length > 0 && (
+            <Card className="border-2 border-amber-300 bg-amber-50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-700">
+                <CardTitle className="flex items-center gap-2 text-amber-800">
                   <AlertCircle className="h-5 w-5 animate-pulse" />
-                  Pending Breaking Ticker
-                  <Badge className="bg-yellow-500 text-white ml-2">Awaiting Approval</Badge>
+                  Pending Ticker Change Requests
+                  <Badge className="bg-amber-500 text-white ml-2">{pendingTickerRequests.length} Pending</Badge>
                 </CardTitle>
-                <CardDescription>A reporter has submitted a new breaking ticker for your approval</CardDescription>
+                <CardDescription>Reporters have submitted new breaking ticker proposals — review and approve or reject each one</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {/* Current Live Ticker */}
                   {pendingTicker?.text && (
                     <div>
-                      <p className="text-sm font-medium text-gray-500 mb-2">CURRENT LIVE TICKER:</p>
-                      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-3 rounded-lg text-sm">
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">CURRENT LIVE TICKER:</p>
+                      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white p-3 rounded-lg text-sm font-medium">
                         {pendingTicker.text}
                       </div>
                     </div>
                   )}
 
-                  {/* Pending Ticker */}
-                  <div>
-                    <p className="text-sm font-medium text-yellow-700 mb-2">PENDING FOR APPROVAL:</p>
-                    <div className="bg-yellow-100 border-2 border-yellow-400 text-yellow-800 p-4 rounded-lg">
-                      <p className="text-base font-medium">{pendingTicker.pendingText}</p>
-                      <p className="text-xs text-yellow-600 mt-2">
-                        Submitted by: {pendingTicker.pendingBy} on {new Date(pendingTicker.pendingAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                  {/* Each pending request */}
+                  {pendingTickerRequests.map((req) => (
+                    <div key={req.id} className="p-4 bg-white rounded-2xl border border-amber-200 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold text-xs shrink-0">
+                              {(req.reporterName || req.reporterEmail || 'R').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">{req.reporterName || req.reporterEmail || 'Reporter'}</p>
+                              <p className="text-xs text-gray-400">{new Date(req.createdAt).toLocaleString()}</p>
+                            </div>
+                          </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={handleApproveTicker}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Approve & Go Live
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleRejectTicker}
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Reject
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={loadPendingTicker}
-                      disabled={loadingPendingTicker}
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-2 ${loadingPendingTicker ? 'animate-spin' : ''}`} />
-                      Refresh
-                    </Button>
-                  </div>
+                          {/* Before / After */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">Current (Live)</p>
+                              <p className="text-sm text-gray-600 leading-snug">{req.previousTickerText || '—'}</p>
+                            </div>
+                            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                              <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mb-1">Proposed</p>
+                              <p className="text-sm font-semibold text-amber-900 leading-snug">{req.proposedTickerText}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex sm:flex-col gap-2 shrink-0">
+                          <Button
+                            onClick={() => handleApproveTicker(req.id)}
+                            className="bg-green-600 hover:bg-green-700 h-10 px-4 rounded-xl flex-1 sm:flex-none"
+                            size="sm"
+                          >
+                            <Check className="h-4 w-4 mr-1.5" /> Approve
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={() => {
+                              const reason = prompt('Reason for rejection (optional):', '')
+                              if (reason !== null) handleRejectTicker(req.id, reason)
+                            }}
+                            className="h-10 px-4 rounded-xl flex-1 sm:flex-none"
+                            size="sm"
+                          >
+                            <X className="h-4 w-4 mr-1.5" /> Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    variant="outline"
+                    onClick={loadPendingTicker}
+                    disabled={loadingPendingTicker}
+                    size="sm"
+                    className="rounded-xl"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loadingPendingTicker ? 'animate-spin' : ''}`} />
+                    Refresh Requests
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -1858,6 +1905,24 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                     pendingSubTab === 'reporters' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
                   }`}>
                     {pendingData.users.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setPendingSubTab('ticker'); loadPendingTicker(); }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    pendingSubTab === 'ticker'
+                      ? 'bg-rose-600 text-white shadow-md shadow-rose-500/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Ticker Requests</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    pendingSubTab === 'ticker' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-800'
+                  }`}>
+                    {(pendingData.tickerRequests?.length || pendingTickerRequests.length || 0)}
                   </span>
                 </button>
               </div>
@@ -2170,6 +2235,89 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                 className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-10 px-4 font-semibold"
                               >
                                 <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SUBTAB 5: PENDING TICKER REQUESTS */}
+              {pendingSubTab === 'ticker' && (
+                <div>
+                  {(pendingTickerRequests.length === 0 && (!pendingData.tickerRequests || pendingData.tickerRequests.length === 0)) ? (
+                    <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 p-8 shadow-sm">
+                      <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="h-8 w-8" />
+                      </div>
+                      <h4 className="font-bold text-gray-800 text-lg">No Pending Ticker Requests</h4>
+                      <p className="text-sm text-gray-500 mt-1 max-w-md mx-auto">
+                        All reporter requests to update the breaking news ticker have been reviewed. When reporters propose ticker updates, they appear here for your review and approval.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(pendingTickerRequests.length > 0 ? pendingTickerRequests : (pendingData.tickerRequests || [])).map((req) => (
+                        <Card key={req.id} className="border-0 shadow-sm bg-white overflow-hidden ring-1 ring-gray-100 hover:ring-rose-200 transition-all rounded-2xl">
+                          <div className="p-5">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-gray-100">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center text-xs font-bold">
+                                  {req.reporterName ? req.reporterName.charAt(0).toUpperCase() : 'R'}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                                    <span>{req.reporterName || 'Reporter'}</span>
+                                    {req.reporterEmail && <span className="text-xs text-gray-500 font-normal">({req.reporterEmail})</span>}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Submitted: {req.createdAt ? new Date(req.createdAt).toLocaleString() : 'Just now'}
+                                  </div>
+                                </div>
+                              </div>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300 w-fit">
+                                Pending Admin Approval
+                              </Badge>
+                            </div>
+
+                            {/* Before and After display */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-3">
+                              <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-gray-400"></span> Previous Live Ticker
+                                </div>
+                                <p className="text-sm text-gray-700 font-medium italic">
+                                  "{req.previousTickerText || '(No headline set)'}"
+                                </p>
+                              </div>
+
+                              <div className="p-3.5 bg-rose-50 rounded-xl border border-rose-200">
+                                <div className="text-xs font-bold text-rose-700 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> Proposed New Ticker
+                                </div>
+                                <p className="text-sm text-gray-900 font-bold">
+                                  "{req.proposedTickerText}"
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center justify-end gap-3 pt-3 mt-3 border-t border-gray-100">
+                              <Button
+                                variant="outline"
+                                onClick={() => handleRejectTicker(req.id)}
+                                className="text-red-600 hover:bg-red-50 border-red-200 rounded-xl h-9 px-4 font-semibold text-sm"
+                              >
+                                <X className="h-4 w-4 mr-1.5" /> Reject
+                              </Button>
+                              <Button
+                                onClick={() => handleApproveTicker(req.id)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-9 px-5 font-semibold text-sm"
+                              >
+                                <Check className="h-4 w-4 mr-1.5" /> Approve & Go Live
                               </Button>
                             </div>
                           </div>
