@@ -416,10 +416,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
   const technologyNews = newsData?.technologyNews || []
   const oldNews = newsData?.oldNews || []
 
-  // Derived collections for specific sections
-  const latestNews = oldNews.slice(0, 10)
+  // Derived collections for specific sections - dynamic latest news
+  const latestNews = newsData?.latestNews || newsData?.mainNewsBoxes?.slice(0, 8) || oldNews.slice(0, 8)
 
   const setMainNewsBoxes = (data) => setNewsData && setNewsData(prev => ({ ...prev, mainNewsBoxes: data }))
+  const setLatestNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, latestNews: data }))
   const setTrendingNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, trendingNews: data }))
   const setBusinessNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, businessNews: data }))
   const setNationNews = (data) => setNewsData && setNewsData(prev => ({ ...prev, nationNews: data }))
@@ -585,11 +586,16 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       ])
       const oldNewsFiltered = remaining.filter(a => !usedIds.has(a.id))
 
+      // Dynamic Latest News: most recent articles (excluding the lead hero)
+      const heroId = topNews[0]?.id
+      const latestNewsFiltered = articles.filter(a => a.id !== heroId).slice(0, 10)
+
       // Batch update the parent state
       if (setNewsData) {
         setNewsData(prev => ({
           ...prev,
           mainNewsBoxes: topNews,
+          latestNews: latestNewsFiltered,
           trendingNews: politicsNews,
           businessNews: businessNewsFiltered,
           nationNews: nationNewsFiltered,
@@ -605,6 +611,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       } else {
         // Fallback for local state only (should not happen with new page.js)
         setMainNewsBoxes(topNews)
+        setLatestNews(latestNewsFiltered)
         setTrendingNews(politicsNews)
         setBusinessNews(businessNewsFiltered)
         setNationNews(nationNewsFiltered)
@@ -1041,8 +1048,26 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <div className="mt-auto flex items-center gap-1.5 text-[10px] font-semibold text-gray-400" suppressHydrationWarning>
                     <Clock className="w-3 h-3 text-gray-300" />
                     {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                    <span className="text-gray-300 mx-0.5">•</span>
-                    <span>{idx + 1} {t('hoursAgo') || 'h ago'}</span>
+                    {(() => {
+                      const dateStr = item.publishedAt || item.createdAt;
+                      if (!dateStr) return null;
+                      const diffMs = Date.now() - new Date(dateStr).getTime();
+                      if (isNaN(diffMs) || diffMs < 0) return null;
+                      const diffMins = Math.floor(diffMs / (1000 * 60));
+                      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                      let rel = '';
+                      if (diffMins < 60) rel = `${Math.max(1, diffMins)}m ago`;
+                      else if (diffHours < 24) rel = `${diffHours}h ago`;
+                      else if (diffDays < 7) rel = `${diffDays}d ago`;
+                      if (!rel) return null;
+                      return (
+                        <>
+                          <span className="text-gray-300 mx-0.5">•</span>
+                          <span>{rel}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}

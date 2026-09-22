@@ -98,8 +98,13 @@ async function fetchInitialNews() {
 
     const oldNews = remaining.filter(a => !usedIds.has(a.id))
 
+    // Dynamic Latest News: Most recent articles (newest first, excluding hero)
+    const heroId = topNews[0]?.id
+    const latestNews = articles.filter(a => a.id !== heroId).slice(0, 10)
+
     return {
       mainNewsBoxes: topNews,
+      latestNews: latestNews,
       trendingNews: politicsNews,
       businessNews: businessNews,
       nationNews: nationNews,

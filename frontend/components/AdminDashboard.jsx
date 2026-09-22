@@ -1364,7 +1364,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           <img src="/starnews-logo.png" alt="StarNews India" className="h-9 w-auto object-contain pointer-events-none drop-shadow-md" />
         </div>
         
-        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 hide-scrollbar">
           <div className="px-3 mb-3 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dashboard</div>
           
           <button onClick={() => setActiveTab('overview')} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === 'overview' ? 'bg-red-600 text-white shadow-md shadow-red-900/20' : 'hover:bg-gray-800 hover:text-white'}`}>
