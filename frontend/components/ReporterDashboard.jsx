@@ -10,8 +10,10 @@ import {
   Radio, Newspaper, LogOut, Edit, Trash2, Clock, X, MessageSquare, 
   AlertTriangle, Check, FileText, Upload, File, Search, Bell, 
   ChevronDown, ChevronRight, Lock, ArrowRight, Zap, BarChart2, 
-  HelpCircle, ExternalLink, User, ShieldCheck, Eye, Sparkles, Send
+  HelpCircle, ExternalLink, User, ShieldCheck, Eye, Sparkles, Send,
+  RefreshCw
 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { getFreshToken, authenticatedFetch } from '@/lib/api'
 
@@ -59,6 +61,7 @@ const compressImage = (file, maxSizeKB = 500, maxWidth = 900) => {
 }
 
 const ReporterDashboard = ({ user, onLogout }) => {
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState('submit-news')
   const [myNews, setMyNews] = useState([])
   const [myPapers, setMyPapers] = useState([])
@@ -68,6 +71,12 @@ const ReporterDashboard = ({ user, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+
+  // Refreshing states for individual buttons
+  const [refreshingNews, setRefreshingNews] = useState(false)
+  const [refreshingTicker, setRefreshingTicker] = useState(false)
+  const [refreshingPapers, setRefreshingPapers] = useState(false)
+  const [refreshingAll, setRefreshingAll] = useState(false)
 
   // Breaking Ticker State — per-reporter isolated
   const [ticker, setTicker] = useState(null)
@@ -112,9 +121,10 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
   const reporterIdDisplay = user?.id ? `REP-${String(user.id).slice(0, 4).toUpperCase()}` : 'REP-1023'
 
-  const fetchTicker = async () => {
+  const fetchTicker = async (isManual = false) => {
+    if (isManual) setRefreshingTicker(true)
     try {
-      const res = await authenticatedFetch('/api/reporter/breaking-ticker')
+      const res = await authenticatedFetch(`/api/reporter/breaking-ticker?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setTicker(data.liveTicker || null)
@@ -124,39 +134,77 @@ const ReporterDashboard = ({ user, onLogout }) => {
           const preload = data.pendingRequest?.proposedTickerText || data.liveTicker?.text || ''
           setTickerText(preload)
         }
+        if (isManual) {
+          toast({ title: 'Ticker Refreshed', description: 'Latest live ticker and request status loaded.' })
+        }
       } else {
         console.error('Ticker fetch error:', res.status, data)
       }
     } catch (err) {
       console.error('Failed to fetch ticker:', err)
+      if (isManual) {
+        toast({ title: 'Error', description: 'Failed to refresh ticker.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setRefreshingTicker(false)
     }
   }
 
-  const fetchMyNews = async () => {
+  const fetchMyNews = async (isManual = false) => {
+    if (isManual) setRefreshingNews(true)
     try {
-      const res = await authenticatedFetch('/api/reporter/news')
+      const res = await authenticatedFetch(`/api/reporter/news?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setMyNews(data.articles || [])
+        if (isManual) {
+          toast({ title: 'Submissions Refreshed', description: 'Your submitted articles list is up to date.' })
+        }
       } else {
         console.error('News fetch error:', res.status, data)
       }
     } catch (err) {
       console.error('Failed to fetch news:', err)
+      if (isManual) {
+        toast({ title: 'Error', description: 'Failed to refresh articles.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setRefreshingNews(false)
     }
   }
 
-  const fetchMyPapers = async () => {
+  const fetchMyPapers = async (isManual = false) => {
+    if (isManual) setRefreshingPapers(true)
     try {
-      const res = await authenticatedFetch('/api/reporter/enewspaper')
+      const res = await authenticatedFetch(`/api/reporter/enewspaper?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setMyPapers(data.papers || [])
+        if (isManual) {
+          toast({ title: 'E-Newspapers Refreshed', description: 'Your published editions are up to date.' })
+        }
       } else {
         console.error('E-newspaper fetch error:', res.status, data)
       }
     } catch (err) {
       console.error('Failed to fetch e-newspapers:', err)
+      if (isManual) {
+        toast({ title: 'Error', description: 'Failed to refresh e-newspapers.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setRefreshingPapers(false)
+    }
+  }
+
+  const handleRefreshAll = async () => {
+    setRefreshingAll(true)
+    try {
+      await Promise.all([fetchTicker(false), fetchMyNews(false), fetchMyPapers(false)])
+      toast({ title: 'Data Synced', description: 'All submissions, ticker, and editions refreshed.' })
+    } catch (err) {
+      toast({ title: 'Sync Warning', description: 'Some data may not have refreshed fully.' })
+    } finally {
+      setRefreshingAll(false)
     }
   }
 
@@ -723,29 +771,42 @@ const ReporterDashboard = ({ user, onLogout }) => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
           
           {/* Top Breadcrumb & Heading */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
-              <span className="w-4 h-1 bg-red-600 rounded-full inline-block" />
-              <span>REPORTER PORTAL</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">
+                <span className="w-4 h-1 bg-red-600 rounded-full inline-block" />
+                <span>REPORTER PORTAL</span>
+              </div>
+              
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                {activeTab === 'submit-news' && (editingNewsItem ? 'Edit News Article' : 'Submit News Article')}
+                {activeTab === 'my-news' && 'My News Submissions'}
+                {activeTab === 'breaking-ticker' && 'Breaking News Ticker'}
+                {activeTab === 'my-papers' && 'E-Newspapers Edition Manager'}
+                {activeTab === 'my-profile' && 'Reporter Profile'}
+                {activeTab === 'help-support' && 'Editorial Guidelines & Support'}
+              </h2>
+              
+              <p className="text-sm text-gray-500 mt-1">
+                {activeTab === 'submit-news' && "Share what's happening in your city, community or region."}
+                {activeTab === 'my-news' && "Track the review and publication status of your submitted stories."}
+                {activeTab === 'breaking-ticker' && "Propose instant breaking news headlines for editorial broadcast."}
+                {activeTab === 'my-papers' && "Publish electronic editions and digital PDFs for your readers."}
+                {activeTab === 'my-profile' && "Manage your account, credentials, and contact details."}
+                {activeTab === 'help-support' && "Quick tips, editorial best practices, and support channels."}
+              </p>
             </div>
-            
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              {activeTab === 'submit-news' && (editingNewsItem ? 'Edit News Article' : 'Submit News Article')}
-              {activeTab === 'my-news' && 'My News Submissions'}
-              {activeTab === 'breaking-ticker' && 'Breaking News Ticker'}
-              {activeTab === 'my-papers' && 'E-Newspapers Edition Manager'}
-              {activeTab === 'my-profile' && 'Reporter Profile'}
-              {activeTab === 'help-support' && 'Editorial Guidelines & Support'}
-            </h2>
-            
-            <p className="text-sm text-gray-500 mt-1">
-              {activeTab === 'submit-news' && "Share what's happening in your city, community or region."}
-              {activeTab === 'my-news' && "Track the review and publication status of your submitted stories."}
-              {activeTab === 'breaking-ticker' && "Propose instant breaking news headlines for editorial broadcast."}
-              {activeTab === 'my-papers' && "Publish electronic editions and digital PDFs for your readers."}
-              {activeTab === 'my-profile' && "Manage your account, credentials, and contact details."}
-              {activeTab === 'help-support' && "Quick tips, editorial best practices, and support channels."}
-            </p>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshAll}
+              disabled={refreshingAll}
+              className="rounded-xl border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 h-9 px-3.5 self-start sm:self-auto cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-2 ${refreshingAll ? 'animate-spin text-red-600' : ''}`} />
+              {refreshingAll ? 'Syncing...' : 'Sync All Data'}
+            </Button>
           </div>
 
           {/* ─── TAB CONTENT: SUBMIT NEWS ARTICLE (Exact Image 3 Layout) ─── */}
@@ -1118,10 +1179,12 @@ const ReporterDashboard = ({ user, onLogout }) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={fetchMyNews}
+                      onClick={() => fetchMyNews(true)}
+                      disabled={refreshingNews}
                       className="rounded-xl border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 h-9 cursor-pointer"
                     >
-                      <Clock className="w-3.5 h-3.5 mr-1.5" /> Refresh
+                      <Clock className={`w-3.5 h-3.5 mr-1.5 ${refreshingNews ? 'animate-spin text-red-600' : ''}`} />
+                      {refreshingNews ? 'Refreshing...' : 'Refresh'}
                     </Button>
                     <Button
                       size="sm"
@@ -1252,9 +1315,21 @@ const ReporterDashboard = ({ user, onLogout }) => {
                       <p className="text-xs text-gray-500">Active broadcast ticker on StarNews India homepage</p>
                     </div>
                   </div>
-                  <Badge className="bg-red-600 text-white border-none text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
-                    LIVE
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchTicker(true)}
+                      disabled={refreshingTicker}
+                      className="rounded-xl border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 h-8 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshingTicker ? 'animate-spin text-red-600' : ''}`} />
+                      {refreshingTicker ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                    <Badge className="bg-red-600 text-white border-none text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md">
+                      LIVE
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-gray-50/80 rounded-xl border border-gray-200/80">
@@ -1477,7 +1552,19 @@ const ReporterDashboard = ({ user, onLogout }) => {
               {/* Published Editions List */}
               {myPapers.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-200/80 shadow-xs p-6">
-                  <h3 className="text-base font-bold text-gray-900 mb-4">Your Published Editions ({myPapers.length})</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-bold text-gray-900">Your Published Editions ({myPapers.length})</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchMyPapers(true)}
+                      disabled={refreshingPapers}
+                      className="rounded-xl border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 h-8 cursor-pointer"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshingPapers ? 'animate-spin text-red-600' : ''}`} />
+                      {refreshingPapers ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {myPapers.map(paper => (
                       <div key={paper.id} className="p-4 rounded-xl border border-gray-100 bg-gray-50/50 flex flex-col justify-between gap-3">

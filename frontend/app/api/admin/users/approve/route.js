@@ -84,6 +84,8 @@ export async function POST(request) {
         }
 
         purgeCache('admin_pending');
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ success: true, userId, status: newStatus, role: finalRole });
     } catch (error) {

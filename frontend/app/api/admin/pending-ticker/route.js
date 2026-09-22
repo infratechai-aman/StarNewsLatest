@@ -56,6 +56,8 @@ export async function GET(request) {
             pendingRequests,
             recentRequests,
             pendingCount: pendingRequests.length
+        }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
 
     } catch (error) {

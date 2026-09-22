@@ -26,7 +26,9 @@ export async function GET(request) {
             thumbnailUrl: doc.data().thumbnailUrl
         }));
 
-        return NextResponse.json({ papers });
+        return NextResponse.json({ papers }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching admin enewspapers:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

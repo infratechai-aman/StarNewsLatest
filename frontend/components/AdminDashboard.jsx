@@ -123,6 +123,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const [pendingTicker, setPendingTicker] = useState(null) // current live ticker object
   const [pendingTickerRequests, setPendingTickerRequests] = useState([]) // all pending requests from reporters
   const [loadingPendingTicker, setLoadingPendingTicker] = useState(false)
+  const [loadingNews, setLoadingNews] = useState(false)
+  const [loadingBusinesses, setLoadingBusinesses] = useState(false)
+  const [loadingClassifieds, setLoadingClassifieds] = useState(false)
+  const [loadingEnewspapers, setLoadingEnewspapers] = useState(false)
+  const [refreshingAll, setRefreshingAll] = useState(false)
 
   // Form States
   const [showBusinessForm, setShowBusinessForm] = useState(false)
@@ -198,13 +203,22 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }, [])
 
   // Load pending items
-  const loadPendingData = async (fresh = false) => {
+  const loadPendingData = async (fresh = false, isManual = false) => {
     try {
       setRefreshing(true)
       const data = await admin.getPending(fresh)
       setPendingData(data)
+      if (fresh) {
+        loadPendingTicker(true)
+      }
+      if (isManual) {
+        toast({ title: 'Queue Refreshed', description: 'Pending approvals list has been updated.' })
+      }
     } catch (error) {
       // console.error('Failed to load pending data:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Failed', description: 'Could not load pending items.', variant: 'destructive' })
+      }
     } finally {
       setRefreshing(false)
     }
@@ -401,40 +415,76 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }
 
   // ===== NEW: Load All Data Functions =====
-  const loadAllBusinesses = async () => {
+  const loadAllBusinesses = async (fresh = false, isManual = false) => {
     try {
-      const data = await admin.getBusinesses()
+      if (isManual) setLoadingBusinesses(true)
+      const data = await admin.getBusinesses(fresh)
       setAllBusinesses(data || [])
+      if (isManual) {
+        toast({ title: 'Businesses Refreshed', description: 'Business directory is up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load businesses:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh businesses.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setLoadingBusinesses(false)
     }
   }
 
-  const loadAllClassifieds = async () => {
+  const loadAllClassifieds = async (fresh = false, isManual = false) => {
     try {
-      const data = await admin.getClassifieds()
+      if (isManual) setLoadingClassifieds(true)
+      const data = await admin.getClassifieds(fresh)
       setAllClassifieds(data || [])
+      if (isManual) {
+        toast({ title: 'Classifieds Refreshed', description: 'Classified ads are up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load classifieds:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh classified ads.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setLoadingClassifieds(false)
     }
   }
 
-  const loadAllNews = async () => {
+  const loadAllNews = async (fresh = false, isManual = false) => {
     try {
-      const data = await admin.getNews()
+      if (isManual) setLoadingNews(true)
+      const data = await admin.getNews(fresh)
       setAllNews(data || [])
+      if (isManual) {
+        toast({ title: 'News Refreshed', description: 'News articles list is up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load news:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh news.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setLoadingNews(false)
     }
   }
 
-  const loadAllEnewspapers = async () => {
+  const loadAllEnewspapers = async (fresh = false, isManual = false) => {
     try {
-      const res = await authenticatedFetch('/api/admin/enewspaper')
+      if (isManual) setLoadingEnewspapers(true)
+      const res = await authenticatedFetch(`/api/admin/enewspaper?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       setAllEnewspapers(data.papers || [])
+      if (isManual) {
+        toast({ title: 'E-Newspapers Refreshed', description: 'Published editions are up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load e-newspapers:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh e-newspapers.', variant: 'destructive' })
+      }
+    } finally {
+      if (isManual) setLoadingEnewspapers(false)
     }
   }
 
@@ -448,14 +498,20 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }
 
   // Load reporter applications
-  const loadReporterApplications = async () => {
+  const loadReporterApplications = async (fresh = false, isManual = false) => {
     try {
       setLoadingReporterApps(true)
-      const res = await authenticatedFetch('/api/reporter-applications')
+      const res = await authenticatedFetch(`/api/reporter-applications?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       setReporterApplications(data.applications || [])
+      if (isManual) {
+        toast({ title: 'Applications Refreshed', description: 'Reporter applications are up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load reporter applications:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh reporter applications.', variant: 'destructive' })
+      }
     } finally {
       setLoadingReporterApps(false)
     }
@@ -508,34 +564,51 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }
 
   // Load all reporters
-  const loadAllReporters = async () => {
+  const loadAllReporters = async (fresh = false, isManual = false) => {
     try {
       setLoadingAllReporters(true)
       const token = localStorage.getItem('token')
-      const res = await fetch('/api/admin/users/reporters', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/admin/users/reporters?fresh=true&_t=${Date.now()}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
       })
       const data = await res.json()
       setAllReporters(data.reporters || [])
+      if (isManual) {
+        toast({ title: 'Reporters Refreshed', description: 'Reporters and contribution stats are up to date.' })
+      }
     } catch (error) {
       // console.error('Failed to load reporters:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh reporters.', variant: 'destructive' })
+      }
     } finally {
       setLoadingAllReporters(false)
     }
   }
 
   // Load business promotions
-  const loadBusinessPromotions = async () => {
+  const loadBusinessPromotions = async (fresh = false, isManual = false) => {
     try {
       setLoadingPromotions(true)
       const token = localStorage.getItem('token')
-      const res = await fetch('/api/business-promotions', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/business-promotions?_t=${Date.now()}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
       })
       const data = await res.json()
-      if (res.ok) setBusinessPromotions(data.promotions || [])
+      if (res.ok) {
+        const promos = Array.isArray(data) ? data : (data.promotions || [])
+        setBusinessPromotions(promos)
+        if (isManual) {
+          toast({ title: 'Promotions Refreshed', description: 'Business promotions list is up to date.' })
+        }
+      }
     } catch (error) {
       // console.error('Failed to load business promotions:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh promotions.', variant: 'destructive' })
+      }
     } finally {
       setLoadingPromotions(false)
     }
@@ -608,21 +681,49 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   }
 
   // Load pending ticker change requests (new per-reporter isolated system)
-  const loadPendingTicker = async () => {
+  const loadPendingTicker = async (fresh = false, isManual = false) => {
     try {
       setLoadingPendingTicker(true)
-      const res = await authenticatedFetch('/api/admin/pending-ticker')
+      const res = await authenticatedFetch(`/api/admin/pending-ticker?_t=${Date.now()}`, { cache: 'no-store' })
       const data = await res.json()
       if (res.ok) {
         setPendingTicker(data.liveTicker || null)         // current live ticker
         setPendingTickerRequests(data.pendingRequests || []) // all pending change requests
         // Update the pendingData for badge count
         setPendingData(prev => ({ ...prev, tickerRequests: data.pendingRequests || [] }))
+        if (isManual) {
+          toast({ title: 'Ticker Requests Refreshed', description: 'Latest pending ticker requests loaded.' })
+        }
       }
     } catch (error) {
       // console.error('Failed to load pending ticker:', error)
+      if (isManual) {
+        toast({ title: 'Refresh Error', description: 'Could not refresh ticker requests.', variant: 'destructive' })
+      }
     } finally {
       setLoadingPendingTicker(false)
+    }
+  }
+
+  const handleRefreshAll = async () => {
+    setRefreshingAll(true)
+    try {
+      await Promise.all([
+        loadPendingData(true),
+        loadPendingTicker(true),
+        loadAllReporters(true),
+        loadReporterApplications(true),
+        loadAllNews(true),
+        loadAllBusinesses(true),
+        loadAllClassifieds(true),
+        loadAllEnewspapers(true),
+        loadBusinessPromotions(true)
+      ])
+      toast({ title: 'Dashboard Synced', description: 'All pending items, ticker requests, news, reporters, and settings refreshed.' })
+    } catch (err) {
+      toast({ title: 'Sync Warning', description: 'Some data may not have refreshed.' })
+    } finally {
+      setRefreshingAll(false)
     }
   }
 
@@ -1461,6 +1562,16 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             <img src="/starnews-logo.png" alt="StarNews" className="h-8 w-auto object-contain" />
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              onClick={() => handleRefreshAll()}
+              disabled={refreshingAll}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:text-blue-600 hover:bg-blue-50/50 h-8 w-8 p-0 rounded-lg"
+              title="Refresh all dashboard data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshingAll ? 'animate-spin text-blue-600' : 'text-gray-600'}`} />
+            </Button>
             <div className="relative mr-1">
               <Bell className="w-5 h-5 text-gray-600" />
               {totalPending > 0 && <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">{totalPending}</span>}
@@ -1498,6 +1609,18 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             </div>
             
             <div className="h-6 w-px bg-gray-200"></div>
+
+            <Button
+              onClick={() => handleRefreshAll()}
+              disabled={refreshingAll}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 bg-white text-gray-700 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/50 rounded-xl h-9 px-3.5 font-medium transition-all flex items-center gap-2 shadow-sm"
+              title="Refresh and sync all dashboard data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshingAll ? 'animate-spin text-blue-600' : 'text-gray-500'}`} />
+              <span className="hidden sm:inline">{refreshingAll ? 'Syncing...' : 'Sync Data'}</span>
+            </Button>
             
             <div className="relative cursor-pointer hover:text-red-600 transition-colors">
               <Bell className="w-5 h-5 text-gray-600" />
@@ -1791,12 +1914,12 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
                   <Button
                     variant="outline"
-                    onClick={loadPendingTicker}
+                    onClick={() => loadPendingTicker(true, true)}
                     disabled={loadingPendingTicker}
                     size="sm"
-                    className="rounded-xl"
+                    className="rounded-xl cursor-pointer"
                   >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${loadingPendingTicker ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-4 w-4 mr-2 ${loadingPendingTicker ? 'animate-spin text-amber-600' : ''}`} />
                     Refresh Requests
                   </Button>
                 </div>
@@ -1829,9 +1952,9 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => loadPendingData(true)}
+                  onClick={() => loadPendingData(true, true)}
                   disabled={refreshing}
-                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-2 self-start sm:self-auto"
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center gap-2 self-start sm:self-auto cursor-pointer"
                 >
                   <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin text-amber-500' : ''}`} />
                   Refresh Queue
@@ -2659,7 +2782,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </CardTitle>
                   <CardDescription className="text-blue-600/70 mt-1">Leads from "Promote Your Business" form</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
+                <Button variant="outline" size="sm" onClick={() => loadBusinessPromotions(true, true)} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl cursor-pointer">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingPromotions ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -2740,9 +2863,21 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </CardTitle>
                 <CardDescription className="mt-1">Add, edit, enable/disable businesses</CardDescription>
               </div>
-              <Button onClick={() => { resetBusinessForm(); setShowBusinessForm(true) }} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-4">
-                <Plus className="h-4 w-4 mr-2" /> Add Business
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => loadAllBusinesses(true, true)}
+                  disabled={loadingBusinesses}
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 h-10 px-3.5"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loadingBusinesses ? 'animate-spin text-emerald-600' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={() => { resetBusinessForm(); setShowBusinessForm(true) }} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm h-10 px-4">
+                  <Plus className="h-4 w-4 mr-2" /> Add Business
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="bg-white p-6">
               {/* Business Form Dialog */}
@@ -3077,9 +3212,21 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </CardTitle>
                 <CardDescription className="mt-1">Add, edit, enable/disable classified ads</CardDescription>
               </div>
-              <Button onClick={() => { resetClassifiedForm(); setShowClassifiedForm(true) }} className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm h-10 px-4">
-                <Plus className="h-4 w-4 mr-2" /> Add Classified
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => loadAllClassifieds(true, true)}
+                  disabled={loadingClassifieds}
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 h-10 px-3.5"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loadingClassifieds ? 'animate-spin text-orange-500' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={() => { resetClassifiedForm(); setShowClassifiedForm(true) }} className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl shadow-sm h-10 px-4">
+                  <Plus className="h-4 w-4 mr-2" /> Add Classified
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="bg-white p-6">
               {/* Classified Form Dialog */}
@@ -3360,7 +3507,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </CardTitle>
                   <CardDescription className="mt-1">Review and manage reporter join requests</CardDescription>
                 </div>
-                <Button onClick={loadReporterApplications} variant="outline" size="sm" className="bg-white border-purple-200 text-purple-700 hover:bg-purple-50 rounded-xl">
+                <Button onClick={() => loadReporterApplications(true, true)} disabled={loadingReporterApps} variant="outline" size="sm" className="bg-white border-purple-200 text-purple-700 hover:bg-purple-50 rounded-xl cursor-pointer">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingReporterApps ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -3720,7 +3867,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </CardTitle>
                   <CardDescription className="mt-1">Manage all registered reporter accounts</CardDescription>
                 </div>
-                <Button onClick={loadAllReporters} variant="outline" size="sm" disabled={loadingAllReporters} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
+                <Button onClick={() => loadAllReporters(true, true)} variant="outline" size="sm" disabled={loadingAllReporters} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl cursor-pointer">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingAllReporters ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -3939,10 +4086,22 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
               {/* Uploaded Papers List */}
               <div className="pt-2">
-                <h4 className="font-bold text-gray-800 text-lg mb-4 flex items-center gap-2">
-                  <span className="w-2 h-6 bg-red-500 rounded-full inline-block"></span>
-                  Uploaded E-Newspapers
-                </h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                    <span className="w-2 h-6 bg-red-500 rounded-full inline-block"></span>
+                    Uploaded E-Newspapers
+                  </h4>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => loadAllEnewspapers(true, true)}
+                    disabled={loadingEnewspapers}
+                    className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 h-9 px-3"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loadingEnewspapers ? 'animate-spin text-red-600' : ''}`} />
+                    Refresh
+                  </Button>
+                </div>
                 {allEnewspapers.length === 0 ? (
                   <div className="text-center py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
                     <div className="w-16 h-16 bg-red-50 text-red-300 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -4049,7 +4208,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </CardTitle>
                   <CardDescription className="mt-1">Requests from 'Promote Your Business/Ad' forms</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={loadBusinessPromotions} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl">
+                <Button variant="outline" size="sm" onClick={() => loadBusinessPromotions(true, true)} disabled={loadingPromotions} className="bg-white border-blue-200 text-blue-700 hover:bg-blue-50 rounded-xl cursor-pointer">
                   <RefreshCw className={`h-4 w-4 mr-2 ${loadingPromotions ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
@@ -5012,6 +5171,16 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   </CardTitle>
                   <CardDescription className="mt-1">Review and approve news articles submitted by reporters</CardDescription>
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => loadPendingData(true, true)}
+                  disabled={loadingPending}
+                  className="rounded-xl border-yellow-200 text-yellow-800 bg-white/80 hover:bg-yellow-50 h-9 px-3"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loadingPending ? 'animate-spin text-yellow-600' : ''}`} />
+                  Refresh
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -5148,9 +5317,21 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                 </CardTitle>
                 <CardDescription className="mt-1">Add, edit, enable/disable, and feature news for the home page</CardDescription>
               </div>
-              <Button onClick={() => { resetNewsForm(); setShowNewsForm(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-11 px-5">
-                <Plus className="h-4 w-4 mr-2" /> Add News Article
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => loadAllNews(true, true)}
+                  disabled={loadingNews}
+                  className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 h-11 px-3.5"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${loadingNews ? 'animate-spin text-blue-600' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={() => { resetNewsForm(); setShowNewsForm(true) }} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm h-11 px-5">
+                  <Plus className="h-4 w-4 mr-2" /> Add News Article
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-6 bg-gray-50/30">
 

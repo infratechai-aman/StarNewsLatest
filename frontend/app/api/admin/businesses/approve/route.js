@@ -38,6 +38,8 @@ export async function POST(request) {
         // Purge pending and public businesses caches
         purgeCache('admin_pending');
         purgeCache('businesses');
+        purgeCache('admin_businesses_list');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ success: true, status });
     } catch (error) {

@@ -54,13 +54,21 @@ function setClientCache(key, data) {
   CLIENT_CACHE.set(key, { data, ts: Date.now() })
 }
 
-// Invalidate cache entries matching a pattern (called after mutations)
-function invalidateClientCache(pattern) {
+// Invalidate cache entries matching a pattern (called after mutations or manual refresh)
+export function invalidateClientCache(pattern) {
+  if (!pattern) {
+    CLIENT_CACHE.clear();
+    return;
+  }
   for (const key of CLIENT_CACHE.keys()) {
     if (key.includes(pattern)) {
-      CLIENT_CACHE.delete(key)
+      CLIENT_CACHE.delete(key);
     }
   }
+}
+
+export function clearClientCache(pattern = null) {
+  invalidateClientCache(pattern);
 }
 
 /**
@@ -98,11 +106,13 @@ export async function getFreshToken(forceRefresh = false) {
 export async function authenticatedFetch(url, options = {}) {
   let token = await getFreshToken(false);
   const headers = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
     ...options.headers,
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
   };
 
-  let response = await fetch(url, { ...options, headers });
+  let response = await fetch(url, { cache: options.cache || 'no-store', ...options, headers });
 
   // If 401 Unauthorized, automatically force-refresh token and retry once
   if (response.status === 401 && firebaseAuth?.currentUser) {
@@ -110,10 +120,12 @@ export async function authenticatedFetch(url, options = {}) {
       const refreshedToken = await getFreshToken(true);
       if (refreshedToken && refreshedToken !== token) {
         const retryHeaders = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
           ...options.headers,
           'Authorization': `Bearer ${refreshedToken}`
         };
-        response = await fetch(url, { ...options, headers: retryHeaders });
+        response = await fetch(url, { cache: options.cache || 'no-store', ...options, headers: retryHeaders });
       }
     } catch (refreshErr) {
       console.warn('authenticatedFetch auto-retry failed:', refreshErr);
@@ -127,15 +139,27 @@ export async function apiRequest(endpoint, options = {}) {
   let token = await getFreshToken(false);
 
   const method = (options.method || 'GET').toUpperCase();
+  const isForceRefresh = Boolean(
+    options.forceRefresh ||
+    endpoint.includes('fresh=true') ||
+    endpoint.includes('_t=')
+  );
 
-  // Client-side cache: only for GET requests
+  // If force refresh is requested, purge any cached entries for this endpoint
+  if (isForceRefresh) {
+    const cleanEndpoint = endpoint.split('?')[0];
+    invalidateClientCache(cleanEndpoint);
+    CLIENT_CACHE.delete(endpoint);
+  }
+
+  // Client-side cache: only for GET requests when NOT forcing a fresh fetch
   // Stale-While-Revalidate: return stale data immediately, revalidate in background
-  if (method === 'GET' && !options._revalidate) {
+  if (method === 'GET' && !options._revalidate && !isForceRefresh) {
     const cached = getClientCache(endpoint);
     if (cached) {
       if (isStale(endpoint)) {
         // Return stale immediately; revalidate silently in background (no SWR loop)
-        setTimeout(() => apiRequest(endpoint, { ...options, _revalidate: true }), 0)
+        setTimeout(() => apiRequest(endpoint, { ...options, _revalidate: true }), 0);
       }
       return cached;
     }
@@ -143,14 +167,21 @@ export async function apiRequest(endpoint, options = {}) {
 
   const buildHeaders = (authToken) => ({
     'Content-Type': 'application/json',
+    ...(isForceRefresh && {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+    }),
     ...((authToken && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) && { Authorization: `Bearer ${authToken}` }),
     ...options.headers
   });
 
-  let response = await fetchWithRetry(`${API_BASE}${endpoint}`, {
+  const fetchOpts = {
     ...options,
-    headers: buildHeaders(token)
-  });
+    headers: buildHeaders(token),
+    ...(isForceRefresh && { cache: 'no-store' })
+  };
+
+  let response = await fetchWithRetry(`${API_BASE}${endpoint}`, fetchOpts);
 
   // Auto-retry once on 401 with force-refreshed token
   if (response.status === 401 && firebaseAuth?.currentUser) {
@@ -159,7 +190,7 @@ export async function apiRequest(endpoint, options = {}) {
       if (refreshedToken && refreshedToken !== token) {
         token = refreshedToken;
         response = await fetch(`${API_BASE}${endpoint}`, {
-          ...options,
+          ...fetchOpts,
           headers: buildHeaders(refreshedToken)
         });
       }
@@ -194,6 +225,10 @@ export async function apiRequest(endpoint, options = {}) {
   // Cache GET responses
   if (method === 'GET') {
     setClientCache(endpoint, data);
+    const cleanEndpoint = endpoint.split('?')[0];
+    if (cleanEndpoint !== endpoint) {
+      setClientCache(cleanEndpoint, data);
+    }
   }
 
   // Invalidate related cache on mutations
@@ -211,6 +246,8 @@ export async function apiRequest(endpoint, options = {}) {
     invalidateClientCache('/classifieds');
     invalidateClientCache('/shorts');
     invalidateClientCache('/admin/shorts');
+    invalidateClientCache('/admin/stats');
+    invalidateClientCache('/admin/users');
   }
 
   return data;
@@ -303,8 +340,8 @@ export const enewspaper = {
 }
 
 export const admin = {
-  getStats: () => apiRequest('/admin/stats'),
-  getPending: (fresh = false) => apiRequest(`/admin/pending${fresh ? '?fresh=true' : ''}`),
+  getStats: (fresh = false) => apiRequest(`/admin/stats${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
+  getPending: (fresh = false) => apiRequest(`/admin/pending${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   approveNews: (articleId, action, reason) => apiRequest('/admin/news/approve', { method: 'POST', body: JSON.stringify({ articleId, action, reason }) }),
   approveBusiness: (businessId, action) => apiRequest('/admin/businesses/approve', { method: 'POST', body: JSON.stringify({ businessId, action }) }),
   approveAd: (adId, action) => apiRequest('/admin/ads/approve', { method: 'POST', body: JSON.stringify({ adId, action }) }),
@@ -320,27 +357,27 @@ export const admin = {
   updateNavigation: (data) => apiRequest('/admin/navigation', { method: 'PUT', body: JSON.stringify(data) }),
 
   // E-Newspaper Management
-  getEnewspapers: () => apiRequest('/admin/enewspaper'),
+  getEnewspapers: (fresh = false) => apiRequest(`/admin/enewspaper${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   uploadEnewspaper: (data) => apiRequest('/admin/enewspaper', { method: 'POST', body: JSON.stringify(data) }),
   deleteEnewspaper: (id) => apiRequest(`/admin/enewspaper/${id}`, { method: 'DELETE' }),
   toggleEnewspaper: (id) => apiRequest(`/admin/enewspaper/${id}/toggle`, { method: 'POST' }),
 
   // Business Management (Full CRUD)
-  getBusinesses: () => apiRequest('/admin/businesses'),
+  getBusinesses: (fresh = false) => apiRequest(`/admin/businesses${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   createBusiness: (data) => apiRequest('/admin/businesses', { method: 'POST', body: JSON.stringify(data) }),
   updateBusiness: (id, data) => apiRequest(`/admin/businesses/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteBusiness: (id) => apiRequest(`/admin/businesses/${id}`, { method: 'DELETE' }),
   toggleBusiness: (id) => apiRequest(`/admin/businesses/${id}/toggle`, { method: 'POST' }),
 
   // Classified Management (Full CRUD)
-  getClassifieds: () => apiRequest('/admin/classifieds'),
+  getClassifieds: (fresh = false) => apiRequest(`/admin/classifieds${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   createClassified: (data) => apiRequest('/admin/classifieds', { method: 'POST', body: JSON.stringify(data) }),
   updateClassified: (id, data) => apiRequest(`/admin/classifieds/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteClassified: (id) => apiRequest(`/admin/classifieds/${id}`, { method: 'DELETE' }),
   toggleClassified: (id) => apiRequest(`/admin/classifieds/${id}/toggle`, { method: 'POST' }),
 
   // News Management (Full CRUD)
-  getNews: () => apiRequest('/admin/news'),
+  getNews: (fresh = false) => apiRequest(`/admin/news${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   createNews: (data) => apiRequest('/admin/news', { method: 'POST', body: JSON.stringify(data) }),
   updateNews: (id, data) => apiRequest(`/admin/news/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteNews: (id) => apiRequest(`/admin/news/${id}`, { method: 'DELETE' }),
@@ -352,11 +389,11 @@ export const admin = {
   updateHomeSettings: (data) => apiRequest('/admin/home-settings', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Sidebar Ad with WhatsApp
-  getSidebarAd: () => apiRequest('/ads/sidebar'),
+  getSidebarAd: (fresh = false) => apiRequest(`/ads/sidebar${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   updateSidebarAd: (data) => apiRequest('/ads/sidebar', { method: 'POST', body: JSON.stringify(data) }),
 
   // Live TV Management
-  getLiveTV: () => apiRequest('/admin/live-tv'),
+  getLiveTV: (fresh = false) => apiRequest(`/admin/live-tv${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   updateLiveTV: (data) => apiRequest('/admin/live-tv', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Layout (legacy)
@@ -364,7 +401,7 @@ export const admin = {
   updateLayout: (data) => apiRequest('/admin/layout', { method: 'PUT', body: JSON.stringify(data) }),
 
   // Shorts / Reels Management
-  getShorts: () => apiRequest('/admin/shorts'),
+  getShorts: (fresh = false) => apiRequest(`/admin/shorts${fresh ? '?fresh=true' : ''}`, { forceRefresh: fresh }),
   createShort: (data) => apiRequest('/admin/shorts', { method: 'POST', body: JSON.stringify(data) }),
   updateShort: (id, data) => apiRequest(`/admin/shorts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteShort: (id) => apiRequest(`/admin/shorts/${id}`, { method: 'DELETE' }),

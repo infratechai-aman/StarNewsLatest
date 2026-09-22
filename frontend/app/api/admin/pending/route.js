@@ -20,9 +20,15 @@ export async function GET(request) {
     const forceFresh = searchParams.get('fresh') === 'true';
 
     const CACHE_KEY = 'admin_pending';
-    if (!forceFresh) {
+    if (forceFresh) {
+        invalidateCache(CACHE_KEY);
+    } else {
         const cached = getCache(CACHE_KEY);
-        if (cached) return NextResponse.json(cached);
+        if (cached) {
+            return NextResponse.json(cached, {
+                headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+            });
+        }
     }
 
     const db = getDb();
@@ -71,7 +77,9 @@ export async function GET(request) {
         };
 
         setCache(CACHE_KEY, result, 60 * 1000); // 60s TTL
-        return NextResponse.json(result);
+        return NextResponse.json(result, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching pending items:', error.message);
         return NextResponse.json({ error: 'Failed to fetch pending items' }, { status: 500 });

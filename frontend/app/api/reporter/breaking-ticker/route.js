@@ -56,6 +56,8 @@ export async function GET(request) {
             liveTicker,
             myRequests,
             pendingRequest
+        }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
 
     } catch (error) {

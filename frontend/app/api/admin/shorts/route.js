@@ -16,7 +16,9 @@ export async function GET(request) {
         const snapshot = await db.collection('news_shorts').orderBy('createdAt', 'desc').get();
         const shorts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        return NextResponse.json({ shorts });
+        return NextResponse.json({ shorts }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching admin shorts:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

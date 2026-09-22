@@ -12,12 +12,23 @@ export async function GET(request) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
 
+        const { searchParams } = new URL(request.url);
+        const forceFresh = searchParams.get('fresh') === 'true';
+
         // opt(PERF-03): Cache admin businesses list for 2 minutes.
         // Each tab visit was re-scanning the entire businesses collection.
         // Cache is purged on any write (POST/PUT/DELETE).
         const CACHE_KEY = 'admin_businesses_list';
-        const cached = getCache(CACHE_KEY);
-        if (cached) return NextResponse.json(cached);
+        if (forceFresh) {
+            purgeCache(CACHE_KEY);
+        } else {
+            const cached = getCache(CACHE_KEY);
+            if (cached) {
+                return NextResponse.json(cached, {
+                    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+                });
+            }
+        }
 
         const snapshot = await db.collection('businesses')
             .orderBy('createdAt', 'desc')
@@ -30,7 +41,9 @@ export async function GET(request) {
         }));
 
         setCache(CACHE_KEY, businesses, 2 * 60 * 1000); // 2-minute TTL
-        return NextResponse.json(businesses);
+        return NextResponse.json(businesses, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching admin businesses:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

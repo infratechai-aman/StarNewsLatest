@@ -19,13 +19,22 @@ export async function GET(request) {
         // Supports ?limit=N query param, capped at 500. Defaults to 200.
         const { searchParams } = new URL(request.url);
         const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '200')));
+        const forceFresh = searchParams.get('fresh') === 'true';
 
         // opt(PERF-03): Cache admin news list for 2 minutes.
         // Admin frequently switches between tabs — without cache each visit re-reads
         // up to 200 full documents. Cache is purged on any write mutation via purgeCache('admin_news_').
         const cacheKey = `admin_news_list_${limit}`;
-        const cached = getCache(cacheKey);
-        if (cached) return NextResponse.json(cached);
+        if (forceFresh) {
+            purgeCache('admin_news_list_');
+        } else {
+            const cached = getCache(cacheKey);
+            if (cached) {
+                return NextResponse.json(cached, {
+                    headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+                });
+            }
+        }
 
         const snapshot = await db.collection('news_articles')
             .orderBy('createdAt', 'desc')
@@ -38,7 +47,9 @@ export async function GET(request) {
         }));
 
         setCache(cacheKey, news, 2 * 60 * 1000); // 2-minute TTL
-        return NextResponse.json(news);
+        return NextResponse.json(news, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching admin news:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

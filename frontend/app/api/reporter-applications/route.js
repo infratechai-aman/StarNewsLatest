@@ -65,7 +65,9 @@ export async function GET(request) {
 
         const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        return NextResponse.json({ applications });
+        return NextResponse.json({ applications }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Reporter applications GET error:', error); // fix(P2-BE-02)
         return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
@@ -163,6 +165,8 @@ export async function PUT(request) {
 
             // Purge caches so reporter lists and pending queues update immediately
             purgeCache('admin_pending');
+            purgeCache('admin_reporters_with_stats');
+            purgeCache('admin_stats');
         }
 
         await appRef.update({

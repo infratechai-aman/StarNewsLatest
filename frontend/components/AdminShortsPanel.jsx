@@ -8,12 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Loader2, Image as ImageIcon, Video as VideoIcon, Pencil, X } from 'lucide-react';
+import { Trash2, Plus, Loader2, Image as ImageIcon, Video as VideoIcon, Pencil, X, RefreshCw } from 'lucide-react';
 import { admin, authenticatedFetch } from '@/lib/api';
 
 export default function AdminShortsPanel({ toast }) {
     const [shorts, setShorts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [saving, setSaving] = useState(false);
 
     // Form State
@@ -34,16 +35,21 @@ export default function AdminShortsPanel({ toast }) {
         fetchData();
     }, []);
 
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchData = async (isManual = false) => {
+        if (isManual) setRefreshing(true);
+        else setLoading(true);
         try {
-            const data = await admin.getShorts();
+            const data = await admin.getShorts(isManual);
             if (data && data.shorts) setShorts(data.shorts);
+            if (isManual && toast) {
+                toast({ title: 'Refreshed', description: 'Reels and shorts list updated from server.' });
+            }
         } catch (error) {
             console.error('Failed to fetch data:', error);
-            toast({ title: 'Error', description: error.message || 'Failed to load shorts data', variant: 'destructive' });
+            if (toast) toast({ title: 'Error', description: error.message || 'Failed to load shorts data', variant: 'destructive' });
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
 
@@ -204,16 +210,28 @@ export default function AdminShortsPanel({ toast }) {
                     <h2 className="text-2xl font-bold text-gray-800">Manage Shorts & Reels</h2>
                     <p className="text-sm text-gray-500 mt-1">Add and organize your short-form video content</p>
                 </div>
-                <Button 
-                    onClick={() => { resetForm(); setIsFormOpen(!isFormOpen); }}
-                    className={`rounded-xl shadow-sm h-11 px-5 font-semibold transition-all ${
-                        isFormOpen 
-                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200' 
-                            : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                >
-                    {isFormOpen ? <><X className="w-4 h-4 mr-2" /> Cancel</> : <><Plus className="w-4 h-4 mr-2" /> Create Reel</>}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchData(true)}
+                        disabled={refreshing || loading}
+                        className="rounded-xl border-gray-200 text-gray-700 hover:bg-gray-50 h-11 px-4 font-medium"
+                    >
+                        <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin text-blue-600' : ''}`} />
+                        Refresh
+                    </Button>
+                    <Button 
+                        onClick={() => { resetForm(); setIsFormOpen(!isFormOpen); }}
+                        className={`rounded-xl shadow-sm h-11 px-5 font-semibold transition-all ${
+                            isFormOpen 
+                                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200' 
+                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                    >
+                        {isFormOpen ? <><X className="w-4 h-4 mr-2" /> Cancel</> : <><Plus className="w-4 h-4 mr-2" /> Create Reel</>}
+                    </Button>
+                </div>
             </div>
 
             {isFormOpen && (

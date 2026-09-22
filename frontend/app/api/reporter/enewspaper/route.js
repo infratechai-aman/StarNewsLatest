@@ -48,7 +48,9 @@ export async function GET(request) {
             }
         }
 
-        return NextResponse.json({ papers });
+        return NextResponse.json({ papers }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Reporter enewspaper GET error:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

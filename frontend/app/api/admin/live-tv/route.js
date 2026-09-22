@@ -21,10 +21,14 @@ export async function GET(request) {
                 enabled: false,
                 streams: [],
                 primaryStreamId: null
+            }, {
+                headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' }
             });
         }
 
-        return NextResponse.json(doc.data());
+        return NextResponse.json(doc.data(), {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching live TV config:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -81,7 +81,9 @@ export async function GET(request) {
             .get();
 
         const promotions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        return NextResponse.json(promotions);
+        return NextResponse.json({ promotions }, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         // console.error('Error fetching promotions:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -1,6 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,9 @@ export async function DELETE(request, { params }) {
         } catch (authErr) {
             console.warn('Reporter deleted from DB but failed in Auth:', authErr.message);
         }
+
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ success: true });
     } catch (error) {

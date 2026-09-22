@@ -43,8 +43,10 @@ export async function POST(request) {
 
         await docRef.update(updateData);
         purgeCache('news_');
-        // opt(PERF-02): Invalidate admin pending cache so next loadPendingData() is fresh
+        purgeCache('admin_news_list_');
         purgeCache('admin_pending');
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ success: true, status });
     } catch (error) {

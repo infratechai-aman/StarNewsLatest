@@ -38,6 +38,7 @@ export async function POST(request) {
         // Purge pending and public classified caches
         purgeCache('admin_pending');
         purgeCache('classifieds');
+        purgeCache('admin_classifieds_list');
 
         return NextResponse.json({ success: true, status });
     } catch (error) {

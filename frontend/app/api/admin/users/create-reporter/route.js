@@ -1,6 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // Create Reporter (Admin only)
 export async function POST(request) {
@@ -46,6 +47,9 @@ export async function POST(request) {
 
         // 3. Set Custom Claim
         await auth.setCustomUserClaims(userRecord.uid, { role: 'reporter' });
+
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ reporter: { id: userRecord.uid, ...newUser } });
 

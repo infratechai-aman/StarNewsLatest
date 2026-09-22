@@ -16,9 +16,20 @@ export async function GET(request) {
     if (!db) return NextResponse.json({ reporters: [] });
 
     // opt(PERF): Cache reporter list + stats for 5 minutes
+    const { searchParams } = new URL(request.url);
+    const forceFresh = searchParams.get('fresh') === 'true';
+
     const CACHE_KEY = 'admin_reporters_with_stats';
-    const cached = getCache(CACHE_KEY);
-    if (cached) return NextResponse.json(cached);
+    if (forceFresh) {
+        setCache(CACHE_KEY, null, 0);
+    } else {
+        const cached = getCache(CACHE_KEY);
+        if (cached) {
+            return NextResponse.json(cached, {
+                headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+            });
+        }
+    }
 
     try {
         // 1. Fetch all reporter user accounts
@@ -67,7 +78,9 @@ export async function GET(request) {
 
         const result = { reporters: reportersWithStats };
         setCache(CACHE_KEY, result, 5 * 60 * 1000); // 5-min TTL
-        return NextResponse.json(result);
+        return NextResponse.json(result, {
+            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+        });
     } catch (error) {
         console.error('Error fetching reporters:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
