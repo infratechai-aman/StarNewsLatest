@@ -1,12 +1,12 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireSuperAdmin } from '@/lib/auth';
+import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request, { params }) {
-    const authResult = await requireSuperAdmin(request);
+    const authResult = await requireReporterOrAdmin(request);
     if (authResult.error) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 
     const db = getDb();

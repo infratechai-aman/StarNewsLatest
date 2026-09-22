@@ -4053,12 +4053,51 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
                 <div className="space-y-2 mb-5">
                   <Label className="text-gray-700 font-semibold">Thumbnail Image URL (Optional)</Label>
-                  <Input
-                    value={enewspaperForm.thumbnailUrl}
-                    onChange={(e) => setEnewspaperForm({ ...enewspaperForm, thumbnailUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="bg-white rounded-xl"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={enewspaperForm.thumbnailUrl}
+                      onChange={(e) => setEnewspaperForm({ ...enewspaperForm, thumbnailUrl: e.target.value })}
+                      placeholder="https://... or upload an image"
+                      className="flex-1 bg-white rounded-xl"
+                    />
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          if (file.size > 700 * 1024) {
+                            toast({ title: 'Thumbnail must be under 700KB', variant: 'destructive' })
+                            return
+                          }
+                          try {
+                            const formData = new FormData()
+                            formData.append('file', file)
+                            const token = localStorage.getItem('token')
+                            const res = await fetch('/api/upload', {
+                              method: 'POST',
+                              headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+                              body: formData
+                            })
+                            const data = await res.json()
+                            if (res.ok) {
+                              setEnewspaperForm((prev) => ({ ...prev, thumbnailUrl: data.url }))
+                              toast({ title: 'Thumbnail uploaded!' })
+                            } else {
+                              toast({ title: data.error || 'Upload failed', variant: 'destructive' })
+                            }
+                          } catch (err) {
+                            toast({ title: 'Upload failed', variant: 'destructive' })
+                          }
+                        }}
+                      />
+                      <div className="h-10 px-4 rounded-xl border border-red-200 text-red-600 bg-white hover:bg-red-50 flex items-center justify-center font-medium transition-colors">
+                        <Upload className="h-4 w-4 mr-2" /> Upload Image
+                      </div>
+                    </label>
+                  </div>
                 </div>
 
                 <div className="space-y-2 mb-6">

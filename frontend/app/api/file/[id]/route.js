@@ -39,12 +39,21 @@ export async function GET(request, { params }) {
             }
         }
 
-        const base64Data = fileData.data;
-        const buffer = Buffer.from(base64Data, 'base64');
+        let buffer;
+        if (fileData.isChunked) {
+            const chunksSnap = await db.collection('file_uploads').doc(id).collection('chunks').orderBy('index', 'asc').get();
+            const buffers = chunksSnap.docs.map(c => Buffer.from(c.data().data, 'base64'));
+            buffer = Buffer.concat(buffers);
+        } else if (fileData.data) {
+            buffer = Buffer.from(fileData.data, 'base64');
+        } else {
+            return new NextResponse('File content empty', { status: 404 });
+        }
 
         const headers = new Headers();
         headers.set('Content-Type', fileData.mimeType || 'application/octet-stream');
         headers.set('Content-Disposition', `inline; filename="${fileData.filename}"`);
+        headers.set('Content-Length', String(buffer.length));
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
         return new NextResponse(buffer, {

@@ -1,12 +1,12 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireSuperAdmin } from '@/lib/auth';
+import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { purgeCache } from '@/lib/cache';
 export const dynamic = 'force-dynamic';
 
 // GET: List Shorts (Admin)
 export async function GET(request) {
-    const authResult = await requireSuperAdmin(request);
+    const authResult = await requireReporterOrAdmin(request);
     if (authResult.error) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 
     const db = getDb();
@@ -27,7 +27,7 @@ export async function GET(request) {
 
 // POST: Create Short/Reel (Admin)
 export async function POST(request) {
-    const authResult = await requireSuperAdmin(request);
+    const authResult = await requireReporterOrAdmin(request);
     if (authResult.error) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 
     const db = getDb();

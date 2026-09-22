@@ -1,9 +1,6 @@
-import { getAuth, getDb } from '@/lib/firebaseAdmin';
+import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
 import { uploadLimiter } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
@@ -11,12 +8,9 @@ export const dynamic = 'force-dynamic';
 
 /**
  * LARGE FILE UPLOAD ROUTE
- * For files that exceed Firestore's 1MB document limit (e.g., PDFs for E-Newspaper).
- * Saves files to public/uploads/ directory instead of Firestore base64.
- * 
- * SECURITY: Requires reporter or admin role.
- * NOTE: On Vercel, the public/ directory is read-only after deployment.
- * For production, this should migrate to Firebase Storage or Vercel Blob.
+ * Supports large files (e.g. multi-page PDFs for E-Newspaper, high-res images) up to 25MB.
+ * Uses persistent chunked Firestore storage to work 100% reliably on Vercel and local environments.
+ * Files are split into chunks safely under Firestore's 1MB document limit and served seamlessly via /api/file/[id].
  */
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
@@ -47,19 +41,16 @@ export async function POST(request) {
         return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    // VERCEL GUARD: The public/ directory is read-only after deployment on Vercel.
-    // File writes will silently fail or throw. Return a clear error instead.
-    if (process.env.VERCEL) {
-        return NextResponse.json({
-            error: 'Local file storage is not supported on Vercel. Please configure Firebase Storage or Vercel Blob for file uploads in production.',
-        }, { status: 501 });
-    }
-
-    // Rate limiting
+    // Rate limiting: max 10 uploads per minute per IP
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const { success } = uploadLimiter.check(ip);
     if (!success) {
         return NextResponse.json({ error: 'Too many uploads. Please try again later.' }, { status: 429 });
+    }
+
+    const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database service not available' }, { status: 503 });
     }
 
     try {
@@ -72,7 +63,7 @@ export async function POST(request) {
 
         const buffer = Buffer.from(await file.arrayBuffer());
 
-        // Size limit
+        // Size limit check
         if (buffer.length > MAX_FILE_SIZE) {
             return NextResponse.json({
                 error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB).`,
@@ -87,37 +78,71 @@ export async function POST(request) {
             }, { status: 415 });
         }
 
-        // Generate unique filename
-        const ext = ALLOWED_TYPES[detectedMime];
-        const uniqueId = crypto.randomUUID();
-        const filename = `${uniqueId}.${ext}`;
+        const userId = authResult.user?.userId || 'admin';
 
-        // Determine subdirectory based on file type
-        const subDir = detectedMime === 'application/pdf' ? 'enewspapers' : 'images';
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads', subDir);
+        // If file fits within a single Firestore document (< 700KB)
+        if (buffer.length <= 700 * 1024) {
+            const docRef = await db.collection('file_uploads').add({
+                filename: file.name,
+                mimeType: detectedMime,
+                data: buffer.toString('base64'),
+                isChunked: false,
+                uploadedBy: userId,
+                size: buffer.length,
+                createdAt: new Date().toISOString()
+            });
 
-        // Ensure directory exists
-        await mkdir(uploadDir, { recursive: true });
+            return NextResponse.json({
+                success: true,
+                url: `/api/file/${docRef.id}`,
+                filename: file.name,
+                type: detectedMime === 'application/pdf' ? 'pdf' : 'image',
+                size: buffer.length,
+            });
+        }
 
-        // Write file to disk
-        const filePath = path.join(uploadDir, filename);
-        await writeFile(filePath, buffer);
+        // Persistent Chunked Firestore storage for larger files (e.g., multi-page PDFs)
+        // 450KB chunk size results in ~600KB base64 per doc, safely under Firestore 1MB doc limit
+        const CHUNK_SIZE = 450 * 1024;
+        const totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);
 
-        // Return public URL (served statically by Next.js from /public)
-        const publicUrl = `/uploads/${subDir}/${filename}`;
+        const docRef = await db.collection('file_uploads').add({
+            filename: file.name,
+            mimeType: detectedMime,
+            isChunked: true,
+            totalChunks,
+            uploadedBy: userId,
+            size: buffer.length,
+            createdAt: new Date().toISOString()
+        });
+
+        // Store chunks in batches of up to 20 to ensure fast commit
+        for (let i = 0; i < totalChunks; i += 20) {
+            const batch = db.batch();
+            const chunkBatchEnd = Math.min(i + 20, totalChunks);
+            for (let j = i; j < chunkBatchEnd; j++) {
+                const chunkBuffer = buffer.subarray(j * CHUNK_SIZE, Math.min((j + 1) * CHUNK_SIZE, buffer.length));
+                const chunkRef = db.collection('file_uploads').doc(docRef.id).collection('chunks').doc(String(j));
+                batch.set(chunkRef, {
+                    index: j,
+                    data: chunkBuffer.toString('base64')
+                });
+            }
+            await batch.commit();
+        }
 
         return NextResponse.json({
             success: true,
-            url: publicUrl,
+            url: `/api/file/${docRef.id}`,
             filename: file.name,
             type: detectedMime === 'application/pdf' ? 'pdf' : 'image',
             size: buffer.length,
         });
 
     } catch (error) {
-        console.error('Large file upload error:', error.message);
+        console.error('Large file upload error:', error);
         return NextResponse.json({
-            error: 'Upload failed. Please try again.',
+            error: 'Upload failed: ' + (error.message || 'Please try again.'),
         }, { status: 500 });
     }
 }

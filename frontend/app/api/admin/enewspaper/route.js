@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireSuperAdmin, requireReporterOrAdmin } from '@/lib/auth';
+import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,9 +36,9 @@ export async function GET(request) {
     }
 }
 
-// POST: Upload E-Newspaper (Admin only)
+// POST: Upload E-Newspaper (Admin or Reporter)
 export async function POST(request) {
-    const authResult = await requireSuperAdmin(request);
+    const authResult = await requireReporterOrAdmin(request);
     if (authResult.error) {
         return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
@@ -64,6 +65,10 @@ export async function POST(request) {
 
         const docRef = await db.collection('enewspapers').add(newPaper);
         await docRef.update({ id: docRef.id });
+
+        // Invalidate public and admin enewspaper cache so new edition appears immediately
+        purgeCache('api_enewspaper_active');
+        purgeCache('enewspaper');
 
         return NextResponse.json({ id: docRef.id, ...newPaper });
     } catch (error) {

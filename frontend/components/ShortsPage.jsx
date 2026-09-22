@@ -74,7 +74,7 @@ export default function ShortsPage({ setCurrentView }) {
   const [isMuted, setIsMuted] = useState(true);
   
   // 'feed' (Instagram Reels / YouTube Shorts full-screen swipe) | 'grid' (Explore grid)
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode] = useState('feed');
   const [activeShortIndex, setActiveShortIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
