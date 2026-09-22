@@ -2154,9 +2154,11 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                                 <p className="text-sm text-gray-600 line-clamp-2 mb-2">{getTextValue(item.content)}</p>
                               )}
                               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
-                                {item.authorName && (
-                                  <span className="flex items-center gap-1 font-medium text-gray-700">
-                                    <User className="w-3.5 h-3.5 text-gray-400" /> Reporter: {item.authorName}
+                                {(item.authorName || item.authorEmail) && (
+                                  <span className="flex items-center gap-1.5 font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
+                                    <User className="w-3.5 h-3.5 text-indigo-500" />
+                                    <span className="font-bold">{item.authorName || 'Reporter'}</span>
+                                    {item.authorEmail && <span className="text-indigo-500 font-normal">({item.authorEmail})</span>}
                                   </span>
                                 )}
                                 {item.createdAt && (
@@ -3741,14 +3743,14 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               ) : (
                 <div className="space-y-3">
                   {allReporters.map((reporter) => (
-                    <div key={reporter.id} className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors bg-white">
+                    <div key={reporter.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors bg-white gap-3">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm shrink-0">
                           {reporter.name?.charAt(0)?.toUpperCase() || 'R'}
                         </div>
                         <div>
                           <h4 className="font-bold text-gray-800">{reporter.name}</h4>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-0.5">
                             <p className="text-sm text-gray-500">{reporter.email}</p>
                             {reporter.phone && (
                               <>
@@ -3757,6 +3759,27 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               </>
                             )}
                           </div>
+                          {/* Activity Stats */}
+                          {reporter.stats && (
+                            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 border border-gray-200">
+                                {reporter.stats.total} Total
+                              </span>
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-green-50 text-green-700 border border-green-200">
+                                {reporter.stats.published} Published
+                              </span>
+                              {reporter.stats.pending > 0 && (
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                                  {reporter.stats.pending} Pending
+                                </span>
+                              )}
+                              {reporter.stats.rejected > 0 && (
+                                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-50 text-red-700 border border-red-200">
+                                  {reporter.stats.rejected} Rejected
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -3937,7 +3960,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                           </div>
                           <div>
                             <h5 className="font-bold text-gray-800">{paper.title}</h5>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
                               <p className="text-sm text-gray-500">
                                 Edition: {new Date(paper.publishDate || paper.editionDate).toLocaleDateString()}
                               </p>
@@ -3945,6 +3968,16 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               <p className="text-xs text-gray-400 font-medium">
                                 Uploaded: {new Date(paper.createdAt || paper.uploadedAt).toLocaleString()}
                               </p>
+                              {paper.authorName && (
+                                <>
+                                  <span className="text-gray-300">•</span>
+                                  <span className="flex items-center gap-1 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                                    <User className="w-3 h-3 text-indigo-400" />
+                                    {paper.authorName}
+                                    {paper.authorEmail && <span className="font-normal text-indigo-400">({paper.authorEmail})</span>}
+                                  </span>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>

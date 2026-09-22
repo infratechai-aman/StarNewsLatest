@@ -2,6 +2,16 @@ const nextConfig = {
   // fix(P2-CONFIG-01): Removed output: 'standalone'.
   // Vercel deploys Next.js natively — standalone mode conflicts with Vercel's
   // internal routing and static file serving. Use default (no output setting).
+
+  // perf: Enable gzip response compression for all API and page responses
+  compress: true,
+
+  // perf: Remove X-Powered-By header (saves bytes, hides stack info)
+  poweredByHeader: false,
+
+  // perf: Preconnect hints for Google Fonts
+  optimizeFonts: true,
+
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -32,8 +42,9 @@ const nextConfig = {
     return config;
   },
   onDemandEntries: {
-    maxInactiveAge: 10000,
-    pagesBufferLength: 2,
+    // perf: Keep more pages in memory buffer → fewer cold reloads on navigation
+    maxInactiveAge: 30000,
+    pagesBufferLength: 5,
   },
   async rewrites() {
     return [
@@ -55,6 +66,8 @@ const nextConfig = {
         source: "/(.*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
+          // perf: Tell browsers to allow DNS prefetching for faster API/CDN lookups
+          { key: "X-DNS-Prefetch-Control", value: "on" },
           {
             key: "Content-Security-Policy",
             value: [
@@ -86,3 +99,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+

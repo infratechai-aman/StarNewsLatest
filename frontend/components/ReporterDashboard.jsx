@@ -461,7 +461,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col antialiased text-gray-900">
+    <div className="h-screen bg-[#F8FAFC] flex flex-col antialiased text-gray-900 overflow-hidden">
       
       {/* ─── TOP NAVBAR (Matching Reference Image 3) ─── */}
       <header className="bg-white sticky top-0 z-40 border-b border-gray-200/80 shadow-xs">
@@ -598,7 +598,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       </header>
 
       {/* ─── 3-COLUMN LAYOUT (Left Sidebar | Main Form | Right Sidebar) ─── */}
-      <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col lg:flex-row">
+      <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col lg:flex-row overflow-hidden">
         
         {/* ─── LEFT SIDEBAR (No middle scrollbar, sleek hide-scrollbar) ─── */}
         <aside className="w-full lg:w-60 xl:w-64 bg-white lg:border-r border-gray-200/80 shrink-0 flex flex-col justify-between p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] hide-scrollbar overflow-y-auto">
@@ -720,7 +720,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         </aside>
 
         {/* ─── CENTER CONTENT AREA ─── */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto">
           
           {/* Top Breadcrumb & Heading */}
           <div className="mb-6">

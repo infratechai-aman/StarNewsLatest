@@ -8,15 +8,41 @@ export const API_BASE = '/api'
 // fix(DEFECT-05): Client-side in-memory cache for GET requests.
 // Prevents re-fetching data when user navigates back to a previously visited page.
 const CLIENT_CACHE = new Map()
-const CLIENT_CACHE_TTL = 2 * 60 * 1000 // 2 minutes
+const CLIENT_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const CLIENT_STALE_TTL = 10 * 60 * 1000 // 10 min — serve stale while revalidating
 
 function getClientCache(key) {
   const cached = CLIENT_CACHE.get(key)
-  if (cached && (Date.now() - cached.ts < CLIENT_CACHE_TTL)) {
-    return cached.data
-  }
-  if (cached) CLIENT_CACHE.delete(key)
+  if (!cached) return null
+  const age = Date.now() - cached.ts
+  if (age < CLIENT_STALE_TTL) return cached.data // fresh or stale-but-usable
+  CLIENT_CACHE.delete(key)
   return null
+}
+
+function isStale(key) {
+  const cached = CLIENT_CACHE.get(key)
+  if (!cached) return false
+  return (Date.now() - cached.ts) >= CLIENT_CACHE_TTL
+}
+
+// Exponential backoff retry for transient server errors
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  const TRANSIENT = new Set([500, 502, 503, 504])
+  let lastError
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, options)
+      if (res.ok || !TRANSIENT.has(res.status)) return res
+      lastError = res
+    } catch (err) {
+      lastError = err
+    }
+    if (attempt < maxRetries - 1) {
+      await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt))) // 500ms, 1s, 2s
+    }
+  }
+  return lastError
 }
 
 function setClientCache(key, data) {
@@ -103,9 +129,16 @@ export async function apiRequest(endpoint, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
 
   // Client-side cache: only for GET requests
-  if (method === 'GET') {
+  // Stale-While-Revalidate: return stale data immediately, revalidate in background
+  if (method === 'GET' && !options._revalidate) {
     const cached = getClientCache(endpoint);
-    if (cached) return cached;
+    if (cached) {
+      if (isStale(endpoint)) {
+        // Return stale immediately; revalidate silently in background (no SWR loop)
+        setTimeout(() => apiRequest(endpoint, { ...options, _revalidate: true }), 0)
+      }
+      return cached;
+    }
   }
 
   const buildHeaders = (authToken) => ({
@@ -114,7 +147,7 @@ export async function apiRequest(endpoint, options = {}) {
     ...options.headers
   });
 
-  let response = await fetch(`${API_BASE}${endpoint}`, {
+  let response = await fetchWithRetry(`${API_BASE}${endpoint}`, {
     ...options,
     headers: buildHeaders(token)
   });

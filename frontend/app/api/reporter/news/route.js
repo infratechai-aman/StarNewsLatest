@@ -32,7 +32,9 @@ export async function GET(request) {
             articles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         }
 
-        return NextResponse.json({ articles });
+        return NextResponse.json({ articles }, {
+            headers: { 'Cache-Control': 'no-store, must-revalidate' }
+        });
     } catch (error) {
         console.error('Reporter news GET error:', error.message);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

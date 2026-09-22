@@ -569,6 +569,28 @@ code {
 }
 
 /* =============================================
+   PERFORMANCE — GPU compositing & paint isolation
+   ============================================= */
+
+/* Promote sticky/fixed sidebars to their own GPU compositing layer.
+   This prevents the browser from re-painting the sidebar whenever the
+   right panel scrolls, eliminating visual jitter on scroll. */
+aside[class*="sticky"],
+aside[class*="fixed"],
+.sidebar-fixed {
+  will-change: transform;
+  transform: translateZ(0); /* force GPU layer */
+}
+
+/* Contain layout & style recalculations inside scrollable panels.
+   Changes inside these elements won't trigger layout of sibling panels. */
+main[class*="overflow-y"],
+.scroll-isolated {
+  contain: layout style;
+}
+
+
+/* =============================================
    BREAKING NEWS TICKER — scrolling animation
    ============================================= */
 

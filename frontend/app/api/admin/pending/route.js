@@ -28,15 +28,18 @@ export async function GET(request) {
     const db = getDb();
 
     try {
-        // Run all pending queries in parallel (includes ticker change requests)
-        const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers, pendingApplications, pendingTickers] = await Promise.all([
-            db.collection('news_articles').where('approvalStatus', '==', 'pending').get(),
-            db.collection('businesses').where('approvalStatus', '==', 'pending').get(),
-            db.collection('classified_ads').where('approvalStatus', '==', 'pending').get(),
-            db.collection('users').where('status', '==', 'pending').get(),
-            db.collection('reporter_applications').where('status', '==', 'PENDING').get(),
-            db.collection('ticker_change_requests').where('status', '==', 'pending').get().catch(() => ({ docs: [] }))
-        ]);
+    // Run all pending queries in parallel with per-collection error isolation.
+    // If a single collection fails (e.g., missing index), others still succeed.
+    const safeGet = (query) => query.catch(() => ({ docs: [] }));
+
+    const [pendingNews, pendingBusinesses, pendingClassifieds, pendingUsers, pendingApplications, pendingTickers] = await Promise.all([
+        safeGet(db.collection('news_articles').where('approvalStatus', '==', 'pending').get()),
+        safeGet(db.collection('businesses').where('approvalStatus', '==', 'pending').get()),
+        safeGet(db.collection('classified_ads').where('approvalStatus', '==', 'pending').get()),
+        safeGet(db.collection('users').where('status', '==', 'pending').get()),
+        safeGet(db.collection('reporter_applications').where('status', '==', 'PENDING').get()),
+        safeGet(db.collection('ticker_change_requests').where('status', '==', 'pending').get())
+    ]);
 
         const mapDocs = (snap) => snap.docs.map(d => ({ ...d.data(), id: d.id }));
 
