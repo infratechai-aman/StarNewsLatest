@@ -5175,10 +5175,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => loadPendingData(true, true)}
-                  disabled={loadingPending}
+                  disabled={refreshing}
                   className="rounded-xl border-yellow-200 text-yellow-800 bg-white/80 hover:bg-yellow-50 h-9 px-3"
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loadingPending ? 'animate-spin text-yellow-600' : ''}`} />
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refreshing ? 'animate-spin text-yellow-600' : ''}`} />
                   Refresh
                 </Button>
               </div>
