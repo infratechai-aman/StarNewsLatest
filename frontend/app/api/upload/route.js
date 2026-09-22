@@ -1,5 +1,6 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { uploadLimiter } from '@/lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -68,24 +69,26 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Database not available' }, { status: 503 });
     }
 
-    // SECURITY: Require authentication for uploads
-    if (!auth) {
-        return NextResponse.json({ error: 'Auth service not available' }, { status: 503 });
+    // Rate limiting: max 10 uploads per minute per IP
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const { success } = uploadLimiter.check(ip);
+    if (!success) {
+        return NextResponse.json({ error: 'Too many uploads. Please try again later.' }, { status: 429 });
     }
 
+    // Optional authentication: authenticate reporters/admins if token is provided, otherwise tag as 'public'
+    let userId = 'public';
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
 
-    if (!token) {
-        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    let userId;
-    try {
-        const decodedToken = await auth.verifyIdToken(token);
-        userId = decodedToken.uid;
-    } catch (authError) {
-        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
+    if (token && auth) {
+        try {
+            const decodedToken = await auth.verifyIdToken(token);
+            userId = decodedToken.uid;
+        } catch (authError) {
+            // If token is invalid or expired, continue as public user
+            userId = 'public';
+        }
     }
 
     try {
