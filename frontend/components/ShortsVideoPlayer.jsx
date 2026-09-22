@@ -52,7 +52,12 @@ export default function ShortsVideoPlayer({
   // YouTube URL extraction
   const getYoutubeId = (url) => {
     if (!url) return null;
-    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    const trimmed = String(url).trim();
+    // Direct 11-char video ID support
+    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+      return trimmed;
+    }
+    const match = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
     return match ? match[1] : null;
   };
 
@@ -202,14 +207,15 @@ export default function ShortsVideoPlayer({
           className="w-full h-full object-cover select-none pointer-events-none"
         />
       ) : youtubeId ? (
-        <div className="w-full h-full relative pointer-events-none overflow-hidden flex items-center justify-center">
+        <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
           <iframe
             key={`yt-${youtubeId}-${isMuted ? 'muted' : 'unmuted'}`}
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&playsinline=1&enablejsapi=1`}
-            className="w-full h-full object-cover scale-[1.03]"
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=${isActive ? 1 : 0}&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&rel=0&playsinline=1&enablejsapi=1${typeof window !== 'undefined' ? `&origin=${encodeURIComponent(window.location.origin)}` : ''}`}
+            className="w-full h-full object-cover scale-[1.03] pointer-events-none"
             style={{ border: 'none' }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
             title={short.title || 'StarNews Short'}
           />
         </div>

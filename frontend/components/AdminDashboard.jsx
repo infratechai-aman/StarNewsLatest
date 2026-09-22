@@ -1045,10 +1045,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
         tags: newsForm.tags ? newsForm.tags.split(',').map(t => t.trim()) : [],
         featured: newsForm.featured || false,
         showOnHome: newsForm.showOnHome !== false,
-        authorName: newsForm.authorName || 'Admin'
+        authorName: newsForm.authorName || editingNews?.authorName || 'Admin'
       }
 
       if (editingNews) {
+        if (editingNews.approvalStatus) {
+          payload.approvalStatus = editingNews.approvalStatus
+        }
         await admin.updateNews(editingNews.id, payload)
         toast({ title: 'News Updated' })
       } else {
@@ -1059,6 +1062,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
       resetNewsForm()
       loadAllNews()
       loadApprovedNews()
+      loadPendingData(true)
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     } finally {
@@ -1069,10 +1073,10 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
   const handleEditNews = (article) => {
     setEditingNews(article)
     setNewsForm({
-      title: article.title || '',
+      title: getTextValue(article.title),
       category: article.category || article.categoryId || '',
       city: article.city || '',
-      content: article.content || '',
+      content: getTextValue(article.content),
       mainImage: article.mainImage || '',
       metaDescription: article.metaDescription || '',
       tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
@@ -2163,6 +2167,14 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100">
+                              <Button
+                                variant="outline"
+                                onClick={() => handleEditNews(item)}
+                                disabled={loading}
+                                className="text-blue-600 hover:bg-blue-50 border-blue-200 rounded-xl h-10 px-4 font-semibold"
+                              >
+                                <Edit className="h-4 w-4 mr-1.5" /> Edit
+                              </Button>
                               <Button
                                 onClick={() => handleNewsAction(item.id, 'approve')}
                                 disabled={loading}

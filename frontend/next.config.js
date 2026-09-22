@@ -59,9 +59,9 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://vercel.live https://*.vercel.live https://apis.google.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net https://vercel.live https://*.vercel.live https://apis.google.com https://www.gstatic.com",
               "worker-src 'self' blob: https://cdn.jsdelivr.net",
-              "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com https://www.gstatic.com",
               "font-src 'self' https://fonts.gstatic.com https://vercel.live https://*.vercel.live https://assets.vercel.com data:",
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' https://www.youtube.com https://*.youtube.com https://firebasestorage.googleapis.com https://storage.googleapis.com blob:",

@@ -43,7 +43,9 @@ export const getLocalizedText = (obj, lang = 'en') => {
 import { translations } from '@/lib/translations';
 
 const CATEGORY_MAP = {
+    // English
     'all': 'all',
+    'all news': 'allNews',
     'business': 'business',
     'city': 'city',
     'city news': 'cityNews',
@@ -60,10 +62,46 @@ const CATEGORY_MAP = {
     'technology': 'technology',
     'tech': 'technology',
     'health': 'health',
-    'murder': 'murder',
+    'murder': 'crime',
     'general': 'general',
     'market intelligence': 'marketIntelligence',
     'economy': 'economy',
+
+    // Marathi & Hindi variants (scraped from old Star News / regional portals)
+    'व्यापार': 'business',
+    'व्यवसाय': 'business',
+    'उद्योग': 'business',
+    'गुन्हा': 'crime',
+    'अपराध': 'crime',
+    'क्राईम': 'crime',
+    'खून': 'crime',
+    'हत्या': 'crime',
+    'राजकारण': 'politics',
+    'राजनीति': 'politics',
+    'खेळ': 'sports',
+    'खेल': 'sports',
+    'क्रीडा': 'sports',
+    'मनोरंजन': 'entertainment',
+    'सिनेमा': 'entertainment',
+    'बॉलीवूड': 'entertainment',
+    'शिक्षण': 'education',
+    'शिक्षा': 'education',
+    'आरोग्य': 'health',
+    'स्वास्थ्य': 'health',
+    'तंत्रज्ञान': 'technology',
+    'टेक्नॉलॉजी': 'technology',
+    'देश': 'nation',
+    'राष्ट्रीय': 'nation',
+    'राष्ट्र': 'nation',
+    'शहर': 'cityNews',
+    'शहर वार्ता': 'cityNews',
+    'स्थानिक': 'cityNews',
+    'पुणे': 'cityNews',
+    'पुणे शहर': 'cityNews',
+    'महाराष्ट्र': 'nation',
+    'सामान्य': 'general',
+    'रोजगार': 'jobs',
+    'नोकरी': 'jobs'
 };
 
 export const getTranslatedCategory = (cat, lang = 'en') => {
@@ -72,11 +110,13 @@ export const getTranslatedCategory = (cat, lang = 'en') => {
         return getLocalizedText(cat, lang);
     }
     const catStr = String(cat).trim();
-    if (lang === 'en') return catStr;
+    const key = CATEGORY_MAP[catStr.toLowerCase()] || CATEGORY_MAP[catStr];
 
-    const key = CATEGORY_MAP[catStr.toLowerCase()];
     if (key && translations[lang]?.[key]) {
         return translations[lang][key];
+    }
+    if (key && translations.en?.[key]) {
+        return lang === 'en' ? translations.en[key] : (translations[lang]?.[key] || catStr);
     }
     return catStr;
 };
