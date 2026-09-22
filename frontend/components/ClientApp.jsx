@@ -212,10 +212,22 @@ const ClientApp = ({ initialNewsData }) => {
         );
 
         // SECURITY: Redirect unauthorized users to login instead of showing empty page
+        const ADMIN_EMAILS = [
+            'riyaz@starnews.com',
+            'admin@starnews.local',
+            'talukdaraman24@gmail.com',
+            'arthomepune@gmail.com'
+        ];
+        const userEmailLower = String(user?.email || '').toLowerCase().trim();
+        const isAdmin = user?.role === ROLES.SUPER_ADMIN ||
+            user?.role === 'admin' ||
+            user?.role === 'superadmin' ||
+            ADMIN_EMAILS.includes(userEmailLower);
+
         const isAuthorized = (
-            (currentView === 'reporter-dashboard' && user?.role === ROLES.REPORTER) ||
-            (currentView === 'admin-dashboard' && user?.role === ROLES.SUPER_ADMIN) ||
-            (currentView === 'advertiser-dashboard' && user?.role === ROLES.ADVERTISER)
+            (currentView === 'reporter-dashboard' && (user?.role === ROLES.REPORTER || isAdmin)) ||
+            (currentView === 'admin-dashboard' && isAdmin) ||
+            (currentView === 'advertiser-dashboard' && (user?.role === ROLES.ADVERTISER || isAdmin))
         );
         if (!isAuthorized) {
             return (
@@ -240,9 +252,9 @@ const ClientApp = ({ initialNewsData }) => {
             <LanguageProvider>
                 <ErrorBoundary fallbackTitle="Dashboard Error" fallbackMessage="The dashboard encountered an error. Please refresh the page.">
                     <div className="min-h-screen bg-background">
-                        {currentView === 'reporter-dashboard' && <ReporterDashboard user={user} toast={toast} onLogout={handleLogout} />}
-                        {currentView === 'admin-dashboard' && <AdminDashboard user={user} toast={toast} onLogout={handleLogout} />}
-                        {currentView === 'advertiser-dashboard' && <AdvertiserDashboard user={user} toast={toast} onLogout={handleLogout} />}
+                        {currentView === 'reporter-dashboard' && <ReporterDashboard user={user} toast={toast} onLogout={handleLogout} setCurrentView={handleSetCurrentView} />}
+                        {currentView === 'admin-dashboard' && <AdminDashboard user={user} toast={toast} onLogout={handleLogout} setCurrentView={handleSetCurrentView} />}
+                        {currentView === 'advertiser-dashboard' && <AdvertiserDashboard user={user} toast={toast} onLogout={handleLogout} setCurrentView={handleSetCurrentView} />}
                     </div>
                 </ErrorBoundary>
             </LanguageProvider>

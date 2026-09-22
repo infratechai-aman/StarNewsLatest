@@ -28,6 +28,12 @@ const BUSINESS_CATEGORIES = [
 ]
 
 const ROLES = { REPORTER: 'reporter', SUPER_ADMIN: 'super_admin', ADVERTISER: 'advertiser' }
+const ADMIN_EMAILS = [
+  'riyaz@starnews.com',
+  'admin@starnews.local',
+  'talukdaraman24@gmail.com',
+  'arthomepune@gmail.com'
+]
 
 // Social Media Icons
 const FacebookIcon = () => (
@@ -114,6 +120,15 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
 
   // Use language context
   const { language, changeLanguage, t, languageOptions } = useLanguage()
+
+  const userRoleLower = String(user?.role || '').toLowerCase().trim()
+  const userEmailLower = String(user?.email || '').toLowerCase().trim()
+  const isAdminUser = !!user && (
+    userRoleLower === 'super_admin' ||
+    userRoleLower === 'admin' ||
+    userRoleLower === 'superadmin' ||
+    ADMIN_EMAILS.includes(userEmailLower)
+  )
 
   // Live search debounce
   useEffect(() => {
@@ -501,7 +516,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           <span className="text-xs text-gray-500">{user.email}</span>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        {isAdminUser && (
+                          <DropdownMenuItem onClick={() => setCurrentView('admin-dashboard')} className="rounded-lg font-semibold text-slate-800">
+                            <Shield className="mr-2 h-4 w-4 text-red-600" />Admin Dashboard
+                          </DropdownMenuItem>
+                        )}
                         {user.role === ROLES.REPORTER && <DropdownMenuItem onClick={() => setCurrentView('reporter-dashboard')} className="rounded-lg"><Newspaper className="mr-2 h-4 w-4" />{t('reporterDashboard')}</DropdownMenuItem>}
+                        {user.role === ROLES.ADVERTISER && <DropdownMenuItem onClick={() => setCurrentView('advertiser-dashboard')} className="rounded-lg"><Briefcase className="mr-2 h-4 w-4" />Advertiser Dashboard</DropdownMenuItem>}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600 rounded-lg"><LogOut className="mr-2 h-4 w-4" />{t('logout')}</DropdownMenuItem>
                       </DropdownMenuContent>
@@ -1092,6 +1113,16 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         <p className="text-xs text-gray-500 truncate max-w-[140px]">{user.email}</p>
                       </div>
                     </div>
+                    {isAdminUser && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full justify-center bg-slate-900 hover:bg-slate-800 text-white mb-2"
+                        onClick={() => { setCurrentView('admin-dashboard'); setMobileMenuOpen(false); }}
+                      >
+                        <Shield className="mr-2 h-4 w-4 text-red-500" /> Admin Dashboard
+                      </Button>
+                    )}
                     {user.role === ROLES.REPORTER && (
                       <Button
                         variant="default"
@@ -1100,6 +1131,16 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         onClick={() => { setCurrentView('reporter-dashboard'); setMobileMenuOpen(false); }}
                       >
                         <Newspaper className="mr-2 h-4 w-4" /> {t('reporterDashboard') || 'Reporter Dashboard'}
+                      </Button>
+                    )}
+                    {user.role === ROLES.ADVERTISER && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="w-full justify-center bg-emerald-600 hover:bg-emerald-700 text-white mb-2"
+                        onClick={() => { setCurrentView('advertiser-dashboard'); setMobileMenuOpen(false); }}
+                      >
+                        <Briefcase className="mr-2 h-4 w-4" /> Advertiser Dashboard
                       </Button>
                     )}
                     <Button variant="outline" size="sm" className="w-full justify-center text-red-600 border-red-200 hover:bg-red-50" onClick={handleLogout}>

@@ -8,10 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Loader2, Image as ImageIcon, Video as VideoIcon, Pencil, X, RefreshCw } from 'lucide-react';
+import { Trash2, Plus, Loader2, Image as ImageIcon, Video as VideoIcon, Pencil, X, RefreshCw, Eye } from 'lucide-react';
 import { admin, authenticatedFetch } from '@/lib/api';
 
-export default function AdminShortsPanel({ toast }) {
+export default function AdminShortsPanel({ toast, setCurrentView }) {
     const [shorts, setShorts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -211,6 +211,19 @@ export default function AdminShortsPanel({ toast }) {
                     <p className="text-sm text-gray-500 mt-1">Add and organize your short-form video content</p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                            if (setCurrentView) setCurrentView('shorts');
+                            else window.open('/?view=shorts', '_blank');
+                        }}
+                        className="rounded-xl border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 h-11 px-4 font-semibold shadow-sm"
+                        title="View Public Shorts Feed"
+                    >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Public Feed
+                    </Button>
                     <Button
                         variant="outline"
                         size="sm"

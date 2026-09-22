@@ -44,11 +44,32 @@ export async function GET(request) {
             role: user.role || 'registered',
             status: 'active'
         };
+
+        // Normalize role: treat admin aliases and admin emails as 'super_admin'
+        // This must match the same logic used in requireSuperAdmin() in lib/auth.js
+        const ADMIN_EMAILS = [
+            'riyaz@starnews.com',
+            'admin@starnews.local',
+            'talukdaraman24@gmail.com',
+            'arthomepune@gmail.com'
+        ];
+        const rawRole = String(d.role || '').toLowerCase().trim();
+        const emailLower = String(d.email || user.email || '').toLowerCase().trim();
+        let normalizedRole = d.role || 'registered';
+        if (
+            rawRole === 'super_admin' ||
+            rawRole === 'admin' ||
+            rawRole === 'superadmin' ||
+            ADMIN_EMAILS.includes(emailLower)
+        ) {
+            normalizedRole = 'super_admin';
+        }
+
         return NextResponse.json({
             id: d.id || user.userId,
             email: d.email || '',
             name: d.name || '',
-            role: d.role || 'registered',
+            role: normalizedRole,
             status: d.status || 'active',
             phone: d.phone || '',
             address: d.address || '',

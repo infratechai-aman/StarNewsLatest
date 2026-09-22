@@ -12,7 +12,8 @@ export async function GET(request, { params }) {
     }
 
     try {
-        const id = params.id;
+        const resolvedParams = await params;
+        const id = resolvedParams?.id || params?.id;
         if (!id) {
             return new NextResponse('Missing ID', { status: 400 });
         }

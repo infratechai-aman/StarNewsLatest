@@ -57,12 +57,20 @@ const getTextValue = (value) => {
   return String(value)
 }
 
-const AdminDashboard = ({ user, toast, onLogout }) => {
+const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [pendingSubTab, setPendingSubTab] = useState('businesses')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+
+  const handleGoHome = (view = 'home') => {
+    if (setCurrentView) {
+      setCurrentView(view)
+    } else {
+      window.location.href = view === 'home' ? '/' : `/?view=${view}`
+    }
+  }
 
   const handleLogoutClick = () => {
     if (onLogout) {
@@ -1533,6 +1541,13 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
           </button>
 
           <button
+            onClick={() => handleGoHome('home')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 transition-all duration-200 group"
+          >
+            <Home className="w-4 h-4 transition-transform group-hover:scale-110" /> View Live Website
+          </button>
+
+          <button
             onClick={handleLogoutClick}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200 group"
           >
@@ -1571,6 +1586,15 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
               title="Refresh all dashboard data"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshingAll ? 'animate-spin text-blue-600' : 'text-gray-600'}`} />
+            </Button>
+            <Button
+              onClick={() => handleGoHome('home')}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50/50 h-8 w-8 p-0 rounded-lg"
+              title="Go to Live Website"
+            >
+              <Home className="w-3.5 h-3.5 text-emerald-600" />
             </Button>
             <div className="relative mr-1">
               <Bell className="w-5 h-5 text-gray-600" />
@@ -1620,6 +1644,17 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshingAll ? 'animate-spin text-blue-600' : 'text-gray-500'}`} />
               <span className="hidden sm:inline">{refreshingAll ? 'Syncing...' : 'Sync Data'}</span>
+            </Button>
+
+            <Button
+              onClick={() => handleGoHome('home')}
+              variant="outline"
+              size="sm"
+              className="border-gray-200 bg-white text-gray-700 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50/50 rounded-xl h-9 px-3.5 font-medium transition-all flex items-center gap-2 shadow-sm"
+              title="Go to Live Website"
+            >
+              <Home className="w-4 h-4 text-emerald-600" />
+              <span className="hidden sm:inline">View Website</span>
             </Button>
             
             <div className="relative cursor-pointer hover:text-red-600 transition-colors">
@@ -3957,7 +3992,7 @@ const AdminDashboard = ({ user, toast, onLogout }) => {
 
         {/* Shorts Tab */}
         <TabsContent value="shorts" className="space-y-4">
-          <AdminShortsPanel toast={toast} />
+          <AdminShortsPanel toast={toast} setCurrentView={setCurrentView} />
         </TabsContent>
 
         {/* E-Newspaper Tab */}

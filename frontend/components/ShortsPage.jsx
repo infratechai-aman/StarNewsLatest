@@ -207,11 +207,12 @@ export default function ShortsPage({ setCurrentView }) {
   };
 
   const handleBackNavigation = () => {
-    if (isMobile) {
-      if (setCurrentView) setCurrentView('home');
-      else window.history.back();
+    if (setCurrentView) {
+      setCurrentView('home');
+    } else if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
     } else {
-      setViewMode('grid');
+      window.location.href = '/';
     }
   };
 
