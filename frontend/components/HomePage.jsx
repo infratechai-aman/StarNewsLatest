@@ -689,19 +689,27 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           fetch('/api/finance?symbol=%5ENSEI')
         ])
         const [sensexJson, niftyJson] = await Promise.all([sensexRes.json(), niftyRes.json()])
-        const toIndian = (n) => n?.toLocaleString('en-IN', { maximumFractionDigits: 2 })
-        const fmt = (n) => (n >= 0 ? '+' : '') + toIndian(n)
+        const toIndian = (n) => typeof n === 'number' && !isNaN(n) ? n.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : null
+        const fmt = (n) => typeof n === 'number' && !isNaN(n) ? ((n >= 0 ? '+' : '') + toIndian(n)) : null
         const sensexMeta = sensexJson?.chart?.result?.[0]?.meta
         const niftyMeta = niftyJson?.chart?.result?.[0]?.meta
         if (sensexMeta && niftyMeta) {
-          const sChange = sensexMeta.regularMarketPrice - sensexMeta.previousClose
-          const sPct = (sChange / sensexMeta.previousClose) * 100
-          const nChange = niftyMeta.regularMarketPrice - niftyMeta.previousClose
-          const nPct = (nChange / niftyMeta.previousClose) * 100
-          setStockData({
-            sensex: { value: toIndian(sensexMeta.regularMarketPrice), change: fmt(sChange), pct: fmt(sPct) + '%', up: sChange >= 0 },
-            nifty: { value: toIndian(niftyMeta.regularMarketPrice), change: fmt(nChange), pct: fmt(nPct) + '%', up: nChange >= 0 }
-          })
+          const sPrice = sensexMeta.regularMarketPrice
+          const sPrev = sensexMeta.previousClose || sensexMeta.chartPreviousClose
+          const nPrice = niftyMeta.regularMarketPrice
+          const nPrev = niftyMeta.previousClose || niftyMeta.chartPreviousClose
+
+          if (typeof sPrice === 'number' && !isNaN(sPrice) && typeof sPrev === 'number' && !isNaN(sPrev) && sPrev > 0 &&
+              typeof nPrice === 'number' && !isNaN(nPrice) && typeof nPrev === 'number' && !isNaN(nPrev) && nPrev > 0) {
+            const sChange = sPrice - sPrev
+            const sPct = (sChange / sPrev) * 100
+            const nChange = nPrice - nPrev
+            const nPct = (nChange / nPrev) * 100
+            setStockData({
+              sensex: { value: toIndian(sPrice) || '81,523.12', change: fmt(sChange) || '+620.18', pct: (fmt(sPct) || '+0.77') + '%', up: sChange >= 0 },
+              nifty: { value: toIndian(nPrice) || '24,972.40', change: fmt(nChange) || '+182.35', pct: (fmt(nPct) || '+0.74') + '%', up: nChange >= 0 }
+            })
+          }
         }
       } catch (e) {
         // Silently fail — keep default placeholder values
@@ -807,7 +815,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                   alt={getLocalizedText(item.title, language) || 'News Image'}
                   fill
-                  className="object-cover"
+                  className="object-fill w-full h-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10"></div>
                 <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -872,7 +880,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                         src={proxyImageUrl(item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                         alt={title || 'Thumbnail'}
                         fill
-                        className="object-cover"
+                        className="object-fill w-full h-full"
                       />
                     </div>
                     <div className="flex-1 flex flex-col justify-between py-0.5">
@@ -917,7 +925,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   src={proxyImageUrl(cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg')}
                   alt={getLocalizedText(cleanMainNews[0].title, language)}
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  className="object-fill w-full h-full"
                   priority
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent rounded-xl"></div>
@@ -958,7 +966,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                     alt={getLocalizedText(item.title, language)}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-fill w-full h-full"
                   />
                 </div>
                 <div className="flex-1 p-3.5 flex flex-col justify-between">
@@ -1033,7 +1041,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                       src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="object-fill w-full h-full"
                     />
                   </div>
                   {item.category && (
@@ -1186,7 +1194,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                           src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                           alt={getLocalizedText(item.title, language)}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          className="object-fill w-full h-full"
                         />
                         <span className={`absolute top-3 left-3 ${labelColors[idx]} text-white text-[9px] font-black px-2.5 py-1 uppercase tracking-wider rounded-sm shadow-lg`}>{labels[idx]}</span>
                       </div>
@@ -1233,7 +1241,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
-                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Politics" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Politics" fill className="object-fill w-full h-full" />
                     <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('politics') || 'Politics'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
@@ -1244,7 +1252,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {cleanPoliticsNews.slice(1, 3).map((item, idx) => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
-                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-105 transition-transform" />
+                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" />
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
@@ -1266,7 +1274,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {cleanCrimeNews[0] && (
                 <div onClick={() => handleNewsClick(cleanCrimeNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
-                    <Image src={proxyImageUrl(cleanCrimeNews[0].mainImage || '/placeholder-news.svg')} alt="Crime" fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src={proxyImageUrl(cleanCrimeNews[0].mainImage || '/placeholder-news.svg')} alt="Crime" fill className="object-fill w-full h-full" />
                     <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('crime') || 'Crime'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanCrimeNews[0].title, language)}</h3>
@@ -1277,7 +1285,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {cleanCrimeNews.slice(1, 3).map((item, idx) => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
-                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-cover group-hover:scale-105 transition-transform" />
+                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" />
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>

@@ -323,7 +323,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 src={proxyImageUrl(article.mainImage)}
                 alt={title}
                 fill
-                className="object-cover"
+                className="object-fill w-full h-full"
                 priority
               />
               <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm">
@@ -500,7 +500,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-cover"
+                      className="object-fill w-full h-full"
                     />
                   </div>
                   <div className="flex-1 py-0.5 sm:py-1 flex flex-col min-w-0">
@@ -541,7 +541,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                       src={proxyImageUrl(newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg')}
                       alt=""
                       fill
-                      className="object-cover"
+                      className="object-fill w-full h-full"
                     />
                   </div>
                   <p className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug break-words flex-1 min-w-0">

@@ -243,7 +243,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                 src={proxyImageUrl(cityNews[0].mainImage || cityNews[0].images?.[0] || '/placeholder-news.svg')} 
                                 alt={getLocalizedText(cityNews[0].title, language)}
                                 fill 
-                                className="object-cover group-hover:scale-105 transition-transform duration-700" 
+                                className="object-fill w-full h-full" 
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/40 to-transparent"></div>
                             
@@ -277,7 +277,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                                 src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} 
                                                 alt={getLocalizedText(item.title, language)}
                                                 fill 
-                                                className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                className="object-fill w-full h-full" 
                                             />
                                             <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
                                                 {getLocalizedCity(selectedCity || item.city || 'Mumbai', language).toUpperCase()}

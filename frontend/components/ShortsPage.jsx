@@ -17,7 +17,8 @@ import {
   Flame,
   Volume2,
   VolumeX,
-  Share2
+  Share2,
+  ChevronLeft
 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -224,70 +225,73 @@ export default function ShortsPage({ setCurrentView }) {
     return (
       <div className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-hidden select-none">
         
-        {/* ── TOP FLOATING HEADER (YouTube Shorts / Instagram Reels Overlay) ── */}
-        <div className="absolute top-0 left-0 right-0 z-50 pointer-events-auto bg-gradient-to-b from-black/80 via-black/40 to-transparent pt-3 pb-4 px-3 sm:px-6">
-          <div className="flex items-center justify-between gap-2 max-w-[1200px] mx-auto">
-            {/* Left: Back Button & Branding */}
-            <div className="flex items-center gap-2">
+        {/* ── TOP FLOATING HEADER (Native Instagram Reels iOS Glass Overlay) ── */}
+        <div className="absolute top-0 left-0 right-0 z-50 pointer-events-auto bg-gradient-to-b from-black/85 via-black/40 to-transparent pt-3 pb-3 px-3.5 sm:px-6">
+          <div className="flex items-center justify-between gap-3 max-w-[1200px] mx-auto">
+            {/* Left: Back Button & Instagram Reels Branding */}
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={handleBackNavigation}
-                className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 active:scale-95 transition-all border border-white/10"
+                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
                 aria-label="Back"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6 stroke-[2.2]" />
               </button>
               
-              {/* YouTube Shorts + Instagram Reels Badge */}
-              <div className="flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg border border-red-400/30">
-                <Flame className="w-3.5 h-3.5 fill-white text-white animate-pulse" />
-                <span className="text-white font-black text-xs tracking-wider uppercase">
-                  Shorts
+              <div className="flex items-center gap-1.5">
+                <span className="text-white font-bold text-lg sm:text-xl tracking-tight drop-shadow-md">
+                  Reels
                 </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               </div>
             </div>
 
-            {/* Center / Right: Action Pills */}
+            {/* Right: iOS Glass Action Buttons (Grid & Sound) */}
             <div className="flex items-center gap-2">
               {/* Toggle to Grid View */}
               <button
                 onClick={() => setViewMode('grid')}
-                className="flex items-center gap-1 px-3 py-1 rounded-full bg-black/40 backdrop-blur-md border border-white/15 text-white/90 hover:text-white text-xs font-semibold hover:bg-black/60 transition-all active:scale-95"
+                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
                 title="Switch to Grid View"
+                aria-label="Grid View"
               >
-                <Grid3x3 className="w-3.5 h-3.5 text-white" />
-                <span className="hidden sm:inline">Grid</span>
+                <Grid3x3 className="w-4 h-4 stroke-[2]" />
               </button>
 
               {/* Global Mute / Unmute */}
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="p-2 rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 border border-white/15 active:scale-95 transition-all"
+                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
                 title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
-                {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-white" />}
+                {isMuted ? <VolumeX className="w-5 h-5 text-rose-400 stroke-[2]" /> : <Volume2 className="w-5 h-5 text-white stroke-[2]" />}
               </button>
             </div>
           </div>
 
-          {/* YouTube Shorts Horizontal Category Pills Bar */}
-          <div className="mt-2.5 max-w-[1200px] mx-auto overflow-x-auto hide-scrollbar flex items-center gap-1.5 px-0.5">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setActiveShortIndex(0);
-                  if (containerRef.current) containerRef.current.scrollTop = 0;
-                }}
-                className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-bold tracking-tight transition-all duration-200 border ${
-                  activeCategory === cat
-                    ? 'bg-white text-black border-white shadow-md'
-                    : 'bg-black/40 backdrop-blur-md text-white/80 hover:text-white border-white/10 hover:bg-white/10'
-                }`}
-              >
-                {getCatLabel(cat)}
-              </button>
-            ))}
+          {/* Instagram Segmented Category Filter Pills Bar */}
+          <div className="mt-2.5 max-w-[1200px] mx-auto overflow-x-auto hide-scrollbar flex items-center gap-1.5 px-0.5 py-0.5">
+            {CATEGORIES.map((cat) => {
+              const isSelected = activeCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setActiveCategory(cat);
+                    setActiveShortIndex(0);
+                    if (containerRef.current) containerRef.current.scrollTop = 0;
+                  }}
+                  className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 border active:scale-95 ${
+                    isSelected
+                      ? 'bg-white text-neutral-950 border-white shadow-[0_2px_10px_rgba(0,0,0,0.3)] font-bold'
+                      : 'bg-black/35 backdrop-blur-2xl text-white/85 hover:text-white border-white/15 hover:bg-white/15'
+                  }`}
+                >
+                  {getCatLabel(cat)}
+                </button>
+              );
+            })}
           </div>
         </div>
 
