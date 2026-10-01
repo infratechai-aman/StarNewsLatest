@@ -1337,10 +1337,9 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
       setUploadingEnewspaper(false)
 
       // Save e-newspaper record via admin endpoint (auto-approved)
-      const token = localStorage.getItem('token')
       const res = await fetch('/api/admin/enewspaper', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
         body: JSON.stringify({
           title: enewspaperForm.title,
           publishDate: enewspaperForm.editionDate,
