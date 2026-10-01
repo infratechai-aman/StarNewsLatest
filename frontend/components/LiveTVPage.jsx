@@ -1,416 +1,505 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { liveTV } from '@/lib/api'
-import { getSidebarAdSettings } from '@/lib/contentStore'
-import { useLanguage } from '@/contexts/LanguageContext'
-import { getLocalizedText } from '@/lib/newsData'
-import { proxyImageUrl } from '@/lib/imageProxy'
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  Tv,
+  Radio,
+  Play,
+  Share2,
+  CheckCircle2,
+  Users,
+  Search,
+  Sparkles,
+  Maximize2,
+  Volume2,
+  Check,
+  Flame,
+  ChevronRight,
+  Eye,
+  SlidersHorizontal,
+  Compass
+} from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { proxyImageUrl } from '@/lib/imageProxy';
 
-// Extract YouTube video ID
+// Extract YouTube ID
 const extractYouTubeId = (url) => {
-  if (!url) return null
-  const str = String(url).trim()
-  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str
-  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/)
-  if (match) return match[1]
-  const vMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
-  if (vMatch) return vMatch[1]
-  return null
-}
+  if (!url) return null;
+  const str = String(url).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/);
+  if (match) return match[1];
+  const vMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (vMatch) return vMatch[1];
+  return null;
+};
 
-const LiveTVPage = ({ setCurrentView }) => {
-  const { t, language } = useLanguage()
-  const [config, setConfig] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [activeStreamId, setActiveStreamId] = useState(null)
-  const [newsArticles, setNewsArticles] = useState([])
-  const [sidebarAds, setSidebarAds] = useState([])
-  const [adIndex, setAdIndex] = useState(0)
+const CATEGORIES = [
+  { id: 'all', label: 'All Channels', labelMr: 'सर्व चॅनेल्स', labelHi: 'सभी चैनल्स', icon: '🔥' },
+  { id: 'news', label: 'News & Politics', labelMr: 'बातम्या आणि राजकारण', labelHi: 'समाचार एवं राजनीति', icon: '🔴' },
+  { id: 'kids', label: 'Kids & Cartoons', labelMr: 'लहान मुलांचे चॅनल', labelHi: 'बच्चों के कार्टून', icon: '👶' },
+  { id: 'business', label: 'Business & Markets', labelMr: 'शेअर बाजार आणि व्यापार', labelHi: 'शेयर बाजार व व्यापार', icon: '📈' },
+  { id: 'devotional', label: 'Live Darshan', labelMr: 'थेट देवदर्शन', labelHi: 'सीधा देवदर्शन', icon: '🙏' },
+  { id: 'music', label: 'Music & Hits', labelMr: 'संगीत आणि मनोरंजन', labelHi: 'संगीत एवं मनोरंजन', icon: '🎵' },
+  { id: 'sports', label: 'Sports Desk', labelMr: 'क्रीडा थेट डेस्क', labelHi: 'खेल लाइव डेस्क', icon: '🏏' }
+];
 
+export default function LiveTVPage({ setCurrentView }) {
+  const { t, language } = useLanguage();
+  const [channels, setChannels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeStreamId, setActiveStreamId] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [shareToast, setShareToast] = useState('');
+
+  // Fetch channels from API
   useEffect(() => {
-    // Parallel fetch for speed
-    Promise.all([
-      liveTV.get().catch(() => null),
-      fetch('/api/news').then(r => r.json()).catch(() => []),
-      getSidebarAdSettings().catch(() => ({ items: [] }))
-    ]).then(([tvData, newsData, adSettings]) => {
-      // Live TV config
-      if (tvData) {
-        setConfig(tvData)
-        setActiveStreamId(tvData.primaryStreamId || tvData.streams?.[0]?.id || null)
+    const fetchChannels = async () => {
+      try {
+        const res = await fetch('/api/live-tv');
+        const data = await res.json();
+        if (data && Array.isArray(data.streams) && data.streams.length > 0) {
+          setChannels(data.streams);
+          setActiveStreamId(data.primaryStreamId || data.streams[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load Live TV channels:', err);
+      } finally {
+        setLoading(false);
       }
-      // News articles
-      const articles = Array.isArray(newsData) ? newsData : (newsData?.articles || newsData?.news || [])
-      setNewsArticles(articles.filter(a => a.status === 'approved' || !a.status).slice(0, 12))
-      // Sidebar ads from API
-      setSidebarAds(adSettings?.items || [])
-      setLoading(false)
-    })
-  }, [])
+    };
+    fetchChannels();
+  }, []);
 
-  // Rotate sidebar ads every 4 seconds
-  useEffect(() => {
-    if (sidebarAds.length <= 1) return
-    const timer = setInterval(() => setAdIndex(i => (i + 1) % sidebarAds.length), 4000)
-    return () => clearInterval(timer)
-  }, [sidebarAds])
+  const activeChannel = useMemo(() => {
+    return channels.find((ch) => ch.id === activeStreamId) || channels[0] || null;
+  }, [channels, activeStreamId]);
 
-  const switchStream = useCallback((id) => {
-    setActiveStreamId(id)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [])
+  const youtubeId = useMemo(() => {
+    return activeChannel ? extractYouTubeId(activeChannel.url) || 'GFjuqQmfVIU' : 'GFjuqQmfVIU';
+  }, [activeChannel]);
 
-  // Loading skeleton
+  // Filter channels by Category and Search
+  const filteredChannels = useMemo(() => {
+    return channels.filter((ch) => {
+      const matchCat = selectedCategory === 'all' || ch.category === selectedCategory;
+      const matchSearch =
+        !searchQuery.trim() ||
+        ch.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ch.channelName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ch.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [channels, selectedCategory, searchQuery]);
+
+  const switchChannel = useCallback((id) => {
+    setActiveStreamId(id);
+    setIsFollowing(false);
+    // Smooth scroll to player on mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/live-tv?stream=${activeStreamId}` : '';
+    const shareData = {
+      title: activeChannel?.title || 'StarNews Live TV',
+      text: `Watch ${activeChannel?.channelName || 'Live TV'} streaming live on StarNews!`,
+      url: shareUrl
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl || window.location.href);
+        setShareToast('Live stream link copied!');
+        setTimeout(() => setShareToast(''), 2500);
+      }
+    } catch {
+      // User cancelled
+    }
+  };
+
+  const getCatTitle = (cat) => {
+    if (language === 'mr') return cat.labelMr;
+    if (language === 'hi') return cat.labelHi;
+    return cat.label;
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950">
-        <div className="bg-red-600 py-2.5 px-4">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="h-4 w-40 bg-white/20 rounded animate-pulse" />
-            <div className="h-4 w-24 bg-white/20 rounded animate-pulse" />
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-0 lg:px-4 pt-0 lg:pt-6">
-          <div className="space-y-4">
-            <div className="aspect-video bg-white/5 rounded-none lg:rounded-xl animate-pulse" />
-            <div className="h-20 bg-white/5 rounded-none lg:rounded-xl animate-pulse mx-0 lg:mx-0" />
-          </div>
-        </div>
+      <div className="min-h-screen bg-[#0a0d14] text-white flex flex-col items-center justify-center p-6 space-y-4">
+        <div className="w-12 h-12 rounded-full border-4 border-red-500 border-t-transparent animate-spin" />
+        <p className="text-gray-400 text-sm font-semibold tracking-wide">
+          {language === 'mr' ? 'लाइव्ह टीव्ही चॅनेल्स लोड होत आहेत...' : language === 'hi' ? 'लाइव टीवी चैनल्स लोड हो रहे हैं...' : 'Tuning into Live TV Channels...'}
+        </p>
       </div>
-    )
-  }
-
-  const DEFAULT_STREAM = {
-    id: 'default-starnews',
-    title: 'Star News Live 24/7',
-    url: 'https://www.youtube.com/live/GFjuqQmfVIU',
-    description: 'Top stories. Ground reports. Expert analysis 24/7 from across India.',
-    isLive: true
-  }
-
-  const streams = (config?.streams && config.streams.length > 0) ? config.streams : [DEFAULT_STREAM]
-  const activeStream = streams.find(s => s.id === activeStreamId) || streams[0]
-  const otherStreams = streams.filter(s => s.id !== activeStream?.id)
-  const youtubeId = extractYouTubeId(activeStream?.url) || 'GFjuqQmfVIU'
-  const hasLiveStreams = streams.some(s => s.isLive)
-  const currentAd = sidebarAds[adIndex]
-
-  const programSchedule = [
-    {
-      time: '12:00 PM – 01:06 PM',
-      show: language === 'mr' ? 'स्टार न्यूज लाइव्ह' : language === 'hi' ? 'स्टार न्यूज़ लाइव' : 'Star News Live',
-      desc: language === 'mr' ? 'प्रमुख बातम्या. ग्राउंड रिपोर्ट्स. तज्ज्ञ विश्लेषण.' : language === 'hi' ? 'प्रमुख खबरें. ग्राउंड रिपोर्ट्स. विशेषज्ञ विश्लेषण.' : 'Top stories. Ground reports. Expert analysis.',
-      live: true
-    },
-    {
-      time: '01:00 PM – 02:00 PM',
-      show: language === 'mr' ? 'न्यूज बुलेटिन' : language === 'hi' ? 'न्यूज़ बुलेटिन' : 'News Bulletin',
-      desc: '',
-      live: false
-    },
-    {
-      time: '02:00 PM – 03:00 PM',
-      show: language === 'mr' ? 'महाराष्ट्र टुडे' : language === 'hi' ? 'महाराष्ट्र टुडे' : 'Maharashtra Today',
-      desc: '',
-      live: false
-    },
-    {
-      time: '03:00 PM – 04:30 PM',
-      show: language === 'mr' ? 'नेशन फर्स्ट' : language === 'hi' ? 'नेशन फर्स्ट' : 'Nation First',
-      desc: '',
-      live: false
-    },
-    {
-      time: '04:00 PM – 10:00 PM',
-      show: language === 'mr' ? 'बिझनेस राउंडअप' : language === 'hi' ? 'बिजनेस राउंडअप' : 'Business Roundup',
-      desc: '',
-      live: false
-    },
-  ]
-
-  const liveTags = language === 'mr'
-    ? ['बातम्या', 'थेट', 'मराठी', 'हिंदी']
-    : language === 'hi'
-    ? ['समाचार', 'लाइव', 'हिंदी', 'अंग्रेज़ी']
-    : ['News', 'Live', 'Hindi', 'English']
-
-  const formatHoursAgo = (createdAt, defaultHours) => {
-    const hours = createdAt ? Math.max(1, Math.round((Date.now() - new Date(createdAt)) / 3600000)) : defaultHours
-    if (language === 'mr') return `${hours} तासांपूर्वी`
-    if (language === 'hi') return `${hours} घंटे पहले`
-    return `${hours} hours ago`
-  }
-
-  const formatViews = (views) => {
-    const count = views || Math.floor(Math.random() * 50 + 10)
-    if (language === 'mr') return `${count}K व्ह्यूज`
-    if (language === 'hi') return `${count}K व्यूज`
-    return `${count}K views`
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f111a] pb-12">
+    <div className="min-h-screen bg-[#0a0d14] text-white pb-20 select-none">
+      {/* ── 1. YOUTUBE-STYLE TOP NAVIGATION HEADER ── */}
+      <div className="sticky top-0 z-40 bg-[#0f131d]/95 backdrop-blur-2xl border-b border-white/10 shadow-xl">
+        <div className="max-w-[1500px] mx-auto px-4 py-2.5 flex items-center justify-between gap-4">
+          {/* Brand & Live Indicator */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 px-3 py-1 rounded-xl shadow-lg shadow-red-900/30">
+              <Tv className="w-4 h-4 text-white" />
+              <span className="text-white font-black text-xs sm:text-sm tracking-wider uppercase">
+                Live TV
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-950/70 border border-red-500/40 text-[10px] font-bold text-red-400">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              <span>{channels.length} {language === 'mr' ? 'चॅनेल्स थेट' : language === 'hi' ? 'चैनल्स लाइव' : 'Channels Broadcasting'}</span>
+            </div>
+          </div>
 
-      {/* ====== MAIN CONTENT: Player + Schedule Sidebar ====== */}
-      <div className="max-w-[1400px] mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_340px] gap-6 lg:gap-8">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md hidden md:block">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              placeholder={language === 'mr' ? 'चॅनेल, बातमी किंवा विषय शोधा...' : language === 'hi' ? 'चैनल, समाचार या विषय खोजें...' : 'Search news, kids, devotional or music channels...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-red-500 rounded-full pl-9 pr-4 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none transition-all"
+            />
+          </div>
 
-          {/* LEFT: Video Player */}
-          <div>
-            {/* Player */}
-            <div className="relative rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/5 ring-1 ring-white/10">
-              {activeStream?.isLive && (
-                <div className="absolute top-4 left-4 z-20 flex gap-2">
-                  <span className="flex items-center gap-1.5 bg-red-600/90 backdrop-blur-md text-white text-[11px] font-black tracking-wide px-3 py-1.5 rounded shadow-lg">
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    ((•)) {t('live') || 'LIVE'}
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md text-white/90 text-[11px] font-bold tracking-wide px-3 py-1.5 rounded shadow-lg">
-                    2.4K {t('watchingLive') || 'watching'}
-                  </span>
-                </div>
-              )}
-              <div className="aspect-video w-full relative bg-black">
-                {youtubeId ? (
-                  <iframe
-                    key={youtubeId}
-                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&rel=0`}
-                    title={activeStream?.title || 'Live TV'}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    style={{ border: 'none' }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                    <p className="text-white/40">{t('streamUnavailable') || (language === 'mr' ? 'प्रवाह अनुपलब्ध' : language === 'hi' ? 'स्ट्रीम अनुपलब्ध' : 'Stream unavailable')}</p>
+          {/* Right Action */}
+          <button
+            onClick={() => setCurrentView && setCurrentView('home')}
+            className="text-xs font-bold text-gray-300 hover:text-white px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition-all shrink-0"
+          >
+            ← {language === 'mr' ? 'मुख्य पृष्ठ' : language === 'hi' ? 'मुख्य पृष्ठ' : 'Back to News'}
+          </button>
+        </div>
+
+        {/* ── 2. YOUTUBE HORIZONTAL CATEGORY CHIPS BAR ── */}
+        <div className="max-w-[1500px] mx-auto px-4 py-2 overflow-x-auto hide-scrollbar flex items-center gap-2">
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 flex items-center gap-1.5 border active:scale-95 ${
+                  isSelected
+                    ? 'bg-white text-neutral-950 border-white font-black shadow-lg shadow-white/10 scale-100'
+                    : 'bg-white/5 text-gray-300 hover:text-white border-white/10 hover:bg-white/10'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                <span>{getCatTitle(cat)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 3. MAIN CINEMA & CHANNELS WORKSPACE ── */}
+      <div className="max-w-[1500px] mx-auto px-0 sm:px-4 pt-0 sm:pt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* ── LEFT: YOUTUBE MAIN LIVE PLAYER + CHANNEL DETAILS ── */}
+          <div className={`${isTheaterMode ? 'lg:col-span-12' : 'lg:col-span-8'} flex flex-col space-y-4`}>
+            {/* The Cinema YouTube Player Container */}
+            <div className="relative aspect-video w-full bg-black sm:rounded-2xl overflow-hidden shadow-2xl border-b sm:border border-white/10">
+              <iframe
+                key={`stream-${youtubeId}`}
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1${typeof window !== 'undefined' ? `&origin=${encodeURIComponent(window.location.origin)}` : ''}`}
+                title={activeChannel?.title || 'StarNews Live Stream'}
+                className="w-full h-full object-cover"
+                style={{ border: 'none' }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+
+              {/* Top Live Badge Bar Overlay */}
+              <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
+                <span className="flex items-center gap-1.5 bg-red-600/95 backdrop-blur-md text-white text-[10px] font-black uppercase px-2.5 py-1 rounded-md shadow-lg tracking-wider">
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <span>LIVE</span>
+                </span>
+                <span className="bg-black/60 backdrop-blur-md text-gray-300 text-[10px] font-bold px-2.5 py-1 rounded-md border border-white/10">
+                  HD 1080p
+                </span>
+              </div>
+            </div>
+
+            {/* Stream Header & Channel Action Bar */}
+            <div className="px-4 sm:px-0 space-y-3">
+              {/* Channel Title */}
+              <h1 className="text-lg sm:text-2xl font-black text-white leading-tight tracking-tight">
+                {activeChannel?.title || 'StarNews India 24/7 Live Stream'}
+              </h1>
+
+              {/* Channel Info & Interactive Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-4 pt-1 pb-3 border-b border-white/10">
+                {/* Channel Profile */}
+                <div className="flex items-center gap-3">
+                  <div className="p-0.5 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 shadow-md">
+                    <div className="w-10 h-10 rounded-full bg-black border border-black flex items-center justify-center overflow-hidden">
+                      <span className="text-white font-black text-xs tracking-tighter">
+                        {activeChannel?.channelName?.substring(0, 2).toUpperCase() || 'TV'}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Breaking News Ticker (Broadcast TV style below player) */}
-            <div className="mt-3 flex items-center bg-[#141724] border border-white/10 rounded-xl overflow-hidden shadow-lg">
-              <div className="bg-red-600 text-white text-xs font-black uppercase tracking-wider px-4 py-3 shrink-0 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                {t('breakingNews') || 'BREAKING NEWS'}
-              </div>
-              <div className="px-4 py-2.5 overflow-hidden flex-1">
-                <p className="text-white text-sm font-bold truncate">
-                  {newsArticles[0] ? (getLocalizedText(newsArticles[0].title, language) || (typeof newsArticles[0].title === 'string' ? newsArticles[0].title : newsArticles[0].title?.en || '')) : (language === 'mr' ? 'स्टार न्यूज लाइव्ह: देशभरातील ताज्या घडामोडी आणि थेट कव्हरेज' : language === 'hi' ? 'स्टार न्यूज़ लाइव: देश भर से ताज़ा ख़बरें और लाइव कवरेज' : 'StarNews Live: Top breaking stories and live coverage across India')}
-                </p>
-              </div>
-            </div>
-
-            {/* Now Playing Info Bar */}
-            <div className="mt-6 flex flex-col md:flex-row md:items-start justify-between gap-6">
-              <div className="flex gap-4 items-start">
-                {/* Thumbnail */}
-                <div className="relative w-[140px] h-[85px] rounded-lg overflow-hidden bg-gray-900 shrink-0 border border-white/10 shadow-lg">
-                  {youtubeId && <img src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover opacity-80" />}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <span className="text-white text-sm font-black text-center leading-tight drop-shadow-md">
-                      {language === 'mr' ? <>स्टार न्यूज<br/>लाइव्ह</> : language === 'hi' ? <>स्टार न्यूज़<br/>लाइव</> : <>STAR NEWS<br/>LIVE</>}
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-bold text-sm sm:text-base">
+                        {activeChannel?.channelName || 'StarNews India'}
+                      </span>
+                      <CheckCircle2 className="w-4 h-4 text-white fill-[#0095f6]" />
+                    </div>
+                    <span className="text-gray-400 text-xs flex items-center gap-1">
+                      <Users className="w-3 h-3 text-red-500" />
+                      <span>{activeChannel?.viewers || '24K'} {language === 'mr' ? 'थेट पाहत आहेत' : language === 'hi' ? 'लाइव देख रहे हैं' : 'watching live'}</span>
                     </span>
                   </div>
-                </div>
-                <div>
-                  <h2 className="text-white font-bold text-2xl leading-tight mb-1">{getLocalizedText(activeStream?.title, language) || activeStream?.title || 'Star News Live'}</h2>
-                  <p className="text-gray-300 text-sm mb-3">{getLocalizedText(activeStream?.description, language) || activeStream?.description || (language === 'mr' ? 'प्रमुख बातम्या. ग्राउंड रिपोर्ट्स. तज्ज्ञ विश्लेषण.' : language === 'hi' ? 'प्रमुख खबरें. ग्राउंड रिपोर्ट्स. विशेषज्ञ विश्लेषण.' : 'Top stories. Ground reports. Expert analysis.')}</p>
-                  <p className="text-gray-400 text-xs max-w-xl leading-relaxed mb-4">
-                    {language === 'mr'
-                      ? 'भारतातील आणि जगातील ताज्या घडामोडी, तज्ज्ञांच्या चर्चा आणि थेट ग्राउंड रिपोर्टिंगसह सदैव अपडेट राहा.'
-                      : language === 'hi'
-                      ? 'भारत और दुनिया भर की ताज़ा खबरों, विशेषज्ञ चर्चाओं और ग्राउंड रिपोर्टिंग के साथ हमेशा अपडेट रहें।'
-                      : 'Stay updated with the latest news from across India and around the world with our live coverage, expert discussions and on-ground reporting.'}
-                  </p>
-                  <div className="flex gap-2">
-                    {liveTags.map(tag => (
-                      <span key={tag} className="text-[10px] font-bold text-gray-400 border border-gray-700/50 bg-white/5 px-2.5 py-1 rounded-full uppercase tracking-wider">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {/* Stats */}
-              <div className="flex flex-col gap-3 min-w-[140px] shrink-0 border-l border-white/10 pl-6 hidden md:flex">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                  </div>
-                  <div><p className="text-sm font-bold text-white">2.4K</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">{t('watchingLive') || 'Watching Live'}</p></div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                  </div>
-                  <div><p className="text-sm font-bold text-white">HD</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">{t('streamingInHd') || 'Streaming in HD'}</p></div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center">
-                    <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  </div>
-                  <div><p className="text-sm font-bold text-white">24/7</p><p className="text-[10px] text-gray-400 uppercase tracking-widest font-semibold">{t('newsCoverage') || 'News Coverage'}</p></div>
-                </div>
-              </div>
-            </div>
 
-            {/* Latest from Star News */}
-            {newsArticles.length > 0 && (
-              <div className="mt-12">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-[16px] font-black text-white flex items-center gap-2">
-                    <span className="w-1 h-5 bg-red-600 rounded-full block" />
-                    {t('latestFrom') ? `${t('latestFrom')} Star News` : 'Latest from Star News'}
-                  </h2>
-                  <button onClick={() => setCurrentView && setCurrentView('news')} className="text-white/60 text-xs font-bold hover:text-white flex items-center gap-1 transition-colors">
-                    {t('viewAll') || 'View All'} →
+                  {/* Follow Channel Button */}
+                  <button
+                    onClick={() => setIsFollowing(!isFollowing)}
+                    className={`ml-2 text-xs font-bold px-4 py-2 rounded-full transition-all active:scale-95 shadow-md flex items-center gap-1.5 ${
+                      isFollowing
+                        ? 'bg-white/15 text-white/90 border border-white/20'
+                        : 'bg-white text-neutral-950 hover:bg-neutral-200'
+                    }`}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Subscribed</span>
+                      </>
+                    ) : (
+                      <span>Subscribe</span>
+                    )}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {newsArticles.slice(0, 4).map((article, idx) => {
-                    const thumb = article.thumbnails?.[0] || article.thumbnailUrl || article.mainImage || article.imageUrl
-                    const title = getLocalizedText(article.title, language) || (typeof article.title === 'string' ? article.title : (article.title?.en || article.title?.hi || ''))
-                    return (
-                      <div key={article.id || idx} className="cursor-pointer group flex flex-col h-full" onClick={() => { if (setCurrentView) { window.history.pushState({}, '', `?article=${article.id}`); setCurrentView('news-detail') } }}>
-                        <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-900 mb-3 shadow-md border border-white/5">
-                          {thumb ? <img src={proxyImageUrl(thumb)} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display='none'} /> : <div className="w-full h-full bg-gray-800" />}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                          
-                          {/* Play button overlay */}
-                          <div className="absolute bottom-2 left-2 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20">
-                            <svg className="w-2.5 h-2.5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                          </div>
-                          
-                          {/* Duration Badge */}
-                          <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md text-white text-[9px] px-1.5 py-0.5 rounded font-bold shadow-sm tracking-wide">
-                            {idx === 0 ? '3:34' : idx === 1 ? '3:12' : idx === 2 ? '2:56' : '3:20'}
-                          </div>
-                        </div>
-                        <h4 className="text-[13px] font-bold text-white/90 line-clamp-2 group-hover:text-white transition-colors leading-snug mb-1.5 flex-1">{title}</h4>
-                        <div className="flex items-center gap-1.5 text-[10px] font-semibold text-white/40 mt-auto">
-                          <span>{formatHoursAgo(article.createdAt, 2 * (idx + 1))}</span>
-                          <span className="w-1 h-1 rounded-full bg-white/20" />
-                          <span>{formatViews(article.views)}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
+
+                {/* Right Player Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleShare}
+                    className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/15 text-white/90 hover:text-white px-3.5 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share</span>
+                  </button>
+                  <button
+                    onClick={() => setIsTheaterMode(!isTheaterMode)}
+                    className="hidden sm:flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/15 text-white/90 hover:text-white px-3.5 py-2 rounded-full text-xs font-bold transition-all active:scale-95"
+                    title="Toggle Theater Mode"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>{isTheaterMode ? 'Normal View' : 'Theater View'}</span>
+                  </button>
                 </div>
               </div>
-            )}
+
+              {/* Description Box */}
+              {activeChannel?.description && (
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-xs text-gray-300 leading-relaxed">
+                  <p className="font-semibold text-white/90 mb-1">
+                    🔴 {language === 'mr' ? 'थेट प्रक्षेपण माहिती:' : language === 'hi' ? 'लाइव प्रसारण विवरण:' : 'Live Stream Information:'}
+                  </p>
+                  <p>{activeChannel.description}</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* RIGHT: Program Schedule Sidebar */}
-          <div className="space-y-6">
-            {/* Live Now / Program Schedule tabs */}
-            <div className="border border-white/5 bg-[#141724] rounded-2xl overflow-hidden shadow-xl ring-1 ring-white/5">
-              <div className="grid grid-cols-2">
-                <div className="bg-red-600 text-white text-[11px] font-black text-center py-3.5 tracking-wider uppercase">{t('liveNow') || 'Live Now'}</div>
-                <div className="bg-[#0f111a] text-white/50 border-b border-white/5 text-[11px] font-bold text-center py-3.5 hover:text-white/80 transition-colors cursor-pointer">{t('programSchedule') || 'Program Schedule'}</div>
+          {/* ── RIGHT / SIDEBAR: UP NEXT LIVE CHANNELS RAIL ── */}
+          <div className={`${isTheaterMode ? 'lg:col-span-12' : 'lg:col-span-4'} px-4 sm:px-0 space-y-4`}>
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <h3 className="text-white font-extrabold text-sm sm:text-base uppercase tracking-wider">
+                  {language === 'mr' ? 'थेट प्रक्षेपित चॅनेल्स' : language === 'hi' ? 'लाइव प्रसारित चैनल्स' : 'Live Channels Rail'}
+                </h3>
               </div>
-              <div className="divide-y divide-white/5">
-                {programSchedule.map((prog, idx) => (
-                  <div key={idx} className={`flex gap-4 p-4 items-center ${prog.live ? 'bg-white/5' : 'hover:bg-white/[0.02]'} transition-colors cursor-pointer`}>
-                    <div className="min-w-0 flex-1">
-                      {prog.live && (
-                        <span className="inline-block text-[9px] font-black bg-red-600 text-white px-1.5 py-0.5 rounded shadow-sm mb-1.5">{t('onAir') || 'ON AIR'}</span>
+              <span className="text-gray-400 text-xs font-bold">
+                {filteredChannels.length} {language === 'mr' ? 'उपलब्ध' : language === 'hi' ? 'उपलब्ध' : 'Available'}
+              </span>
+            </div>
+
+            {/* Channels Scrollable Vertical List */}
+            <div className={`space-y-3 ${isTheaterMode ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 space-y-0' : 'max-h-[820px] overflow-y-auto hide-scrollbar'}`}>
+              {filteredChannels.map((channel) => {
+                const cYouTubeId = extractYouTubeId(channel.url);
+                const isPlayingThis = channel.id === activeStreamId;
+                return (
+                  <div
+                    key={channel.id}
+                    onClick={() => switchChannel(channel.id)}
+                    className={`flex gap-3 p-2.5 rounded-2xl cursor-pointer transition-all duration-200 border group ${
+                      isPlayingThis
+                        ? 'bg-red-950/40 border-red-500/60 shadow-lg shadow-red-950/50'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    {/* 16:9 Thumbnail with LIVE badge */}
+                    <div className="relative w-36 sm:w-40 aspect-video rounded-xl overflow-hidden bg-black shrink-0 shadow-md">
+                      {cYouTubeId ? (
+                        <img
+                          src={`https://img.youtube.com/vi/${cYouTubeId}/hqdefault.jpg`}
+                          alt={channel.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                          <Tv className="w-6 h-6 text-gray-600" />
+                        </div>
                       )}
-                      <p className={`text-[10px] font-bold ${prog.live ? 'text-white/50' : 'text-white/40'} tracking-wide mb-0.5`}>{prog.time}</p>
-                      <p className={`text-[13px] font-bold ${prog.live ? 'text-white' : 'text-white/80'} leading-tight`}>{prog.show}</p>
-                      {prog.desc && <p className="text-[10px] text-white/40 mt-1 leading-relaxed">{prog.desc}</p>}
-                    </div>
-                    {prog.live && (
-                      <div className="relative w-[75px] h-[45px] rounded-md shrink-0 overflow-hidden shadow-lg border border-white/10">
-                        {youtubeId && <img src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`} alt="" className="w-full h-full object-cover opacity-80" />}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
-                          <span className="text-white text-[8px] font-black text-center leading-tight drop-shadow-md">
-                            {language === 'mr' ? <>स्टार न्यूज<br/>लाइव्ह</> : language === 'hi' ? <>स्टार न्यूज़<br/>लाइव</> : <>STAR NEWS<br/>LIVE</>}
+                      {/* Crimson Live Badge */}
+                      <span className="absolute bottom-1.5 left-1.5 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-md flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span>LIVE</span>
+                      </span>
+                      {isPlayingThis && (
+                        <div className="absolute inset-0 bg-red-600/20 backdrop-blur-[1px] flex items-center justify-center">
+                          <span className="bg-red-600 text-white font-black text-[9px] uppercase px-2 py-1 rounded-md shadow-lg tracking-wider">
+                            Playing
                           </span>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Channel Metadata */}
+                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                      <div>
+                        <h4 className="text-white text-xs sm:text-sm font-bold line-clamp-2 leading-snug group-hover:text-red-400 transition-colors">
+                          {channel.title}
+                        </h4>
+                        <p className="text-gray-400 text-[11px] font-semibold mt-1 truncate">
+                          {channel.channelName || 'StarNews Network'}
+                        </p>
                       </div>
-                    )}
-                    {!prog.live && (
-                      <div className={`relative w-[75px] h-[45px] rounded-md shrink-0 overflow-hidden shadow-md border border-white/10 ${
-                        idx === 1 ? 'bg-blue-900/60' : idx === 2 ? 'bg-orange-900/60' : idx === 3 ? 'bg-indigo-900/60' : 'bg-blue-800/60'
-                      }`}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                        <div className="absolute inset-0 flex items-center justify-center p-1">
-                          <span className="text-white text-[8px] font-black text-center leading-tight uppercase drop-shadow-md break-words">{prog.show}</span>
-                        </div>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-500 font-bold mt-1">
+                        <span className="text-red-400">● {channel.viewers || '15K'}</span>
+                        <span className="uppercase text-gray-400 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">
+                          {channel.category}
+                        </span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="p-4 border-t border-white/5 bg-black/20">
-                <button className="w-full text-center text-white/60 hover:text-white text-xs font-bold transition-colors flex items-center justify-center gap-1">
-                  {t('viewFullSchedule') || 'View Full Schedule'} →
-                </button>
-              </div>
+                );
+              })}
             </div>
+          </div>
+        </div>
 
-            {/* Real Stories CTA */}
-            <div className="bg-[#141724] rounded-2xl p-6 relative overflow-hidden border border-white/5 ring-1 ring-white/5 shadow-xl">
-              {newsArticles[1] && (() => {
-                const thumb = newsArticles[1].thumbnails?.[0] || newsArticles[1].mainImage
-                return thumb ? <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" onError={e => e.target.style.display='none'} /> : null
-              })()}
-              <div className="relative z-10">
-                <h3 className="text-white font-black text-2xl leading-tight mb-2 drop-shadow-md">
-                  {language === 'mr' ? <>खऱ्या कथा.<br/>खरा प्रभाव.</> : language === 'hi' ? <>सच्ची कहानियां.<br/>सच्चा प्रभाव.</> : <>Real Stories.<br/>Real Impact.</>}
-                </h3>
-                <p className="text-white/60 text-xs mb-5 max-w-[200px] leading-relaxed font-semibold">
-                  {t('journalismTagline') || (language === 'mr' ? 'पत्रकारिता जी आपल्याला माहितीपूर्ण, सक्षम आणि पुढे ठेवते.' : language === 'hi' ? 'पत्रकारिता जो आपको सूचित, सशक्त और आगे रखती है।' : 'Journalism that keeps you informed, empowered and ahead.')}
-                </p>
-                <button onClick={() => setCurrentView && setCurrentView('reporter')} className="bg-red-600 hover:bg-red-700 text-white text-xs font-black px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1 shadow-lg shadow-red-900/50">
-                  {t('joinAsReporter') || (language === 'mr' ? 'रिपोर्टर म्हणून सामील व्हा' : language === 'hi' ? 'रिपोर्टर के रूप में जुड़ें' : 'Join as Reporter')} →
-                </button>
-              </div>
-            </div>
+        {/* ── 4. CATEGORIZED SECTIONS & SHELVES (YouTube Style Multi-Channel Hub) ── */}
+        <div className="mt-12 px-4 sm:px-0 space-y-10">
+          {[
+            { catId: 'news', title: '🔴 24/7 Marathi & National News Channels', titleMr: '🔴 २४ तास मराठी आणि राष्ट्रीय बातम्या', desc: 'Real-time breaking updates, studio debates, and live field reporters.' },
+            { catId: 'kids', title: '👶 Kids Zone • Rhymes, Cartoons & Learning Stories', titleMr: '👶 लहान मुलांचे चॅनल • बालगीते, गोष्टी आणि कार्टून', desc: 'Engaging, safe, and educational live streams for toddlers and children.' },
+            { catId: 'business', title: '📈 Business, Stock Market & Trading Live', titleMr: '📈 शेअर बाजार आणि बिझनेस थेट प्रक्षेपण', desc: 'Live NSE, BSE Sensex, Nifty analysis, company earnings, and finance tips.' },
+            { catId: 'devotional', title: '🙏 24/7 Live Mandir Darshan • Pandharpur & Shirdi', titleMr: '🙏 २४ तास थेट देवदर्शन • पंढरपूर, शिर्डी आणि सिद्धिविनायक', desc: 'Experience continuous divine darshan, daily aartis, and prayers from sacred shrines.' },
+            { catId: 'music', title: '🎵 Non-Stop Music & Bollywood Hits', titleMr: '🎵 नॉन-स्टॉप बॉलिवूड गाणी आणि संगीत', desc: 'Top party anthems, romantic melodies, and trending chartbusters.' },
+            { catId: 'sports', title: '🏏 Sports Live & Cricket Match Desk', titleMr: '🏏 क्रीडा थेट विश्लेषण आणि क्रिकेट वार्ता', desc: 'Live score analysis, post-match conferences, and expert insights.' }
+          ].map((section) => {
+            const sectionChannels = channels.filter((c) => c.category === section.catId);
+            if (sectionChannels.length === 0) return null;
 
-            {/* Stream Switcher if multiple */}
-            {config.streams.length > 1 && (
-              <div className="border border-white/5 bg-[#141724] rounded-2xl p-5 shadow-xl">
-                <p className="text-xs font-black text-white/50 uppercase tracking-widest mb-4">{t('otherStreams') || 'Other Streams'}</p>
-                <div className="space-y-3">
-                  {otherStreams.slice(0, 3).map(stream => {
-                    const tid = extractYouTubeId(stream.url)
+            return (
+              <div key={section.catId} className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1 border-b border-white/10 pb-3">
+                  <div>
+                    <h2 className="text-lg sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                      {language === 'mr' ? section.titleMr : section.title}
+                    </h2>
+                    <p className="text-gray-400 text-xs sm:text-sm mt-0.5 font-medium">
+                      {section.desc}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCategory(section.catId);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="text-red-400 hover:text-red-300 text-xs font-black uppercase tracking-wider flex items-center gap-1 shrink-0"
+                  >
+                    <span>{language === 'mr' ? 'सर्व पहा' : 'View Section'}</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Channel Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {sectionChannels.map((channel) => {
+                    const cYouTubeId = extractYouTubeId(channel.url);
+                    const isPlayingThis = channel.id === activeStreamId;
+
                     return (
-                      <div key={stream.id} onClick={() => switchStream(stream.id)} className="flex gap-4 cursor-pointer group hover:bg-white/5 rounded-xl p-2 -mx-2 transition-colors items-center">
-                        <div className="relative w-24 h-14 rounded-lg overflow-hidden bg-gray-900 shrink-0 shadow-md">
-                          {tid && <img src={`https://img.youtube.com/vi/${tid}/mqdefault.jpg`} alt={getLocalizedText(stream.title, language) || stream.title} className="w-full h-full object-cover opacity-80" />}
+                      <div
+                        key={channel.id}
+                        onClick={() => switchChannel(channel.id)}
+                        className={`group bg-[#141824] hover:bg-[#1a2030] rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer flex flex-col shadow-lg ${
+                          isPlayingThis ? 'border-red-500 ring-2 ring-red-500/40' : 'border-white/10 hover:border-white/20'
+                        }`}
+                      >
+                        {/* Video Thumbnail */}
+                        <div className="relative aspect-video w-full bg-black overflow-hidden">
+                          {cYouTubeId ? (
+                            <img
+                              src={`https://img.youtube.com/vi/${cYouTubeId}/hqdefault.jpg`}
+                              alt={channel.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-neutral-900 flex items-center justify-center">
+                              <Tv className="w-8 h-8 text-gray-600" />
+                            </div>
+                          )}
+                          <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-md flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            <span>LIVE</span>
+                          </span>
+                          <span className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded">
+                            {channel.viewers || '20K'} watching
+                          </span>
                         </div>
-                        <div className="min-w-0">
-                          <h5 className="text-[13px] font-bold text-white/90 line-clamp-2 group-hover:text-white leading-tight mb-1">{getLocalizedText(stream.title, language) || stream.title}</h5>
-                          {stream.isLive && <span className="text-[9px] text-red-500 font-bold uppercase tracking-wide">● {t('live') || 'LIVE'}</span>}
+
+                        {/* Card Info */}
+                        <div className="p-3.5 flex items-start gap-3 flex-1">
+                          <div className="w-8 h-8 rounded-full bg-black border border-white/20 flex items-center justify-center font-black text-xs text-white shrink-0 shadow-sm mt-0.5">
+                            {channel.channelName?.substring(0, 2).toUpperCase() || 'TV'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm text-white group-hover:text-red-400 transition-colors line-clamp-2 leading-snug">
+                              {channel.title}
+                            </h3>
+                            <p className="text-gray-400 text-xs font-semibold mt-1 truncate">
+                              {channel.channelName}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
                 </div>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="border-t border-white/5 bg-[#141724] py-6 px-6 mt-6">
-        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
-          <span className="text-white/40 text-[11px] font-bold tracking-wide">
-            {language === 'mr' ? 'स्टार न्यूज लाइव्ह टीव्ही — ताज्या बातम्यांसाठी तुमचा विश्वासार्ह स्रोत' : language === 'hi' ? 'स्टार न्यूज़ लाइव टीवी — ताज़ा खबरों के लिए आपका विश्वसनीय स्रोत' : 'Star News Live TV — Your trusted source for breaking news'}
-          </span>
-          <a href="https://youtube.com/@starnewsindialive" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" /><path d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z" fill="#0f111a" /></svg>
-          </a>
+      {/* Share Toast Notification */}
+      {shareToast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-black/90 backdrop-blur-xl border border-white/20 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>{shareToast}</span>
         </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
-
-export default LiveTVPage

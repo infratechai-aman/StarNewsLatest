@@ -207,7 +207,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const [liveTVConfig, setLiveTVConfig] = useState({
     enabled: false, streams: [], primaryStreamId: null
   })
-  const [liveTVForm, setLiveTVForm] = useState({ title: '', url: '', isLive: false })
+  const [liveTVForm, setLiveTVForm] = useState({ title: '', url: '', isLive: true, category: 'news', channelName: '', viewers: '15K', description: '' })
   const [loadingLiveTV, setLoadingLiveTV] = useState(false)
   const [editingStream, setEditingStream] = useState(null)
 
@@ -886,9 +886,13 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
     const newStream = {
       id: editingStream ? editingStream.id : crypto.randomUUID(),
       title: liveTVForm.title,
+      channelName: liveTVForm.channelName || liveTVForm.title,
+      category: liveTVForm.category || 'news',
       url: liveTVForm.url,
       isLive: liveTVForm.isLive,
       isActive: true,
+      viewers: liveTVForm.viewers || '15K',
+      description: liveTVForm.description || '',
       order: editingStream ? editingStream.order : (liveTVConfig.streams?.length || 0) + 1,
       addedAt: editingStream ? editingStream.addedAt : new Date().toISOString()
     }
@@ -904,7 +908,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
       primaryStreamId: liveTVConfig.primaryStreamId || newStream.id
     }
     handleSaveLiveTVConfig(newConfig)
-    setLiveTVForm({ title: '', url: '', isLive: false })
+    setLiveTVForm({ title: '', url: '', isLive: true, category: 'news', channelName: '', viewers: '15K', description: '' })
     setEditingStream(null)
   }
 
@@ -5614,7 +5618,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       <Input
                         value={liveTVForm.title}
                         onChange={(e) => setLiveTVForm({ ...liveTVForm, title: e.target.value })}
-                        placeholder="e.g. Star News 24/7 Live"
+                        placeholder="e.g. ABP Majha Live 24/7"
                         className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
                       />
                     </div>
@@ -5624,6 +5628,41 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                         value={liveTVForm.url}
                         onChange={(e) => setLiveTVForm({ ...liveTVForm, url: e.target.value })}
                         placeholder="https://www.youtube.com/watch?v=..."
+                        className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-semibold">TV Channel Category *</Label>
+                      <select
+                        value={liveTVForm.category || 'news'}
+                        onChange={(e) => setLiveTVForm({ ...liveTVForm, category: e.target.value })}
+                        className="w-full bg-gray-50/50 rounded-xl h-11 border border-gray-200 px-3 text-sm focus:outline-none focus:border-red-500"
+                      >
+                        <option value="news">🔴 News & Politics (बातम्या)</option>
+                        <option value="kids">👶 Kids & Cartoons (लहान मुले)</option>
+                        <option value="business">📈 Business & Markets (शेअर बाजार)</option>
+                        <option value="devotional">🙏 Devotional & Darshan (देवदर्शन)</option>
+                        <option value="music">🎵 Music & Entertainment (संगीत)</option>
+                        <option value="sports">🏏 Sports & Match Desk (क्रीडा)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-semibold">Channel / Network Name</Label>
+                      <Input
+                        value={liveTVForm.channelName || ''}
+                        onChange={(e) => setLiveTVForm({ ...liveTVForm, channelName: e.target.value })}
+                        placeholder="e.g. ABP Majha"
+                        className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-700 font-semibold">Audience / Viewers Tag</Label>
+                      <Input
+                        value={liveTVForm.viewers || ''}
+                        onChange={(e) => setLiveTVForm({ ...liveTVForm, viewers: e.target.value })}
+                        placeholder="e.g. 35K watching"
                         className="bg-gray-50/50 rounded-xl h-11 border-gray-200"
                       />
                     </div>

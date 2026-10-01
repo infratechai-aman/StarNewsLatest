@@ -200,13 +200,23 @@ export default function ShortsVideoPlayer({
       className="relative w-full h-full bg-black flex items-center justify-center snap-center select-none overflow-hidden"
       onClick={handleVideoTap}
     >
-      {/* ─── 1. MEDIA LAYER (Fills 9:16 Aspect Screen) ─── */}
+      {/* ─── 1. MEDIA LAYER (Preserves True Uploaded Orientation with Ambient Backdrop) ─── */}
       {isImage ? (
-        <img
-          src={short.mediaUrl}
-          alt={short.title || 'Reel Image'}
-          className="w-full h-full object-cover select-none pointer-events-none"
-        />
+        <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-black">
+          {/* Ambient blurred backdrop so there are never harsh black bars */}
+          <img
+            src={short.mediaUrl}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover blur-2xl scale-125 opacity-35 select-none pointer-events-none"
+          />
+          {/* Authentic uploaded image in its EXACT TRUE orientation */}
+          <img
+            src={short.mediaUrl}
+            alt={short.title || 'Reel Image'}
+            className="relative z-10 max-w-full max-h-full w-auto h-auto object-contain select-none pointer-events-none drop-shadow-2xl"
+          />
+        </div>
       ) : youtubeId ? (
         <div className="w-full h-full relative overflow-hidden flex items-center justify-center bg-black">
           <iframe
@@ -385,7 +395,7 @@ export default function ShortsVideoPlayer({
 
       {/* ─── 7. BOTTOM-LEFT INFORMATION OVERLAY (Instagram Feed Aesthetic) ─── */}
       <div
-        className="absolute bottom-5 left-3.5 right-18 z-20 pointer-events-auto flex flex-col gap-2 max-w-[calc(100%-80px)] select-text"
+        className="absolute bottom-5 left-3.5 right-18 z-20 pointer-events-auto flex flex-col gap-2 max-w-[calc(100%-80px)] select-text bg-black/40 backdrop-blur-md p-3 rounded-2xl border border-white/10 shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* CHANNEL / PROFILE ROW (Instagram Story Ring + Verified + Follow Pill) */}

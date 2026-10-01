@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Store, ChevronRight } from 'lucide-react'
 import WeatherWidget from './WeatherWidget'
+import ReporterApplicationModal from './ReporterApplicationModal'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }) => (
@@ -399,6 +400,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   // Promotion popup state
   const [promotionOpen, setPromotionOpen] = useState(false)
+  const [isReporterModalOpen, setIsReporterModalOpen] = useState(false)
 
   // -- STATE LIFTING: Use props if available, otherwise fallback to local (though page.js always passes them now) --
   const mainNewsBoxes = newsData?.mainNewsBoxes || []
@@ -956,25 +958,39 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               <div
                 key={item.id}
                 onClick={() => handleNewsClick(item)}
-                className="flex flex-col flex-1 cursor-pointer group bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative"
+                className="flex flex-col flex-1 cursor-pointer group bg-white border border-gray-100 hover:border-red-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative"
               >
-                <div className="absolute top-2 left-2 z-10">
-                  <span className="bg-white/90 backdrop-blur text-gray-900 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded shadow-sm">{getTranslatedCategory(item.category, t, language) || t('news') || 'News'}</span>
-                </div>
-                <div className="relative w-full h-[120px] flex-shrink-0 overflow-hidden bg-gray-100">
+                <div className="relative w-full aspect-[16/10] flex-shrink-0 overflow-hidden bg-gray-100">
                   <Image
                     src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                     alt={getLocalizedText(item.title, language)}
                     fill
                     className="object-fill w-full h-full"
                   />
+                  <div className="absolute top-2.5 left-2.5 z-10">
+                    <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded shadow-md">
+                      {getTranslatedCategory(item.category, t, language) || t('news') || 'News'}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex-1 p-3.5 flex flex-col justify-between">
-                  <h3 className="text-[14px] font-bold leading-[1.3] text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3">{getLocalizedText(item.title, language)}</h3>
-                  <span className="text-[10px] text-gray-400 mt-2 block flex items-center gap-1 font-semibold" suppressHydrationWarning>
-                    <Clock className="w-3 h-3 text-gray-300" />
-                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                  </span>
+                <div className="flex-1 p-4 flex flex-col justify-between bg-white">
+                  <div>
+                    <h3 className="text-[15px] font-extrabold leading-[1.3] text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2">
+                      {getLocalizedText(item.title, language)}
+                    </h3>
+                    <p className="text-xs text-gray-500 line-clamp-2 mt-1.5 leading-relaxed font-normal">
+                      {getLocalizedText(item.content, language)?.replace(/<[^>]*>/g, '').substring(0, 95)}...
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] font-semibold text-gray-400" suppressHydrationWarning>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-red-500" />
+                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                      2 min read
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1334,37 +1350,72 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
         </div>
       </section>
 
-      {/* BE A PART OF THE STORY — Premium iOS-Style CTA Banner */}
-      <section className="w-full bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-5 mb-10 hidden lg:block relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(220,38,38,0.08),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(220,38,38,0.05),transparent_50%)]"></div>
-        <div className="max-w-[1440px] mx-auto px-4 flex items-center justify-between gap-8 relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-700 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-red-900/30">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-black text-lg text-white">{t('beAPartOfTheStory') || 'Be a Part of the Story'}</h3>
-              <p className="text-gray-400 text-xs">{t('beAPartDesc') || 'Share news, photos or video from your area. Because every story matters.'}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => { window.open('/reporter', '_self') }}
-            className="flex items-center gap-2 bg-white hover:bg-gray-100 text-gray-900 font-black text-sm px-7 py-3 rounded-full transition-all flex-shrink-0 shadow-lg hover:shadow-xl hover:scale-[1.02]"
-          >
-            {t('joinAsReporter') || 'Join as Reporter'} <ChevronRight className="w-4 h-4" />
-          </button>
-          <div className="flex gap-3 flex-shrink-0">
-            {[
-              { icon: '🛡️', label: t('verifiedPlatform') || 'Verified Platform' },
-              { icon: '📱', label: t('instantPublishing') || 'Instant Publishing' },
-              { icon: '🌍', label: t('panIndiaReach') || 'Pan-India Reach' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 bg-white/[0.06] backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
-                <span className="text-sm">{item.icon}</span>
-                <span className="text-xs font-semibold text-gray-300 whitespace-nowrap">{item.label}</span>
+      {/* BE A PART OF THE STORY — Luxury Journalism Network Banner & Modal CTA */}
+      <section className="w-full my-8 px-4 lg:px-6 max-w-[1340px] mx-auto">
+        <div className="relative rounded-3xl bg-gradient-to-r from-[#0c0f17] via-[#141824] to-[#0c0f17] border border-red-500/20 shadow-[0_20px_50px_rgba(220,38,38,0.15)] p-6 sm:p-8 lg:p-10 overflow-hidden">
+          {/* Subtle Ambient Red Glow Flared Lights */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-red-600/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-red-800/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            {/* Left Content Area */}
+            <div className="max-w-2xl space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-red-600/90 text-white font-black text-[10px] uppercase tracking-widest shadow-md">
+                  STARNEWS JOURNALISM NETWORK
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/10 text-gray-300 font-semibold text-[11px] backdrop-blur-sm border border-white/10">
+                  Official Stringer &amp; Citizen Program
+                </span>
               </div>
-            ))}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight tracking-tight">
+                Become a Verified Ground Reporter • <span className="text-red-500">Voice of Your City</span>
+              </h2>
+              <p className="text-gray-300 text-xs sm:text-sm leading-relaxed max-w-xl">
+                Report breaking developments, public issues, and community stories directly to millions of readers across Maharashtra. Get official accreditation, press identity, and performance incentives.
+              </p>
+
+              {/* 4 Feature Highlights */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-1 backdrop-blur-sm">
+                  <span className="text-lg">🛡️</span>
+                  <span className="text-white text-xs font-bold leading-tight">Digital Press ID</span>
+                  <span className="text-gray-400 text-[10px]">Verified QR credential</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-1 backdrop-blur-sm">
+                  <span className="text-lg">⚡</span>
+                  <span className="text-white text-xs font-bold leading-tight">Instant CMS</span>
+                  <span className="text-gray-400 text-[10px]">Direct byline publishing</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-1 backdrop-blur-sm">
+                  <span className="text-lg">💰</span>
+                  <span className="text-white text-xs font-bold leading-tight">Monthly Honors</span>
+                  <span className="text-gray-400 text-[10px]">Performance rewards</span>
+                </div>
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex flex-col gap-1 backdrop-blur-sm">
+                  <span className="text-lg">📍</span>
+                  <span className="text-white text-xs font-bold leading-tight">36 Districts</span>
+                  <span className="text-gray-400 text-[10px]">Pan-Maharashtra reach</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Action Column */}
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0 lg:w-72">
+              <button
+                onClick={() => setIsReporterModalOpen(true)}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-sm uppercase tracking-wider shadow-xl shadow-red-900/50 flex items-center justify-center gap-2 transition-all active:scale-95 group"
+              >
+                <span>Apply as Ground Reporter</span>
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => window.open('/reporter', '_self')}
+                className="w-full py-3.5 px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white/90 hover:text-white border border-white/15 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+              >
+                <span>Already a Reporter? Login</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -1532,6 +1583,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
           </div>
         )}
       </section>
+      <ReporterApplicationModal isOpen={isReporterModalOpen} onClose={() => setIsReporterModalOpen(false)} />
       <style jsx>{`
             @keyframes marquee {
               0% { transform: translateX(0); }
