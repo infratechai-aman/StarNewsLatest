@@ -107,7 +107,7 @@ export const saveContentSettings = (settings) => {
 // Premium Ad helpers
 export const getPremiumAdSettings = async () => {
     try {
-        const res = await fetch('/api/ads/premium', { cache: 'no-store' })
+        const res = await fetch('/api/ads/premium')
         const data = await res.json()
         if (data.enabled === false) {
             return { enabled: false, imageUrl: '', linkUrl: '', title: '' }
@@ -148,7 +148,7 @@ export const savePremiumAdSettings = async (adSettings) => {
 
 export const getSidebarAdSettings = async () => {
     try {
-        const res = await fetch('/api/ads/sidebar', { cache: 'no-store' })
+        const res = await fetch('/api/ads/sidebar')
         const data = await res.json()
         if (data.enabled === false) {
             const settings = getContentSettings()

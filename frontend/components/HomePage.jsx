@@ -155,18 +155,15 @@ const NewsBox = ({ item, onClick, language }) => {
       onClick={() => onClick(item)}
     >
       <div className="relative aspect-[4/3] md:aspect-[16/10] overflow-hidden bg-gray-100">
-        {images.map((img, index) => (
-          <Image
-            key={index}
-            src={img}
-            alt={title}
-            fill
-            className={`object-contain transition-all duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
-            sizes="(max-width: 768px) 100vw, 33vw"
-            unoptimized={true}
-            referrerPolicy="no-referrer"
-          />
-        ))}
+        <Image
+          src={images[currentImageIndex] || '/placeholder-news.svg'}
+          alt={title}
+          fill
+          className="object-contain transition-all duration-500 ease-in-out opacity-100 scale-100"
+          sizes="(max-width: 768px) 100vw, 33vw"
+          unoptimized={true}
+          referrerPolicy="no-referrer"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         {category && (
           <Badge className="absolute top-4 left-0 bg-[#cd4a4c] text-white text-[13px] md:text-[14px] font-bold px-3 py-1 md:py-1.5 rounded-l-none rounded-r-md shadow-md z-10 border-none tracking-normal capitalize">

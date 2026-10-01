@@ -7,6 +7,12 @@ let sidebarAdCache = { data: null, lastFetch: 0 };
 const CACHE_TTL = 60 * 1000; // 1 minute
 
 export async function GET() {
+    if (sidebarAdCache.data && (Date.now() - sidebarAdCache.lastFetch < CACHE_TTL)) {
+        return NextResponse.json(sidebarAdCache.data, {
+            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
+        });
+    }
+
     const db = getDb();
     if (!db) {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
@@ -23,8 +29,10 @@ export async function GET() {
             };
         }
 
+        sidebarAdCache = { data: responseData, lastFetch: Date.now() };
+
         return NextResponse.json(responseData, {
-            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
         });
     } catch (error) {
         console.error('Ads Sidebar GET Error:', error)

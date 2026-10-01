@@ -4,11 +4,17 @@ import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
 import { getCache, setCache, purgeCache } from '@/lib/cache'
 
 export async function GET() {
+    const CACHE_KEY = 'site_settings_premium_ad';
+    const cached = getCache(CACHE_KEY);
+    if (cached) {
+        return NextResponse.json(cached, {
+            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
+        });
+    }
+
     const db = getDb();
     if (!db) {
-        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' }, {
-            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
-        });
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
     }
     try {
         const doc = await db.collection('site_settings').doc('premium_ad').get()
@@ -25,14 +31,14 @@ export async function GET() {
             };
         }
 
+        setCache(CACHE_KEY, responseData, 5 * 60 * 1000);
+
         return NextResponse.json(responseData, {
-            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
+            headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' }
         });
     } catch (error) {
         console.error('Ads Premium GET Error:', error)
-        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' }, {
-            headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
-        })
+        return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
     }
 }
 
