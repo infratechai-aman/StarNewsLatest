@@ -26,18 +26,39 @@ async function fetchInitialNews() {
     const snapshot = await db.collection('news_articles')
       .where('approvalStatus', '==', 'approved')
       .where('active', '==', true)
-      .limit(100)
+      .limit(60)
       .get()
 
     // Sort in memory (fallback method from API)
     let articles = snapshot.docs.map(doc => {
       const data = doc.data()
       // Serialize Firebase Timestamps for Next.js Server Components
-      if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate().toISOString()
-      if (data.publishedAt?.toDate) data.publishedAt = data.publishedAt.toDate().toISOString()
-      if (data.updatedAt?.toDate) data.updatedAt = data.updatedAt.toDate().toISOString()
+      const createdAt = data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : (data.createdAt || null)
+      const publishedAt = data.publishedAt?.toDate ? data.publishedAt.toDate().toISOString() : (data.publishedAt || createdAt)
+      
+      // CRITICAL PERF: Strip heavy full HTML content for homepage cards.
+      // Full content is fetched on-demand when opening /api/news/[id].
+      const snippet = typeof data.content === 'string'
+        ? data.content.slice(0, 160)
+        : (data.metaDescription || '')
 
-      return { id: doc.id, ...data }
+      return {
+        id: doc.id,
+        title: data.title || '',
+        category: data.category || data.categoryId || '',
+        categoryId: data.categoryId || '',
+        city: data.city || '',
+        mainImage: data.mainImage || '',
+        thumbnailUrl: data.thumbnailUrl || data.mainImage || '',
+        thumbnails: data.thumbnails || [],
+        images: data.images || [],
+        featured: data.featured || false,
+        views: data.views || 0,
+        publishedAt,
+        createdAt,
+        metaDescription: data.metaDescription || snippet,
+        content: snippet
+      }
     })
 
     // Sort after serialization
@@ -96,7 +117,7 @@ async function fetchInitialNews() {
       ...technologyNews.map(a => a.id)
     ])
 
-    const oldNews = remaining.filter(a => !usedIds.has(a.id))
+    const oldNews = remaining.filter(a => !usedIds.has(a.id)).slice(0, 10)
 
     // Dynamic Latest News: Most recent articles (newest first, excluding hero)
     const heroId = topNews[0]?.id

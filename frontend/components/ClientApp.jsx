@@ -1,31 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import HomePage from '@/components/HomePage'
-import NewsPage from '@/components/NewsPage'
-import NewsDetailPage from '@/components/NewsDetailPage'
-import BusinessesPage from '@/components/BusinessesPage'
-import BusinessDetailPage from '@/components/BusinessDetailPage'
-import DailyDealsPage from '@/components/DailyDealsPage'
-import ClassifiedsPage from '@/components/ClassifiedsPage'
-import ClassifiedDetailPage from '@/components/ClassifiedDetailPage'
-import LiveTVPage from '@/components/LiveTVPage'
-import EnewspaperPage from '@/components/EnewspaperPage'
-import CityPage from '@/components/CityPage'
-import AboutUsPage from '@/components/AboutUsPage'
-import TermsConditionsPage from '@/components/TermsConditionsPage'
-import PrivacyPolicyPage from '@/components/PrivacyPolicyPage'
-import LoginPage from '@/components/LoginPage'
-import RegisterPage from '@/components/RegisterPage'
-import ReporterDashboard from '@/components/ReporterDashboard'
-import AdminDashboard from '@/components/AdminDashboard'
-import AdvertiserDashboard from '@/components/AdvertiserDashboard'
-import ForcePasswordChange from '@/components/ForcePasswordChange'
 import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import ShortsPage from '@/components/ShortsPage'
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import { auth } from '@/lib/api'
 import { auth as firebaseClientAuth } from '@/lib/firebase'
@@ -33,8 +14,40 @@ import { onIdTokenChanged, signOut } from 'firebase/auth'
 import { useToast } from '@/hooks/use-toast'
 import { ROLES } from '@/lib/roles'
 
-// fix(P3-FE-02): ROLES imported from lib/auth.js — single source of truth.
-// Removed the duplicate local definition that could drift from the backend.
+// Lightweight loader for dynamic imports (shows only when user navigates to that tab)
+const PageSkeleton = () => (
+    <div className="min-h-[50vh] flex items-center justify-center p-8">
+        <div className="flex flex-col items-center gap-3">
+            <div className="w-9 h-9 border-3 border-red-600 border-t-transparent rounded-full animate-spin" />
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Loading...</span>
+        </div>
+    </div>
+)
+
+// Dynamic Imports: Heavy dashboards and sub-views are lazy loaded on demand
+// This drastically reduces the initial JS bundle size and speeds up first load!
+const NewsPage = dynamic(() => import('@/components/NewsPage'), { loading: PageSkeleton })
+const NewsDetailPage = dynamic(() => import('@/components/NewsDetailPage'), { loading: PageSkeleton })
+const BusinessesPage = dynamic(() => import('@/components/BusinessesPage'), { loading: PageSkeleton })
+const BusinessDetailPage = dynamic(() => import('@/components/BusinessDetailPage'), { loading: PageSkeleton })
+const DailyDealsPage = dynamic(() => import('@/components/DailyDealsPage'), { loading: PageSkeleton })
+const ClassifiedsPage = dynamic(() => import('@/components/ClassifiedsPage'), { loading: PageSkeleton })
+const ClassifiedDetailPage = dynamic(() => import('@/components/ClassifiedDetailPage'), { loading: PageSkeleton })
+const LiveTVPage = dynamic(() => import('@/components/LiveTVPage'), { loading: PageSkeleton })
+const EnewspaperPage = dynamic(() => import('@/components/EnewspaperPage'), { loading: PageSkeleton })
+const CityPage = dynamic(() => import('@/components/CityPage'), { loading: PageSkeleton })
+const AboutUsPage = dynamic(() => import('@/components/AboutUsPage'), { loading: PageSkeleton })
+const TermsConditionsPage = dynamic(() => import('@/components/TermsConditionsPage'), { loading: PageSkeleton })
+const PrivacyPolicyPage = dynamic(() => import('@/components/PrivacyPolicyPage'), { loading: PageSkeleton })
+const LoginPage = dynamic(() => import('@/components/LoginPage'), { loading: PageSkeleton })
+const RegisterPage = dynamic(() => import('@/components/RegisterPage'), { loading: PageSkeleton })
+const ShortsPage = dynamic(() => import('@/components/ShortsPage'), { loading: PageSkeleton })
+const ForcePasswordChange = dynamic(() => import('@/components/ForcePasswordChange'), { loading: PageSkeleton })
+
+// Dashboards (SSR: false because they are client-only and require authentication)
+const ReporterDashboard = dynamic(() => import('@/components/ReporterDashboard'), { loading: PageSkeleton, ssr: false })
+const AdminDashboard = dynamic(() => import('@/components/AdminDashboard'), { loading: PageSkeleton, ssr: false })
+const AdvertiserDashboard = dynamic(() => import('@/components/AdvertiserDashboard'), { loading: PageSkeleton, ssr: false })
 
 const ClientApp = ({ initialNewsData }) => {
     const [user, setUser] = useState(null)
@@ -83,7 +96,15 @@ const ClientApp = ({ initialNewsData }) => {
             'e-newspaper': 'enewspaper'
         }
         const resolvedView = viewParam || aliasMap[path] || (validViews.includes(path) ? path : null)
-        if (resolvedView && validViews.includes(resolvedView)) {
+        const articleParam = params.get('article')
+        if (articleParam) {
+            setCurrentView('news-detail')
+            import('@/lib/api').then(({ news }) => {
+                news.getById(articleParam).then(art => {
+                    if (art) setSelectedArticle(art)
+                }).catch(e => console.warn(e))
+            })
+        } else if (resolvedView && validViews.includes(resolvedView)) {
             setCurrentView(resolvedView)
         }
     }, [])

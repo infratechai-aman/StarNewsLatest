@@ -115,12 +115,28 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     }
   }, [article?.id])
 
-  if (!article) return null
+  const [fullArticle, setFullArticle] = useState(article)
+
+  useEffect(() => {
+    setFullArticle(article)
+    // If article only has a preview snippet (<= 160 chars), fetch full article from API
+    if (article?.id && (!article.content || (typeof article.content === 'string' && article.content.length <= 160))) {
+      news.getById(article.id).then(data => {
+        if (data && data.content) {
+          setFullArticle(data)
+        }
+      }).catch(err => console.warn('Failed to load full article content:', err))
+    }
+  }, [article?.id])
+
+  const activeArticle = fullArticle || article
+
+  if (!activeArticle) return null
 
   // Get localized content
-  const title = getLocalizedText(article.title, language)
-  const category = getLocalizedText(article.category, language)
-  const content = getLocalizedText(article.content, language)
+  const title = getLocalizedText(activeArticle.title, language)
+  const category = getLocalizedText(activeArticle.category, language)
+  const content = getLocalizedText(activeArticle.content, language)
 
   // Get related news - use API data if available, otherwise fallback to static
   const relatedNews = relatedNewsFromApi

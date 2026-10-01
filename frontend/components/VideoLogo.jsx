@@ -5,27 +5,29 @@ import React, { useRef, useEffect } from 'react';
 export default function VideoLogo({ className = "", style = {}, videoSrc = "/LatestLogo.mp4" }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const isVisibleRef = useRef(true);
 
     useEffect(() => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas) return;
 
-        // Use willReadFrequently to optimize for continuous getImageData calls
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         let animationFrameId;
+        let videoFrameCallbackId;
+        let isDestroyed = false;
+        let lastFrameTime = 0;
 
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
                 video.muted = true;
                 video.defaultMuted = true;
-                video.playbackRate = 2.0; // Adjusted playback speed based on user feedback
+                video.playbackRate = 2.0;
                 if (video.paused) {
                     await video.play();
                 }
             } catch (err) {
-                // Ignore benign browser power-saving interruptions (AbortError / NotAllowedError)
                 if (err?.name !== 'AbortError' && err?.name !== 'NotAllowedError') {
                     console.debug("VideoLogo autoplay note:", err?.message || err);
                 }
@@ -33,17 +35,32 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         };
         playVideo();
 
+        // 1. IntersectionObserver: Pause completely if element is hidden (e.g. mobile vs desktop header)
+        const observer = new IntersectionObserver((entries) => {
+            const entry = entries[0];
+            isVisibleRef.current = entry ? entry.isIntersecting : true;
+            if (isVisibleRef.current && video.paused) {
+                playVideo();
+            }
+        }, { threshold: 0.05 });
+
+        observer.observe(canvas);
+
         const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && video && video.paused) {
+            if (document.visibilityState === 'visible' && isVisibleRef.current && video && video.paused) {
                 playVideo();
             }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         const processFrame = () => {
-            if (video && !video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
-                // OPTIMIZATION: Process canvas at a much smaller resolution to avoid 1080p pixel-loop lag (ensures 60fps)
-                const MAX_WIDTH = 500;
+            if (isDestroyed) return;
+
+            // Only process if element is actually visible and video is actively playing
+            if (isVisibleRef.current && video && !video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
+                // OPTIMIZATION: Render at 180px max (logo rendered size is 200px desktop / 130px mobile)
+                // This eliminates ~87% of unnecessary pixel processing!
+                const MAX_WIDTH = 180;
                 let calcWidth = video.videoWidth;
                 let calcHeight = video.videoHeight;
 
@@ -56,30 +73,33 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 if (canvas.width !== calcWidth) canvas.width = calcWidth;
                 if (canvas.height !== calcHeight) canvas.height = calcHeight;
 
-                // Draw current video frame to canvas at scaled resolution
+                // Draw video frame to canvas at optimized scale
                 ctx.drawImage(video, 0, 0, calcWidth, calcHeight);
 
-                // Extract pixel data
+                // Extract pixel buffer
                 const frame = ctx.getImageData(0, 0, calcWidth, calcHeight);
-                const data = frame.data;
-                const length = data.length;
+                // Ultra-fast 32-bit integer array view (processes 4 bytes per iteration in 1 instruction)
+                const buf32 = new Uint32Array(frame.data.buffer);
+                const len = buf32.length;
 
-                // Chroma key (Green screen removal) algorithm
-                for (let i = 0; i < length; i += 4) {
-                    const r = data[i + 0];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
+                // Chroma key (Green screen removal) optimized with bitwise ops
+                for (let i = 0; i < len; i++) {
+                    const pixel = buf32[i];
+                    // Little-endian RGBA: 0xAABBGGRR
+                    const r = pixel & 0xFF;
+                    const g = (pixel >> 8) & 0xFF;
+                    const b = (pixel >> 16) & 0xFF;
 
-                    // Identify green pixels: high green value, significantly higher than red and blue
                     if (g > 80 && g > r * 1.2 && g > b * 1.2) {
-                        const maxColor = Math.max(r, b);
+                        const maxColor = r > b ? r : b;
                         const diff = g - maxColor;
 
                         if (diff > 40) {
-                            data[i + 3] = 0; // fully transparent
+                            buf32[i] = 0; // Fully transparent
                         } else {
-                            data[i + 3] = 255 - (diff * 6); // smooth edges
-                            data[i + 1] = maxColor; // remove green spill
+                            const alpha = 255 - (diff * 6);
+                            // Reconstruct pixel with smoothed alpha and suppressed green spill
+                            buf32[i] = (alpha << 24) | (b << 16) | (maxColor << 8) | r;
                         }
                     }
                 }
@@ -87,17 +107,44 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 // Put modified pixel data back
                 ctx.putImageData(frame, 0, 0);
             }
-            // Ask browser for next frame (runs up to 60fps)
-            animationFrameId = requestAnimationFrame(processFrame);
+
+            // Schedule next frame efficiently
+            scheduleNextFrame();
         };
 
-        // Start processing frame immediately
-        processFrame();
+        const scheduleNextFrame = () => {
+            if (isDestroyed) return;
+
+            // Preferred: video.requestVideoFrameCallback (only runs when hardware decodes a new frame)
+            if ('requestVideoFrameCallback' in HTMLVideoElement.prototype && video?.requestVideoFrameCallback) {
+                videoFrameCallbackId = video.requestVideoFrameCallback(() => {
+                    processFrame();
+                });
+            } else {
+                // Fallback: throttled requestAnimationFrame (capped at 25fps to prevent CPU exhaustion)
+                animationFrameId = requestAnimationFrame((timestamp) => {
+                    if (timestamp - lastFrameTime >= 40) {
+                        lastFrameTime = timestamp;
+                        processFrame();
+                    } else {
+                        scheduleNextFrame();
+                    }
+                });
+            }
+        };
+
+        // Start processing
+        scheduleNextFrame();
 
         return () => {
+            isDestroyed = true;
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
             }
+            if (videoFrameCallbackId && video?.cancelVideoFrameCallback) {
+                video.cancelVideoFrameCallback(videoFrameCallbackId);
+            }
+            observer.disconnect();
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, []);
@@ -111,7 +158,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 loop
                 muted
                 playsInline
-                style={{ position: 'fixed', top: -9999, left: -9999, width: '320px', height: '180px', opacity: 0.01, pointerEvents: 'none' }}
+                style={{ position: 'fixed', top: -9999, left: -9999, width: '180px', height: '100px', opacity: 0.01, pointerEvents: 'none' }}
             />
             <canvas
                 ref={canvasRef}
