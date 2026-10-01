@@ -97,7 +97,7 @@ export async function GET(request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ error: 'Failed to fetch image' }, { status: response.status });
+      return NextResponse.redirect(new URL('/placeholder-news.svg', request.url), 307);
     }
 
     let contentType = response.headers.get('content-type') || 'image/jpeg';
@@ -144,7 +144,7 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error('Image proxy error:', error.message);
-    return NextResponse.json({ error: 'Proxy error' }, { status: 500 });
+    console.warn('Image proxy fetch error:', error?.message || error);
+    return NextResponse.redirect(new URL('/placeholder-news.svg', request.url), 307);
   }
 }

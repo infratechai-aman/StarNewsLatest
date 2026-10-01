@@ -6,7 +6,6 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const isVisibleRef = useRef(false);
-    const [activeSrc, setActiveSrc] = useState('');
     const [hasFirstFrame, setHasFirstFrame] = useState(false);
 
     useEffect(() => {
@@ -23,10 +22,13 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
+                if (!video.src) {
+                    video.src = videoSrc;
+                }
                 video.muted = true;
                 video.defaultMuted = true;
                 video.playbackRate = 2.0;
-                if (video.paused && video.src) {
+                if (video.paused) {
                     await video.play();
                 }
             } catch (err) {
@@ -44,7 +46,6 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             isVisibleRef.current = isIntersecting;
 
             if (isIntersecting) {
-                setActiveSrc(prev => prev ? prev : videoSrc);
                 playVideo();
             } else if (!video.paused) {
                 video.pause();
@@ -63,8 +64,8 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         const processFrame = () => {
             if (isDestroyed) return;
 
-            // Only process if element is actually visible and video is actively playing
-            if (isVisibleRef.current && video && !video.paused && !video.ended && video.videoWidth > 0 && video.videoHeight > 0) {
+            // Only process if element is actually visible, video is playing and has decoded data
+            if (isVisibleRef.current && video && !video.paused && !video.ended && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
                 // OPTIMIZATION: Render at 180px max (logo rendered size is 200px desktop / 130px mobile)
                 // This eliminates ~87% of unnecessary pixel processing!
                 const MAX_WIDTH = 180;
@@ -156,7 +157,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             observer.disconnect();
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [activeSrc]);
+    }, []);
 
     return (
         <div className={`relative ${className}`} style={style}>
@@ -167,18 +168,16 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 alt="Star News Logo"
                 className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame ? 'opacity-0' : 'opacity-100'}`}
             />
-            {activeSrc && (
-                <video
-                    ref={videoRef}
-                    src={activeSrc}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="none"
-                    style={{ position: 'fixed', top: -9999, left: -9999, width: '180px', height: '100px', opacity: 0.01, pointerEvents: 'none' }}
-                />
-            )}
+            <video
+                ref={videoRef}
+                crossOrigin="anonymous"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                style={{ position: 'fixed', top: -9999, left: -9999, width: '180px', height: '100px', opacity: 0.01, pointerEvents: 'none' }}
+            />
             <canvas
                 ref={canvasRef}
                 className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}

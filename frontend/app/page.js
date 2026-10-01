@@ -26,7 +26,7 @@ async function fetchInitialNews() {
     const snapshot = await db.collection('news_articles')
       .where('approvalStatus', '==', 'approved')
       .where('active', '==', true)
-      .limit(60)
+      .limit(100)
       .get()
 
     // Sort in memory (fallback method from API)
@@ -117,7 +117,7 @@ async function fetchInitialNews() {
       ...technologyNews.map(a => a.id)
     ])
 
-    const oldNews = remaining.filter(a => !usedIds.has(a.id)).slice(0, 10)
+    const oldNews = remaining.filter(a => !usedIds.has(a.id))
 
     // Dynamic Latest News: Most recent articles (newest first, excluding hero)
     const heroId = topNews[0]?.id

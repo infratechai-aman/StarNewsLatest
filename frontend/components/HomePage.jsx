@@ -159,7 +159,7 @@ const NewsBox = ({ item, onClick, language }) => {
           src={images[currentImageIndex] || '/placeholder-news.svg'}
           alt={title}
           fill
-          className="object-contain transition-all duration-500 ease-in-out opacity-100 scale-100"
+          className="object-cover group-hover:scale-105 transition-all duration-500 ease-in-out opacity-100"
           sizes="(max-width: 768px) 100vw, 33vw"
           unoptimized={true}
           referrerPolicy="no-referrer"
