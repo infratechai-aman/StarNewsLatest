@@ -312,7 +312,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 )}
                 alt={(article && article.title) ? (getLocalizedText(article.title, language) || article.title) : 'News Article'}
                 fill
-                className="object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
+                className="object-fill w-full h-full"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 priority={idx === 0}
                 onError={(e) => {

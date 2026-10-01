@@ -159,7 +159,7 @@ const NewsBox = ({ item, onClick, language }) => {
           src={images[currentImageIndex] || '/placeholder-news.svg'}
           alt={title}
           fill
-          className="object-cover group-hover:scale-105 transition-all duration-500 ease-in-out opacity-100"
+          className="object-fill w-full h-full"
           sizes="(max-width: 768px) 100vw, 33vw"
           unoptimized={true}
           referrerPolicy="no-referrer"
@@ -224,7 +224,7 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
           src={imgSrc}
           alt={title}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className="object-fill w-full h-full"
           onError={() => setImgSrc('/placeholder-news.svg')}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           unoptimized={true}
