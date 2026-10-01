@@ -273,7 +273,7 @@ const BusinessAdWidget = ({ settings, t, onClick }) => {
         {settings?.imageUrl ? (
           <div className="relative w-full h-full">
             <Image
-              src={settings.imageUrl}
+              src={proxyImageUrl(settings.imageUrl)}
               alt="Business Ad"
               fill
               className="object-cover"
@@ -807,7 +807,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 className="relative w-full flex-shrink-0 min-w-full sm:min-w-[340px] h-[75dvh] sm:h-auto sm:aspect-square rounded-none sm:rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border-y sm:border border-gray-100"
               >
                 <Image
-                  src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                  src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                   alt={getLocalizedText(item.title, language) || 'News Image'}
                   fill
                   className="object-cover"
@@ -836,7 +836,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl) window.open(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length].destinationUrl, '_blank') }}>
               <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
                 <Image
-                  src={sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg'}
+                  src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')}
                   alt="Advertisement"
                   fill
                   className="object-cover transition-opacity duration-1000"
@@ -872,7 +872,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <div onClick={() => handleNewsClick(item)} className="p-4 bg-white flex gap-4 items-stretch active:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100 last:border-b-0">
                     <div className="relative w-32 h-[90px] shrink-0 overflow-hidden bg-gray-100 rounded-sm">
                       <Image
-                        src={item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                        src={proxyImageUrl(item.thumbnailUrl || item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                         alt={title || 'Thumbnail'}
                         fill
                         className="object-cover"
@@ -917,7 +917,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 style={{ minHeight: '460px' }}
               >
                 <Image
-                  src={cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg'}
+                  src={proxyImageUrl(cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg')}
                   alt={getLocalizedText(cleanMainNews[0].title, language)}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-700"

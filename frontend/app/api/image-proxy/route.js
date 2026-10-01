@@ -49,21 +49,16 @@ function isUrlAllowed(urlString) {
 
     const hostname = parsed.hostname.toLowerCase();
 
-    // Block private/internal IPs
+    // Block private/internal IPs (SSRF protection)
     for (const pattern of BLOCKED_IP_PATTERNS) {
       if (pattern.test(hostname)) {
         return false;
       }
     }
 
-    // Check against allowed domains
-    for (const domain of ALLOWED_DOMAINS) {
-      if (hostname === domain || hostname.endsWith('.' + domain)) {
-        return true;
-      }
-    }
-
-    return false;
+    // Allow any external domain — SSRF is prevented by IP blocklist above
+    // This enables admin/reporters to paste image URLs from any news source
+    return true;
   } catch {
     return false;
   }
@@ -93,11 +88,11 @@ export async function GET(request) {
   try {
     const response = await fetch(imageUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-        'Referer': '',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
       },
-      // Follow redirects to allow placeholder images
+      // Follow redirects to allow placeholder images and shortlinks
       redirect: 'follow',
     });
 
@@ -105,14 +100,31 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Failed to fetch image' }, { status: response.status });
     }
 
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    let contentType = response.headers.get('content-type') || 'image/jpeg';
 
-    // SECURITY: Only allow image content types
+    // SECURITY: Only allow image content types, with fallback for CDNs serving images as octet-stream
     if (!contentType.startsWith('image/')) {
-      return NextResponse.json(
-        { error: 'Response is not an image' },
-        { status: 400 }
-      );
+      const pathname = new URL(imageUrl).pathname.toLowerCase();
+      if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+      } else if (pathname.endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (pathname.endsWith('.webp')) {
+        contentType = 'image/webp';
+      } else if (pathname.endsWith('.gif')) {
+        contentType = 'image/gif';
+      } else if (pathname.endsWith('.svg')) {
+        contentType = 'image/svg+xml';
+      } else if (pathname.endsWith('.avif')) {
+        contentType = 'image/avif';
+      } else if (contentType.includes('octet-stream')) {
+        contentType = 'image/jpeg';
+      } else {
+        return NextResponse.json(
+          { error: 'Response is not an image' },
+          { status: 400 }
+        );
+      }
     }
 
     const buffer = await response.arrayBuffer();

@@ -1,25 +1,35 @@
 /**
- * Wraps external image URLs through our server-side proxy to bypass 403/hotlink blocks.
- * Local images (starting with / but not /wp-content) are returned as-is.
+ * Get a proxy-safe image source URL.
+ * 
+ * When displaying images from external URLs in <img> tags,
+ * the browser may be blocked by CORS or hotlink protection.
+ * This utility routes external URLs through our /api/image-proxy
+ * to ensure they always load.
+ * 
+ * Internal URLs (data:, blob:, /api/file/) are returned as-is.
  */
-export function proxyImageUrl(url) {
-  if (!url || typeof url !== 'string') return '/placeholder-news.svg'
 
-  // Already proxied or local asset
-  if (url.startsWith('/api/image-proxy')) return url
-  if (url.startsWith('/placeholder') || url.startsWith('/starnews') || url.startsWith('/images/')) return url
-  if (url.startsWith('data:')) return url
+export function getProxiedImageUrl(src) {
+  if (!src) return ''
 
-  // External URLs or WordPress paths that need proxying
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/wp-content/')) {
-    const fullUrl = url.startsWith('/') ? `https://www.starnewsindia.in${url}` : url
-    return `/api/image-proxy?url=${encodeURIComponent(fullUrl)}`
+  // Data URLs, blob URLs, and internal API URLs don't need proxying
+  if (
+    src.startsWith('data:') ||
+    src.startsWith('blob:') ||
+    src.startsWith('/api/') ||
+    src.startsWith('/placeholder') ||
+    src.startsWith('/')
+  ) {
+    return src
   }
 
-  // Firestore file references like /api/file/xxx
-  if (url.startsWith('/api/file/')) {
-    return url // These are served by our own API
+  // External http(s) URLs → route through proxy
+  if (src.startsWith('http://') || src.startsWith('https://')) {
+    return `/api/image-proxy?url=${encodeURIComponent(src)}`
   }
 
-  return url
+  return src
 }
+
+export const proxyImageUrl = getProxiedImageUrl
+export default getProxiedImageUrl

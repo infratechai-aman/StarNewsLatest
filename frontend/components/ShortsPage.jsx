@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { proxyImageUrl } from '@/lib/imageProxy';
 
 const CATEGORIES = [
   'All',
@@ -500,7 +501,7 @@ export default function ShortsPage({ setCurrentView }) {
                       {/* Thumbnail */}
                       {thumb ? (
                         <img
-                          src={thumb}
+                          src={proxyImageUrl(thumb)}
                           alt={short.title || 'Short'}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {

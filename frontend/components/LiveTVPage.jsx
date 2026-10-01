@@ -7,6 +7,7 @@ import { liveTV } from '@/lib/api'
 import { getSidebarAdSettings } from '@/lib/contentStore'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
+import { proxyImageUrl } from '@/lib/imageProxy'
 
 // Extract YouTube video ID
 const extractYouTubeId = (url) => {
@@ -276,7 +277,7 @@ const LiveTVPage = ({ setCurrentView }) => {
                     return (
                       <div key={article.id || idx} className="cursor-pointer group flex flex-col h-full" onClick={() => { if (setCurrentView) { window.history.pushState({}, '', `?article=${article.id}`); setCurrentView('news-detail') } }}>
                         <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-900 mb-3 shadow-md border border-white/5">
-                          {thumb ? <img src={thumb} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display='none'} /> : <div className="w-full h-full bg-gray-800" />}
+                          {thumb ? <img src={proxyImageUrl(thumb)} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={e => e.target.style.display='none'} /> : <div className="w-full h-full bg-gray-800" />}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                           
                           {/* Play button overlay */}

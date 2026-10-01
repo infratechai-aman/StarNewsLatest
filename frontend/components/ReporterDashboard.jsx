@@ -16,49 +16,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { getFreshToken, authenticatedFetch } from '@/lib/api'
-
-// Fast auto-compress images to <= 500KB using Canvas API
-const compressImage = (file, maxSizeKB = 500, maxWidth = 900) => {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      const canvas = document.createElement('canvas')
-      let width = img.width
-      let height = img.height
-
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width)
-        width = maxWidth
-      }
-
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-      ctx.drawImage(img, 0, 0, width, height)
-
-      const pixels = width * height
-      let quality = 0.7
-      if (pixels > 500000) quality = 0.5
-      else if (pixels > 200000) quality = 0.6
-
-      const result = canvas.toDataURL('image/jpeg', quality)
-
-      if (result.length > maxSizeKB * 1370) {
-        const retry = canvas.toDataURL('image/jpeg', 0.3)
-        resolve(retry)
-      } else {
-        resolve(result)
-      }
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Failed to load image'))
-    }
-    img.src = url
-  })
-}
+import { compressImage } from '@/lib/imageCompress'
+import { proxyImageUrl } from '@/lib/imageProxy'
 
 const ReporterDashboard = ({ user, onLogout }) => {
   const { toast } = useToast()
@@ -957,6 +916,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         </label>
                       </div>
                       <p className="text-[11px] text-gray-400">Paste URL or upload an image file</p>
+                      {newsFormData.mainImage && (
+                        <div className="mt-2 relative h-36 w-full rounded-xl overflow-hidden border border-gray-200">
+                          <img src={proxyImageUrl(newsFormData.mainImage)} alt="Main preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
 
                     {/* Second Image (Optional) */}
@@ -995,6 +959,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         </label>
                       </div>
                       <p className="text-[11px] text-gray-400">Paste URL or upload an image file</p>
+                      {newsFormData.secondImage && (
+                        <div className="mt-2 relative h-36 w-full rounded-xl overflow-hidden border border-gray-200">
+                          <img src={proxyImageUrl(newsFormData.secondImage)} alt="Second preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1050,6 +1019,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         </label>
                       </div>
                       <p className="text-[11px] text-gray-400">Leave blank to use main image</p>
+                      {newsFormData.thumbnailUrl && (
+                        <div className="mt-2 relative h-36 w-full rounded-xl overflow-hidden border border-gray-200">
+                          <img src={proxyImageUrl(newsFormData.thumbnailUrl)} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1220,7 +1194,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
                           <div className="flex gap-3.5 min-w-0 flex-1">
                             {article.mainImage ? (
                               <img 
-                                src={article.mainImage} 
+                                src={proxyImageUrl(article.mainImage)} 
                                 alt="" 
                                 className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-100" 
                               />
@@ -1525,6 +1499,11 @@ const ReporterDashboard = ({ user, onLogout }) => {
                         placeholder="https://image-url.jpg"
                         className="w-full h-11 px-4 bg-gray-50/40 border border-gray-200 rounded-xl text-sm"
                       />
+                      {paperFormData.thumbnailUrl && (
+                        <div className="mt-2 relative h-32 w-24 rounded-xl overflow-hidden border border-gray-200">
+                          <img src={proxyImageUrl(paperFormData.thumbnailUrl)} alt="Paper thumbnail" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -1876,7 +1855,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
               {selectedSubmission.mainImage && (
                 <div className="rounded-xl overflow-hidden mb-6 border border-gray-100">
                   <img 
-                    src={selectedSubmission.mainImage} 
+                    src={proxyImageUrl(selectedSubmission.mainImage)} 
                     className="w-full max-h-[300px] object-cover" 
                     alt="" 
                   />

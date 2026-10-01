@@ -14,6 +14,7 @@ import { Tag, Phone, MapPin, IndianRupee, Plus, X, Upload, ImageIcon, Loader2, C
 import Image from 'next/image'
 import { classifieds as classifiedsApi, getFreshToken } from '@/lib/api'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { compressImageFile } from '@/lib/imageCompress'
 
 // Fixed conversion rate (1 USD = 83 INR)
 const USD_TO_INR_RATE = 83
@@ -188,13 +189,6 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       return
     }
 
-    // Check size limit: 700KB
-    const oversizedFiles = files.filter(f => f.size > 700 * 1024)
-    if (oversizedFiles.length > 0) {
-      toast?.({ title: 'Image must be under 700KB', variant: 'destructive' })
-      return
-    }
-
     setUploadingImages(true)
     try {
       const token = await getFreshToken() || (typeof window !== 'undefined' ? localStorage.getItem('token') : null)
@@ -203,17 +197,24 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue
 
+        // Auto-compress if needed
+        let fileToUpload = file
+        if (file.size > 650 * 1024) {
+          const result = await compressImageFile(file, { maxSizeKB: 650 })
+          fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+        }
+
         // Create preview
         const reader = new FileReader()
         reader.onload = (event) => {
           setImagePreviews(prev => [...prev, event.target.result])
         }
-        reader.readAsDataURL(file)
+        reader.readAsDataURL(fileToUpload)
 
         // Upload to server
         try {
           const formDataUpload = new FormData()
-          formDataUpload.append('file', file)
+          formDataUpload.append('file', fileToUpload)
           const response = await fetch('/api/upload', {
             method: 'POST',
             headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
@@ -661,7 +662,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
               {/* Images Upload */}
               <div className="space-y-2">
-                <Label>{language === 'mr' ? 'छायाचित्रे * (किमान १, कमाल ८, प्रत्येकी जास्तीत जास्त ७००केबी)' : language === 'hi' ? 'छवियां * (न्यूनतम 1, अधिकतम 8, अधिकतम 700KB प्रत्येक)' : 'Images * (Minimum 1, Maximum 8, Max 700KB each)'}</Label>
+                <Label>{language === 'mr' ? 'छायाचित्रे * (किमान १, कमाल ८, ऑटो-कंप्रेस्ड)' : language === 'hi' ? 'छवियां * (न्यूनतम 1, अधिकतम 8, ऑटो-कंप्रेस्ड)' : 'Images * (Minimum 1, Maximum 8, Auto-compressed)'}</Label>
                 <p className="text-xs text-muted-foreground mt-1 mb-2">{language === 'mr' ? 'शिफारस केलेले आकार: ८००x६००px (लँडस्केप)' : language === 'hi' ? 'अनुशंसित आकार: 800x600px (लैंडस्केप)' : 'Recommended size: 800x600px (Landscape)'}</p>
                 <div className="grid grid-cols-4 gap-3">
                   {imagePreviews.map((preview, index) => (

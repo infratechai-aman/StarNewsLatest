@@ -29,6 +29,8 @@ import {
   LogOut
 } from 'lucide-react'
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
+import { compressImageFile, formatFileSize } from '@/lib/imageCompress'
+import { getProxiedImageUrl } from '@/lib/imageProxy'
 
 // News categories
 const NEWS_CATEGORIES = [
@@ -63,6 +65,37 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
+
+  /**
+   * Auto-compress an image file to under 700KB and upload it to /api/upload.
+   * Returns the uploaded URL on success, or null on failure.
+   */
+  const compressAndUpload = async (file) => {
+    try {
+      let fileToUpload = file
+      // Auto-compress if file is an image and over 650KB
+      if (file.type.startsWith('image/') && file.size > 650 * 1024) {
+        const result = await compressImageFile(file, { maxSizeKB: 650 })
+        fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+        toast({ title: `Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(result.compressedSize)}` })
+      }
+      const formData = new FormData()
+      formData.append('file', fileToUpload)
+      const token = await getFreshToken() || localStorage.getItem('token')
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+        body: formData
+      })
+      const data = await res.json()
+      if (res.ok) return data.url
+      toast({ title: data.error || 'Upload failed', variant: 'destructive' })
+      return null
+    } catch (err) {
+      toast({ title: 'Upload failed: ' + err.message, variant: 'destructive' })
+      return null
+    }
+  }
 
   const handleGoHome = (view = 'home') => {
     if (setCurrentView) {
@@ -1114,9 +1147,10 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
           const formData = new FormData()
           formData.append('file', blob, `image.${mimeStr.split('/')[1]}`)
 
+          const token = await getFreshToken() || localStorage.getItem('token')
           const uploadRes = await fetch('/api/upload', {
             method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
             body: formData
           })
 
@@ -1150,7 +1184,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         videoUrl: newsForm.youtubeUrl || '',
         youtubeUrl: newsForm.youtubeUrl || '',
         thumbnails: uploadedThumbs.filter(Boolean),
-        thumbnailUrl: uploadedThumbs[0] || '',
+        thumbnailUrl: uploadedThumbs[0] || mainImageUrl || '',
         tags: newsForm.tags ? newsForm.tags.split(',').map(t => t.trim()) : [],
         featured: newsForm.featured || false,
         showOnHome: newsForm.showOnHome !== false,
@@ -1278,7 +1312,12 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
       // Upload PDF first
       const formData = new FormData()
       formData.append('file', enewspaperPdfFile)
-      const uploadRes = await fetch('/api/upload-large', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
+      const token = await getFreshToken() || localStorage.getItem('token')
+      const uploadRes = await fetch('/api/upload-large', { 
+        method: 'POST', 
+        headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }, 
+        body: formData 
+      })
       const resText = await uploadRes.text()
 
       let uploadData;
@@ -2291,7 +2330,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           <div className="flex flex-col md:flex-row md:items-center p-5 gap-5">
                             <div className="w-24 h-24 rounded-2xl bg-gray-100 overflow-hidden flex-shrink-0 ring-1 ring-gray-900/5">
                               <img
-                                src={item.mainImage || item.image || 'https://placehold.co/100?text=News'}
+                                src={getProxiedImageUrl(item.mainImage || item.image || 'https://placehold.co/100?text=News')}
                                 alt={getTextValue(item.title)}
                                 className="w-full h-full object-cover"
                                 onError={(e) => { e.target.src = 'https://placehold.co/100?text=News'; }}
@@ -2970,7 +3009,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       <Input value={businessForm.googleMapsLink} onChange={(e) => setBusinessForm({ ...businessForm, googleMapsLink: e.target.value })} placeholder="https://maps.google.com/..." className="bg-gray-50/50 rounded-xl" />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Cover Image <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
+                      <Label className="text-gray-700 font-semibold">Cover Image <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                       <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 flex flex-col items-center justify-center bg-gray-50/50 hover:border-emerald-400 transition-colors h-40 relative group">
                         {businessForm.coverImage ? (
                           <>
@@ -2996,23 +3035,10 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                               onChange={async (e) => {
                                 const file = e.target.files?.[0]
                                 if (!file) return
-                                if (file.size > 700 * 1024) {
-                                  toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                                  return
-                                }
-                                try {
-                                  const formData = new FormData()
-                                  formData.append('file', file)
-                                  const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                                  const data = await res.json()
-                                  if (res.ok) {
-                                    setBusinessForm({ ...businessForm, coverImage: data.url })
-                                    toast({ title: 'Cover image uploaded!' })
-                                  } else {
-                                    toast({ title: 'Upload failed', variant: 'destructive' })
-                                  }
-                                } catch (err) {
-                                  toast({ title: 'Upload failed', variant: 'destructive' })
+                                const url = await compressAndUpload(file)
+                                if (url) {
+                                  setBusinessForm({ ...businessForm, coverImage: url })
+                                  toast({ title: 'Cover image uploaded!' })
                                 }
                               }}
                             />
@@ -3021,7 +3047,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Gallery Images (up to 8) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB each)</span></Label>
+                      <Label className="text-gray-700 font-semibold">Gallery Images (up to 8) <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                       <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = businessForm.images?.[index] || ''
@@ -3051,25 +3077,12 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 700 * 1024) {
-                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                                        return
-                                      }
-                                      try {
-                                        const formData = new FormData()
-                                        formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                                        const data = await res.json()
-                                        if (res.ok) {
-                                          const newImages = [...(businessForm.images || [])]
-                                          newImages[index] = data.url
-                                          setBusinessForm({ ...businessForm, images: newImages })
-                                          toast({ title: `Image ${index + 1} uploaded!` })
-                                        } else {
-                                          toast({ title: 'Upload failed', variant: 'destructive' })
-                                        }
-                                      } catch (err) {
-                                        toast({ title: 'Upload failed', variant: 'destructive' })
+                                      const url = await compressAndUpload(file)
+                                      if (url) {
+                                        const newImages = [...(businessForm.images || [])]
+                                        newImages[index] = url
+                                        setBusinessForm({ ...businessForm, images: newImages })
+                                        toast({ title: `Image ${index + 1} uploaded!` })
                                       }
                                     }}
                                   />
@@ -3330,7 +3343,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Images (up to 8) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB each)</span></Label>
+                      <Label className="text-gray-700 font-semibold">Images (up to 8) <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                       <div className="grid grid-cols-4 gap-3">
                         {[0, 1, 2, 3, 4, 5, 6, 7].map((index) => {
                           const imgUrl = classifiedForm.images?.[index] || ''
@@ -3360,26 +3373,12 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 700 * 1024) {
-                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                                        return
-                                      }
-                                      try {
-                                        const formData = new FormData()
-                                        formData.append('file', file)
-                                        const token = await getFreshToken() || localStorage.getItem('token')
-                                        const res = await fetch('/api/upload', { method: 'POST', headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) }, body: formData })
-                                        const data = await res.json()
-                                        if (res.ok) {
-                                          const newImages = [...(classifiedForm.images || [])]
-                                          newImages[index] = data.url
-                                          setClassifiedForm({ ...classifiedForm, images: newImages })
-                                          toast({ title: `Image ${index + 1} uploaded!` })
-                                        } else {
-                                          toast({ title: 'Upload failed', variant: 'destructive' })
-                                        }
-                                      } catch (err) {
-                                        toast({ title: 'Upload failed', variant: 'destructive' })
+                                      const url = await compressAndUpload(file)
+                                      if (url) {
+                                        const newImages = [...(classifiedForm.images || [])]
+                                        newImages[index] = url
+                                        setClassifiedForm({ ...classifiedForm, images: newImages })
+                                        toast({ title: `Image ${index + 1} uploaded!` })
                                       }
                                     }}
                                   />
@@ -3389,7 +3388,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           )
                         })}
                       </div>
-                      <p className="text-xs text-gray-500">Click each slot to upload an image. Max 700KB per image.</p>
+                      <p className="text-xs text-gray-500">Click each slot to upload an image. Large images are auto-compressed.</p>
                     </div>
                   </div>
                   <DialogFooter className="border-t border-gray-100 pt-4 mt-2">
@@ -4103,28 +4102,10 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (!file) return
-                          if (file.size > 700 * 1024) {
-                            toast({ title: 'Thumbnail must be under 700KB', variant: 'destructive' })
-                            return
-                          }
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            const token = localStorage.getItem('token')
-                            const res = await fetch('/api/upload', {
-                              method: 'POST',
-                              headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
-                              body: formData
-                            })
-                            const data = await res.json()
-                            if (res.ok) {
-                              setEnewspaperForm((prev) => ({ ...prev, thumbnailUrl: data.url }))
-                              toast({ title: 'Thumbnail uploaded!' })
-                            } else {
-                              toast({ title: data.error || 'Upload failed', variant: 'destructive' })
-                            }
-                          } catch (err) {
-                            toast({ title: 'Upload failed', variant: 'destructive' })
+                          const url = await compressAndUpload(file)
+                          if (url) {
+                            setEnewspaperForm((prev) => ({ ...prev, thumbnailUrl: url }))
+                            toast({ title: 'Thumbnail uploaded!' })
                           }
                         }}
                       />
@@ -4133,6 +4114,11 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       </div>
                     </label>
                   </div>
+                  {enewspaperForm.thumbnailUrl && (
+                    <div className="mt-2 relative h-36 w-28 rounded-xl overflow-hidden border border-gray-200 shadow-xs">
+                      <img src={getProxiedImageUrl(enewspaperForm.thumbnailUrl)} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 mb-6">
@@ -4421,7 +4407,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                 <div className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 animate-in fade-in zoom-in-95 duration-200">
                   <div className="grid gap-6 md:grid-cols-2 mb-6">
                     <div className="space-y-2">
-                      <Label className="text-gray-700 font-semibold">Ad Image URL or Upload <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
+                      <Label className="text-gray-700 font-semibold">Ad Image URL or Upload <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                       <div className="flex gap-2">
                         <Input
                           placeholder="https://example.com/ad-image.jpg"
@@ -4440,28 +4426,16 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (!file) return
-                            if (file.size > 700 * 1024) {
-                              toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                              return
-                            }
                             setUploadingPremiumAd(true)
-                            try {
-                              const formData = new FormData()
-                              formData.append('file', file)
-                              const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                              const data = await res.json()
-                              if (res.ok) {
-                                setContentSettings({
-                                  ...contentSettings,
-                                  premiumAd: { ...contentSettings.premiumAd, imageUrl: data.url }
-                                })
-                                toast({ title: 'Image uploaded!' })
-                              }
-                            } catch (err) {
-                              toast({ title: 'Upload failed', variant: 'destructive' })
-                            } finally {
-                              setUploadingPremiumAd(false)
+                            const url = await compressAndUpload(file)
+                            if (url) {
+                              setContentSettings({
+                                ...contentSettings,
+                                premiumAd: { ...contentSettings.premiumAd, imageUrl: url }
+                              })
+                              toast({ title: 'Image uploaded!' })
                             }
+                            setUploadingPremiumAd(false)
                           }}
                         />
                         <Button
@@ -4621,7 +4595,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
 
                               {/* Image URL Input */}
                               <div className="space-y-1.5">
-                                <Label className="text-sm font-semibold text-gray-700">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max: 700KB)</span></Label>
+                                <Label className="text-sm font-semibold text-gray-700">Image URL <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                                 <div className="flex gap-2">
                                   <Input
                                     placeholder="Paste image URL..."
@@ -4645,27 +4619,16 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                                     onChange={async (e) => {
                                       const file = e.target.files?.[0]
                                       if (!file) return
-                                      if (file.size > 700 * 1024) {
-                                        toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                                        return
-                                      }
-                                      try {
-                                        const formData = new FormData()
-                                        formData.append('file', file)
-                                        const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                                        const data = await res.json()
-                                        if (res.ok) {
-                                          const items = [...(contentSettings.sidebarAd?.items || [{}, {}, {}, {}].slice(0, 4))]
-                                          while (items.length <= index) items.push({ imageUrl: '', destinationUrl: '' })
-                                          items[index] = { ...items[index], imageUrl: data.url }
-                                          setContentSettings({
-                                            ...contentSettings,
-                                            sidebarAd: { ...contentSettings.sidebarAd, items }
-                                          })
-                                          toast({ title: `Image ${index + 1} uploaded!` })
-                                        }
-                                      } catch (err) {
-                                        toast({ title: 'Upload failed', variant: 'destructive' })
+                                      const url = await compressAndUpload(file)
+                                      if (url) {
+                                        const items = [...(contentSettings.sidebarAd?.items || [{}, {}, {}, {}].slice(0, 4))]
+                                        while (items.length <= index) items.push({ imageUrl: '', destinationUrl: '' })
+                                        items[index] = { ...items[index], imageUrl: url }
+                                        setContentSettings({
+                                          ...contentSettings,
+                                          sidebarAd: { ...contentSettings.sidebarAd, items }
+                                        })
+                                        toast({ title: `Image ${index + 1} uploaded!` })
                                       }
                                     }}
                                   />
@@ -4765,7 +4728,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
+                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/banner.jpg"
@@ -4790,30 +4753,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           onChange={async (e) => {
                             const file = e.target.files?.[0]
                             if (!file) return
-                            if (file.size > 700 * 1024) {
-                              toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                              return
-                            }
-                            try {
-                              const formData = new FormData()
-                              formData.append('file', file)
-                              const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                              const data = await res.json()
-                              if (res.ok) {
-                                const updated = {
-                                  ...contentSettings,
-                                  articleAd: {
-                                    ...contentSettings.articleAd,
-                                    banner: { ...contentSettings.articleAd?.banner, imageUrl: data.url }
-                                  }
+                            const url = await compressAndUpload(file)
+                            if (url) {
+                              const updated = {
+                                ...contentSettings,
+                                articleAd: {
+                                  ...contentSettings.articleAd,
+                                  banner: { ...contentSettings.articleAd?.banner, imageUrl: url }
                                 }
-                                setContentSettings(updated)
-                                toast({ title: 'Article Ad Banner image uploaded!' })
-                              } else {
-                                toast({ title: 'Upload failed', variant: 'destructive' })
                               }
-                            } catch (err) {
-                              toast({ title: 'Upload failed', variant: 'destructive' })
+                              setContentSettings(updated)
+                              toast({ title: 'Article Ad Banner image uploaded!' })
                             }
                           }}
                         />
@@ -4874,7 +4824,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                 </div>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
+                    <Label className="text-gray-700 font-semibold">Image URL <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/sticky-ad.jpg"
@@ -4899,30 +4849,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (!file) return
-                          if (file.size > 700 * 1024) {
-                            toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                            return
-                          }
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                            const data = await res.json()
-                            if (res.ok) {
-                              const updated = {
-                                ...contentSettings,
-                                articleAd: {
-                                  ...contentSettings.articleAd,
-                                  sticky: { ...contentSettings.articleAd?.sticky, imageUrl: data.url }
-                                }
+                          const url = await compressAndUpload(file)
+                          if (url) {
+                            const updated = {
+                              ...contentSettings,
+                              articleAd: {
+                                ...contentSettings.articleAd,
+                                sticky: { ...contentSettings.articleAd?.sticky, imageUrl: url }
                               }
-                              setContentSettings(updated)
-                              toast({ title: 'Article Sticky Ad image uploaded!' })
-                            } else {
-                              toast({ title: 'Upload failed', variant: 'destructive' })
                             }
-                          } catch (err) {
-                            toast({ title: 'Upload failed', variant: 'destructive' })
+                            setContentSettings(updated)
+                            toast({ title: 'Article Sticky Ad image uploaded!' })
                           }
                         }}
                       />
@@ -5058,7 +4995,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-700 font-semibold">Custom Image URL (Optional - replaces default gradient) <span className="text-xs font-normal text-gray-400 ml-1">(Max size: 700KB)</span></Label>
+                    <Label className="text-gray-700 font-semibold">Custom Image URL (Optional - replaces default gradient) <span className="text-xs font-normal text-emerald-500 ml-1">(Auto-compressed)</span></Label>
                     <div className="flex gap-2">
                       <Input
                         placeholder="https://example.com/business-ad.jpg"
@@ -5077,24 +5014,13 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (!file) return
-                          if (file.size > 700 * 1024) {
-                            toast({ title: 'Image must be under 700KB', variant: 'destructive' })
-                            return
-                          }
-                          try {
-                            const formData = new FormData()
-                            formData.append('file', file)
-                            const res = await fetch('/api/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }, body: formData })
-                            const data = await res.json()
-                            if (res.ok) {
-                              setContentSettings({
-                                ...contentSettings,
-                                businessAd: { ...contentSettings.businessAd, imageUrl: data.url }
-                              })
-                              toast({ title: 'Business Ad Image uploaded!' })
-                            }
-                          } catch (err) {
-                            toast({ title: 'Upload failed', variant: 'destructive' })
+                          const url = await compressAndUpload(file)
+                          if (url) {
+                            setContentSettings({
+                              ...contentSettings,
+                              businessAd: { ...contentSettings.businessAd, imageUrl: url }
+                            })
+                            toast({ title: 'Business Ad Image uploaded!' })
                           }
                         }}
                       />
@@ -5278,7 +5204,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                             <div className="flex-shrink-0 w-full md:w-32 aspect-video md:aspect-[4/3] bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
                               {article.mainImage ? (
                                 <img
-                                  src={article.mainImage}
+                                  src={getProxiedImageUrl(article.mainImage)}
                                   alt={getTextValue(article.title)}
                                   className="w-full h-full object-cover"
                                 />
@@ -5437,7 +5363,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           {/* Image - Premium aspect ratio */}
                           <div className="flex-shrink-0 w-full sm:w-28 aspect-video sm:aspect-square bg-gray-100 rounded-lg overflow-hidden border border-gray-100 relative group">
                             {article.mainImage ? (
-                              <img src={article.mainImage} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              <img src={getProxiedImageUrl(article.mainImage)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 gap-1">
                                 <Newspaper className="h-5 w-5" />
@@ -5971,14 +5897,18 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0]
                       if (file) {
-                        const reader = new FileReader()
-                        reader.onload = (event) => {
-                          setNewsForm({ ...newsForm, mainImage: event.target.result })
+                        try {
+                          const result = await compressImageFile(file, { maxSizeKB: 650 })
+                          if (result.wasCompressed) {
+                            toast({ title: `Image compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)}` })
+                          }
+                          setNewsForm({ ...newsForm, mainImage: result.dataUrl })
+                        } catch (err) {
+                          toast({ title: 'Failed to process image', variant: 'destructive' })
                         }
-                        reader.readAsDataURL(file)
                       }
                     }}
                   />
@@ -5989,7 +5919,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               </div>
               {newsForm.mainImage && (
                 <div className="mt-3 relative h-48 w-full rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
-                  <img src={newsForm.mainImage} alt="Main preview" className="w-full h-full object-cover" />
+                  <img src={getProxiedImageUrl(newsForm.mainImage)} alt="Main preview" className="w-full h-full object-cover" />
                 </div>
               )}
             </div>
@@ -6003,13 +5933,13 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {(newsForm.thumbnails || (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : [])).map((thumb, idx) => (
                   <div key={idx} className="relative h-24 rounded-xl overflow-hidden border border-gray-200 group bg-gray-50 flex flex-col">
-                    <img src={thumb} alt={`Thumb ${idx}`} className="w-full h-full object-cover absolute inset-0 z-0 opacity-40 group-hover:opacity-10 transition-opacity" />
+                    <img src={getProxiedImageUrl(thumb)} alt={`Thumb ${idx}`} className="w-full h-full object-cover absolute inset-0 z-0 opacity-40 group-hover:opacity-10 transition-opacity" />
                     <Input
                       value={thumb}
                       onChange={(e) => {
-                        const newThumbs = [...(newsForm.thumbnails || [])]
+                        const newThumbs = [...(newsForm.thumbnails || (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : []))]
                         newThumbs[idx] = e.target.value
-                        setNewsForm({ ...newsForm, thumbnails: newThumbs })
+                        setNewsForm({ ...newsForm, thumbnails: newThumbs, thumbnailUrl: newThumbs[0] || '' })
                       }}
                       placeholder={`URL ${idx + 1}`}
                       className="absolute inset-x-2 bottom-2 h-8 text-xs bg-white/80 backdrop-blur-sm border-0 rounded-md z-10 font-medium"
@@ -6039,12 +5969,16 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                         onChange={async (e) => {
                           const file = e.target.files?.[0]
                           if (file) {
-                            const reader = new FileReader()
-                            reader.onload = (event) => {
-                              const newThumbs = [...(newsForm.thumbnails || []), event.target.result]
+                            try {
+                              const result = await compressImageFile(file, { maxSizeKB: 650 })
+                              if (result.wasCompressed) {
+                                toast({ title: `Thumbnail compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)}` })
+                              }
+                              const newThumbs = [...(newsForm.thumbnails || []), result.dataUrl]
                               setNewsForm({ ...newsForm, thumbnails: newThumbs, thumbnailUrl: newThumbs[0] })
+                            } catch (err) {
+                              toast({ title: 'Failed to process image', variant: 'destructive' })
                             }
-                            reader.readAsDataURL(file)
                           }
                         }}
                       />

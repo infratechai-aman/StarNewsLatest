@@ -17,6 +17,7 @@ import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getLocalizedText } from '@/lib/newsData'
+import { compressImageFile, formatFileSize } from '@/lib/imageCompress'
 
 const CLASSIFIED_CATEGORIES = [
   'IT Jobs', 'Real Estate', 'Vehicles', 'Electronics', 'Furniture', 'Fashion', 'Services', 'Other'
@@ -234,24 +235,26 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       return
     }
 
-    const oversized = files.filter(f => f.size > 700 * 1024)
-    if (oversized.length > 0) {
-      alert('Each image must be under 700KB')
-      return
-    }
-
     for (const file of files) {
       if (!file.type.startsWith('image/')) continue
 
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        setClassifiedPreviews(prev => [...prev, event.target.result])
-      }
-      reader.readAsDataURL(file)
-
       try {
+        // Auto-compress if needed
+        let fileToUpload = file
+        if (file.size > 650 * 1024) {
+          const result = await compressImageFile(file, { maxSizeKB: 650 })
+          fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+        }
+
+        // Show preview
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          setClassifiedPreviews(prev => [...prev, event.target.result])
+        }
+        reader.readAsDataURL(fileToUpload)
+
         const formDataUpload = new FormData()
-        formDataUpload.append('file', file)
+        formDataUpload.append('file', fileToUpload)
         const res = await fetch('/api/upload', {
           method: 'POST',
           headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
@@ -286,20 +289,22 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 700 * 1024) {
-      alert('Cover image must be under 700KB')
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      setBusinessCoverPreview(event.target.result)
-    }
-    reader.readAsDataURL(file)
-
     try {
+      // Auto-compress if needed
+      let fileToUpload = file
+      if (file.size > 650 * 1024) {
+        const result = await compressImageFile(file, { maxSizeKB: 650 })
+        fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+      }
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setBusinessCoverPreview(event.target.result)
+      }
+      reader.readAsDataURL(fileToUpload)
+
       const formDataUpload = new FormData()
-      formDataUpload.append('file', file)
+      formDataUpload.append('file', fileToUpload)
       const res = await fetch('/api/upload', {
         method: 'POST',
         headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
@@ -749,7 +754,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm font-semibold text-gray-700">Upload Images</Label>
-                            <span className="text-xs text-gray-400 font-medium">(Max size: 700KB per image, max 8)</span>
+                            <span className="text-xs text-emerald-500 font-medium">(Auto-compressed, max 8)</span>
                           </div>
                           <div className="flex flex-wrap gap-2 items-center">
                             {classifiedPreviews.map((preview, idx) => (
@@ -893,7 +898,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm font-semibold text-gray-700">Cover Image / Logo</Label>
-                            <span className="text-xs text-gray-400 font-medium">(Max size: 700KB)</span>
+                            <span className="text-xs text-emerald-500 font-medium">(Auto-compressed)</span>
                           </div>
                           <div className="flex items-center gap-3">
                             {businessCoverPreview ? (

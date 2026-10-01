@@ -11,6 +11,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getArticleAdSettings } from '@/lib/contentStore'
 import { news } from '@/lib/api'
 import DOMPurify from 'dompurify'
+import { proxyImageUrl } from '@/lib/imageProxy'
 
 /**
  * SECURITY: Sanitize HTML content to prevent XSS attacks.
@@ -303,7 +304,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           })() : article.mainImage && (
             <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 w-full max-w-full min-w-0">
               <Image
-                src={article.mainImage}
+                src={proxyImageUrl(article.mainImage)}
                 alt={title}
                 fill
                 className="object-cover"
@@ -348,7 +349,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                     <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                       {galleryImgs.map((img, idx) => (
                         <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
-                          <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
+                          <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                         </div>
                       ))}
                     </div>
@@ -369,7 +370,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                     {galleryImgs.map((img, idx) => (
                       <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
-                        <Image src={img} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
+                        <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
                       </div>
                     ))}
                   </div>
@@ -480,7 +481,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 >
                   <div className="relative w-20 sm:w-24 h-16 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <Image
-                      src={item.mainImage || item.images?.[0] || '/placeholder-news.svg'}
+                      src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                       alt={getLocalizedText(item.title, language)}
                       fill
                       className="object-cover"
@@ -521,7 +522,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   </div>
                   <div className="relative w-14 sm:w-16 h-10 sm:h-12 shrink-0 rounded-md overflow-hidden bg-gray-100">
                     <Image
-                      src={newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg'}
+                      src={proxyImageUrl(newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg')}
                       alt=""
                       fill
                       className="object-cover"
