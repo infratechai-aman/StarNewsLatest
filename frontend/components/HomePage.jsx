@@ -1068,27 +1068,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <h4 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-3 group-hover:text-red-600 transition-colors mb-2">{getLocalizedText(item.title, language)}</h4>
                   <div className="mt-auto flex items-center gap-1.5 text-[10px] font-semibold text-gray-400" suppressHydrationWarning>
                     <Clock className="w-3 h-3 text-gray-300" />
-                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                    {(() => {
-                      const dateStr = item.publishedAt || item.createdAt;
-                      if (!dateStr) return null;
-                      const diffMs = Date.now() - new Date(dateStr).getTime();
-                      if (isNaN(diffMs) || diffMs < 0) return null;
-                      const diffMins = Math.floor(diffMs / (1000 * 60));
-                      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                      let rel = '';
-                      if (diffMins < 60) rel = `${Math.max(1, diffMins)}m ago`;
-                      else if (diffHours < 24) rel = `${diffHours}h ago`;
-                      else if (diffDays < 7) rel = `${diffDays}d ago`;
-                      if (!rel) return null;
-                      return (
-                        <>
-                          <span className="text-gray-300 mx-0.5">•</span>
-                          <span>{rel}</span>
-                        </>
-                      );
-                    })()}
+                    <span suppressHydrationWarning>
+                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
+                    </span>
                   </div>
                 </div>
               ))}

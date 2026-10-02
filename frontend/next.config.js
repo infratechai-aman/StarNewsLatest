@@ -60,9 +60,8 @@ const nextConfig = {
     ];
   },
   async headers() {
-    // fix(P3-SEC-01): Use production domain as default instead of undefined/empty
-    // which would make CORS headers absent. CORS_ORIGINS env var overrides this.
-    const allowedOrigin = process.env.CORS_ORIGINS || "https://starnewsindia.in";
+    // Support all deployment domains (Vercel previews, custom domains, localhost)
+    const allowedOrigin = process.env.CORS_ORIGINS || "*";
     return [
       {
         source: "/(.*)",

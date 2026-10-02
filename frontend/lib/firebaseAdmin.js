@@ -37,8 +37,11 @@ const cleanPrivateKey = (key) => {
     return cleaned;
 };
 
+const firebase = admin.default || admin;
+
 const getApp = () => {
-    if (admin.apps.length > 0) return admin.apps[0];
+    const apps = firebase.apps || [];
+    if (apps.length > 0) return apps[0];
 
     // Next.js automatically loads .env.local — no manual dotenv needed
 
@@ -67,7 +70,7 @@ const getApp = () => {
     if (!clientEmail || !rawKey) {
         console.warn(`[FirebaseAdmin] Missing private key/email on Vercel. Initializing in Public/Unauthenticated mode.`);
         try {
-            return admin.initializeApp({
+            return firebase.initializeApp({
                 projectId,
                 storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
             });
@@ -83,8 +86,8 @@ const getApp = () => {
         // Diagnostic logging (no sensitive values)
         console.log(`[FirebaseAdmin] Init: project=${projectId}, keyLen=${privateKey.length}`);
 
-        return admin.initializeApp({
-            credential: admin.credential.cert({
+        return firebase.initializeApp({
+            credential: firebase.credential.cert({
                 projectId,
                 clientEmail,
                 privateKey,
@@ -102,17 +105,17 @@ const getApp = () => {
 
 export const getDb = () => {
     const app = getApp();
-    return app ? admin.firestore() : null;
+    return app ? firebase.firestore() : null;
 };
 
 export const getAuth = () => {
     const app = getApp();
-    return app ? admin.auth() : null;
+    return app ? firebase.auth() : null;
 };
 
 export const getStorage = () => {
     const app = getApp();
-    return app ? admin.storage() : null;
+    return app ? firebase.storage() : null;
 };
 
 // NOTE: Do NOT export module-level `db` or `auth` constants.

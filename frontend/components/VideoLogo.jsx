@@ -197,7 +197,6 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             <video
                 ref={videoRef}
                 src={videoSrc}
-                crossOrigin="anonymous"
                 autoPlay
                 loop
                 muted
