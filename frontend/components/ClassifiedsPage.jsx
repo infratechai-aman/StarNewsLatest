@@ -65,14 +65,6 @@ const convertToINR = (price) => {
   return priceStr
 }
 
-// Mock classifieds for fallback
-const mockClassifieds = [
-  { id: '1', title: 'Software Developer - React & Node.js', category: 'IT Jobs', price: 'Salary: ₹8-12 LPA', description: 'Hiring experienced full-stack developers for startup in Hinjewadi. Must have 3+ years experience in React, Node.js and MongoDB.', location: 'Hinjewadi, Pune', phone: '+91 98765 43210', image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400', postedBy: 'TechCorp Solutions', condition: 'New' },
-  { id: '2', title: 'Flat for Rent - 2BHK Furnished', category: 'Real Estate', price: '₹25,000/month', description: 'Spacious 2BHK flat with all amenities near IT parks. Semi-furnished with modular kitchen, AC in bedrooms.', location: 'Baner, Pune', phone: '+91 98765 43211', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400', postedBy: 'PropertyDeals', condition: 'Good' },
-  { id: '3', title: 'Honda City 2020 - Excellent Condition', category: 'Vehicles', price: '$10,240', description: 'Well maintained, single owner, full service history. Petrol variant, 35000 km driven only.', location: 'Kothrud, Pune', phone: '+91 98765 43212', image: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400', postedBy: 'Auto Traders', condition: 'Excellent' },
-  { id: '4', title: 'MacBook Pro M2 - Like New', category: 'Electronics', price: '$1,500', description: 'Apple MacBook Pro 14" M2 Pro, 16GB RAM, 512GB SSD. With original box and charger. Under warranty.', location: 'Viman Nagar, Pune', phone: '+91 98765 43213', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400', postedBy: 'GadgetStore', condition: 'Like New' },
-]
-
 const CLASSIFIED_CATEGORIES = [
   'IT Jobs', 'Real Estate', 'Vehicles', 'Electronics', 'Furniture', 'Fashion', 'Services', 'Other'
 ]
@@ -154,11 +146,11 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           setClassifieds(data)
         } else {
           // Fallback to mock data
-          setClassifieds(mockClassifieds)
+          setClassifieds([])
         }
       } catch (error) {
         console.error('Failed to load classifieds:', error)
-        setClassifieds(mockClassifieds)
+        setClassifieds([])
       } finally {
         setLoading(false)
       }
@@ -485,7 +477,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
           {/* CENTER: Grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-500 font-medium">{t('showing') || 'Showing'} 1-12 {t('of') || 'of'} {classifieds.length > 0 ? classifieds.length * 370 : 1482} {t('ads') || 'ads'}</p>
+              <p className="text-sm text-gray-500 font-medium">{t('showing') || 'Showing'} 1-12 {t('of') || 'of'} {classifieds.length} {t('ads') || 'ads'}</p>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{t('sortBy') || 'Sort by'}</span>
                 <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white">
@@ -496,43 +488,58 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {classifieds.map((ad, idx) => {
-                const displayPrice = convertToINR(ad.price)
-                const cardImg = getAdCardImage(ad)
-                return (
-                  <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all flex flex-col" onClick={() => handleContactSeller(ad)}>
-                    <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                      <Image src={cardImg} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
-                      <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>
-                        {ad.condition === 'New' ? (t('newCondition') || 'NEW') : ad.condition === 'Excellent' ? (language === 'mr' ? 'खास' : language === 'hi' ? 'विशेष' : 'FEATURED') : (language === 'mr' ? 'तातडीचे' : language === 'hi' ? 'तत्काल' : 'URGENT')}
-                      </Badge>
-                      <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
-                        <Heart className="w-3.5 h-3.5" />
-                      </button>
+            {classifieds.length === 0 ? (
+              <div className="text-center py-16 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
+                <Tag className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <h3 className="text-base font-bold text-gray-900 mb-1">
+                  {language === 'mr' ? 'कोणत्याही वर्गीकृत जाहिराती उपलब्ध नाहीत' : language === 'hi' ? 'कोई वर्गीकृत विज्ञापन उपलब्ध नहीं हैं' : 'No classified ads available yet'}
+                </h3>
+                <p className="text-xs text-gray-500 mb-5 max-w-sm mx-auto">
+                  {language === 'mr' ? 'पहिली जाहिरात पोस्ट करा आणि हजारो स्थानिक ग्राहकांपर्यंत पोहोचा.' : language === 'hi' ? 'पहला विज्ञापन पोस्ट करें और हजारों स्थानीय ग्राहकों तक पहुंचें।' : 'Be the first to post a classified ad and reach verified local buyers across Maharashtra.'}
+                </p>
+                <Button onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs h-9 px-5 shadow-sm active:scale-95 transition-transform">
+                  {t('postYourAd') || 'Post Your Ad'} →
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {classifieds.map((ad, idx) => {
+                  const displayPrice = convertToINR(ad.price)
+                  const cardImg = getAdCardImage(ad)
+                  return (
+                    <div key={ad.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all flex flex-col" onClick={() => handleContactSeller(ad)}>
+                      <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                        <Image src={cardImg} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
+                        <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>
+                          {ad.condition === 'New' ? (t('newCondition') || 'NEW') : ad.condition === 'Excellent' ? (language === 'mr' ? 'खास' : language === 'hi' ? 'विशेष' : 'FEATURED') : (language === 'mr' ? 'तातडीचे' : language === 'hi' ? 'तत्काल' : 'URGENT')}
+                        </Badge>
+                        <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
+                          <Heart className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="p-3 flex flex-col flex-1">
+                        <h4 className="font-black text-[15px] text-gray-900 leading-tight mb-1">{displayPrice || '₹0'}</h4>
+                        <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[32px]">{ad.title}</p>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1 mt-auto">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{ad.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{language === 'mr' ? `${idx + 1 + (idx * 2)} तासांपूर्वी` : language === 'hi' ? `${idx + 1 + (idx * 2)} घंटे पहले` : `${idx + 1 + (idx * 2)} hours ago`}</span>
+                        </div>
+                        <div className="pt-2 border-t border-gray-100 mt-auto flex items-center justify-between">
+                          <span className="text-xs font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
+                            {t('viewDetails') || 'View Details'}
+                            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-3 flex flex-col flex-1">
-                      <h4 className="font-black text-[15px] text-gray-900 leading-tight mb-1">{displayPrice || '₹0'}</h4>
-                      <p className="text-xs font-bold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[32px]">{ad.title}</p>
-                      <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-1 mt-auto">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        <span className="truncate">{ad.location}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
-                        <Clock className="w-3 h-3 shrink-0" />
-                        <span>{language === 'mr' ? `${idx + 1 + (idx * 2)} तासांपूर्वी` : language === 'hi' ? `${idx + 1 + (idx * 2)} घंटे पहले` : `${idx + 1 + (idx * 2)} hours ago`}</span>
-                      </div>
-                      <div className="pt-2 border-t border-gray-100 mt-auto flex items-center justify-between">
-                        <span className="text-xs font-bold text-red-600 group-hover:text-red-700 flex items-center gap-1">
-                          {t('viewDetails') || 'View Details'}
-                          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* RIGHT SIDEBAR */}

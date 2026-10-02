@@ -25,8 +25,8 @@ import {
   Building2, Tag, Users, FileText, Settings, Eye, EyeOff, Check, X,
   Edit, Trash2, Plus, PlusCircle, GripVertical, RefreshCw, Lock, Bell,
   TrendingUp, TrendingDown, Database, Clock, CheckCircle, XCircle, AlertTriangle, Image, Link, Monitor,
-  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, MoreHorizontal,
-  LogOut
+  Phone, MapPin, Globe, MessageCircle, Star, Home, UserPlus, Upload, Video, User, Mail, Calendar, Shield, ShieldCheck, MoreHorizontal,
+  LogOut, Copy, Key
 } from 'lucide-react'
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { compressImageFile, formatFileSize } from '@/lib/imageCompress'
@@ -155,6 +155,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const [creatingReporter, setCreatingReporter] = useState(false)
   const [allReporters, setAllReporters] = useState([])
   const [loadingAllReporters, setLoadingAllReporters] = useState(false)
+
+  // Reporter Account Modal & Credentials Tracking State
+  const [accountModalOpen, setAccountModalOpen] = useState(false)
+  const [accountModalApp, setAccountModalApp] = useState(null)
+  const [accountFormData, setAccountFormData] = useState({
+    name: '', email: '', phone: '', password: '', approveAlso: true
+  })
+  const [showAccountModalPass, setShowAccountModalPass] = useState(false)
+  const [submittingAccount, setSubmittingAccount] = useState(false)
+  const [showCardPasswords, setShowCardPasswords] = useState({})
+  const [accountModalSuccess, setAccountModalSuccess] = useState(null)
 
   // Business Promotions State
   const [businessPromotions, setBusinessPromotions] = useState([])
@@ -561,21 +572,20 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   // Update reporter application status
   const handleReporterAppAction = async (id, status) => {
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch('/api/reporter-applications', {
+      const res = await authenticatedFetch('/api/reporter-applications', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status })
       })
       const data = await res.json().catch(() => ({}))
       if (res.ok) {
         toast({
           title: status === 'APPROVED' ? 'Application Approved' : `Application marked as ${status}`,
-          description: status === 'APPROVED' ? 'User role updated to Reporter in database.' : undefined
+          description: status === 'APPROVED' ? 'Status updated. You can assign login credentials directly on the card.' : undefined
         })
         await Promise.all([
-          loadReporterApplications(),
-          loadAllReporters(),
+          loadReporterApplications(true),
+          loadAllReporters(true),
           loadPendingData(true)
         ])
       } else {
@@ -590,27 +600,134 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const handleDeleteReporterApp = async (id) => {
     if (!confirm('Are you sure you want to delete this application?')) return
     try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/reporter-applications?id=${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await authenticatedFetch(`/api/reporter-applications?id=${id}`, {
+        method: 'DELETE'
       })
       if (res.ok) {
         toast({ title: 'Application deleted' })
-        loadReporterApplications()
+        loadReporterApplications(true)
       }
     } catch (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' })
     }
   }
 
+  // Generate clean, secure random password
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'
+    let rand = ''
+    for (let i = 0; i < 6; i++) {
+      rand += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return `Star#${rand}!`
+  }
+
+  // Open Create/Edit Account Modal for a specific application
+  const openAccountModal = (app, isEdit = false) => {
+    setAccountModalApp(app)
+    setAccountFormData({
+      name: app.fullName || '',
+      email: app.accountEmail || app.email || '',
+      phone: app.phone || '',
+      password: app.tempPassword || generateRandomPassword(),
+      approveAlso: true
+    })
+    setShowAccountModalPass(true)
+    setAccountModalSuccess(null)
+    setAccountModalOpen(true)
+  }
+
+  // Submit Account Creation / Update via Admin API
+  const submitAccountModal = async () => {
+    if (!accountFormData.name || !accountFormData.email || !accountFormData.password) {
+      toast({ title: 'Missing fields', description: 'Name, email, and password are required', variant: 'destructive' })
+      return
+    }
+    if (accountFormData.password.length < 6) {
+      toast({ title: 'Password too short', description: 'Password must be at least 6 characters', variant: 'destructive' })
+      return
+    }
+
+    setSubmittingAccount(true)
+    try {
+      const res = await authenticatedFetch('/api/admin/users/create-reporter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicationId: accountModalApp?.id,
+          name: accountFormData.name,
+          email: accountFormData.email,
+          password: accountFormData.password,
+          phone: accountFormData.phone
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter-login` : '/reporter-login'
+        const successData = {
+          name: accountFormData.name,
+          email: accountFormData.email,
+          password: accountFormData.password,
+          loginUrl: portalUrl
+        }
+        setAccountModalSuccess(successData)
+
+        toast({
+          title: 'Reporter Account Ready!',
+          description: `Account created/updated for ${accountFormData.name} (${accountFormData.email})`
+        })
+
+        // Instantly refresh applications AND All Reporters list below
+        await Promise.all([
+          loadReporterApplications(true),
+          loadAllReporters(true, true),
+          loadPendingData(true)
+        ])
+      } else {
+        throw new Error(data.error || 'Failed to create reporter account')
+      }
+    } catch (err) {
+      toast({ title: 'Account Error', description: err.message, variant: 'destructive' })
+    } finally {
+      setSubmittingAccount(false)
+    }
+  }
+
+  // Copy helper
+  const copyToClipboard = (text, label) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    toast({ title: 'Copied!', description: `${label} copied to clipboard.` })
+  }
+
+  // Copy all reporter credentials formatted for WhatsApp / SMS / Email
+  const copyFullCredentials = (app) => {
+    const email = app.accountEmail || app.email
+    const pwd = app.tempPassword || '(Password active in Auth)'
+    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter-login` : '/reporter-login'
+    const message = `✨ STAR NEWS - REPORTER LOGIN CREDENTIALS ✨\n\n👤 Name: ${app.fullName}\n📧 Login ID/Email: ${email}\n🔑 Password: ${pwd}\n🌐 Portal URL: ${portalUrl}\n\nPlease login and start submitting news!`
+    
+    navigator.clipboard.writeText(message)
+    toast({
+      title: 'Credentials Copied!',
+      description: `Full login credentials for ${app.fullName} copied to clipboard!`
+    })
+  }
+
+  // Toggle show/hide password on card
+  const toggleCardPassword = (appId) => {
+    setShowCardPasswords(prev => ({
+      ...prev,
+      [appId]: !prev[appId]
+    }))
+  }
+
   // Load all reporters
   const loadAllReporters = async (fresh = false, isManual = false) => {
     try {
       setLoadingAllReporters(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch(`/api/admin/users/reporters?fresh=true&_t=${Date.now()}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+      const res = await authenticatedFetch(`/api/admin/users/reporters?fresh=true&_t=${Date.now()}`, {
         cache: 'no-store'
       })
       const data = await res.json()
@@ -619,7 +736,6 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         toast({ title: 'Reporters Refreshed', description: 'Reporters and contribution stats are up to date.' })
       }
     } catch (error) {
-      // console.error('Failed to load reporters:', error)
       if (isManual) {
         toast({ title: 'Refresh Error', description: 'Could not refresh reporters.', variant: 'destructive' })
       }
@@ -690,7 +806,8 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         toast({ title: `Request ${action === 'delete' ? 'deleted' : 'updated'}` })
         loadBusinessPromotions()
       } else {
-        toast({ title: 'Operation failed', variant: 'destructive' })
+        const errData = await res.json().catch(() => ({}))
+        toast({ title: 'Operation failed', description: errData.error || `Server returned error ${res.status}`, variant: 'destructive' })
       }
     } catch (error) {
       // console.error('Promotion action error:', error)
@@ -3651,44 +3768,223 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                               )}
                             </div>
                             <p className="text-[11px] text-gray-400 mt-3 font-medium">Submitted: {new Date(app.submittedAt).toLocaleDateString()}</p>
+
+                            {/* Account Credentials Tracker */}
+                            {app.accountCreated ? (
+                              <div className="mt-3.5 p-3.5 bg-gradient-to-br from-emerald-50/90 to-teal-50/80 border border-emerald-200 rounded-xl space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5 font-bold text-emerald-800 text-xs">
+                                    <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                                    <span>Reporter Account Active</span>
+                                  </div>
+                                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-semibold">
+                                    Linked in All Reporters
+                                  </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                                  {/* Login ID / Email */}
+                                  <div className="bg-white/95 p-2 rounded-lg border border-emerald-100/80 flex items-center justify-between">
+                                    <div className="min-w-0 pr-1">
+                                      <span className="text-[10px] font-semibold uppercase text-gray-400 tracking-wider block">Login ID / Email</span>
+                                      <span className="text-xs font-mono font-bold text-gray-800 truncate block select-all" title={app.accountEmail || app.email}>
+                                        {app.accountEmail || app.email}
+                                      </span>
+                                    </div>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-6 w-6 text-gray-400 hover:text-emerald-700 shrink-0"
+                                      onClick={() => copyToClipboard(app.accountEmail || app.email, 'Login ID')}
+                                      title="Copy Login Email"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+
+                                  {/* Password */}
+                                  <div className="bg-white/95 p-2 rounded-lg border border-emerald-100/80 flex items-center justify-between">
+                                    <div className="min-w-0 pr-1">
+                                      <span className="text-[10px] font-semibold uppercase text-gray-400 tracking-wider block">Password</span>
+                                      {app.tempPassword ? (
+                                        <span className="text-xs font-mono font-bold text-gray-800 select-all block">
+                                          {showCardPasswords[app.id] ? app.tempPassword : '••••••••••••'}
+                                        </span>
+                                      ) : (
+                                        <span className="text-[11px] font-medium text-gray-500 italic block">Active in Auth</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-0.5 shrink-0">
+                                      {app.tempPassword && (
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-6 w-6 text-gray-400 hover:text-gray-700"
+                                          onClick={() => toggleCardPassword(app.id)}
+                                          title={showCardPasswords[app.id] ? 'Hide password' : 'Show password'}
+                                        >
+                                          {showCardPasswords[app.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                        </Button>
+                                      )}
+                                      {app.tempPassword && (
+                                        <Button
+                                          size="icon"
+                                          variant="ghost"
+                                          className="h-6 w-6 text-gray-400 hover:text-emerald-700"
+                                          onClick={() => copyToClipboard(app.tempPassword, 'Password')}
+                                          title="Copy Password"
+                                        >
+                                          <Copy className="h-3 w-3" />
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Quick action buttons for credentials */}
+                                <div className="flex items-center gap-2 pt-0.5">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-[11px] font-semibold bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-lg flex-1 gap-1"
+                                    onClick={() => copyFullCredentials(app)}
+                                  >
+                                    <Copy className="h-3 w-3" /> Copy All Credentials
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-[11px] font-semibold bg-white border-teal-200 text-teal-700 hover:bg-teal-50 rounded-lg flex-1 gap-1"
+                                    onClick={() => openAccountModal(app, true)}
+                                  >
+                                    <Key className="h-3 w-3" /> Reset / Change Password
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mt-3.5 p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex items-center justify-between text-xs gap-2">
+                                <div className="flex items-center gap-2 text-amber-800">
+                                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                                  <span className="font-medium text-[11px]">No login account assigned yet</span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-xs shrink-0"
+                                  onClick={() => openAccountModal(app, false)}
+                                >
+                                  <UserPlus className="h-3.5 w-3.5 mr-1" /> Add Account
+                                </Button>
+                              </div>
+                            )}
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-gray-100">
                             {app.status === 'PENDING' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
-                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+                                <Button
+                                  size="sm"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors gap-1"
+                                  onClick={() => openAccountModal(app, false)}
+                                >
+                                  <Key className="h-3.5 w-3.5 mr-1" /> Approve & Add Account
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-blue-700 border-blue-200 hover:bg-blue-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg font-semibold transition-colors"
+                                  onClick={() => handleReporterAppAction(app.id, 'APPROVED')}
+                                  title="Quick approve without setting custom password"
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Quick Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-blue-700 border-blue-200 hover:bg-blue-50 rounded-lg font-semibold transition-colors"
+                                  onClick={() => handleReporterAppAction(app.id, 'CONTACTED')}
+                                >
                                   <Phone className="h-3.5 w-3.5 mr-1" /> Contacted
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg font-semibold transition-colors"
+                                  onClick={() => handleReporterAppAction(app.id, 'REJECTED')}
+                                >
                                   <X className="h-3.5 w-3.5 mr-1" /> Reject
                                 </Button>
                               </>
                             )}
                             {app.status === 'CONTACTED' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
-                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+                                <Button
+                                  size="sm"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 shadow-sm font-semibold transition-colors gap-1"
+                                  onClick={() => openAccountModal(app, false)}
+                                >
+                                  <Key className="h-3.5 w-3.5 mr-1" /> Approve & Add Account
                                 </Button>
-                                <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'REJECTED')}>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg font-semibold transition-colors"
+                                  onClick={() => handleReporterAppAction(app.id, 'APPROVED')}
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" /> Quick Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-700 border-red-200 hover:bg-red-50 rounded-lg font-semibold transition-colors"
+                                  onClick={() => handleReporterAppAction(app.id, 'REJECTED')}
+                                >
                                   <X className="h-3.5 w-3.5 mr-1" /> Reject
                                 </Button>
                               </>
                             )}
                             {app.status === 'APPROVED' && (
-                              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5 flex-1">
-                                <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                                <span>Approved Reporter</span>
-                              </div>
+                              <>
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-1.5">
+                                  <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                  <span>Approved</span>
+                                </div>
+                                {!app.accountCreated ? (
+                                  <Button
+                                    size="sm"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex-1 font-semibold transition-colors gap-1"
+                                    onClick={() => openAccountModal(app, false)}
+                                  >
+                                    <Key className="h-3.5 w-3.5 mr-1" /> + Create Login Account
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg flex-1 font-semibold transition-colors gap-1"
+                                    onClick={() => openAccountModal(app, true)}
+                                  >
+                                    <Key className="h-3.5 w-3.5 mr-1" /> Manage Credentials
+                                  </Button>
+                                )}
+                              </>
                             )}
                             {app.status === 'REJECTED' && (
-                              <Button size="sm" variant="outline" className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg flex-1 font-semibold transition-colors" onClick={() => handleReporterAppAction(app.id, 'APPROVED')}>
-                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Re-approve
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-emerald-700 border-emerald-200 hover:bg-emerald-50 rounded-lg flex-1 font-semibold transition-colors gap-1"
+                                onClick={() => openAccountModal(app, false)}
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Re-approve & Add Account
                               </Button>
                             )}
-                            <Button size="icon" variant="ghost" className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9 shrink-0" onClick={() => handleDeleteReporterApp(app.id)} title="Delete Application">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-gray-400 hover:text-red-600 rounded-lg h-9 w-9 shrink-0"
+                              onClick={() => handleDeleteReporterApp(app.id)}
+                              title="Delete Application"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -3858,10 +4154,9 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       onClick={async () => {
                         setCreatingReporter(true)
                         try {
-                          const token = localStorage.getItem('token')
-                          const res = await fetch('/api/admin/users/create-reporter', {
+                          const res = await authenticatedFetch('/api/admin/users/create-reporter', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(createReporterForm)
                           })
                           const data = await res.json()
@@ -3872,7 +4167,10 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                             })
                             setShowCreateReporterForm(false)
                             setCreateReporterForm({ name: '', email: '', phone: '', password: '' })
-                            loadAllReporters() // Refresh list
+                            await Promise.all([
+                              loadAllReporters(true, true),
+                              loadReporterApplications(true)
+                            ])
                           } else {
                             toast({ title: 'Error', description: data.error, variant: 'destructive' })
                           }
@@ -3990,6 +4288,195 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               )}
             </CardContent>
           </Card>
+          {/* Create / Manage Reporter Account Modal */}
+          <Dialog open={accountModalOpen} onOpenChange={(open) => {
+            setAccountModalOpen(open)
+            if (!open) {
+              setAccountModalSuccess(null)
+            }
+          }}>
+            <DialogContent className="max-w-lg p-0 overflow-hidden rounded-2xl border-0 shadow-2xl bg-white">
+              <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-6 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                    <Key className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold text-white">
+                      {accountModalApp?.accountCreated ? 'Manage Reporter Account' : 'Create Reporter Account'}
+                    </DialogTitle>
+                    <DialogDescription className="text-emerald-100 text-xs mt-1">
+                      {accountModalApp?.accountCreated
+                        ? 'Update login credentials for this reporter. Changes reflect immediately in Firebase Auth and All Reporters.'
+                        : 'Assign login ID & password. This account will immediately appear in the All Reporters list below.'}
+                    </DialogDescription>
+                  </div>
+                </div>
+              </div>
+
+              {accountModalSuccess ? (
+                <div className="p-6 space-y-4 bg-white">
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-3">
+                    <div className="flex items-center gap-2 text-emerald-800 font-bold text-sm">
+                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                      <span>Reporter Account Ready & Active!</span>
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      Account for <strong>{accountModalSuccess.name}</strong> is now saved and linked to the reporter card and the All Reporters section below.
+                    </p>
+
+                    <div className="bg-white p-3 rounded-lg border border-emerald-100 space-y-1.5 font-mono text-xs">
+                      <div>
+                        <span className="text-gray-400 font-sans text-[10px] block uppercase">Portal URL</span>
+                        <span className="text-blue-600 select-all font-semibold break-all">{accountModalSuccess.loginUrl}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 font-sans text-[10px] block uppercase">Login Email / ID</span>
+                        <span className="text-gray-900 select-all font-bold">{accountModalSuccess.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 font-sans text-[10px] block uppercase">Password</span>
+                        <span className="text-emerald-700 select-all font-bold">{accountModalSuccess.password}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <Button
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold gap-1.5 h-11"
+                      onClick={() => {
+                        const text = `✨ STAR NEWS - REPORTER LOGIN CREDENTIALS ✨\n\n👤 Name: ${accountModalSuccess.name}\n📧 Login ID/Email: ${accountModalSuccess.email}\n🔑 Password: ${accountModalSuccess.password}\n🌐 Portal URL: ${accountModalSuccess.loginUrl}\n\nPlease login and start submitting news!`
+                        navigator.clipboard.writeText(text)
+                        toast({ title: 'Copied!', description: 'Full reporter credentials copied to clipboard.' })
+                      }}
+                    >
+                      <Copy className="h-4 w-4" /> Copy All Details to Clipboard
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="rounded-xl h-11 px-5"
+                      onClick={() => {
+                        setAccountModalOpen(false)
+                        setAccountModalSuccess(null)
+                      }}
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 space-y-4 bg-white">
+                  {accountModalApp && (
+                    <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-600 flex items-center justify-between">
+                      <div>
+                        <span className="text-gray-400 block text-[10px] uppercase font-bold">Applicant</span>
+                        <span className="font-bold text-gray-800 text-sm">{accountModalApp.fullName}</span>
+                      </div>
+                      <Badge variant="outline" className={
+                        accountModalApp.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        'bg-yellow-50 text-yellow-700 border-yellow-200'
+                      }>
+                        Status: {accountModalApp.status}
+                      </Badge>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-gray-700">Full Name *</Label>
+                      <Input
+                        value={accountFormData.name}
+                        onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
+                        placeholder="Reporter Name"
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-gray-700">Login ID / Email *</Label>
+                      <Input
+                        type="email"
+                        value={accountFormData.email}
+                        onChange={(e) => setAccountFormData({ ...accountFormData, email: e.target.value })}
+                        placeholder="reporter@starnews.com"
+                        className="rounded-xl font-mono text-xs"
+                      />
+                      <p className="text-[11px] text-gray-400">The reporter will use this email/ID to log into the Reporter Portal.</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-gray-700">Phone Number</Label>
+                      <Input
+                        value={accountFormData.phone}
+                        onChange={(e) => setAccountFormData({ ...accountFormData, phone: e.target.value })}
+                        placeholder="+91 XXXXXXXXXX"
+                        className="rounded-xl"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-gray-700">Password * (Min 6 chars)</Label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 px-2 font-bold"
+                          onClick={() => setAccountFormData({ ...accountFormData, password: generateRandomPassword() })}
+                        >
+                          ⚡ Generate Strong
+                        </Button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          type={showAccountModalPass ? 'text' : 'password'}
+                          value={accountFormData.password}
+                          onChange={(e) => setAccountFormData({ ...accountFormData, password: e.target.value })}
+                          placeholder="Enter or generate password"
+                          className="rounded-xl font-mono pr-10 text-xs"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-gray-400 hover:text-gray-700"
+                          onClick={() => setShowAccountModalPass(!showAccountModalPass)}
+                        >
+                          {showAccountModalPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="pt-3 border-t flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl"
+                      onClick={() => setAccountModalOpen(false)}
+                      disabled={submittingAccount}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-sm px-5"
+                      onClick={submitAccountModal}
+                      disabled={submittingAccount || !accountFormData.name || !accountFormData.email || !accountFormData.password || accountFormData.password.length < 6}
+                    >
+                      {submittingAccount ? (
+                        <span className="flex items-center gap-1.5">
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Saving...
+                        </span>
+                      ) : (
+                        accountModalApp?.accountCreated ? 'Update Account & Password' : 'Create Account & Approve'
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         {/* Shorts Tab */}

@@ -118,6 +118,35 @@ const getTranslatedCategory = (cat, t, language) => {
   return translated !== fallbackKey ? translated : catStr
 }
 
+// SSR-safe date component to eliminate React hydration mismatch (#418, #425, #423)
+const SafeDate = ({ date, format = 'short', className = '', showClock = false, clockClassName = 'w-3 h-3 text-gray-400' }) => {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!date) return null
+
+  let text = ''
+  if (mounted) {
+    try {
+      const d = new Date(date)
+      if (!isNaN(d.getTime())) {
+        text = format === 'long'
+          ? d.toLocaleDateString()
+          : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+      }
+    } catch (e) {}
+  }
+
+  return (
+    <span className={className} suppressHydrationWarning>
+      {showClock && <Clock className={clockClassName} />}
+      {text}
+    </span>
+  )
+}
+
 // News Box Component - Language Aware with API data support
 const NewsBox = ({ item, onClick, language }) => {
   const { t } = useLanguage()
@@ -177,9 +206,13 @@ const NewsBox = ({ item, onClick, language }) => {
           {title}
         </h3>
         <div className="mt-4 md:mt-3 flex items-center justify-between">
-          <span className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5" suppressHydrationWarning>
-            <Clock className="w-3.5 h-3.5" /> {new Date(item.publishedAt || item.createdAt).toLocaleDateString()}
-          </span>
+          <SafeDate
+            date={item.publishedAt || item.createdAt}
+            format="long"
+            showClock={true}
+            clockClassName="w-3.5 h-3.5"
+            className="text-[11px] md:text-[10px] font-bold text-gray-500 flex items-center gap-1.5"
+          />
           <span className="text-[11px] md:text-[10px] font-black text-red-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">{t('readFullStory') || 'Read Full Story →'}</span>
         </div>
       </div>
@@ -242,10 +275,13 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
           {title}
         </h4>
         <div className="text-[10px] text-gray-400 mt-2.5 flex items-center justify-between pt-2 border-t border-gray-50">
-          <span className="flex items-center gap-1" suppressHydrationWarning>
-            <Clock className="h-3 w-3" />
-            {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-          </span>
+          <SafeDate
+            date={item.publishedAt || item.createdAt}
+            format="short"
+            showClock={true}
+            clockClassName="h-3 w-3"
+            className="flex items-center gap-1"
+          />
           <span className="flex items-center gap-1">
             <Eye className="h-3 w-3" />
             {item.views || 0}
@@ -827,10 +863,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <h3 className="text-2xl font-heading font-black text-white leading-tight drop-shadow-2xl">
                     {getLocalizedText(item.title, language)}
                   </h3>
-                  <div className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold" suppressHydrationWarning>
-                    <Clock className="w-3.5 h-3.5 text-red-500" />
-                    {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : ''}
-                  </div>
+                  <SafeDate
+                    date={item.publishedAt || item.createdAt}
+                    format="long"
+                    showClock={true}
+                    clockClassName="w-3.5 h-3.5 text-red-500"
+                    className="mt-4 flex items-center gap-2 text-gray-300 text-xs font-bold"
+                  />
                 </div>
               </div>
             ))}
@@ -857,6 +896,34 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </CardContent>
             </Card>
           ) : null}
+        </div>
+
+        {/* Mobile Today's E-Paper Card */}
+        <div className="px-4">
+          <div
+            className="border border-gray-100 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+            onClick={() => setCurrentView('enewspaper')}
+          >
+            <div className="p-4 pb-2 relative z-10 bg-white">
+              <h3 className="font-black text-lg text-gray-900">{t('todaysEpaper') || "Today's E-Paper"}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">{t('readLatestEdition') || 'Read the latest edition'}</p>
+            </div>
+            <div className="relative w-full overflow-hidden flex justify-center items-center bg-gray-50/50" style={{ height: '320px' }}>
+              <Image 
+                src="/star_news_epaper.jpg" 
+                alt="Star News India E-Paper" 
+                fill
+                className="object-contain group-hover:scale-105 transition-transform duration-500 p-2" 
+                priority={false}
+              />
+            </div>
+            <button
+              className="w-full mt-0 bg-[#0f111a] hover:bg-red-600 text-white text-sm font-bold py-3.5 px-4 transition-colors flex items-center justify-between relative z-10 shadow-lg"
+            >
+              <span>{t('readEpaper') || 'Read E-Paper'}</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 mb-6">
@@ -892,9 +959,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                           {title}
                         </h3>
                       </div>
-                      <div className="text-[10px] text-gray-500 font-bold flex items-center gap-1 mt-2" suppressHydrationWarning>
-                        <Clock className="w-3 h-3 text-gray-400" /> {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString() : ''}
-                      </div>
+                      <SafeDate
+                        date={item.publishedAt || item.createdAt}
+                        format="long"
+                        showClock={true}
+                        clockClassName="w-3 h-3 text-gray-400"
+                        className="text-[10px] text-gray-500 font-bold flex items-center gap-1 mt-2"
+                      />
                     </div>
                   </div>
                 </div>
@@ -982,11 +1053,14 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                       {getLocalizedText(item.content, language)?.replace(/<[^>]*>/g, '').substring(0, 95)}...
                     </p>
                   </div>
-                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] font-semibold text-gray-400" suppressHydrationWarning>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-red-500" />
-                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                    </span>
+                  <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[11px] font-semibold text-gray-400">
+                    <SafeDate
+                      date={item.publishedAt || item.createdAt}
+                      format="short"
+                      showClock={true}
+                      clockClassName="w-3.5 h-3.5 text-red-500"
+                      className="flex items-center gap-1.5"
+                    />
                     <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
                       2 min read
                     </span>
@@ -1066,12 +1140,13 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     </span>
                   )}
                   <h4 className="text-[13px] font-bold text-gray-900 leading-snug line-clamp-3 group-hover:text-red-600 transition-colors mb-2">{getLocalizedText(item.title, language)}</h4>
-                  <div className="mt-auto flex items-center gap-1.5 text-[10px] font-semibold text-gray-400" suppressHydrationWarning>
-                    <Clock className="w-3 h-3 text-gray-300" />
-                    <span suppressHydrationWarning>
-                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                    </span>
-                  </div>
+                  <SafeDate
+                    date={item.publishedAt || item.createdAt}
+                    format="short"
+                    showClock={true}
+                    clockClassName="w-3 h-3 text-gray-300"
+                    className="mt-auto flex items-center gap-1.5 text-[10px] font-semibold text-gray-400"
+                  />
                 </div>
               ))}
             </div>
@@ -1095,9 +1170,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                   <span className="text-[28px] font-black text-gray-200 group-hover:text-red-600 transition-colors shrink-0 leading-none w-8">0{idx + 1}</span>
                   <div className="min-w-0">
                     <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
-                    <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>
-                      {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                    </span>
+                    <SafeDate date={item.publishedAt || item.createdAt} format="short" className="text-[10px] text-gray-400 mt-1 block" />
                   </div>
                 </div>
               ))}
@@ -1202,9 +1275,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                         <h4 className="text-[13px] sm:text-[14px] font-bold text-white leading-snug line-clamp-2 group-hover:text-green-300 transition-colors">
                           {getLocalizedText(item.title, language)}
                         </h4>
-                        <span className="text-[10px] text-gray-400 mt-2 block" suppressHydrationWarning>
-                          {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
-                        </span>
+                        <SafeDate
+                          date={item.publishedAt || item.createdAt}
+                          format="short"
+                          className="text-[10px] text-gray-400 mt-2 block"
+                        />
                       </div>
                     </div>
                   )
@@ -1247,7 +1322,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('politics') || 'Politics'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanPoliticsNews[0].publishedAt ? new Date(cleanPoliticsNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                  <SafeDate date={cleanPoliticsNews[0].publishedAt} format="short" showClock={true} className="text-[10px] text-gray-400 flex items-center gap-1" />
                 </div>
               )}
               <div className="space-y-0">
@@ -1258,7 +1333,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
-                      <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                      <SafeDate date={item.publishedAt} format="short" className="text-[10px] text-gray-400 mt-1 block" />
                     </div>
                   </div>
                 ))}
@@ -1280,7 +1355,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('crime') || 'Crime'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanCrimeNews[0].title, language)}</h3>
-                  <span className="text-[10px] text-gray-400 flex items-center gap-1" suppressHydrationWarning><Clock className="w-3 h-3" />{cleanCrimeNews[0].publishedAt ? new Date(cleanCrimeNews[0].publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                  <SafeDate date={cleanCrimeNews[0].publishedAt} format="short" showClock={true} className="text-[10px] text-gray-400 flex items-center gap-1" />
                 </div>
               )}
               <div className="space-y-0">
@@ -1291,7 +1366,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
-                      <span className="text-[10px] text-gray-400 mt-1 block" suppressHydrationWarning>{item.publishedAt ? new Date(item.publishedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}</span>
+                      <SafeDate date={item.publishedAt} format="short" className="text-[10px] text-gray-400 mt-1 block" />
                     </div>
                   </div>
                 ))}

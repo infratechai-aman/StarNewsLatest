@@ -67,6 +67,7 @@ const SOCIAL_LINKS = {
 }
 
 const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedArticle }) => {
+  const [mounted, setMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [allNewsOpen, setAllNewsOpen] = useState(false)
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false)
@@ -130,6 +131,10 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     userRoleLower === 'superadmin' ||
     ADMIN_EMAILS.includes(userEmailLower)
   )
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Live search debounce
   useEffect(() => {
@@ -459,13 +464,19 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   </div>
                 </div>
                 {/* Date display */}
-                <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200" suppressHydrationWarning>
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider" suppressHydrationWarning>
-                    {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { weekday: 'long' })}
-                  </span>
-                  <span className="text-[13px] font-bold text-gray-700 tracking-tight" suppressHydrationWarning>
-                    {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                  </span>
+                <div className="hidden xl:flex flex-col pl-5 border-l border-gray-200 min-w-[140px]" suppressHydrationWarning>
+                  {mounted ? (
+                    <>
+                      <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider" suppressHydrationWarning>
+                        {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { weekday: 'long' })}
+                      </span>
+                      <span className="text-[13px] font-bold text-gray-700 tracking-tight" suppressHydrationWarning>
+                        {new Date().toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </span>
+                    </>
+                  ) : (
+                    <div className="h-8 w-28 bg-gray-50/50 rounded" />
+                  )}
                 </div>
               </div>
 

@@ -7,8 +7,16 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
     const canvasRef = useRef(null);
     const isVisibleRef = useRef(false);
     const [hasFirstFrame, setHasFirstFrame] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [videoError, setVideoError] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted || videoError) return;
+
         const video = videoRef.current;
         const canvas = canvasRef.current;
         if (!video || !canvas) return;
@@ -29,6 +37,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
 
         // Ensure video is playing and speed it up
         const playVideo = async () => {
+            if (isDestroyed || videoError || !video) return;
             try {
                 if (!video.src || !video.src.includes('LatestLogo.mp4')) {
                     video.src = videoSrc;
@@ -48,7 +57,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
 
         // One-time interaction fallback to unlock audio/video engine on strict mobile browsers
         const unlockMobileVideo = () => {
-            if (video && video.paused) {
+            if (video && video.paused && !videoError) {
                 video.play().catch(() => {});
             }
         };
@@ -78,7 +87,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         const handleCanPlay = () => {
-            if (isVisibleRef.current && video.paused) {
+            if (isVisibleRef.current && video && video.paused) {
                 playVideo();
             }
         };
@@ -86,10 +95,10 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         video.addEventListener('loadeddata', handleCanPlay);
 
         const processFrame = () => {
-            if (isDestroyed) return;
+            if (isDestroyed || videoError || !video || video.error) return;
 
             // Only process if element is actually visible, video is playing and has decoded data
-            if (isVisibleRef.current && video && !video.paused && !video.ended && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+            if (isVisibleRef.current && !video.paused && !video.ended && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
                 const MAX_WIDTH = 200;
                 let calcWidth = video.videoWidth;
                 let calcHeight = video.videoHeight;
@@ -104,40 +113,44 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                 if (canvas.height !== calcHeight) canvas.height = calcHeight;
 
                 // Draw video frame to canvas at optimized scale
-                ctx.drawImage(video, 0, 0, calcWidth, calcHeight);
+                try {
+                    ctx.drawImage(video, 0, 0, calcWidth, calcHeight);
 
-                // Extract pixel buffer
-                const frame = ctx.getImageData(0, 0, calcWidth, calcHeight);
-                const buf32 = new Uint32Array(frame.data.buffer);
-                const len = buf32.length;
+                    // Extract pixel buffer
+                    const frame = ctx.getImageData(0, 0, calcWidth, calcHeight);
+                    const buf32 = new Uint32Array(frame.data.buffer);
+                    const len = buf32.length;
 
-                // Chroma key (Green screen removal) optimized with bitwise ops
-                for (let i = 0; i < len; i++) {
-                    const pixel = buf32[i];
-                    // Little-endian RGBA: 0xAABBGGRR
-                    const r = pixel & 0xFF;
-                    const g = (pixel >> 8) & 0xFF;
-                    const b = (pixel >> 16) & 0xFF;
+                    // Chroma key (Green screen removal) optimized with bitwise ops
+                    for (let i = 0; i < len; i++) {
+                        const pixel = buf32[i];
+                        // Little-endian RGBA: 0xAABBGGRR
+                        const r = pixel & 0xFF;
+                        const g = (pixel >> 8) & 0xFF;
+                        const b = (pixel >> 16) & 0xFF;
 
-                    if (g > 80 && g > r * 1.2 && g > b * 1.2) {
-                        const maxColor = r > b ? r : b;
-                        const diff = g - maxColor;
+                        if (g > 80 && g > r * 1.2 && g > b * 1.2) {
+                            const maxColor = r > b ? r : b;
+                            const diff = g - maxColor;
 
-                        if (diff > 40) {
-                            buf32[i] = 0; // Fully transparent
-                        } else {
-                            const alpha = 255 - (diff * 6);
-                            // Reconstruct pixel with smoothed alpha and suppressed green spill
-                            buf32[i] = (alpha << 24) | (b << 16) | (maxColor << 8) | r;
+                            if (diff > 40) {
+                                buf32[i] = 0; // Fully transparent
+                            } else {
+                                const alpha = 255 - (diff * 6);
+                                // Reconstruct pixel with smoothed alpha and suppressed green spill
+                                buf32[i] = (alpha << 24) | (b << 16) | (maxColor << 8) | r;
+                            }
                         }
                     }
+
+                    // Put modified pixel data back
+                    ctx.putImageData(frame, 0, 0);
+
+                    // Mark that we have at least one frame drawn
+                    if (!hasFirstFrame) setHasFirstFrame(true);
+                } catch (e) {
+                    // Avoid breaking animation loop on drawing glitch
                 }
-
-                // Put modified pixel data back
-                ctx.putImageData(frame, 0, 0);
-
-                // Mark that we have at least one frame drawn
-                setHasFirstFrame(true);
             }
 
             // Schedule next frame efficiently
@@ -145,7 +158,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         };
 
         const scheduleNextFrame = () => {
-            if (isDestroyed) return;
+            if (isDestroyed || videoError) return;
 
             if ('requestVideoFrameCallback' in HTMLVideoElement.prototype && video?.requestVideoFrameCallback) {
                 videoFrameCallbackId = video.requestVideoFrameCallback(() => {
@@ -182,34 +195,42 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             window.removeEventListener('touchstart', unlockMobileVideo);
             window.removeEventListener('click', unlockMobileVideo);
         };
-    }, [videoSrc]);
+    }, [videoSrc, mounted, videoError]);
 
     return (
-        <div className={`relative ${className}`} style={style}>
-            {/* Fallback image shown immediately while video loads/buffers - unscaled, crisp, clean */}
+        <div className={`relative ${className}`} style={style} suppressHydrationWarning>
+            {/* Fallback / primary static logo: shown while loading, during SSR, or if video fails */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 src="/starnews-logo.png"
                 alt="Star News Logo"
-                className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame && !videoError ? 'opacity-0' : 'opacity-100'}`}
+                suppressHydrationWarning
             />
-            {/* Active video element kept in DOM flow so mobile browsers do not throttle decode */}
-            <video
-                ref={videoRef}
-                src={videoSrc}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                style={{ position: 'absolute', inset: 0, opacity: 0.001, pointerEvents: 'none', zIndex: -10 }}
-            />
-            {/* Animated canvas with scale to crop out video green padding */}
-            <canvas
-                ref={canvasRef}
-                className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 scale-[1.75] ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
-            />
+
+            {/* Client-only video & canvas to prevent SSR hydration mismatch */}
+            {mounted && !videoError && (
+                <>
+                    <video
+                        ref={videoRef}
+                        src={videoSrc}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        preload="metadata"
+                        onError={() => {
+                            // Silently fall back to clean logo without uncaught error
+                            setVideoError(true);
+                        }}
+                        style={{ position: 'absolute', inset: 0, opacity: 0.001, pointerEvents: 'none', zIndex: -10 }}
+                    />
+                    <canvas
+                        ref={canvasRef}
+                        className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 scale-[1.75] ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                </>
+            )}
         </div>
     );
 }
-

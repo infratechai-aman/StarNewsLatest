@@ -3,6 +3,8 @@ import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { purgeCache } from '@/lib/cache';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
     try {
         const db = getDb();
@@ -35,6 +37,7 @@ export async function POST(request) {
             portfolio: portfolio?.trim() || '',
             reason: reason?.trim() || '',
             status: 'PENDING',
+            accountCreated: false,
             submittedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -43,7 +46,7 @@ export async function POST(request) {
 
         return NextResponse.json({ success: true, message: 'Application submitted successfully', id: newDocRef.id });
     } catch (error) {
-        console.error('Reporter application POST error:', error); // fix(P2-BE-02)
+        console.error('Reporter application POST error:', error);
         return NextResponse.json({ error: 'Failed to submit application' }, { status: 500 });
     }
 }
@@ -59,17 +62,52 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
 
-        const snapshot = await db.collection('reporter_applications')
-            .orderBy('submittedAt', 'desc')
-            .get();
+        let snapshot;
+        try {
+            snapshot = await db.collection('reporter_applications')
+                .orderBy('submittedAt', 'desc')
+                .get();
+        } catch (err) {
+            snapshot = await db.collection('reporter_applications').get();
+        }
 
-        const applications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Cross-reference with 'users' collection to check if an account exists for each applicant
+        const usersSnapshot = await db.collection('users').where('role', '==', 'reporter').get();
+        const reporterEmails = new Set();
+        const userMap = {};
+        for (const uDoc of usersSnapshot.docs) {
+            const uData = uDoc.data();
+            if (uData.email) {
+                const em = uData.email.toLowerCase().trim();
+                reporterEmails.add(em);
+                userMap[em] = { id: uDoc.id, ...uData };
+            }
+        }
+
+        const applications = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const em = (data.email || '').toLowerCase().trim();
+            const isCreated = Boolean(data.accountCreated || reporterEmails.has(em));
+            const linkedUser = userMap[em];
+
+            return {
+                ...data,
+                id: doc.id,
+                accountCreated: isCreated,
+                accountId: data.accountId || linkedUser?.id || null,
+                accountEmail: data.accountEmail || (isCreated ? em : null),
+                tempPassword: data.tempPassword || null
+            };
+        });
+
+        // Ensure sorted by submittedAt descending
+        applications.sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0));
 
         return NextResponse.json({ applications }, {
             headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' }
         });
     } catch (error) {
-        console.error('Reporter applications GET error:', error); // fix(P2-BE-02)
+        console.error('Reporter applications GET error:', error);
         return NextResponse.json({ error: 'Failed to fetch applications' }, { status: 500 });
     }
 }
@@ -87,102 +125,128 @@ export async function PUT(request) {
         }
 
         const body = await request.json();
-        const { id, status, adminNote } = body;
+        const { id, status, adminNote, password, createAccount, loginEmail } = body;
 
         const validStatuses = ['PENDING', 'CONTACTED', 'APPROVED', 'REJECTED'];
         if (!id || !status || !validStatuses.includes(status)) {
             return NextResponse.json({ error: `ID and valid status (${validStatuses.join(', ')}) are required` }, { status: 400 });
         }
 
-        const appRef = db.collection('reporter_applications').doc(id);
-        const appDoc = await appRef.get();
+        const cleanId = String(id).trim();
+        let appRef = db.collection('reporter_applications').doc(cleanId);
+        let appDoc = await appRef.get();
         if (!appDoc.exists) {
-            return NextResponse.json({ error: 'Application not found' }, { status: 404 });
-        }
-        const appData = appDoc.data();
-        const appEmail = (appData.email || '').toLowerCase().trim();
-
-        // If approving, update or create user record with role: 'reporter' and status: 'active'
-        if (status === 'APPROVED' && appEmail) {
-            // Check if user exists in Firestore users collection
-            const userSnap = await db.collection('users')
-                .where('email', '==', appEmail)
-                .get();
-
-            let targetUserId = null;
-
-            if (!userSnap.empty) {
-                // User already has a document in 'users'
-                const userDoc = userSnap.docs[0];
-                targetUserId = userDoc.id;
-                await userDoc.ref.update({
-                    role: 'reporter',
-                    status: 'active',
-                    name: appData.fullName || userDoc.data().name || '',
-                    phone: appData.phone || userDoc.data().phone || '',
-                    updatedAt: new Date().toISOString()
-                });
+            const byField = await db.collection('reporter_applications').where('id', '==', cleanId).get();
+            if (!byField.empty) {
+                appRef = byField.docs[0].ref;
+                appDoc = byField.docs[0];
             } else {
-                // Check if user exists in Firebase Auth by email
-                if (auth) {
-                    try {
-                        const existingAuthUser = await auth.getUserByEmail(appEmail);
-                        if (existingAuthUser) {
-                            targetUserId = existingAuthUser.uid;
-                        }
-                    } catch (e) {
-                        // User not in Firebase Auth yet
+                return NextResponse.json({ error: 'Application not found' }, { status: 404 });
+            }
+        }
+
+        const appData = appDoc.data() || {};
+        const appEmail = (loginEmail || appData.email || '').toLowerCase().trim();
+        const appName = appData.fullName || 'Reporter';
+        const appPhone = appData.phone || '';
+
+        let accountCreated = Boolean(appData.accountCreated);
+        let accountId = appData.accountId || null;
+        let savedTempPassword = appData.tempPassword || null;
+
+        // If approving or explicitly creating account with a password:
+        if ((status === 'APPROVED' || createAccount) && password && password.length >= 6) {
+            if (auth) {
+                let userRecord;
+                try {
+                    userRecord = await auth.getUserByEmail(appEmail);
+                    await auth.updateUser(userRecord.uid, {
+                        password: password,
+                        displayName: appName
+                    });
+                } catch (authErr) {
+                    if (authErr.code === 'auth/user-not-found' || authErr.message?.includes('no user')) {
+                        userRecord = await auth.createUser({
+                            email: appEmail,
+                            password: password,
+                            displayName: appName
+                        });
+                    } else {
+                        throw authErr;
                     }
                 }
 
-                // If not in Firebase Auth, create doc in 'users' with new ID
-                const userDocRef = targetUserId
-                    ? db.collection('users').doc(targetUserId)
-                    : db.collection('users').doc();
+                accountId = userRecord.uid;
+                accountCreated = true;
+                savedTempPassword = password;
 
-                targetUserId = userDocRef.id;
-
+                // Update users collection
+                const userDocRef = db.collection('users').doc(userRecord.uid);
                 await userDocRef.set({
-                    id: targetUserId,
+                    id: userRecord.uid,
                     email: appEmail,
-                    name: appData.fullName || '',
-                    phone: appData.phone || '',
+                    name: appName,
+                    phone: appPhone,
                     role: 'reporter',
                     status: 'active',
-                    createdAt: appData.submittedAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+
+                // Set custom claims
+                try {
+                    await auth.setCustomUserClaims(userRecord.uid, { role: 'reporter' });
+                } catch (claimErr) {
+                    console.warn('Could not set custom user claim:', claimErr.message);
+                }
+            }
+        } else if (status === 'APPROVED' && appEmail) {
+            // General approval without custom password: check if user already exists
+            const userSnap = await db.collection('users').where('email', '==', appEmail).get();
+            if (!userSnap.empty) {
+                const uDoc = userSnap.docs[0];
+                accountId = uDoc.id;
+                accountCreated = true;
+                await uDoc.ref.set({
+                    role: 'reporter',
+                    status: 'active',
                     updatedAt: new Date().toISOString()
                 }, { merge: true });
             }
-
-            // Set Firebase Auth custom claims role = 'reporter'
-            if (auth && targetUserId) {
-                try {
-                    await auth.setCustomUserClaims(targetUserId, { role: 'reporter' });
-                } catch (err) {
-                    console.warn('Could not set custom user claims on approved reporter:', err.message);
-                }
-            }
-
-            // Purge caches so reporter lists and pending queues update immediately
-            purgeCache('admin_pending');
-            purgeCache('admin_reporters_with_stats');
-            purgeCache('admin_stats');
         }
 
-        await appRef.update({
+        const updatePayload = {
+            id: appRef.id,
             status,
             adminNote: adminNote || '',
+            accountCreated,
+            accountId,
+            accountEmail: appEmail,
             updatedAt: new Date().toISOString()
-        });
+        };
+
+        if (savedTempPassword) {
+            updatePayload.tempPassword = savedTempPassword;
+        }
+
+        await appRef.set(updatePayload, { merge: true });
+
+        // Purge caches
+        purgeCache('admin_pending');
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({
             success: true,
-            message: status === 'APPROVED' ? 'Reporter application approved and user upgraded to reporter' : `Application marked as ${status}`,
-            status
+            message: status === 'APPROVED' ? 'Application approved and account updated' : `Application marked as ${status}`,
+            status,
+            accountCreated,
+            accountId,
+            accountEmail: appEmail,
+            tempPassword: savedTempPassword
         });
     } catch (error) {
-        console.error('Reporter application PUT error:', error); // fix(P2-BE-02)
-        return NextResponse.json({ error: 'Failed to update application' }, { status: 500 });
+        console.error('Reporter application PUT error:', error);
+        return NextResponse.json({ error: error.message || 'Failed to update application' }, { status: 500 });
     }
 }
 
@@ -204,11 +268,26 @@ export async function DELETE(request) {
             return NextResponse.json({ error: 'ID is required' }, { status: 400 });
         }
 
-        await db.collection('reporter_applications').doc(id).delete();
+        const cleanId = String(id).trim();
+        const docRef = db.collection('reporter_applications').doc(cleanId);
+        const snap = await docRef.get();
+
+        if (snap.exists) {
+            await docRef.delete();
+        } else {
+            const byField = await db.collection('reporter_applications').where('id', '==', cleanId).get();
+            if (!byField.empty) {
+                await byField.docs[0].ref.delete();
+            }
+        }
+
+        purgeCache('admin_pending');
+        purgeCache('admin_reporters_with_stats');
+        purgeCache('admin_stats');
 
         return NextResponse.json({ success: true, message: 'Application deleted' });
     } catch (error) {
-        console.error('Reporter application DELETE error:', error); // fix(P2-BE-02)
-        return NextResponse.json({ error: 'Failed to delete application' }, { status: 500 });
+        console.error('Reporter application DELETE error:', error);
+        return NextResponse.json({ error: error.message || 'Failed to delete application' }, { status: 500 });
     }
 }

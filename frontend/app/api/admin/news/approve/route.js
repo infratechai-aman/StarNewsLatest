@@ -13,6 +13,9 @@ export async function POST(request) {
     }
 
     const db = getDb();
+    if (!db) {
+        return NextResponse.json({ error: 'Database service not available' }, { status: 503 });
+    }
 
     try {
         const body = await request.json();
@@ -22,35 +25,45 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Article ID and action are required' }, { status: 400 });
         }
 
-        const docRef = db.collection('news_articles').doc(articleId);
-        const doc = await docRef.get();
+        const cleanId = String(articleId).trim();
+        let docRef = db.collection('news_articles').doc(cleanId);
+        let doc = await docRef.get();
 
         if (!doc.exists) {
-            return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+            const querySnap = await db.collection('news_articles').where('id', '==', cleanId).get();
+            if (!querySnap.empty) {
+                doc = querySnap.docs[0];
+                docRef = querySnap.docs[0].ref;
+            } else {
+                return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+            }
         }
 
         const status = action === 'approve' ? 'approved' : 'rejected';
+        const docData = doc.data() || {};
         const updateData = {
+            id: docRef.id,
             approvalStatus: status,
-            active: status === 'approved' ? true : doc.data().active,
+            active: status === 'approved' ? true : (docData.active ?? false),
             adminResponse: reason || '',
             updatedAt: new Date().toISOString()
         };
 
         if (status === 'approved') {
-            updateData.publishedAt = new Date().toISOString();
+            updateData.publishedAt = docData.publishedAt || new Date().toISOString();
         }
 
-        await docRef.update(updateData);
+        await docRef.set(updateData, { merge: true });
+
         purgeCache('news_');
         purgeCache('admin_news_list_');
         purgeCache('admin_pending');
         purgeCache('admin_reporters_with_stats');
         purgeCache('admin_stats');
 
-        return NextResponse.json({ success: true, status });
+        return NextResponse.json({ success: true, status, id: docRef.id });
     } catch (error) {
         console.error('Error approving news:', error.message);
-        return NextResponse.json({ error: 'Failed to process approval' }, { status: 500 });
+        return NextResponse.json({ error: error.message || 'Failed to process approval' }, { status: 500 });
     }
 }

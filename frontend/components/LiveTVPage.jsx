@@ -22,7 +22,13 @@ import {
   Radio,
   Bookmark,
   Compass,
-  Smile
+  Smile,
+  Calendar,
+  Clock,
+  Flame,
+  TrendingUp,
+  Music2,
+  Trophy
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -39,21 +45,17 @@ const extractYouTubeId = (url) => {
 };
 
 const CATEGORIES = [
-  { id: 'all', label: 'All', labelMr: 'सर्व', labelHi: 'सभी', icon: '🔥' },
-  { id: 'news', label: 'News & Politics', labelMr: 'बातम्या', labelHi: 'समाचार', icon: '🔴' },
-  { id: 'kids', label: 'Kids & Cartoons', labelMr: 'लहान मुले', labelHi: 'कार्टून', icon: '👶' },
-  { id: 'business', label: 'Business & Markets', labelMr: 'व्यापार', labelHi: 'बिजनेस', icon: '📈' },
-  { id: 'devotional', label: 'Live Darshan', labelMr: 'देवदर्शन', labelHi: 'दर्शन', icon: '🙏' },
-  { id: 'music', label: 'Music & Hits', labelMr: 'संगीत', labelHi: 'संगीत', icon: '🎵' },
-  { id: 'sports', label: 'Sports Desk', labelMr: 'क्रीडा', labelHi: 'खेल', icon: '🏏' }
+  { id: 'all', label: 'All', labelMr: 'सर्व', labelHi: 'सभी', Icon: Flame },
+  { id: 'news', label: 'News & Politics', labelMr: 'बातम्या', labelHi: 'समाचार', Icon: Radio },
+  { id: 'kids', label: 'Kids & Cartoons', labelMr: 'लहान मुले', labelHi: 'कार्टून', Icon: Sparkles },
+  { id: 'business', label: 'Business & Markets', labelMr: 'व्यापार', labelHi: 'बिजनेस', Icon: TrendingUp },
+  { id: 'devotional', label: 'Live Darshan', labelMr: 'देवदर्शन', labelHi: 'दर्शन', Icon: Sun },
+  { id: 'music', label: 'Music & Hits', labelMr: 'संगीत', labelHi: 'संगीत', Icon: Music2 },
+  { id: 'sports', label: 'Sports Desk', labelMr: 'क्रीडा', labelHi: 'खेल', Icon: Trophy }
 ];
 
 const INITIAL_CHAT_MESSAGES = [
-  { id: 1, user: 'Rohit Patil', text: 'पुण्यातील हवामान आणि पावसाची बातमी महत्त्वाची आहे!', time: '1m ago', isMod: false, badge: 'Pune' },
-  { id: 2, user: 'StarNews Desk', text: 'Welcome to StarNews 24/7 Live Broadcast! Post your live comments here.', time: '1m ago', isMod: true, badge: 'Official' },
-  { id: 3, user: 'Amit Sharma', text: 'Sound and video quality is crisp! Best news feed.', time: 'Just now', isMod: false, badge: 'Mumbai' },
-  { id: 4, user: 'Pooja Deshmukh', text: 'नमस्कार स्टार न्यूज टीम! ग्राउंड रिपोर्ट खूप छान आहे.', time: 'Just now', isMod: false, badge: 'Nagpur' },
-  { id: 5, user: 'Vikram Joshi', text: 'Sensex and Nifty updates live chalu ahet ka?', time: 'Just now', isMod: false, badge: 'Nashik' },
+  { id: 'mod-1', user: 'StarNews Moderator', text: 'Welcome to StarNews 24/7 Live Broadcast! Post your comments below. Respect community guidelines.', time: 'Live', isMod: true, badge: 'Official' }
 ];
 
 export default function LiveTVPage({ setCurrentView }) {
@@ -216,26 +218,7 @@ export default function LiveTVPage({ setCurrentView }) {
     }, 100);
   };
 
-  // Periodic random chat message
-  useEffect(() => {
-    const randomComments = [
-      { user: 'Kunal Shinde', text: 'स्टार न्यूज लाईव्ह कव्हरेज सर्वोत्तम आहे 👌', badge: 'Satara' },
-      { user: 'Sanjay More', text: 'पुणे कँप आणि कोंढवा बातम्यांचा अपडेट द्या', badge: 'Pune' },
-      { user: 'Meera Rao', text: 'Very smooth streaming, thanks team!', badge: 'Bengaluru' },
-      { user: 'Pravin Jadhav', text: 'जय महाराष्ट्र! सत्य आणि निःपक्षपाती पत्रकारिता.', badge: 'Kolhapur' },
-    ];
-    let idx = 0;
-    const interval = setInterval(() => {
-      const comment = randomComments[idx % randomComments.length];
-      idx++;
-      setChatMessages((prev) => [
-        ...prev.slice(-30), // Keep last 30 messages
-        { id: Date.now(), user: comment.user, text: comment.text, time: 'Just now', isMod: false, badge: comment.badge }
-      ]);
-    }, 18000);
 
-    return () => clearInterval(interval);
-  }, []);
 
   const getCatTitle = (cat) => {
     if (language === 'mr') return cat.labelMr || cat.label;
@@ -341,7 +324,7 @@ export default function LiveTVPage({ setCurrentView }) {
                     : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-200'
                 }`}
               >
-                <span>{cat.icon}</span>
+                {cat.Icon && <cat.Icon className="w-3.5 h-3.5" />}
                 <span>{getCatTitle(cat)}</span>
               </button>
             );
@@ -555,6 +538,22 @@ export default function LiveTVPage({ setCurrentView }) {
                   <Tv className="w-3.5 h-3.5 text-red-500" />
                   <span>Channels ({filteredChannels.length})</span>
                 </button>
+
+                <button
+                  onClick={() => setActiveSidebarTab('schedule')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+                    activeSidebarTab === 'schedule'
+                      ? isDark
+                        ? 'bg-[#272727] text-white shadow'
+                        : 'bg-white text-gray-900 shadow-sm'
+                      : isDark
+                      ? 'text-gray-400 hover:text-white'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5 text-red-500" />
+                  <span>Schedule</span>
+                </button>
               </div>
 
               {/* TAB 1: YOUTUBE LIVE CHAT STREAM */}
@@ -708,6 +707,60 @@ export default function LiveTVPage({ setCurrentView }) {
                   })}
                 </div>
               )}
+
+              {/* TAB 3: BROADCAST PROGRAM SCHEDULE (EPG) */}
+              {activeSidebarTab === 'schedule' && (
+                <div className="flex-1 p-3 overflow-y-auto space-y-2.5 hide-scrollbar">
+                  <div className={`p-2.5 rounded-xl border text-xs font-semibold mb-2 flex items-center justify-between ${
+                    isDark ? 'bg-[#181818] border-[#2e2e2e] text-gray-300' : 'bg-red-50 border-red-100 text-red-950'
+                  }`}>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-red-500" />
+                      <span>Today's Broadcast Lineup</span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded bg-red-600 text-white">Live EPG</span>
+                  </div>
+                  {[
+                    { time: '06:00 - 08:30', title: 'Maharashtra Prabhat', desc: 'State-wide Morning Headlines, Weather & Traffic', live: false },
+                    { time: '08:30 - 10:00', title: 'Pune Kondhwa & Camp Ground Bulletin', desc: 'Dedicated Local Pune Municipal & Community Reports', live: false },
+                    { time: '10:00 - 13:00', title: 'Live News Room 360', desc: 'National Politics, Parliament & Supreme Court Hearings', live: false },
+                    { time: '13:00 - 14:30', title: 'Maharashtra Mahasangram', desc: 'Cabinet Updates, Assembly Debates & Rural Development', live: false },
+                    { time: '14:30 - 17:00', title: 'Market Pulse & AgriTech Live', desc: 'Sensex, Nifty, Bullion Rates & Farming Market Prices', live: false },
+                    { time: '17:00 - 19:00', title: 'Crime Patrol & Police Action Desk', desc: 'Maharashtra Law & Order, Cyber Cell & Police Bulletins', live: true },
+                    { time: '19:00 - 20:30', title: 'Prime Time 8 PM Debate', desc: 'Flagship Hard-Talk Debate with Editor-in-Chief', live: false },
+                    { time: '20:30 - 22:00', title: 'Maharashtra 24', desc: '36 Districts in 36 Minutes Express News', live: false },
+                    { time: '22:00 - 23:30', title: 'Special Investigation: Ground Zero', desc: 'In-Depth Investigative Documentary & Exposé', live: false },
+                    { time: '23:30 - 06:00', title: 'Night Edition & Global Wire', desc: '24/7 Continuous Automated News Feed & World News', live: false },
+                  ].map((prog, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-xl border transition-all ${
+                        prog.live
+                          ? isDark
+                            ? 'bg-red-950/20 border-red-800/80 shadow-md ring-1 ring-red-500/40'
+                            : 'bg-red-50/80 border-red-200 shadow-sm ring-1 ring-red-400/40'
+                          : isDark
+                          ? 'bg-[#181818] border-[#282828] text-gray-300'
+                          : 'bg-white border-gray-200 text-gray-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-[11px] font-mono font-bold text-red-500 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {prog.time}
+                        </span>
+                        {prog.live && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full bg-red-600 text-white flex items-center gap-1 animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" /> On Air Now
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-xs font-bold text-inherit">{prog.title}</h4>
+                      <p className={`text-[11px] mt-0.5 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{prog.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -715,12 +768,12 @@ export default function LiveTVPage({ setCurrentView }) {
         {/* ── 3. CATEGORIZED BROADCAST SHELVES (YouTube Multi-Channel Hub) ── */}
         <div className="mt-12 px-4 sm:px-0 space-y-10">
           {[
-            { catId: 'news', title: '🔴 24/7 Marathi & National News Channels', titleMr: '🔴 २४ तास मराठी आणि राष्ट्रीय बातम्या', desc: 'Real-time breaking updates, studio debates, and live field reporters.' },
-            { catId: 'kids', title: '👶 Kids Zone • Rhymes, Cartoons & Learning Stories', titleMr: '👶 लहान मुलांचे चॅनल • बालगीते, गोष्टी आणि कार्टून', desc: 'Engaging, safe, and educational live streams for toddlers and children.' },
-            { catId: 'business', title: '📈 Business, Stock Market & Trading Live', titleMr: '📈 शेअर बाजार आणि बिझनेस थेट प्रक्षेपण', desc: 'Live NSE, BSE Sensex, Nifty analysis, company earnings, and finance tips.' },
-            { catId: 'devotional', title: '🙏 24/7 Live Mandir Darshan • Pandharpur & Shirdi', titleMr: '🙏 २४ तास थेट देवदर्शन • पंढरपूर, शिर्डी आणि सिद्धिविनायक', desc: 'Experience continuous divine darshan, daily aartis, and prayers from sacred shrines.' },
-            { catId: 'music', title: '🎵 Non-Stop Music & Bollywood Hits', titleMr: '🎵 नॉन-स्टॉप बॉलिवूड गाणी आणि संगीत', desc: 'Top party anthems, romantic melodies, and trending chartbusters.' },
-            { catId: 'sports', title: '🏏 Sports Live & Cricket Match Desk', titleMr: '🏏 क्रीडा थेट विश्लेषण आणि क्रिकेट वार्ता', desc: 'Live score analysis, post-match conferences, and expert insights.' }
+            { catId: 'news', title: '24/7 Marathi & National News Channels', titleMr: '२४ तास मराठी आणि राष्ट्रीय बातम्या', desc: 'Real-time breaking updates, studio debates, and live field reporters.' },
+            { catId: 'kids', title: 'Kids Zone • Rhymes, Cartoons & Learning Stories', titleMr: 'लहान मुलांचे चॅनल • बालगीते, गोष्टी आणि कार्टून', desc: 'Engaging, safe, and educational live streams for toddlers and children.' },
+            { catId: 'business', title: 'Business, Stock Market & Trading Live', titleMr: 'शेअर बाजार आणि बिझनेस थेट प्रक्षेपण', desc: 'Live NSE, BSE Sensex, Nifty analysis, company earnings, and finance tips.' },
+            { catId: 'devotional', title: '24/7 Live Mandir Darshan • Pandharpur & Shirdi', titleMr: '२४ तास थेट देवदर्शन • पंढरपूर, शिर्डी आणि सिद्धिविनायक', desc: 'Experience continuous divine darshan, daily aartis, and prayers from sacred shrines.' },
+            { catId: 'music', title: 'Non-Stop Music & Bollywood Hits', titleMr: 'नॉन-स्टॉप बॉलिवूड गाणी आणि संगीत', desc: 'Top party anthems, romantic melodies, and trending chartbusters.' },
+            { catId: 'sports', title: 'Sports Live & Cricket Match Desk', titleMr: 'क्रीडा थेट विश्लेषण आणि क्रिकेट वार्ता', desc: 'Live score analysis, post-match conferences, and expert insights.' }
           ].map((section) => {
             const sectionChannels = channels.filter((c) => c.category === section.catId);
             if (sectionChannels.length === 0) return null;

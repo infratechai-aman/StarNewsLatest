@@ -18,7 +18,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="overflow-x-hidden max-w-full">
+    <html lang="en" className="overflow-x-hidden max-w-full" suppressHydrationWarning>
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
       </head>
-      <body className="font-sans antialiased overflow-x-hidden max-w-full min-h-screen">
+      <body className="font-sans antialiased overflow-x-hidden max-w-full min-h-screen" suppressHydrationWarning>
         {children}
         <Toaster />
       </body>

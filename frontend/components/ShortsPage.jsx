@@ -18,7 +18,9 @@ import {
   Volume2,
   VolumeX,
   Share2,
-  ChevronLeft
+  ChevronLeft,
+  Sun,
+  Moon
 } from 'lucide-react';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -74,6 +76,24 @@ export default function ShortsPage({ setCurrentView }) {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMuted, setIsMuted] = useState(true);
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('shorts_theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme);
+      }
+    } catch (e) {}
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem('shorts_theme', nextTheme);
+    } catch (e) {}
+  };
   
   // 'feed' (Instagram Reels / YouTube Shorts full-screen swipe) | 'grid' (Explore grid)
   const [viewMode, setViewMode] = useState('feed');
@@ -223,35 +243,53 @@ export default function ShortsPage({ setCurrentView }) {
   // ─────────────────────────────────────────────────────────────────────────────
   if (viewMode === 'feed') {
     return (
-      <div className="fixed inset-0 z-50 bg-black text-white flex flex-col overflow-hidden select-none">
+      <div className={`fixed inset-0 z-50 flex flex-col overflow-hidden select-none transition-colors duration-300 ${theme === 'light' ? 'bg-[#f4f5f8] text-neutral-900' : 'bg-black text-white'}`}>
         
-        {/* ── TOP FLOATING HEADER (Native Instagram Reels iOS Glass Overlay) ── */}
-        <div className="absolute top-0 left-0 right-0 z-50 pointer-events-auto bg-gradient-to-b from-black/85 via-black/40 to-transparent pt-3 pb-3 px-3.5 sm:px-6">
+        {/* ── TOP FLOATING HEADER (Instagram Reels iOS Minimalist Bar) ── */}
+        <div className={`absolute top-0 left-0 right-0 z-50 pointer-events-auto pt-3 pb-3 px-3.5 sm:px-6 ${theme === 'light' ? 'bg-gradient-to-b from-white/95 via-white/60 to-transparent' : 'bg-gradient-to-b from-black/85 via-black/40 to-transparent'}`}>
           <div className="flex items-center justify-between gap-3 max-w-[1200px] mx-auto">
             {/* Left: Back Button & Instagram Reels Branding */}
             <div className="flex items-center gap-2.5">
               <button
                 onClick={handleBackNavigation}
-                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
+                className={`p-1.5 rounded-full transition-transform active:scale-90 ${theme === 'light' ? 'text-neutral-900 hover:bg-black/5' : 'text-white hover:bg-white/10'}`}
                 aria-label="Back"
               >
-                <ChevronLeft className="w-6 h-6 stroke-[2.2]" />
+                <ChevronLeft className="w-6 h-6 stroke-[2.2] drop-shadow-sm" />
               </button>
               
               <div className="flex items-center gap-1.5">
-                <span className="text-white font-bold text-lg sm:text-xl tracking-tight drop-shadow-md">
+                <span className={`font-bold text-lg sm:text-xl tracking-tight drop-shadow-md ${theme === 'light' ? 'text-neutral-900' : 'text-white'}`}>
                   Reels
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
               </div>
             </div>
 
-            {/* Right: iOS Glass Action Buttons (Grid & Sound) */}
+            {/* Right: Action Buttons (Theme Toggle, Grid, Mute) */}
             <div className="flex items-center gap-2">
+              {/* Theme Toggle Button */}
+              <button
+                onClick={toggleTheme}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-90 ${
+                  theme === 'light'
+                    ? 'bg-neutral-200/80 text-neutral-800 hover:bg-neutral-300'
+                    : 'bg-black/40 backdrop-blur-md border border-white/20 text-amber-300 hover:bg-white/15'
+                }`}
+                title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+                aria-label="Toggle Theme"
+              >
+                {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-300 stroke-[2]" /> : <Moon className="w-4.5 h-4.5 text-neutral-800 stroke-[2]" />}
+              </button>
+
               {/* Toggle to Grid View */}
               <button
                 onClick={() => setViewMode('grid')}
-                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-90 ${
+                  theme === 'light'
+                    ? 'bg-neutral-200/80 text-neutral-800 hover:bg-neutral-300'
+                    : 'bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-white/15'
+                }`}
                 title="Switch to Grid View"
                 aria-label="Grid View"
               >
@@ -261,17 +299,21 @@ export default function ShortsPage({ setCurrentView }) {
               {/* Global Mute / Unmute */}
               <button
                 onClick={() => setIsMuted(!isMuted)}
-                className="w-10 h-10 rounded-full ios-glass-btn flex items-center justify-center text-white active:scale-90 transition-transform shadow-lg"
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-transform active:scale-90 ${
+                  theme === 'light'
+                    ? 'bg-neutral-200/80 text-neutral-800 hover:bg-neutral-300'
+                    : 'bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-white/15'
+                }`}
                 title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
                 aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
-                {isMuted ? <VolumeX className="w-5 h-5 text-rose-400 stroke-[2]" /> : <Volume2 className="w-5 h-5 text-white stroke-[2]" />}
+                {isMuted ? <VolumeX className="w-4.5 h-4.5 text-rose-400 stroke-[2]" /> : <Volume2 className="w-4.5 h-4.5 stroke-[2]" />}
               </button>
             </div>
           </div>
 
           {/* Instagram Segmented Category Filter Pills Bar */}
-          <div className="mt-2.5 max-w-[1200px] mx-auto overflow-x-auto hide-scrollbar flex items-center gap-1.5 px-0.5 py-0.5">
+          <div className="mt-2 max-w-[1200px] mx-auto overflow-x-auto hide-scrollbar flex items-center gap-1.5 px-0.5 py-0.5">
             {CATEGORIES.map((cat) => {
               const isSelected = activeCategory === cat;
               return (
@@ -282,10 +324,14 @@ export default function ShortsPage({ setCurrentView }) {
                     setActiveShortIndex(0);
                     if (containerRef.current) containerRef.current.scrollTop = 0;
                   }}
-                  className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 border active:scale-95 ${
+                  className={`shrink-0 px-3.5 py-1 rounded-full text-xs font-semibold tracking-tight transition-all duration-150 active:scale-95 ${
                     isSelected
-                      ? 'bg-white text-neutral-950 border-white shadow-[0_2px_10px_rgba(0,0,0,0.3)] font-bold'
-                      : 'bg-black/35 backdrop-blur-2xl text-white/85 hover:text-white border-white/15 hover:bg-white/15'
+                      ? theme === 'light'
+                        ? 'bg-neutral-900 text-white font-bold shadow-sm'
+                        : 'bg-white text-neutral-950 font-bold shadow-sm'
+                      : theme === 'light'
+                        ? 'bg-black/5 text-neutral-700 hover:bg-black/10'
+                        : 'bg-black/35 backdrop-blur-xl text-white/85 hover:text-white border border-white/15 hover:bg-white/15'
                   }`}
                 >
                   {getCatLabel(cat)}
@@ -355,6 +401,7 @@ export default function ShortsPage({ setCurrentView }) {
                     isMuted={isMuted}
                     toggleMute={() => setIsMuted((prev) => !prev)}
                     onBack={handleBackNavigation}
+                    theme={theme}
                   />
                 </div>
               ))}

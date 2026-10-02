@@ -24,6 +24,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(ARTICLES_PER_PAGE)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   // Track the last fetched category and query to know when to re-fetch
   const lastFetchedCategory = useRef(null)
@@ -41,6 +42,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   const setLoaded = (status) => setNewsPageState && setNewsPageState(prev => ({ ...prev, loaded: status }))
 
   useEffect(() => {
+    setMounted(true)
     const storedCategory = localStorage.getItem('selectedCategory')
     if (storedCategory) {
       setSelectedCategoryState(storedCategory)
@@ -212,9 +214,9 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 {getLocalizedText(heroArticle.title, language) || heroArticle.title}
               </h3>
               <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest" suppressHydrationWarning>
                   <Clock className="w-3.5 h-3.5 text-red-500" />
-                  {new Date(heroArticle.publishedAt || heroArticle.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {mounted && (heroArticle.publishedAt || heroArticle.createdAt) ? new Date(heroArticle.publishedAt || heroArticle.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
                 </span>
                 <div className="w-7 h-7 rounded-full bg-red-600 flex items-center justify-center text-white shadow-md transform group-hover:translate-x-1 transition-transform">
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -332,10 +334,10 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             {/* Content Container */}
             <div className="p-5 flex-1 flex flex-col">
               {/* Date/Time */}
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2" suppressHydrationWarning>
                 <Clock className="w-3.5 h-3.5 text-red-500" />
                 <span suppressHydrationWarning>
-                  {article.publishedAt || article.createdAt ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                  {mounted && (article.publishedAt || article.createdAt) ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                 </span>
               </div>
 

@@ -64,6 +64,13 @@ const nextConfig = {
     const allowedOrigin = process.env.CORS_ORIGINS || "*";
     return [
       {
+        source: "/(.*).mp4",
+        headers: [
+          { key: "Accept-Ranges", value: "bytes" },
+          { key: "Cache-Control", value: "public, max-age=3600, must-revalidate" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           { key: "X-Frame-Options", value: "DENY" },
