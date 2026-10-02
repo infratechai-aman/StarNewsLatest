@@ -85,6 +85,7 @@ export async function POST(request) {
         // Auto-translate if strings provided
         const translatedTitle = typeof title === 'string' ? await translateText(title) : title;
         const translatedContent = typeof content === 'string' ? await translateText(content) : content;
+        const translatedMeta = metaDescription && typeof metaDescription === 'string' ? await translateText(metaDescription) : (metaDescription || '');
 
         const newArticle = {
             title: translatedTitle,
@@ -97,7 +98,7 @@ export async function POST(request) {
             videoUrl: videoUrl || youtubeUrl || '',
             youtubeUrl: youtubeUrl || videoUrl || '',
             tags: tags || [],
-            metaDescription: metaDescription || '',
+            metaDescription: translatedMeta,
             thumbnailUrl: thumbnailUrl || mainImage || '',
             thumbnails: thumbnails || (thumbnailUrl ? [thumbnailUrl] : []),
             featured: featured || false,

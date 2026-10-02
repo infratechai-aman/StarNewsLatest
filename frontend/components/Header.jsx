@@ -454,8 +454,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
               {/* LEFT: Logo + Date */}
               <div className="flex items-center gap-5">
                 <div className="flex items-center cursor-pointer group" onClick={() => setCurrentView('home')}>
-                  <div className="flex-shrink-0 h-[72px] w-[200px] rounded-lg p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
-                    <VideoLogo className="h-full w-full scale-[1.75] transition-transform duration-300 group-hover:scale-[1.85]" />
+                  <div className="flex-shrink-0 h-[68px] w-[190px] p-0 group cursor-pointer relative overflow-hidden flex items-center justify-center">
+                    <VideoLogo className="h-full w-full transition-transform duration-300 group-hover:scale-105" />
                   </div>
                 </div>
                 {/* Date display */}
@@ -1012,10 +1012,10 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             <Menu className="h-6 w-6 text-white" />
           </button>
 
-          {/* Center: Logo with tight border */}
+          {/* Center: Sleek Logo without white border or clipping */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-[130px] h-[52px] rounded-md shadow-md p-0 relative cursor-pointer z-50 border-2 border-white overflow-hidden">
-              <VideoLogo className="w-full h-full scale-[1.8]" />
+            <div className="flex-shrink-0 w-[145px] h-[48px] relative flex items-center justify-center overflow-hidden">
+              <VideoLogo className="w-full h-full" />
             </div>
           </div>
 

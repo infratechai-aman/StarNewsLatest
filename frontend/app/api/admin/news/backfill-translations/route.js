@@ -31,8 +31,9 @@ export async function POST(request) {
 
             const needsTitleTranslation = typeof data.title === 'string';
             const needsContentTranslation = typeof data.content === 'string';
+            const needsMetaTranslation = typeof data.metaDescription === 'string' && data.metaDescription.trim().length > 0;
 
-            if (needsTitleTranslation || needsContentTranslation) {
+            if (needsTitleTranslation || needsContentTranslation || needsMetaTranslation) {
                 const updatePayload = {
                     updatedAt: new Date().toISOString()
                 };
@@ -42,6 +43,9 @@ export async function POST(request) {
                 }
                 if (needsContentTranslation) {
                     updatePayload.content = await translateText(data.content);
+                }
+                if (needsMetaTranslation) {
+                    updatePayload.metaDescription = await translateText(data.metaDescription);
                 }
 
                 await doc.ref.update(updatePayload);

@@ -133,10 +133,63 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
   if (!activeArticle) return null
 
-  // Get localized content
+  const [dynamicSummary, setDynamicSummary] = useState('')
+  const [dynamicContent, setDynamicContent] = useState('')
+
+  useEffect(() => {
+    let isCancelled = false
+    setDynamicSummary('')
+    setDynamicContent('')
+
+    if (language === 'en') return
+
+    // Translate summary / metaDescription dynamically if English-only or untranslated in DB
+    const rawSummary = activeArticle?.metaDescription || activeArticle?.shortDescription || activeArticle?.summary || ''
+    const currentSummary = typeof rawSummary === 'object' ? (rawSummary[language] || '') : rawSummary
+    const needsSummaryTrans = !currentSummary || (!/[\u0900-\u097F]/.test(currentSummary) && /[a-zA-Z]{4,}/.test(currentSummary))
+
+    if (needsSummaryTrans && typeof rawSummary === 'string' && rawSummary.trim()) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(rawSummary.trim())}`
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (!isCancelled && data && data[0]) {
+            const translated = data[0].map(item => item[0]).join('')
+            if (translated) setDynamicSummary(translated)
+          }
+        })
+        .catch(() => {})
+    }
+
+    // Translate content dynamically if English-only or untranslated in DB
+    const rawContent = activeArticle?.content || ''
+    const currentContent = typeof rawContent === 'object' ? (rawContent[language] || '') : rawContent
+    const needsContentTrans = !currentContent || (!/[\u0900-\u097F]/.test(currentContent) && /[a-zA-Z]{4,}/.test(currentContent))
+
+    if (needsContentTrans && typeof rawContent === 'string' && rawContent.trim()) {
+      const cleanPlain = rawContent.replace(/<[^>]*>/g, ' ').substring(0, 3000)
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(cleanPlain.trim())}`
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (!isCancelled && data && data[0]) {
+            const translated = data[0].map(item => item[0]).join('')
+            if (translated) setDynamicContent(translated)
+          }
+        })
+        .catch(() => {})
+    }
+
+    return () => {
+      isCancelled = true
+    }
+  }, [activeArticle?.id, language, activeArticle?.metaDescription, activeArticle?.content])
+
+  // Get localized content with dynamic fallback
   const title = getLocalizedText(activeArticle.title, language)
-  const category = getLocalizedText(activeArticle.category, language)
-  const content = getLocalizedText(activeArticle.content, language)
+  const category = getTranslatedCategory(activeArticle.category, language)
+  const content = dynamicContent || getLocalizedText(activeArticle.content, language)
+  const summary = dynamicSummary || getLocalizedText(activeArticle.metaDescription || activeArticle.shortDescription || activeArticle.summary, language)
 
   // Get related news - use API data if available, otherwise fallback to static
   const relatedNews = relatedNewsFromApi
@@ -180,11 +233,11 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
       {/* Breadcrumbs */}
       <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-4 md:mb-6 overflow-hidden whitespace-nowrap min-w-0">
         <button onClick={handleBackToHome} className="hover:text-red-600 transition-colors cursor-pointer flex items-center gap-1 shrink-0">
-          <ArrowLeft className="w-3 md:w-3.5 h-3 md:h-3.5" /> Home
+          <ArrowLeft className="w-3 md:w-3.5 h-3 md:h-3.5" /> {t('home') || (language === 'mr' ? 'मुख्यपृष्ठ' : language === 'hi' ? 'होम' : 'Home')}
         </button>
         <span className="shrink-0 text-gray-400">&gt;</span>
         <button onClick={() => {if(setCurrentView) setCurrentView('news')}} className="hover:text-red-600 transition-colors cursor-pointer shrink-0">
-          News
+          {t('news') || (language === 'mr' ? 'बातम्या' : language === 'hi' ? 'समाचार' : 'News')}
         </button>
         <span className="shrink-0 text-gray-400">&gt;</span>
         <button className="hover:text-red-600 transition-colors cursor-pointer shrink-0">
@@ -228,7 +281,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   </button>
                 </div>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-black bg-gray-100 rounded-full border border-gray-200 transition-all">
-                  <Bookmark className="w-3.5 h-3.5" /> Save
+                  <Bookmark className="w-3.5 h-3.5" /> {t('save') || (language === 'mr' ? 'जतन करा' : language === 'hi' ? 'सुरक्षित करें' : 'Save')}
                 </button>
               </div>
             </div>
@@ -237,9 +290,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               {title}
             </h1>
             
-            {(article.metaDescription || article.shortDescription) && (
+            {summary && (
               <p className="text-sm sm:text-base md:text-lg font-medium text-gray-600 leading-snug break-words [overflow-wrap:anywhere] w-full">
-                {getLocalizedText(article.metaDescription || article.shortDescription, language)}
+                {summary}
               </p>
             )}
           </div>
@@ -273,13 +326,15 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 </span>
                 <span className="flex items-center gap-1.5 shrink-0">
                   <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                  5 min read
+                  {language === 'mr' ? '५ मिनिट वाचन' : language === 'hi' ? '५ मिनट पढ़ें' : '5 min read'}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
-              <span className="text-[11px] font-bold text-gray-500 mr-1">Share:</span>
+              <span className="text-[11px] font-bold text-gray-500 mr-1">
+                {language === 'mr' ? 'शेअर करा:' : language === 'hi' ? 'शेयर करें:' : 'Share:'}
+              </span>
               <button className="w-7 h-7 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80 transition-opacity"><Facebook className="w-3.5 h-3.5" /></button>
               <button className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:opacity-80 transition-opacity">
                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -406,11 +461,35 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             <span className="text-xs sm:text-sm font-bold text-gray-500 shrink-0">
               {language === 'mr' ? 'टॅग्ज:' : language === 'hi' ? 'टैग:' : 'Tags:'}
             </span>
-            {['Maharashtra', 'Mumbai', 'Pune', 'India News', 'Live TV'].map((tag, idx) => (
-              <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-3 sm:px-4 py-1 text-xs rounded-full hover:bg-gray-50 transition-colors">
-                {tag}
-              </Badge>
-            ))}
+            {(activeArticle.tags && activeArticle.tags.length > 0 ? activeArticle.tags : ['Maharashtra', 'Mumbai', 'Pune', 'India News', 'Live TV']).map((tag, idx) => {
+              const tagTranslations = {
+                mr: {
+                  'maharashtra': 'महाराष्ट्र',
+                  'mumbai': 'मुंबई',
+                  'pune': 'पुणे',
+                  'india news': 'भारत बातम्या',
+                  'live tv': 'लाइव्ह टीव्ही',
+                  'business': 'व्यापार',
+                  'economy': 'अर्थव्यवस्था'
+                },
+                hi: {
+                  'maharashtra': 'महाराष्ट्र',
+                  'mumbai': 'मुंबई',
+                  'pune': 'पुणे',
+                  'india news': 'भारत समाचार',
+                  'live tv': 'लाइव टीवी',
+                  'business': 'व्यापार',
+                  'economy': 'अर्थव्यवस्था'
+                }
+              };
+              const tagStr = String(tag).trim();
+              const localizedTag = tagTranslations[language]?.[tagStr.toLowerCase()] || tagStr;
+              return (
+                <Badge key={idx} variant="outline" className="text-gray-600 border-gray-300 font-medium px-3 sm:px-4 py-1 text-xs rounded-full hover:bg-gray-50 transition-colors">
+                  {localizedTag}
+                </Badge>
+              );
+            })}
           </div>
 
           {/* Author Box */}

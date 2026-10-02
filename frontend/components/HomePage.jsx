@@ -1151,9 +1151,9 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             )}
           </div>
 
-          <section className="mb-10 w-full lg:max-w-[1340px] lg:mx-auto px-0 lg:px-6">
+          <section className="mb-10 w-full lg:max-w-[1340px] lg:mx-auto px-3 sm:px-4 lg:px-6">
             {/* Business & Economy section with BSE background image */}
-            <div className="relative text-white py-10 px-5 lg:px-10 overflow-hidden shadow-2xl rounded-xl lg:rounded-2xl">
+            <div className="relative text-white py-7 sm:py-10 px-4 sm:px-6 lg:px-10 overflow-hidden shadow-2xl rounded-2xl">
               {/* Background image */}
               <div className="absolute inset-0 z-0">
                 <Image src="/business-economy-bg.jpg" alt="" fill className="object-cover" priority />
@@ -1161,41 +1161,41 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </div>
 
               {/* Header row */}
-              <div className="flex items-end justify-between mb-6 relative z-10">
+              <div className="flex items-end justify-between mb-5 sm:mb-6 relative z-10">
                 <div>
-                  <h2 className="font-black text-3xl lg:text-4xl leading-tight">
+                  <h2 className="font-black text-2xl sm:text-3xl lg:text-4xl leading-tight">
                     {t('business') || 'Business'} &amp; <span className="text-green-400 italic font-serif">{t('economy') || 'Economy'}</span>
                   </h2>
-                  <p className="text-[12px] text-gray-400 mt-1">{t('businessTagline') || 'Markets. Policy. Business. Your edge in a changing economy.'}</p>
+                  <p className="text-[11px] sm:text-[12px] text-gray-400 mt-1">{t('businessTagline') || 'Markets. Policy. Business. Your edge in a changing economy.'}</p>
                 </div>
-                <Button variant="outline" size="sm" className="text-white border-white/20 bg-white/5 hover:bg-green-600 hover:border-green-500 hover:text-white font-black text-xs px-5 h-9 rounded-lg transition-all backdrop-blur-sm" onClick={() => handleCategoryClick('business')}>
+                <Button variant="outline" size="sm" className="text-white border-white/20 bg-white/5 hover:bg-green-600 hover:border-green-500 hover:text-white font-black text-xs px-3.5 sm:px-5 h-8 sm:h-9 rounded-lg transition-all backdrop-blur-sm shrink-0" onClick={() => handleCategoryClick('business')}>
                   {t('viewAll') || 'View All'} <ChevronRight className="ml-1 w-3.5 h-3.5" />
                 </Button>
               </div>
 
-              {/* Stock ticker bar */}
-              <div className="flex gap-8 bg-white/5 backdrop-blur-sm border border-white/10 px-6 py-3.5 mb-7 relative z-10 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider">SENSEX</span>
-                  <span className="text-xl font-black text-white">{stockData.sensex.value}</span>
-                  <span className={`flex items-center gap-1 text-sm font-bold ${stockData.sensex.up ? 'text-green-400' : 'text-red-400'}`}>
-                    {stockData.sensex.up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+              {/* Stock ticker bar - responsive wrap on mobile */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-6 bg-white/5 backdrop-blur-md border border-white/10 px-4 sm:px-6 py-3 mb-6 relative z-10 rounded-xl">
+                <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4">
+                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider">SENSEX</span>
+                  <span className="text-base sm:text-xl font-black text-white">{stockData.sensex.value}</span>
+                  <span className={`flex items-center gap-1 text-xs sm:text-sm font-bold ${stockData.sensex.up ? 'text-green-400' : 'text-red-400'}`}>
+                    {stockData.sensex.up ? <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     {stockData.sensex.change} ({stockData.sensex.pct})
                   </span>
                 </div>
-                <div className="w-px bg-white/15"></div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[11px] font-black text-gray-500 uppercase tracking-wider">NIFTY 50</span>
-                  <span className="text-xl font-black text-white">{stockData.nifty.value}</span>
-                  <span className={`flex items-center gap-1 text-sm font-bold ${stockData.nifty.up ? 'text-green-400' : 'text-red-400'}`}>
-                    {stockData.nifty.up ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                <div className="hidden sm:block w-px h-6 bg-white/15"></div>
+                <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4 pt-2 sm:pt-0 border-t border-white/10 sm:border-t-0">
+                  <span className="text-[11px] font-black text-gray-400 uppercase tracking-wider">NIFTY 50</span>
+                  <span className="text-base sm:text-xl font-black text-white">{stockData.nifty.value}</span>
+                  <span className={`flex items-center gap-1 text-xs sm:text-sm font-bold ${stockData.nifty.up ? 'text-green-400' : 'text-red-400'}`}>
+                    {stockData.nifty.up ? <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                     {stockData.nifty.change} ({stockData.nifty.pct})
                   </span>
                 </div>
               </div>
 
-              {/* Business news cards */}
-              <div className="grid grid-cols-3 gap-5 relative z-10">
+              {/* Business news cards - responsive swipeable snap on mobile, 3-col on desktop */}
+              <div className="flex sm:grid sm:grid-cols-3 gap-4 lg:gap-5 overflow-x-auto sm:overflow-visible pb-3 sm:pb-0 hide-scrollbar snap-x snap-mandatory relative z-10 -mx-1 px-1">
                 {cleanBusinessNews.slice(0, 3).map((item, idx) => {
                   const labels = [t('markets') || 'Markets', t('economy') || 'Economy', t('corporate') || 'Corporate']
                   const labelColors = ['bg-red-600', 'bg-green-600', 'bg-blue-600']
@@ -1203,20 +1203,24 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     <div
                       key={item.id}
                       onClick={() => handleNewsClick(item)}
-                      className="cursor-pointer group overflow-hidden relative bg-white/5 border border-white/10 hover:border-green-400/40 transition-all rounded-xl hover:bg-white/10"
+                      className="min-w-[270px] sm:min-w-0 flex-1 snap-start cursor-pointer group overflow-hidden relative bg-white/5 border border-white/10 hover:border-green-400/40 transition-all rounded-xl hover:bg-white/10 flex flex-col"
                     >
-                      <div className="relative h-40 overflow-hidden bg-gray-900 rounded-t-xl">
+                      <div className="relative aspect-[16/10] overflow-hidden bg-gray-900 rounded-t-xl">
                         <Image
                           src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
                           alt={getLocalizedText(item.title, language)}
                           fill
                           className="object-fill w-full h-full"
                         />
-                        <span className={`absolute top-3 left-3 ${labelColors[idx]} text-white text-[9px] font-black px-2.5 py-1 uppercase tracking-wider rounded-sm shadow-lg`}>{labels[idx]}</span>
+                        <span className={`absolute top-2.5 left-2.5 ${labelColors[idx]} text-white text-[9px] font-black px-2.5 py-1 uppercase tracking-wider rounded shadow-md`}>
+                          {labels[idx]}
+                        </span>
                       </div>
-                      <div className="p-3.5">
-                        <h4 className="text-[13px] font-bold text-white leading-[1.4] line-clamp-2 group-hover:text-green-300 transition-colors">{getLocalizedText(item.title, language)}</h4>
-                        <span className="text-[10px] text-gray-500 mt-1.5 block" suppressHydrationWarning>
+                      <div className="p-3.5 flex-1 flex flex-col justify-between">
+                        <h4 className="text-[13px] sm:text-[14px] font-bold text-white leading-snug line-clamp-2 group-hover:text-green-300 transition-colors">
+                          {getLocalizedText(item.title, language)}
+                        </h4>
+                        <span className="text-[10px] text-gray-400 mt-2 block" suppressHydrationWarning>
                           {item.publishedAt || item.createdAt ? new Date(item.publishedAt || item.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : ''}
                         </span>
                       </div>

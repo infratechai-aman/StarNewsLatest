@@ -235,9 +235,8 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         {/* Main Big Article */}
                         <div 
-                            className={`${cityNews.length > 1 ? 'lg:col-span-5' : 'lg:col-span-12'} relative bg-white rounded-2xl overflow-hidden shadow-md group cursor-pointer`}
+                            className={`${cityNews.length > 1 ? 'lg:col-span-5' : 'lg:col-span-12'} relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group cursor-pointer min-h-[360px] sm:min-h-[460px] flex flex-col justify-end`}
                             onClick={() => handleNewsClick(cityNews[0])}
-                            style={{ minHeight: '480px' }}
                         >
                             <Image 
                                 src={proxyImageUrl(cityNews[0].mainImage || cityNews[0].images?.[0] || '/placeholder-news.svg')} 
@@ -245,23 +244,23 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
                                 fill 
                                 className="object-fill w-full h-full" 
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/40 to-transparent"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0f111a]/95 via-[#0f111a]/45 to-transparent"></div>
                             
-                            <div className="absolute top-4 left-4 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-md">
+                            <div className="absolute top-3.5 left-3.5 bg-red-600 text-white text-[10px] font-black uppercase px-3 py-1 rounded-full shadow-md">
                                 {getLocalizedCity(selectedCity || cityNews[0].city || 'Mumbai', language).toUpperCase()}
                             </div>
-                            <div className="absolute top-4 right-4 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded shadow-md flex items-center gap-1">
+                            <div className="absolute top-3.5 right-3.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
                                 {language === 'mr' ? '२ तासांपूर्वी' : language === 'hi' ? '२ घंटे पहले' : '2 hrs ago'}
                             </div>
                             
-                            <div className="absolute bottom-0 left-0 p-6 w-full">
-                                <h3 className="text-white text-2xl font-black leading-tight mb-3 group-hover:text-red-100 transition-colors">
+                            <div className="relative z-10 p-5 sm:p-6 w-full">
+                                <h3 className="text-white text-xl sm:text-2xl font-black leading-tight mb-2.5 group-hover:text-red-100 transition-colors">
                                     {getLocalizedText(cityNews[0].title, language)}
                                 </h3>
-                                <p className="text-gray-300 text-sm line-clamp-3 mb-5 leading-relaxed">
-                                    {getLocalizedText(cityNews[0].content, language)?.replace(/<[^>]*>/g, '').substring(0, 150)}...
+                                <p className="text-gray-300 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 mb-4 leading-relaxed font-normal">
+                                    {getLocalizedText(cityNews[0].content, language)?.replace(/<[^>]*>/g, '').substring(0, 140)}...
                                 </p>
-                                <button className="bg-red-600 hover:bg-red-700 text-white text-[11px] font-black px-4 py-2 rounded-md transition-colors flex items-center gap-1.5 shadow-lg">
+                                <button className="bg-red-600 hover:bg-red-700 text-white text-xs font-black px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-lg">
                                     {t('readMore') || 'Read More'} <ChevronRight className="w-3.5 h-3.5" />
                                 </button>
                             </div>
@@ -269,39 +268,44 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
 
                         {/* Smaller Articles Grid */}
                         {cityNews.length > 1 && (
-                            <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                                 {cityNews.slice(1, 5).map((item, idx) => (
-                                    <div key={item.id} onClick={() => handleNewsClick(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col border border-gray-100">
-                                        <div className="relative h-40 overflow-hidden bg-gray-100">
+                                    <div key={item.id} onClick={() => handleNewsClick(item)} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col border border-gray-100/90">
+                                        <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                                             <Image 
                                                 src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} 
                                                 alt={getLocalizedText(item.title, language)}
                                                 fill 
                                                 className="object-fill w-full h-full" 
                                             />
-                                            <div className="absolute top-3 left-3 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow-sm">
+                                            <div className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm">
                                                 {getLocalizedCity(selectedCity || item.city || 'Mumbai', language).toUpperCase()}
                                             </div>
-                                            <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded shadow-sm">
+                                            <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-md text-white text-[9px] font-bold uppercase px-2 py-0.5 rounded-full shadow-sm">
                                                 {idx + 1 * 4} {language === 'mr' ? (idx % 2 === 0 ? 'तासांपूर्वी' : 'दिवसांपूर्वी') : language === 'hi' ? (idx % 2 === 0 ? 'घंटे पहले' : 'दिन पहले') : (idx % 2 === 0 ? 'hrs ago' : 'days ago')}
                                             </div>
                                         </div>
-                                        <div className="p-4 flex-1 flex flex-col justify-between">
-                                            <h4 className="font-bold text-[15px] leading-tight text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3 mb-4">
-                                                {getLocalizedText(item.title, language)}
-                                            </h4>
-                                            <div className="flex items-center justify-between text-gray-500 text-[11px] font-semibold border-t border-gray-50 pt-3">
-                                                <div className="flex items-center gap-4">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <Eye className="w-3.5 h-3.5" />
-                                                        {item.views || (1200 + idx * 300)}{idx === 1 ? 'K' : ''}
+                                        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <h4 className="font-bold text-[14px] sm:text-[15px] leading-snug text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 mb-1.5">
+                                                    {getLocalizedText(item.title, language)}
+                                                </h4>
+                                                <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed mb-3">
+                                                    {getLocalizedText(item.content, language)?.replace(/<[^>]*>/g, '').substring(0, 90)}...
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center justify-between text-gray-400 text-[11px] font-semibold border-t border-gray-100 pt-2.5">
+                                                <div className="flex items-center gap-3.5">
+                                                    <span className="flex items-center gap-1">
+                                                        <Eye className="w-3.5 h-3.5 text-gray-400" />
+                                                        {(item.views || (850 + idx * 240)).toLocaleString()}
                                                     </span>
-                                                    <span className="flex items-center gap-1.5">
-                                                        <MessageSquare className="w-3.5 h-3.5" />
+                                                    <span className="flex items-center gap-1">
+                                                        <MessageSquare className="w-3.5 h-3.5 text-gray-400" />
                                                         {15 + idx * 5}
                                                     </span>
                                                 </div>
-                                                <Bookmark className="w-4 h-4 hover:text-red-600" />
+                                                <Bookmark className="w-3.5 h-3.5 hover:text-red-600 transition-colors" />
                                             </div>
                                         </div>
                                     </div>

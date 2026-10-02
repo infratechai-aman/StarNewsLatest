@@ -19,10 +19,18 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         let isDestroyed = false;
         let lastFrameTime = 0;
 
+        // Force mobile-friendly attributes
+        video.muted = true;
+        video.defaultMuted = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('muted', '');
+
         // Ensure video is playing and speed it up
         const playVideo = async () => {
             try {
-                if (!video.src) {
+                if (!video.src || !video.src.includes('LatestLogo.mp4')) {
                     video.src = videoSrc;
                 }
                 video.muted = true;
@@ -38,8 +46,16 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             }
         };
 
-        // 1. IntersectionObserver: Only activate video if element is actually visible on screen
-        // This ensures mobile does NOT download desktop's video, and desktop does NOT download mobile's!
+        // One-time interaction fallback to unlock audio/video engine on strict mobile browsers
+        const unlockMobileVideo = () => {
+            if (video && video.paused) {
+                video.play().catch(() => {});
+            }
+        };
+        window.addEventListener('touchstart', unlockMobileVideo, { once: true, passive: true });
+        window.addEventListener('click', unlockMobileVideo, { once: true, passive: true });
+
+        // 1. IntersectionObserver: Only activate video if element is visible on screen
         const observer = new IntersectionObserver((entries) => {
             const entry = entries[0];
             const isIntersecting = entry ? entry.isIntersecting : false;
@@ -61,14 +77,20 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
+        const handleCanPlay = () => {
+            if (isVisibleRef.current && video.paused) {
+                playVideo();
+            }
+        };
+        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('loadeddata', handleCanPlay);
+
         const processFrame = () => {
             if (isDestroyed) return;
 
             // Only process if element is actually visible, video is playing and has decoded data
             if (isVisibleRef.current && video && !video.paused && !video.ended && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-                // OPTIMIZATION: Render at 180px max (logo rendered size is 200px desktop / 130px mobile)
-                // This eliminates ~87% of unnecessary pixel processing!
-                const MAX_WIDTH = 180;
+                const MAX_WIDTH = 200;
                 let calcWidth = video.videoWidth;
                 let calcHeight = video.videoHeight;
 
@@ -125,13 +147,11 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         const scheduleNextFrame = () => {
             if (isDestroyed) return;
 
-            // Preferred: video.requestVideoFrameCallback (only runs when hardware decodes a new frame)
             if ('requestVideoFrameCallback' in HTMLVideoElement.prototype && video?.requestVideoFrameCallback) {
                 videoFrameCallbackId = video.requestVideoFrameCallback(() => {
                     processFrame();
                 });
             } else {
-                // Fallback: throttled requestAnimationFrame (capped at 25fps to prevent CPU exhaustion)
                 animationFrameId = requestAnimationFrame((timestamp) => {
                     if (timestamp - lastFrameTime >= 40) {
                         lastFrameTime = timestamp;
@@ -143,8 +163,9 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             }
         };
 
-        // Start processing
+        // Start processing loop
         scheduleNextFrame();
+        playVideo();
 
         return () => {
             isDestroyed = true;
@@ -156,32 +177,40 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             }
             observer.disconnect();
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            video.removeEventListener('canplay', handleCanPlay);
+            video.removeEventListener('loadeddata', handleCanPlay);
+            window.removeEventListener('touchstart', unlockMobileVideo);
+            window.removeEventListener('click', unlockMobileVideo);
         };
-    }, []);
+    }, [videoSrc]);
 
     return (
         <div className={`relative ${className}`} style={style}>
-            {/* Fallback image shown immediately while video loads/buffers */}
+            {/* Fallback image shown immediately while video loads/buffers - unscaled, crisp, clean */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 src="/starnews-logo.png"
                 alt="Star News Logo"
                 className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame ? 'opacity-0' : 'opacity-100'}`}
             />
+            {/* Active video element kept in DOM flow so mobile browsers do not throttle decode */}
             <video
                 ref={videoRef}
+                src={videoSrc}
                 crossOrigin="anonymous"
                 autoPlay
                 loop
                 muted
                 playsInline
-                preload="metadata"
-                style={{ position: 'fixed', top: -9999, left: -9999, width: '180px', height: '100px', opacity: 0.01, pointerEvents: 'none' }}
+                preload="auto"
+                style={{ position: 'absolute', inset: 0, opacity: 0.001, pointerEvents: 'none', zIndex: -10 }}
             />
+            {/* Animated canvas with scale to crop out video green padding */}
             <canvas
                 ref={canvasRef}
-                className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 scale-[1.75] ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
             />
         </div>
     );
 }
+
