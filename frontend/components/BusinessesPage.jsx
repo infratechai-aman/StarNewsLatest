@@ -619,7 +619,8 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
       {/* ─── HERO BANNER ─── */}
       <div className="relative w-full overflow-hidden h-[160px] md:h-[200px]">
-        <Image src="/business_dir_banner_1789519372349.jpg" alt="Business Directory" fill className="absolute inset-0 object-cover" priority />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="https://images.unsplash.com/photo-1533750516457-a7f992034fec?w=1600&auto=format&fit=crop&q=80" alt="Business Directory" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
         <div className="relative z-10 w-full px-4 md:px-12 flex flex-col justify-center h-full">
           <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-2">{t('businessDirectory') || 'BUSINESS DIRECTORY'}</p>
