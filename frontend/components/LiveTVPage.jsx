@@ -95,6 +95,19 @@ export default function LiveTVPage({ setCurrentView }) {
   
   // Theme state: 'dark' (YouTube Dark) or 'light' (StarNews Clean Light)
   const [theme, setTheme] = useState('dark');
+  // Player audio: muted autoplay first (allowed everywhere), sound after one tap
+  const playerRef = useRef(null)
+  const [soundOn, setSoundOn] = useState(false)
+  const unmutePlayer = () => {
+    const win = playerRef.current?.contentWindow
+    if (win) {
+      const send = (func, args = []) => win.postMessage(JSON.stringify({ event: 'command', func, args }), '*')
+      send('unMute')
+      send('setVolume', [100])
+      send('playVideo')
+    }
+    setSoundOn(true)
+  }
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeStreamId, setActiveStreamId] = useState(null);
@@ -164,6 +177,11 @@ export default function LiveTVPage({ setCurrentView }) {
   const youtubeId = useMemo(() => {
     return activeChannel ? extractYouTubeId(activeChannel.url) || '2g811Eo7K8U' : '2g811Eo7K8U';
   }, [activeChannel]);
+
+  // Mute flag is fixed per video: a new channel starts with sound only if the viewer
+  // already unmuted (their tap allows it). Unmuting itself never reloads the player.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const embedMute = useMemo(() => (soundOn ? 0 : 1), [youtubeId]);
 
   // Filter channels by Category and Search
   const filteredChannels = useMemo(() => {
@@ -384,14 +402,27 @@ export default function LiveTVPage({ setCurrentView }) {
               isDark ? 'border-[#272727]' : 'border-gray-200'
             }`}>
               <iframe
+                ref={playerRef}
                 key={`stream-${youtubeId}`}
-                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`}
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=${embedMute}&loop=1&playlist=${youtubeId}&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`}
                 title={activeChannel?.title || 'Live Stream Player'}
                 className="w-full h-full object-cover"
                 style={{ border: 'none' }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
+
+              {/* Browsers block autoplay with sound, so the stream starts muted.
+                  One tap unmutes via the YouTube iframe API (no reload). */}
+              {!soundOn && (
+                <button
+                  type="button"
+                  onClick={unmutePlayer}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/70 hover:bg-black/85 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-full border border-white/15 shadow-xl"
+                >
+                  <span aria-hidden="true">🔇</span> Tap to unmute
+                </button>
+              )}
 
               {/* Top YouTube Live Indicator */}
               <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">

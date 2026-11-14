@@ -1,6 +1,7 @@
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 export async function DELETE(request, { params }) {
     const authResult = await requireReporterOrAdmin(request);
@@ -29,6 +30,7 @@ export async function DELETE(request, { params }) {
         }
 
         await docRef.delete();
+        purgeCache('api_enewspaper');
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Reporter enewspaper DELETE error:', error.message);

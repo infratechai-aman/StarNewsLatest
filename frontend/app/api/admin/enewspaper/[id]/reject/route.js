@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // PUT: Reject E-Newspaper
 export async function PUT(request, { params }) {
@@ -20,6 +21,7 @@ export async function PUT(request, { params }) {
             updatedAt: new Date().toISOString()
         });
 
+        purgeCache('api_enewspaper');
         return NextResponse.json({ success: true, status: 'rejected' });
     } catch (error) {
         console.error('Error rejecting enewspaper:', error);

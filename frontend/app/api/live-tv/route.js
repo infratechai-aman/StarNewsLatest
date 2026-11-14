@@ -287,12 +287,19 @@ export async function GET() {
     // Overlay or prepend custom channels
     customStreams.forEach((ch) => streamMap.set(ch.id, { ...ch, isLive: true, isActive: true }));
 
-    const allStreams = await annotateThumbnails(Array.from(streamMap.values()));
+    // Built-in catalogue channels whose YouTube video no longer exists are hidden
+    // (clicking them only shows "Video unavailable"). Admin-added streams always stay.
+    const customIds = new Set(customStreams.map((c) => c.id));
+    const allStreams = (await annotateThumbnails(Array.from(streamMap.values())))
+      .filter((s) => customIds.has(s.id) || s.thumbAvailable !== false);
 
     const responseData = {
       enabled,
       streams: allStreams,
-      primaryStreamId: allStreams.some((s) => s.id === primaryStreamId) ? primaryStreamId : allStreams[0]?.id || 'starnews-live'
+      // Open on a stream that actually plays: skip a primary whose video is gone
+      primaryStreamId: allStreams.some((s) => s.id === primaryStreamId && s.thumbAvailable !== false)
+        ? primaryStreamId
+        : (allStreams.find((s) => s.thumbAvailable !== false) || allStreams[0])?.id || 'starnews-live'
     };
 
     setCache(CACHE_KEY, responseData, 3 * 60 * 1000); // 3 minutes cache

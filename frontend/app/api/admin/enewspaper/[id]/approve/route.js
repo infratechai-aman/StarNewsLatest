@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // PUT: Approve E-Newspaper
 export async function PUT(request, { params }) {
@@ -17,6 +18,7 @@ export async function PUT(request, { params }) {
             updatedAt: new Date().toISOString()
         });
 
+        purgeCache('api_enewspaper');
         return NextResponse.json({ success: true, status: 'approved' });
     } catch (error) {
         console.error('Error approving enewspaper:', error);

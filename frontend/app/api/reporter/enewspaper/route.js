@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // GET: My E-Newspapers (isolated per reporter; super admins see all)
 export async function GET(request) {

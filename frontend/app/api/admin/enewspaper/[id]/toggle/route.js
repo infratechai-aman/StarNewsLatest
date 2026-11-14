@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
 
 // POST: Toggle E-Newspaper Active Status (Admin only, or Reporter?)
 // Original code allowed admin.
@@ -21,6 +22,7 @@ export async function POST(request, { params }) {
             await docRef.update({ active: newStatus });
         }
 
+        purgeCache('api_enewspaper');
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Error toggling enewspaper:', error);
