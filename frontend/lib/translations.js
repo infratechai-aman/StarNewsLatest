@@ -266,6 +266,14 @@ export const translations = {
 
         // Misc
         relatedNews: 'Related News',
+        relatedStories: 'Related Stories',
+        download: 'Download',
+        menu: 'Menu',
+        searchNews: 'Search News',
+        searchPublishedNewsPlaceholder: 'Search published news, topics, cities...',
+        fitness: 'Fitness',
+        fashion: 'Fashion',
+        verified: 'Verified',
         moreNews: 'More News',
         trendingNow: 'Trending Now',
         mostRead: 'Most Read',
@@ -923,6 +931,14 @@ export const translations = {
 
         // Misc
         relatedNews: 'संबंधित समाचार',
+        relatedStories: 'संबंधित खबरें',
+        download: 'डाउनलोड',
+        menu: 'मेनू',
+        searchNews: 'समाचार खोजें',
+        searchPublishedNewsPlaceholder: 'प्रकाशित समाचार, विषय, शहर खोजें...',
+        fitness: 'फिटनेस',
+        fashion: 'फैशन',
+        verified: 'सत्यापित',
         moreNews: 'और समाचार',
         trendingNow: 'अभी ट्रेंडिंग',
         mostRead: 'सबसे ज़्यादा पढ़ा गया',
@@ -1581,6 +1597,14 @@ export const translations = {
 
         // Misc
         relatedNews: 'संबंधित बातम्या',
+        relatedStories: 'संबंधित बातम्या',
+        download: 'डाउनलोड',
+        menu: 'मेनू',
+        searchNews: 'बातम्या शोधा',
+        searchPublishedNewsPlaceholder: 'प्रकाशित बातम्या, विषय, शहरे शोधा...',
+        fitness: 'फिटनेस',
+        fashion: 'फॅशन',
+        verified: 'सत्यापित',
         moreNews: 'अधिक बातम्या',
         trendingNow: 'आता ट्रेंडिंग',
         mostRead: 'सर्वात जास्त वाचलेले',

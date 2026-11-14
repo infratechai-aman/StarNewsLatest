@@ -807,14 +807,15 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
       {/* PREMIUM AD BANNER - ABSOLUTE TOP */}
       {premiumAdSettings?.enabled && (
-        <div className="z-40 relative bg-gradient-to-r from-gray-900 via-red-900 to-gray-900 shadow-xl premium-ad-banner mt-3 md:mt-4 md:mb-8 mb-4 w-full min-h-[50px] md:h-40 rounded-none md:rounded-2xl md:mx-auto md:max-w-7xl flex flex-col justify-center">
+        <div className="z-40 relative bg-gradient-to-r from-gray-900 via-red-900 to-gray-900 shadow-xl premium-ad-banner mt-3 md:mt-4 md:mb-8 mb-4 w-full h-[100px] sm:h-[130px] md:h-40 overflow-hidden rounded-none md:rounded-2xl md:mx-auto md:max-w-7xl flex flex-col justify-center">
           {premiumAdSettings.imageUrl ? (
-            <div className="relative h-full group w-full flex-grow flex items-center">
-              <a href={premiumAdSettings.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="block w-full h-full relative">
+            <div className="relative h-full group w-full">
+              <a href={premiumAdSettings.linkUrl || '#'} target="_blank" rel="noopener noreferrer" className="absolute inset-0 block">
+                {/* Fixed-height strip: image always fills it, never stretches the page */}
                 <img
                   src={premiumAdSettings.imageUrl}
                   alt={premiumAdSettings.title || 'Advertisement'}
-                  className="w-full h-auto object-contain max-h-[150px] md:max-h-full group-hover:scale-105 transition-transform [transition-duration:2000ms]"
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform [transition-duration:2000ms]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 pointer-events-none" />
               </a>

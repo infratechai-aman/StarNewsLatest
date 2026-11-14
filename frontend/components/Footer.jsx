@@ -73,7 +73,7 @@ const Footer = ({ setCurrentView }) => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>© 2025 StarNews. {t('allRightsReserved')}.</p>
+          <p>© {new Date().getFullYear()} StarNews. {t('allRightsReserved')}.</p>
           <div className="mt-3 flex items-center justify-center gap-4 text-xs">
             <button onClick={() => setCurrentView('terms')} className="text-gray-400 hover:text-white transition-colors">
               {t('termsConditions')}

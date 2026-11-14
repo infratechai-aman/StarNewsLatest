@@ -36,7 +36,59 @@ const SANITIZE_CONFIG = {
 function sanitizeHtml(html) {
   if (!html) return '';
   if (typeof window === 'undefined') return html; // SSR fallback
-  return DOMPurify.sanitize(html, SANITIZE_CONFIG);
+  return DOMPurify.sanitize(formatArticleHtml(html), SANITIZE_CONFIG);
+}
+
+/**
+ * Articles arrive as a mix of HTML, plain text and markdown pasted from other tools
+ * (e.g. "### heading", "**bold**", and broken fragments like `text-align: center;">`).
+ * Normalise to clean HTML before sanitising so readers never see raw syntax.
+ */
+const escapeHtml = (s) => s.replace(/&(?!(?:[a-z]+|#\d+);)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+function formatArticleHtml(raw) {
+  let s = String(raw)
+  // Broken attribute leftovers in the TEXT (never inside a real tag):
+  // `text-align: center;">` and stray `/>`
+  const insideTag = (str, offset) => str.lastIndexOf('<', offset) > str.lastIndexOf('>', offset - 1)
+  s = s.replace(/[a-z-]+\s*:\s*[a-z0-9#%.,\s-]+;?\s*"\s*\/?>/gi, (m, offset, str) => insideTag(str, offset) ? m : '')
+  s = s.replace(/\/>/g, (m, offset, str) => insideTag(str, offset) ? m : '')
+  const hasBlockHtml = /<(p|div|h[1-6]|ul|ol|li|blockquote|table|figure|br)\b/i.test(s)
+  const inline = (t) => t
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|\s)#{2,6}\s*/g, '$1') // stray inline ### markers
+    .replace(/\*\*/g, '')
+  if (hasBlockHtml) {
+    // HTML article: only fix markdown that leaked into the text
+    return s
+      .replace(/<p[^>]*>\s*#{1,6}\s+([^<]+)<\/p>/gi, '<h3>$1</h3>')
+      .replace(/(^|>)\s*#{1,6}\s+([^<\n]+)/g, '$1<h3>$2</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*\*/g, '')
+  }
+  // Plain text / markdown article: build paragraphs and headings
+  const blocks = s.split(/\n{2,}|\r\n\r\n|(?=\n#{1,6}\s)/).map(b => b.trim()).filter(Boolean)
+  return blocks.map((b) => {
+    const h = b.match(/^(#{1,6})\s+([^\n]+)\n?([\s\S]*)$/)
+    if (h) {
+      const tag = h[1].length <= 2 ? 'h2' : 'h3'
+      const rest = h[3].trim()
+      return `<${tag}>${inline(escapeHtml(h[2].trim()))}</${tag}>` +
+        (rest ? `<p>${inline(escapeHtml(rest)).replace(/\n/g, '<br/>')}</p>` : '')
+    }
+    return `<p>${inline(escapeHtml(b)).replace(/\n/g, '<br/>')}</p>`
+  }).join('')
+}
+
+/** Plain-text version for summaries/excerpts (no markdown symbols). */
+export function stripMarkdown(text) {
+  if (!text) return ''
+  return String(text)
+    .replace(/[a-z-]+\s*:\s*[a-z0-9#%.,\s-]+;?\s*"\s*\/?>/gi, '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/#{1,6}\s*/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 }
 
 const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
@@ -121,7 +173,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     setFullArticle(article)
     // If article only has a preview snippet (<= 160 chars), fetch full article from API
     if (article?.id && (!article.content || (typeof article.content === 'string' && article.content.length <= 160))) {
-      news.getById(article.id).then(data => {
+      news.getOne(article.id).then(res => {
+        const data = res?.article || res
         if (data && data.content) {
           setFullArticle(data)
         }
@@ -292,7 +345,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             
             {summary && (
               <p className="text-sm sm:text-base md:text-lg font-medium text-gray-600 leading-snug break-words [overflow-wrap:anywhere] w-full">
-                {summary}
+                {stripMarkdown(summary)}
               </p>
             )}
           </div>
@@ -392,7 +445,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             fontSizeLevel === 'sm' ? 'text-sm sm:text-base' : fontSizeLevel === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'
           }`}>
             {(() => {
-              const galleryImgs = article.galleryImages && article.galleryImages.length > 0 ? article.galleryImages : []
+              // Skip gallery images that repeat the cover image (or each other)
+              const galleryImgs = (Array.isArray(article.galleryImages) ? article.galleryImages : [])
+                .filter((img, i, arr) => img && img !== article.mainImage && arr.indexOf(img) === i)
 
               if (galleryImgs.length === 0) {
                 return (

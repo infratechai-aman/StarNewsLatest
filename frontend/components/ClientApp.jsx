@@ -100,11 +100,19 @@ const ClientApp = ({ initialNewsData }) => {
         const articleParam = params.get('article')
         if (articleParam) {
             setCurrentView('news-detail')
-            import('@/lib/api').then(({ news }) => {
-                news.getById(articleParam).then(art => {
-                    if (art) setSelectedArticle(art)
-                }).catch(e => console.warn(e))
-            })
+            // Shared article links (?article=<id>): load it, or fall back to home if it
+            // no longer exists, so a stale/deleted link never shows a blank page.
+            import('@/lib/api')
+                .then(({ news }) => news.getOne(articleParam))
+                .then(art => {
+                    const a = art?.article || art
+                    if (a && a.id) setSelectedArticle(a)
+                    else setCurrentView('home')
+                })
+                .catch(e => {
+                    console.warn('Shared article could not be loaded:', e?.message || e)
+                    setCurrentView('home')
+                })
         } else if (resolvedView && validViews.includes(resolvedView)) {
             setCurrentView(resolvedView)
         }

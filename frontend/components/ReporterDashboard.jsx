@@ -726,7 +726,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
               “Real people. Real stories. A more informed India.”
             </p>
             <div className="mt-4 text-[11px] text-gray-400 space-y-0.5 font-medium leading-normal">
-              <p>© 2026 StarNews India</p>
+              <p>© {new Date().getFullYear()} StarNews India</p>
               <p>Reporter Portal</p>
               <p className="text-[10px] text-gray-400">Version 1.0.0</p>
             </div>

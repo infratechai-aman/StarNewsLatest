@@ -78,62 +78,68 @@ const BusinessDetailPage = ({ business, setCurrentView, user, toast }) => {
         {t('backToDirectory')}
       </Button>
 
-      {/* ==================== 1. TOP BUSINESS HEADER ==================== */}
-      <div className="bg-white rounded-xl shadow-sm border p-4 md:p-6 mb-4">
-        <div className="flex flex-col md:flex-row md:items-start gap-4">
-          {/* Cover Image - Main Display */}
+      {/* ==================== 1. HERO HEADER ==================== */}
+      <div className="relative rounded-3xl overflow-hidden shadow-xl mb-5 bg-gray-900">
+        <div className="relative h-56 sm:h-64 md:h-80 w-full">
           <img
-            src={business.image || business.coverImage || business.logo || galleryImages[0]}
-            alt={business.name}
-            className="w-full md:w-48 h-40 md:h-32 rounded-xl object-cover border-2 border-gray-200 flex-shrink-0"
-            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop'; }}
+            src={galleryImages[0]}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover scale-105"
+            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&h=600&fit=crop' }}
           />
-
-          <div className="flex-1">
-            {/* Business Name */}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-              {business.name}
-            </h1>
-
-            {/* Rating & Reviews - Only show if > 0 */}
-            {displayReviews > 0 && (
-              <div className="flex flex-wrap items-center gap-3 mb-3">
-                <div className="flex items-center gap-1.5 bg-green-600 text-white px-3 py-1 rounded-lg">
-                  <Star className="h-4 w-4 fill-white" />
-                  <span className="font-bold">{displayRating}</span>
-                </div>
-                <span className="text-gray-600 text-sm">
-                  {displayReviews} {t('reviews')}
-                </span>
-                <span className="text-gray-400">|</span>
-              </div>
-            )}
-
-            <div className="mb-3">
-              <Badge variant="outline" className="text-sm">
-                {business.category}
-              </Badge>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6 md:p-8 flex items-end gap-4 md:gap-6">
+            <div className="w-20 h-20 md:w-28 md:h-28 rounded-2xl overflow-hidden ring-4 ring-white/90 shadow-2xl bg-white shrink-0">
+              <img
+                src={business.logo || business.image || business.coverImage || galleryImages[0]}
+                alt={business.name}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&h=300&fit=crop' }}
+              />
             </div>
-
-            {/* Badges */}
-            <div className="flex flex-wrap gap-2">
-              {business.featured && (
-                <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
-                  <Star className="h-3 w-3 mr-1 fill-white" />
-                  Featured
-                </Badge>
-              )}
-              <Badge variant="outline" className="text-green-600 border-green-600">
-                <Shield className="h-3 w-3 mr-1" />
-                {t('verifiedBusiness')}
-              </Badge>
+            <div className="min-w-0 flex-1 text-white">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                {business.category && (
+                  <span className="px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] font-bold uppercase tracking-wider">
+                    {business.category}
+                  </span>
+                )}
+                <span className="px-2.5 py-1 rounded-full bg-emerald-500/90 text-[11px] font-bold flex items-center gap-1">
+                  <Shield className="h-3 w-3" /> {t('verifiedBusiness')}
+                </span>
+                {business.featured && (
+                  <span className="px-2.5 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-[11px] font-bold flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-white" /> Featured
+                  </span>
+                )}
+              </div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight drop-shadow-lg break-words">
+                {business.name}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/85">
+                {displayReviews > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-1 bg-green-600 text-white px-2 py-0.5 rounded-md font-bold tabular-nums">
+                      <Star className="h-3.5 w-3.5 fill-white" /> {displayRating}
+                    </span>
+                    <span className="tabular-nums">{displayReviews} {t('reviews')}</span>
+                  </span>
+                )}
+                {(business.area || business.address) && (
+                  <span className="flex items-center gap-1 min-w-0">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate max-w-[60vw] md:max-w-md">{business.area || business.address}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* ==================== 2. GALLERY ==================== */}
-      {business.images && business.images.length > 0 && (
+      {galleryImages.length > 1 && (
         <>
           <div className="mb-4">
             <div className="relative rounded-xl overflow-hidden bg-gray-900 group">
@@ -209,7 +215,7 @@ const BusinessDetailPage = ({ business, setCurrentView, user, toast }) => {
       )}
 
       {/* ==================== 4. ACTION BUTTON ROW ==================== */}
-      <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-black/[0.06] p-4 mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Call Button */}
           {business.phone && (

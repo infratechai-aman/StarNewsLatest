@@ -211,6 +211,50 @@ export const DEFAULT_CHANNELS = [
 ];
 
 // GET: Public endpoint - fetch live TV config with multi-category channels
+/* ---------- YouTube thumbnail validation ----------
+ * Ended live streams / removed videos make i.ytimg.com answer 404 with a grey
+ * placeholder, which spams the browser console and looks broken. We check each
+ * video id once (HEAD, cached 6h) and tell the client which ones are dead so it
+ * renders a branded tile instead of requesting the thumbnail at all. */
+const THUMB_TTL = 6 * 60 * 60 * 1000;
+
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const str = String(url).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+  const m = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/)
+    || str.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+async function isThumbAlive(id) {
+  const key = `yt_thumb_${id}`;
+  const cached = getCache(key);
+  if (cached !== null && cached !== undefined) return cached;
+  let alive = true; // network trouble => assume fine, never hide a working channel
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const res = await fetch(`https://i.ytimg.com/vi/${id}/mqdefault.jpg`, { method: 'HEAD', signal: ctrl.signal });
+    clearTimeout(t);
+    if (res.status === 404) alive = false;
+  } catch { /* keep alive = true */ }
+  setCache(key, alive, THUMB_TTL);
+  return alive;
+}
+
+async function annotateThumbnails(streams) {
+  return Promise.all(streams.map(async (s) => {
+    // Stored thumbnails that point at YouTube are validated too; other hosts are trusted
+    const storedYt = typeof s.thumbnail === 'string' && s.thumbnail.match(/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([a-zA-Z0-9_-]{11})\//);
+    if (s.thumbnail && !storedYt) return s;
+    const id = storedYt ? storedYt[1] : extractYouTubeId(s.url);
+    if (!id) return { ...s, thumbAvailable: false };
+    const alive = await isThumbAlive(id);
+    return { ...s, thumbAvailable: alive, thumbnail: alive ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : null };
+  }));
+}
+
 export async function GET() {
   const CACHE_KEY = 'api_live_tv_config_v2';
   const cachedData = getCache(CACHE_KEY);
@@ -243,7 +287,7 @@ export async function GET() {
     // Overlay or prepend custom channels
     customStreams.forEach((ch) => streamMap.set(ch.id, { ...ch, isLive: true, isActive: true }));
 
-    const allStreams = Array.from(streamMap.values());
+    const allStreams = await annotateThumbnails(Array.from(streamMap.values()));
 
     const responseData = {
       enabled,

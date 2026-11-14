@@ -44,6 +44,38 @@ const extractYouTubeId = (url) => {
   return null;
 };
 
+/* Thumbnail with a branded fallback: used when the YouTube video no longer exists
+   (server marks thumbAvailable=false) or YouTube returns its 120px grey placeholder. */
+const ChannelThumb = ({ channel, src, className }) => {
+  const [dead, setDead] = useState(!src || channel.thumbAvailable === false)
+  if (dead) {
+    const name = String(channel.channelName || channel.title || 'Live')
+    let h = 0
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360
+    return (
+      <div
+        className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-white select-none"
+        style={{ background: `radial-gradient(120% 90% at 20% 10%, hsl(${h} 70% 42%) 0%, hsl(${(h + 40) % 360} 65% 22%) 55%, #0b0b0f 100%)` }}
+      >
+        <span className="w-9 h-9 rounded-full bg-white/15 backdrop-blur flex items-center justify-center ring-1 ring-white/25">
+          <Radio className="w-4 h-4" />
+        </span>
+        <span className="px-3 text-center text-[11px] font-bold leading-tight line-clamp-2 drop-shadow">{name}</span>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={src}
+      alt={channel.title}
+      loading="lazy"
+      className={className}
+      onLoad={(e) => { if (e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalWidth <= 120) setDead(true) }}
+      onError={() => setDead(true)}
+    />
+  )
+}
+
 const CATEGORIES = [
   { id: 'all', label: 'All', labelMr: 'सर्व', labelHi: 'सभी', Icon: Flame },
   { id: 'news', label: 'News & Politics', labelMr: 'बातम्या', labelHi: 'समाचार', Icon: Radio },
@@ -639,7 +671,7 @@ export default function LiveTVPage({ setCurrentView }) {
                   {filteredChannels.map((channel) => {
                     const cYouTubeId = extractYouTubeId(channel.url);
                     const isPlayingThis = channel.id === activeStreamId;
-                    const thumbUrl = channel.thumbnail || (cYouTubeId ? `https://img.youtube.com/vi/${cYouTubeId}/hqdefault.jpg` : '/placeholder-news.svg');
+                    const thumbUrl = channel.thumbnail || (cYouTubeId && channel.thumbAvailable !== false ? `https://i.ytimg.com/vi/${cYouTubeId}/mqdefault.jpg` : null);
 
                     return (
                       <div
@@ -657,15 +689,7 @@ export default function LiveTVPage({ setCurrentView }) {
                       >
                         {/* 16:9 Thumbnail with LIVE badge */}
                         <div className="relative w-36 aspect-video rounded-lg overflow-hidden bg-black shrink-0 shadow-sm">
-                          <img
-                            src={thumbUrl}
-                            alt={channel.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = '/placeholder-news.svg';
-                            }}
-                          />
+                          <ChannelThumb channel={channel} src={thumbUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           <span className="absolute bottom-1 left-1 bg-red-600 text-white text-[8px] font-black uppercase px-1.5 py-0.2 rounded shadow flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
                             <span>LIVE</span>
@@ -812,7 +836,7 @@ export default function LiveTVPage({ setCurrentView }) {
                   {sectionChannels.map((channel) => {
                     const cYouTubeId = extractYouTubeId(channel.url);
                     const isPlayingThis = channel.id === activeStreamId;
-                    const thumbUrl = channel.thumbnail || (cYouTubeId ? `https://img.youtube.com/vi/${cYouTubeId}/hqdefault.jpg` : '/placeholder-news.svg');
+                    const thumbUrl = channel.thumbnail || (cYouTubeId && channel.thumbAvailable !== false ? `https://i.ytimg.com/vi/${cYouTubeId}/mqdefault.jpg` : null);
 
                     return (
                       <div
@@ -828,15 +852,7 @@ export default function LiveTVPage({ setCurrentView }) {
                       >
                         {/* Video Thumbnail */}
                         <div className="relative aspect-video w-full bg-black overflow-hidden">
-                          <img
-                            src={thumbUrl}
-                            alt={channel.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src = '/placeholder-news.svg';
-                            }}
-                          />
+                          <ChannelThumb channel={channel} src={thumbUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           <span className="absolute bottom-2 left-2 bg-red-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                             <span>LIVE</span>

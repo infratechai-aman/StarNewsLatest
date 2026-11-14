@@ -147,7 +147,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                     ctx.putImageData(frame, 0, 0);
 
                     // Mark that we have at least one frame drawn
-                    if (!hasFirstFrame) setHasFirstFrame(true);
+                    setHasFirstFrame(true); // no-op after the first call (same value)
                 } catch (e) {
                     // Avoid breaking animation loop on drawing glitch
                 }
@@ -160,11 +160,10 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         const scheduleNextFrame = () => {
             if (isDestroyed || videoError) return;
 
-            if ('requestVideoFrameCallback' in HTMLVideoElement.prototype && video?.requestVideoFrameCallback) {
-                videoFrameCallbackId = video.requestVideoFrameCallback(() => {
-                    processFrame();
-                });
-            } else {
+            // rAF (not requestVideoFrameCallback): mobile Safari/Chrome never "present"
+            // frames of a visually hidden <video>, so rVFC would never fire there and the
+            // logo would stay on the static PNG. drawImage reads decoded frames directly.
+            {
                 animationFrameId = requestAnimationFrame((timestamp) => {
                     if (timestamp - lastFrameTime >= 40) {
                         lastFrameTime = timestamp;
@@ -218,12 +217,12 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                         loop
                         muted
                         playsInline
-                        preload="metadata"
+                        preload="auto"
                         onError={() => {
                             // Silently fall back to clean logo without uncaught error
                             setVideoError(true);
                         }}
-                        style={{ position: 'absolute', inset: 0, opacity: 0.001, pointerEvents: 'none', zIndex: -10 }}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.001, pointerEvents: 'none' }}
                     />
                     <canvas
                         ref={canvasRef}

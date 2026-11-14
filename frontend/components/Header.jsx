@@ -1137,12 +1137,9 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)}></div>
             <div className="relative bg-white w-[280px] h-full shadow-2xl overflow-y-auto animate-in slide-in-from-left duration-300">
               <div className="p-5 border-b flex justify-between items-center bg-gray-50">
-                <img
-                  src="/starnews-logo.png"
-                  onError={(e) => e.target.style.display = 'none'}
-                  alt="Star News"
-                  className="h-10 w-auto object-contain"
-                />
+                <div className="w-[120px] h-10 relative overflow-hidden flex items-center justify-center">
+                  <VideoLogo className="w-full h-full" />
+                </div>
                 <span className="font-bold text-lg text-gray-900 absolute left-1/2 -translate-x-1/2">{t('menu') || (language === 'mr' ? 'मेनू' : language === 'hi' ? 'मेनू' : 'Menu')}</span>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full hover:bg-gray-200 transition-colors"><X className="h-5 w-5 text-gray-600" /></button>
               </div>

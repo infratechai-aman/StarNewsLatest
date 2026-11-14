@@ -24,6 +24,7 @@ const EnewspaperPage = () => {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [showThumbnails, setShowThumbnails] = useState(false)
+  const [calMonth, setCalMonth] = useState(null) // { y, m } shown in the edition calendar
 
   const containerRef = useRef(null)
   const pageStripRef = useRef(null)
@@ -247,6 +248,38 @@ const EnewspaperPage = () => {
     return new Date(date).toLocaleDateString(loc, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
   }
 
+  // Edition date helpers (real data, no hard-coded dates)
+  const paperDate = (p) => {
+    const raw = p?.editionDate || p?.publishDate || p?.createdAt
+    const d = raw ? new Date(raw) : null
+    return d && !isNaN(d) ? d : null
+  }
+  const dayKey = (d) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  const editionsByDay = new Map()
+  newspapers.forEach((p) => { const d = paperDate(p); if (d && !editionsByDay.has(dayKey(d))) editionsByDay.set(dayKey(d), p) })
+  const selDate = paperDate(selectedPaper)
+  const viewMonth = calMonth || (selDate ? { y: selDate.getFullYear(), m: selDate.getMonth() } : { y: new Date().getFullYear(), m: new Date().getMonth() })
+  const monthLabel = `${(MONTH_NAMES[language] || MONTH_NAMES.en)[viewMonth.m]} ${viewMonth.y}`
+  const firstWeekday = new Date(viewMonth.y, viewMonth.m, 1).getDay()
+  const daysInMonth = new Date(viewMonth.y, viewMonth.m + 1, 0).getDate()
+  const today = new Date()
+  const shiftMonth = (delta) => {
+    const d = new Date(viewMonth.y, viewMonth.m + delta, 1)
+    setCalMonth({ y: d.getFullYear(), m: d.getMonth() })
+  }
+  const longDate = (d) => d
+    ? `${(DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()]}, ${d.getDate()} ${(MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]} ${d.getFullYear()}`
+    : ''
+  const openPaper = (p) => {
+    if (!p) return
+    setSelectedPaper(p)
+    setCurrentPage(0)
+    const d = paperDate(p)
+    if (d) setCalMonth({ y: d.getFullYear(), m: d.getMonth() })
+  }
+  const pagesWord = (n) => language === 'mr' ? 'पृष्ठे' : language === 'hi' ? 'पृष्ठ' : (n === 1 ? 'Page' : 'Pages')
+  const noOtherText = language === 'mr' ? 'इतर आवृत्त्या नाहीत' : language === 'hi' ? 'कोई अन्य संस्करण नहीं' : 'No other editions yet'
+
   // ─── Loading skeleton ───
   if (loading) {
     return (
@@ -323,11 +356,9 @@ const EnewspaperPage = () => {
               </div>
               <div className="p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <button className="text-gray-400 hover:text-gray-900"><ChevronLeft className="w-4 h-4" /></button>
-                  <span className="font-bold text-sm text-gray-900">
-                    {(MONTH_NAMES[language] || MONTH_NAMES.en)[8]} 2026
-                  </span>
-                  <button className="text-gray-400 hover:text-gray-900"><ChevronRight className="w-4 h-4" /></button>
+                  <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+                  <span className="font-bold text-sm text-gray-900 tabular-nums">{monthLabel}</span>
+                  <button onClick={() => shiftMonth(1)} aria-label="Next month" className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"><ChevronRight className="w-4 h-4" /></button>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-[11px] mb-2">
                   {(CALENDAR_DAY_HEADERS[language] || CALENDAR_DAY_HEADERS.en).map(d => (
@@ -335,11 +366,29 @@ const EnewspaperPage = () => {
                   ))}
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
-                  {Array.from({length: 30}, (_,i) => i+1).map(d => (
-                    <button key={d} className={`w-7 h-7 rounded-full flex items-center justify-center mx-auto transition-colors ${d === 16 ? 'bg-red-600 text-white font-bold' : d > 16 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}>
-                      {d}
-                    </button>
-                  ))}
+                  {Array.from({ length: firstWeekday }, (_, i) => <span key={`pad-${i}`} />)}
+                  {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
+                    const date = new Date(viewMonth.y, viewMonth.m, d)
+                    const edition = editionsByDay.get(dayKey(date))
+                    const isSelected = selDate && dayKey(selDate) === dayKey(date)
+                    const isToday = dayKey(today) === dayKey(date)
+                    return (
+                      <button
+                        key={d}
+                        disabled={!edition}
+                        onClick={() => openPaper(edition)}
+                        title={edition ? (edition.title || 'Edition') : undefined}
+                        className={`relative w-7 h-7 rounded-full flex items-center justify-center mx-auto tabular-nums transition-colors ${
+                          isSelected ? 'bg-red-600 text-white font-bold shadow-sm'
+                            : edition ? 'text-gray-900 font-bold hover:bg-red-50 hover:text-red-600'
+                            : 'text-gray-300 cursor-default'
+                        } ${isToday && !isSelected ? 'ring-1 ring-red-300' : ''}`}
+                      >
+                        {d}
+                        {edition && !isSelected && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-500" />}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -351,19 +400,15 @@ const EnewspaperPage = () => {
                 <h3 className="font-black text-sm text-gray-900">{t('quickAccess') || 'Quick Access'}</h3>
               </div>
               <div className="p-2 space-y-1">
-                {[
-                  { name: t('frontPage') || 'Front Page', pages: 'Page 1', active: true },
-                  { name: t('nation') || 'National', pages: 'Pages 2-4' },
-                  { name: t('maharashtra') || 'Maharashtra', pages: 'Pages 5-7' },
-                  { name: t('cityNews') || 'City News', pages: 'Pages 8-10' },
-                  { name: t('business') || 'Business & Economy', pages: 'Pages 11-12' },
-                  { name: t('sports') || 'Sports', pages: 'Pages 13-14' },
-                  { name: t('entertainment') || 'Entertainment', pages: 'Pages 15-16' },
-                  { name: t('editorial') || 'Editorial & Opinion', pages: 'Pages 17-18' },
-                ].map(item => (
-                  <button key={item.name} className={`w-full text-left px-3 py-2 rounded-lg flex flex-col transition-colors ${item.active ? 'bg-red-600 text-white' : 'hover:bg-gray-50 text-gray-700'}`}>
-                    <span className="font-bold text-sm">{item.name}</span>
-                    <span className={`text-[10px] ${item.active ? 'text-red-200' : 'text-gray-500'}`}>{item.pages}</span>
+                {Array.from({ length: totalPages || 1 }, (_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToPage(idx)}
+                    disabled={idx >= pageImages.length}
+                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors disabled:opacity-40 ${currentPage === idx ? 'bg-red-600 text-white' : 'hover:bg-gray-50 text-gray-700'}`}
+                  >
+                    <span className="font-bold text-sm">{idx === 0 ? (t('frontPage') || 'Front Page') : `${pagesWord(1)} ${idx + 1}`}</span>
+                    <span className={`text-[10px] tabular-nums ${currentPage === idx ? 'text-red-100' : 'text-gray-400'}`}>{idx + 1}/{totalPages || 1}</span>
                   </button>
                 ))}
               </div>
@@ -386,8 +431,8 @@ const EnewspaperPage = () => {
             
             {/* Center (Title/Edition) */}
             <div className="hidden lg:flex items-center gap-3 bg-[#2a2a2a] px-5 py-1.5 rounded-full border border-gray-700">
-              <span className="text-[10px] font-black text-gray-400 tracking-wider">COURT ORDER</span>
-              <span className="text-[11px] font-bold text-white">Thu, 9 Apr, 2026</span>
+              <span className="text-[10px] font-black text-gray-400 tracking-wider uppercase max-w-[180px] truncate">{selectedPaper?.title || 'Edition'}</span>
+              <span className="text-[11px] font-bold text-white tabular-nums">{getFormattedDate(paperDate(selectedPaper))}</span>
             </div>
 
             {/* Right Tools */}
@@ -486,19 +531,19 @@ const EnewspaperPage = () => {
                 <h3 className="font-black text-sm text-gray-900">{t('todaysEdition') || "Today's Edition"}</h3>
               </div>
               <p className="text-xs font-bold text-gray-800 mb-1">
-                {(DAY_NAMES[language] || DAY_NAMES.en)[3]}, 16 {(MONTH_NAMES[language] || MONTH_NAMES.en)[8]} 2026
+                {longDate(paperDate(newspapers[0]))}
               </p>
               <p className="text-[11px] text-gray-500 mb-1">
                 {getLocalizedCity('Pune', language)} {t('edition') || 'Edition'}
               </p>
               <p className="text-[11px] text-gray-400 mb-5">
-                {language === 'mr' ? '12 पृष्ठे | ₹5' : language === 'hi' ? '12 पृष्ठ | ₹5' : '12 Pages | ₹5'}
+                {newspapers[0]?.title || ''}{selectedPaper?.id === newspapers[0]?.id && totalPages ? ` • ${totalPages} ${pagesWord(totalPages)}` : ''}
               </p>
               
-              <button className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
+              <button onClick={() => openPaper(newspapers[0])} className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
                 <BookOpen className="w-4 h-4" /> {t('readNow') || 'Read Now'}
               </button>
-              <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold py-2.5 rounded-lg transition-colors">
+              <button onClick={() => newspapers[0] && handleDownload(newspapers[0])} className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold py-2.5 rounded-lg transition-colors">
                 <Download className="w-4 h-4" /> {t('downloadPdf') || 'Download PDF'}
               </button>
             </div>
@@ -514,28 +559,24 @@ const EnewspaperPage = () => {
               </div>
               
               <div className="space-y-4">
-                {[
-                  { dayOffset: 1, img: '/epaper-thumb-1.jpg' },
-                  { dayOffset: 2, img: '/epaper-thumb-2.jpg' },
-                  { dayOffset: 3, img: '/epaper-thumb-3.jpg' },
-                  { dayOffset: 4, img: '/epaper-thumb-4.jpg' },
-                  { dayOffset: 5, img: '/epaper-thumb-5.jpg' },
-                ].map(ed => {
-                  const d = new Date()
-                  d.setDate(d.getDate() - ed.dayOffset)
-                  const dayName = (DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()]
-                  const monthName = (MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]
-                  const dateStr = `${d.getDate()} ${monthName} ${d.getFullYear()}`
+                {newspapers.slice(1, 7).length === 0 && (
+                  <p className="text-xs text-gray-400">{noOtherText}</p>
+                )}
+                {newspapers.slice(1, 7).map(p => {
+                  const d = paperDate(p)
+                  const active = selectedPaper?.id === p.id
                   return (
-                    <div key={ed.dayOffset} className="flex gap-3 cursor-pointer group">
-                      <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded overflow-hidden shadow-sm group-hover:border-red-400 transition-colors shrink-0 flex items-center justify-center">
-                        <Newspaper className="w-5 h-5 text-gray-300" />
+                    <button key={p.id} onClick={() => openPaper(p)} className="w-full text-left flex gap-3 group">
+                      <div className={`w-12 h-16 rounded-md overflow-hidden shrink-0 flex items-center justify-center border transition-colors ${active ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 group-hover:border-red-300'}`}>
+                        {p.thumbnailUrl
+                          ? <img src={p.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                          : <Newspaper className={`w-5 h-5 ${active ? 'text-red-500' : 'text-gray-300'}`} />}
                       </div>
-                      <div className="flex-1 py-1">
-                        <h4 className="font-black text-xs text-gray-900 group-hover:text-red-600 transition-colors">{dayName}</h4>
-                        <p className="text-[10px] text-gray-500">{dateStr}</p>
+                      <div className="flex-1 py-1 min-w-0">
+                        <h4 className={`font-black text-xs truncate transition-colors ${active ? 'text-red-600' : 'text-gray-900 group-hover:text-red-600'}`}>{d ? (DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()] : (p.title || 'Edition')}</h4>
+                        <p className="text-[10px] text-gray-500 truncate">{d ? `${d.getDate()} ${(MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]} ${d.getFullYear()}` : ''}{p.title ? ` • ${p.title}` : ''}</p>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>
