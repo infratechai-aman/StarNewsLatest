@@ -60,7 +60,7 @@ export async function POST(request) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
         const body = await request.json();
-        const { name, description, category, address, city, phone, email, website, image, coverImage, images, ownerId } = body;
+        const { name, description, category, address, city, area, phone, whatsapp, email, website, image, coverImage, images, ownerId, googleMapsLink } = body;
 
         if (!name) {
             return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -72,6 +72,9 @@ export async function POST(request) {
             category: category || '',
             address: address || '',
             city: city || '',
+            area: area || '',
+            whatsapp: whatsapp || '',
+            googleMapsLink: googleMapsLink || '',
             phone: phone || '',
             email: email || '',
             website: website || '',
@@ -88,6 +91,7 @@ export async function POST(request) {
         const docRef = await db.collection('businesses').add(newBusiness);
         await docRef.update({ id: docRef.id });
         purgeCache('admin_businesses_list'); // Invalidate admin list cache
+        purgeCache('businesses'); // public directory list
 
         return NextResponse.json({ id: docRef.id, ...newBusiness });
     } catch (error) {

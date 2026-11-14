@@ -119,7 +119,9 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
       )
     }
 
-    if (selectedLocality !== 'All Localities') {
+    if (selectedLocality === 'Beyond Pune') {
+      filtered = filtered.filter(b => !`${b.area || ''} ${b.address || ''} ${b.city || ''}`.toLowerCase().includes('pune'))
+    } else if (selectedLocality !== 'All Localities') {
       const targetLocality = selectedLocality.toLowerCase();
       filtered = filtered.filter(b =>
         (b.area || '').toLowerCase().includes(targetLocality) ||
@@ -205,8 +207,8 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
       {/* ─── SEARCH BAR ─── */}
       <div className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-6 py-4">
-          <div className="flex gap-3">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex gap-2 sm:gap-3">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -216,12 +218,13 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 text-sm text-gray-600">
+            <div className="hidden sm:flex items-center gap-2 border border-gray-200 rounded-lg px-3 text-sm text-gray-600">
               <MapPin className="w-4 h-4 text-gray-400" />
               <span>Pune, Maharashtra</span>
             </div>
-            <Button className="h-11 px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg">
-              {t('search') || 'Search'} →
+            <Button aria-label="Search" className="h-11 px-4 sm:px-6 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shrink-0">
+              <Search className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline">{t('search') || 'Search'} →</span>
             </Button>
           </div>
         </div>
@@ -229,23 +232,25 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
 
       {/* ─── PUNE LOCALITY FILTER CHIPS (Camp & Kondhwa Focus) ─── */}
       <div className="bg-slate-50 border-b border-gray-200 py-3">
-        <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-black text-gray-500 uppercase tracking-wider flex items-center gap-1">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-nowrap sm:flex-wrap overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            <span className="shrink-0 text-xs font-black text-gray-500 uppercase tracking-wider flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-red-600" />
               Localities:
             </span>
             {[
-              { id: 'All Localities', label: 'All Pune (16+ Listings)', count: businessList.length },
-              { id: 'Camp', label: '📍 Camp (East St / MG Rd)', count: businessList.filter(b => (b.area||'').toLowerCase().includes('camp')).length },
-              { id: 'Kondhwa', label: '📍 Kondhwa (Kausar Baugh / Salunke Vihar / NIBM)', count: businessList.filter(b => (b.area||'').toLowerCase().includes('kondhwa')).length },
+              { id: 'All Localities', label: 'All', count: businessList.length },
+              { id: 'Kondhwa', label: '📍 Kondhwa', count: businessList.filter(b => `${b.area||''} ${b.address||''}`.toLowerCase().includes('kondhwa')).length },
+              { id: 'Camp', label: '📍 Camp', count: businessList.filter(b => `${b.area||''} ${b.address||''}`.toLowerCase().includes('camp')).length },
+              { id: 'Pune', label: '🏙️ Pune City', count: businessList.filter(b => `${b.area||''} ${b.address||''} ${b.city||''}`.toLowerCase().includes('pune')).length },
+              { id: 'Beyond Pune', label: '🗺️ Maharashtra', count: businessList.filter(b => !`${b.area||''} ${b.address||''} ${b.city||''}`.toLowerCase().includes('pune')).length },
             ].map((loc) => {
               const isLocActive = selectedLocality === loc.id
               return (
                 <button
                   key={loc.id}
                   onClick={() => setSelectedLocality(loc.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border ${
+                  className={`shrink-0 whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm border ${
                     isLocActive
                       ? 'bg-red-600 text-white border-red-600 shadow-md ring-2 ring-red-200'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -263,17 +268,17 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
           </div>
 
           {/* Admin Verified Status Badge */}
-          <div className="hidden sm:flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-black border border-emerald-200">
+          <div className="hidden lg:flex shrink-0 items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-black border border-emerald-200">
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Kondhwa & Camp Verified by Admin Panel</span>
+            <span>Listings verified by StarNews</span>
           </div>
         </div>
       </div>
 
       {/* ─── CATEGORY TABS ─── */}
-      <div className="border-b border-gray-100 bg-white shadow-sm pt-5 pb-5">
-        <div className="max-w-[1400px] mx-auto px-6">
-          <div className="flex items-center gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+      <div className="border-b border-gray-100 bg-white shadow-sm py-3 sm:py-5">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-1 sm:pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
             {[
               { icon: <LayoutGrid className="w-5 h-5 text-indigo-500" />, label: 'All Categories', color: 'bg-indigo-50' },
               { icon: <Utensils className="w-5 h-5 text-orange-500" />, label: 'Restaurants & Cafes', color: 'bg-orange-50' },
@@ -293,11 +298,11 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 <button
                   key={cat.label}
                   onClick={() => setSelectedCategory(i === 0 ? 'All Categories' : cat.label)}
-                  className={`shrink-0 flex flex-col items-center justify-center gap-2 min-w-[105px] h-[90px] rounded-[18px] border transition-all duration-300 ${
+                  className={`shrink-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2 min-w-[82px] h-[76px] sm:min-w-[105px] sm:h-[90px] rounded-2xl sm:rounded-[18px] border transition-all duration-300 ${
                     isActive ? 'border-red-500 bg-red-50/50 shadow-sm text-red-600' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md hover:-translate-y-1 text-gray-700'
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
                     {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
                   </div>
                   <span className={`text-[10px] font-bold tracking-wide ${isActive ? 'text-red-600' : 'text-gray-600'} text-center px-1 leading-tight`}>{getCategoryLabel(cat.label)}</span>
@@ -309,11 +314,11 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
       </div>
 
       {/* ─── MAIN LAYOUT ─── */}
-      <div className="max-w-[1400px] mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-6 lg:gap-8">
 
-          {/* LEFT: Filters */}
-          <div className="space-y-5">
+          {/* LEFT: Filters (desktop; phones use the locality chips + category tiles above) */}
+          <div className="hidden lg:block space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="font-black text-sm text-gray-900">{t('filters') || 'Filters'}</h3>
               <button 
@@ -332,9 +337,11 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 value={selectedLocality}
                 onChange={(e) => setSelectedLocality(e.target.value)}
               >
-                <option value="All Localities">All Pune Localities (16+)</option>
-                <option value="Camp">📍 Camp (East St & MG Rd)</option>
-                <option value="Kondhwa">📍 Kondhwa (Kausar Baugh & NIBM)</option>
+                <option value="All Localities">All Localities</option>
+                <option value="Kondhwa">📍 Kondhwa</option>
+                <option value="Camp">📍 Camp</option>
+                <option value="Pune">🏙️ Pune City</option>
+                <option value="Beyond Pune">🗺️ Rest of Maharashtra</option>
               </select>
             </div>
 
@@ -383,7 +390,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
           {/* CENTER: Results Grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm text-gray-500">{t('showing') || 'Showing'} 1-12 {t('of') || 'of'} {filteredBusinesses.length} {t('businesses') || 'businesses'}</p>
+              <p className="text-sm text-gray-500 tabular-nums">{t('showing') || 'Showing'} <span className="font-bold text-gray-900">{filteredBusinesses.length}</span> {t('businesses') || 'businesses'}</p>
               <div className="flex items-center gap-2">
                 <select className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-700">
                   <option>{t('mostRelevant') || 'Most Relevant'}</option>
@@ -393,7 +400,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
               {filteredBusinesses.map((business) => {
                 const rawPhone = business.phone || business.whatsapp || '';
                 const cleanPhone = rawPhone.replace(/[^0-9]/g, '');
@@ -432,12 +439,6 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                           </span>
                         </div>
 
-                        {/* Bottom-left on Image: Open Badge */}
-                        <div className="absolute bottom-2 left-2.5 flex items-center gap-1.5">
-                          <span className="bg-green-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded shadow">
-                            Open Now
-                          </span>
-                        </div>
                       </div>
 
                       {/* Business Core Info */}
@@ -464,16 +465,18 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                           )}
                         </div>
 
-                        {/* Google Rating & Review Counter */}
+                        {/* Rating: only when the listing has a real one */}
+                        {Number(business.rating) > 0 && (
                         <div className="flex items-center gap-1.5 bg-amber-50/70 border border-amber-200/60 px-2.5 py-1 rounded-lg w-fit">
                           <div className="flex items-center">
                             {[1,2,3,4,5].map(s => (
-                              <Star key={s} className={`w-3.5 h-3.5 ${s <= Math.round(business.rating || 4.5) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} />
+                              <Star key={s} className={`w-3.5 h-3.5 ${s <= Math.round(business.rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`} />
                             ))}
                           </div>
-                          <span className="text-xs font-black text-amber-900">{business.rating || '4.7'}</span>
-                          <span className="text-[11px] text-amber-700 font-medium">({business.reviewCount ? `${(business.reviewCount).toLocaleString()}+ Google reviews` : 'Verified'})</span>
+                          <span className="text-xs font-black text-amber-900 tabular-nums">{business.rating}</span>
+                          {business.reviewCount > 0 && <span className="text-[11px] text-amber-700 font-medium tabular-nums">({Number(business.reviewCount).toLocaleString()} reviews)</span>}
                         </div>
+                        )}
 
                         {/* Address */}
                         <p className="text-xs text-gray-600 flex items-start gap-1.5 line-clamp-1">
@@ -505,8 +508,9 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                             <span>Call</span>
                           </a>
                         ) : (
-                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-400 text-[11px] font-medium flex items-center justify-center">
-                            <span>Direct</span>
+                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-500 text-[11px] font-bold flex items-center justify-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            <span>Profile</span>
                           </div>
                         )}
 
@@ -524,8 +528,9 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                             <span>Chat</span>
                           </a>
                         ) : (
-                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-400 text-[11px] font-medium flex items-center justify-center">
-                            <span>Inquire</span>
+                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-500 text-[11px] font-bold flex items-center justify-center gap-1">
+                            <ChevronRight className="w-3 h-3" />
+                            <span>Details</span>
                           </div>
                         )}
 
@@ -546,7 +551,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                       <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-50">
                         <span className="flex items-center gap-1 text-emerald-600 font-bold">
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>Updated via Admin Panel</span>
+                          <span>{business.area || 'Verified listing'}</span>
                         </span>
                         <span className="hover:text-red-600 font-bold flex items-center gap-0.5">
                           <span>View Profile</span>
