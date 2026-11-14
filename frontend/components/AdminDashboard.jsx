@@ -5728,7 +5728,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                               
                               <div className="flex flex-wrap items-center gap-2 mb-3">
                                 <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 font-medium">
-                                  {getTextValue(article.category) || article.genre || 'Article'}
+                                  {getTextValue(article.category) || getTextValue(article.categoryName) || article.categoryId || 'Article'}
                                 </Badge>
                                 {article.city && (
                                   <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200 font-semibold flex items-center gap-1">
