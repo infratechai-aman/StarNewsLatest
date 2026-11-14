@@ -289,7 +289,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         videoUrl: newsFormData.youtubeUrl,
         thumbnailUrl: thumbnailUrl,
         metaDescription: newsFormData.metaDescription,
-        tags: newsFormData.tags ? newsFormData.tags.split(',').map(t => t.trim()) : [],
+        tags: newsFormData.tags ? newsFormData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         featured: newsFormData.featured,
         showOnHome: newsFormData.showOnHome,
         authorName: newsFormData.authorName || user?.name || 'Reporter'
@@ -312,7 +312,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         })
         setActiveTab('my-news')
       } else {
-        const errorData = await res.json()
+        const errorData = await res.json().catch(() => ({}))
         alert('Failed to submit: ' + (errorData.error || 'Unknown error'))
       }
     } catch (err) {
@@ -360,7 +360,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       })
 
       if (!uploadRes.ok) {
-        const err = await uploadRes.json()
+        const err = await uploadRes.json().catch(() => ({}))
         throw new Error(err.error || 'Upload failed')
       }
 
@@ -387,6 +387,9 @@ const ReporterDashboard = ({ user, onLogout }) => {
         if (fileInputRef.current) fileInputRef.current.value = ''
         setPaperSaved(true)
         setTimeout(() => setPaperSaved(false), 3000)
+      } else {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || `Failed to save E-Newspaper (status ${res.status})`)
       }
     } catch (err) {
       alert(err.message || 'Failed to upload')
@@ -399,12 +402,17 @@ const ReporterDashboard = ({ user, onLogout }) => {
   const handleDeletePaper = async (id) => {
     if (!confirm('Are you sure you want to delete this E-Newspaper?')) return
     try {
-      await authenticatedFetch(`/api/reporter/enewspaper/${id}`, {
+      const res = await authenticatedFetch(`/api/reporter/enewspaper/${id}`, {
         method: 'DELETE'
       })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Delete failed')
+      }
       await fetchMyPapers()
     } catch (err) {
       console.error('Failed to delete:', err)
+      alert(err.message || 'Failed to delete E-Newspaper')
     }
   }
 
@@ -471,7 +479,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
     <div className="h-screen bg-[#F8FAFC] flex flex-col antialiased text-gray-900 overflow-hidden">
       
       {/* ─── TOP NAVBAR (Matching Reference Image 3) ─── */}
-      <header className="bg-white sticky top-0 z-40 border-b border-gray-200/80 shadow-xs">
+      <header className="bg-white/80 backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-40 border-b border-black/[0.06] shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           
           {/* Brand & Portal Title */}

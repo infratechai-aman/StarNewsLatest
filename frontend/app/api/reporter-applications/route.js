@@ -12,7 +12,10 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
 
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { fullName, phone, email, experience, portfolio, reason } = body;
         if (!fullName || !phone || !email) {
             return NextResponse.json({ error: 'Name, phone, and email are required' }, { status: 400 });
@@ -124,7 +127,10 @@ export async function PUT(request) {
             return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
         }
 
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { id, status, adminNote, password, createAccount, loginEmail } = body;
 
         const validStatuses = ['PENDING', 'CONTACTED', 'APPROVED', 'REJECTED'];

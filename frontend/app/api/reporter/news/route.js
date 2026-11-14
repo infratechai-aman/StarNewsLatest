@@ -1,6 +1,10 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
+
+const purgeNewsCaches = () => { ['news_', 'admin_news_list_', 'admin_pending', 'admin_stats', 'admin_reporters_with_stats'].forEach(k => purgeCache(k)); };
+
 import { translateText } from '@/lib/translation';
 
 // GET: My Submitted News
@@ -100,6 +104,7 @@ export async function POST(request) {
 
         const docRef = await db.collection('news_articles').add(newArticle);
         await docRef.update({ id: docRef.id });
+        purgeNewsCaches();
 
         return NextResponse.json({ id: docRef.id, ...newArticle });
     } catch (error) {

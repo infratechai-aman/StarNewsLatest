@@ -521,7 +521,8 @@ const EnewspaperPage = () => {
                   { dayOffset: 4, img: '/epaper-thumb-4.jpg' },
                   { dayOffset: 5, img: '/epaper-thumb-5.jpg' },
                 ].map(ed => {
-                  const d = new Date(2026, 8, 16 - ed.dayOffset)
+                  const d = new Date()
+                  d.setDate(d.getDate() - ed.dayOffset)
                   const dayName = (DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()]
                   const monthName = (MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]
                   const dateStr = `${d.getDate()} ${monthName} ${d.getFullYear()}`

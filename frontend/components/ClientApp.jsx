@@ -1,5 +1,6 @@
 'use client'
 
+import MotionLayer from '@/components/MotionLayer'
 import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import HomePage from '@/components/HomePage'
@@ -284,7 +285,7 @@ const ClientApp = ({ initialNewsData }) => {
 
     return (
         <LanguageProvider>
-            <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+            <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
                 <Header
                     user={user}
                     currentView={currentView}
@@ -294,9 +295,12 @@ const ClientApp = ({ initialNewsData }) => {
                 />
 
                 <BreakingNewsTicker />
+                <MotionLayer />
 
                 <ErrorBoundary fallbackMessage="This section failed to load. Please try refreshing.">
-                <main className={['home', 'live-tv', 'news', 'news-detail', 'classifieds', 'classified-detail', 'city', 'enewspaper', 'businesses', 'business-detail', 'shorts', 'daily-deals'].includes(currentView) ? "w-full min-w-0 overflow-x-hidden" : "container py-6 min-w-0"}>
+                <main className={['home', 'live-tv', 'news', 'news-detail', 'classifieds', 'classified-detail', 'city', 'enewspaper', 'businesses', 'business-detail', 'shorts', 'daily-deals'].includes(currentView) ? "w-full min-w-0 overflow-x-hidden supports-[overflow:clip]:overflow-x-clip" : "container py-6 min-w-0"}>
+                  {/* key remounts the wrapper on every view change so the page-enter transition replays */}
+                  <div key={currentView} className="view-enter">
                     {currentView === 'home' && <HomePage setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} newsData={newsData} setNewsData={setNewsData} />}
                     {currentView === 'news' && <NewsPage setSelectedArticle={setSelectedArticle} setCurrentView={handleSetCurrentView} newsPageState={newsPageState} setNewsPageState={setNewsPageState} />}
                     {currentView === 'news-detail' && selectedArticle && <NewsDetailPage article={selectedArticle} setCurrentView={handleSetCurrentView} setSelectedArticle={setSelectedArticle} />}
@@ -315,6 +319,7 @@ const ClientApp = ({ initialNewsData }) => {
                     {currentView === 'login' && <LoginPage setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
                     {currentView === 'register' && <RegisterPage setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
                     {currentView === 'force-password-change' && user?.requirePasswordChange && <ForcePasswordChange user={user} setUser={setUser} setCurrentView={handleSetCurrentView} toast={toast} />}
+                  </div>
                 </main>
                 </ErrorBoundary>
 

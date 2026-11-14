@@ -30,8 +30,10 @@ export async function GET(request) {
             return response;
         }
 
-        const limit = parseInt(limitParam || (queryParam ? '100' : '50'))
-        const page = parseInt(pageParam || '1')
+        // NaN-safe + clamped: a bad or huge ?limit must not 500 or trigger a full-collection read
+        const defaultLimit = queryParam ? 100 : 50
+        const limit = Math.min(200, Math.max(1, parseInt(limitParam, 10) || defaultLimit))
+        const page = Math.max(1, parseInt(pageParam, 10) || 1)
 
         let query = db.collection('news_articles')
             .where('approvalStatus', '==', 'approved')

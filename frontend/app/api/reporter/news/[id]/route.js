@@ -1,6 +1,10 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { purgeCache } from '@/lib/cache';
+
+const purgeNewsCaches = () => { ['news_', 'admin_news_list_', 'admin_pending', 'admin_stats', 'admin_reporters_with_stats'].forEach(k => purgeCache(k)); };
+
 
 // Whitelist of allowed fields for reporter news updates
 const ALLOWED_UPDATE_FIELDS = [
@@ -35,6 +39,7 @@ export async function DELETE(request, { params }) {
         }
 
         await docRef.delete();
+        purgeNewsCaches();
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Reporter news DELETE error:', error.message);
@@ -82,6 +87,7 @@ export async function PUT(request, { params }) {
         updateData.updatedAt = new Date().toISOString();
 
         await docRef.update(updateData);
+        purgeNewsCaches();
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Reporter news PUT error:', error.message);

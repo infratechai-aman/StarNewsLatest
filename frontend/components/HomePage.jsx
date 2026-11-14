@@ -814,7 +814,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <img
                   src={premiumAdSettings.imageUrl}
                   alt={premiumAdSettings.title || 'Advertisement'}
-                  className="w-full h-auto object-contain max-h-[150px] md:max-h-full group-hover:scale-105 transition-transform duration-[2000ms]"
+                  className="w-full h-auto object-contain max-h-[150px] md:max-h-full group-hover:scale-105 transition-transform [transition-duration:2000ms]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 pointer-events-none" />
               </a>

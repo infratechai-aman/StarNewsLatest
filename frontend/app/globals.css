@@ -8,6 +8,7 @@ body {
   padding: 0;
   max-width: 100vw;
   overflow-x: hidden;
+  overflow-x: clip; /* clip (not hidden) keeps position:sticky working */
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
@@ -148,6 +149,135 @@ code {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* =============================================
+   UI POLISH LAYER (design-engineering details)
+   Interaction feel only: no colour/theme changes.
+   ============================================= */
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings: balanced wrapping + slightly tighter tracking on large text */
+h1, h2, h3 {
+  text-wrap: balance;
+}
+/* Apple-style size-specific tracking: tighter as type grows, body near 0 */
+body {
+  font-optical-sizing: auto;
+  font-feature-settings: "kern" 1;
+}
+h1 { letter-spacing: -0.022em; line-height: 1.15; }
+h2 { letter-spacing: -0.017em; line-height: 1.2; }
+h3 { letter-spacing: -0.011em; }
+.text-xs, .text-\[10px\], .text-\[11px\] { letter-spacing: 0.005em; }
+
+/* Refined, unobtrusive scrollbars (desktop) */
+@media (hover: hover) and (pointer: fine) {
+  * { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent; }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.16);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.3); }
+}
+
+/* Used by horizontal strips in Header/HomePage (was referenced but never defined) */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none !important; }
+.scrollbar-hide::-webkit-scrollbar { display: none !important; }
+
+/* Smooth in-page scrolling (disabled under reduced motion below) */
+html { scroll-behavior: smooth; }
+p {
+  text-wrap: pretty;
+}
+
+/* Press feedback: buttons confirm the tap. Uses the independent `scale`
+   property so it composes with any existing Tailwind transform/translate. */
+:where(button:not(:disabled), [role="button"]) {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, scale;
+  transition-timing-function: var(--ease-out);
+  transition-duration: 160ms;
+}
+/* Tailwind `transition-colors` buttons: still give the press a quick ease */
+button.transition-colors:not(:disabled) {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, scale;
+}
+button:not(:disabled):not([data-no-press]):active,
+[role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
+  scale: 0.97;
+}
+
+/* Prevent long-press text selection on buttons (feels like an app, not a page) */
+button {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Numbers that update (stats, counters, prices) don't jitter */
+.tabular-nums, [data-numeric], table td, table th {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keyboard focus is always visible, mouse focus stays clean */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* iOS: inputs under 16px zoom the page on focus */
+@media (max-width: 767px) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Mobile browsers: 100vh hides content behind the URL bar */
+@supports (height: 100dvh) {
+  .h-screen { height: 100dvh; }
+  .min-h-screen { min-height: 100dvh; }
+  .max-h-screen { max-height: 100dvh; }
+}
+
+/* Images: no ghost-drag of UI imagery, smooth decode */
+img {
+  -webkit-user-drag: none;
+}
+
+/* Respect reduced motion: keep fades, remove movement/zoom */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  button:active, [role="button"]:active { scale: 1 !important; }
+  .animate-in, .animate-out, [data-state] {
+    animation-duration: 1ms !important;
+  }
+  .news-image-container:hover img { transform: none; }
 }
 
 @layer utilities {
@@ -884,4 +1014,73 @@ main[class*="overflow-y"],
 .article-prose-content a {
   overflow-wrap: anywhere;
   word-break: break-all;
+}
+/* =============================================
+   MOTION LAYER (public website)
+   Driven by components/MotionLayer.jsx. Uses the independent
+   `translate`/`scale` properties so existing transforms are untouched.
+   ============================================= */
+
+/* Lenis smooth scrolling */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+.lenis.lenis-smooth:not(.lenis-scrolling) iframe { pointer-events: auto; }
+
+/* Page-to-page transition: soft fade, rise and de-blur.
+   `backwards` fill: nothing lingers after the animation (keeps fixed/sticky children correct). */
+.view-enter {
+  animation: view-enter 460ms var(--ease-out) backwards;
+}
+@keyframes view-enter {
+  from { opacity: 0; translate: 0 12px; filter: blur(6px); }
+  to   { opacity: 1; translate: none; filter: none; }
+}
+
+/* Scroll reveal */
+.reveal-pending {
+  opacity: 0;
+  translate: 0 22px;
+}
+.reveal-in {
+  opacity: 1;
+  translate: none;
+  transition: opacity 700ms var(--ease-out), translate 800ms var(--ease-out);
+}
+
+/* Images fade in when loaded instead of popping */
+img.img-fade { opacity: 0; transition: opacity 500ms var(--ease-out); }
+img.img-fade.img-loaded { opacity: 1; }
+
+/* Cards: gentle lift + image zoom on hover (desktop only) */
+@media (hover: hover) and (pointer: fine) {
+  :where(main .cursor-pointer:is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl), main article.cursor-pointer) {
+    transition-property: translate, box-shadow, color, background-color, border-color, opacity, transform;
+    transition-duration: 300ms;
+    transition-timing-function: var(--ease-out);
+  }
+  :where(main .cursor-pointer:is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl), main article.cursor-pointer):hover {
+    translate: 0 -3px;
+  }
+  main .cursor-pointer img:not([class*="scale"]) {
+    transition: scale 700ms var(--ease-out), opacity 500ms var(--ease-out);
+  }
+  main .cursor-pointer:hover img:not([class*="scale"]) {
+    scale: 1.035;
+  }
+}
+
+/* Links & nav: smooth colour changes everywhere */
+:where(a, nav button) {
+  transition-property: color, background-color, border-color, opacity, box-shadow, scale;
+  transition-duration: 180ms;
+  transition-timing-function: var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-enter { animation: none; }
+  .reveal-pending { opacity: 1; translate: none; }
+  img.img-fade { opacity: 1; }
 }

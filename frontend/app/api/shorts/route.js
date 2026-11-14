@@ -12,7 +12,7 @@ export async function GET(request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+        const limit = Math.min(50, Math.max(1, (parseInt(searchParams.get('limit') || '20', 10) || 20)));
 
         const cacheKey = `public_shorts_reels_l${limit}`;
         const cached = getCache(cacheKey);

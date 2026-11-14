@@ -397,7 +397,7 @@ export default function ShortsVideoPlayer({
             <div className="p-[1.5px] bg-black rounded-full">
               <div className="w-8 h-8 rounded-full overflow-hidden bg-neutral-900">
                 <img
-                  src="/star_news_logo.png"
+                  src="/starnews-logo.png"
                   alt="StarNews"
                   className="w-full h-full object-cover"
                   onError={e => {

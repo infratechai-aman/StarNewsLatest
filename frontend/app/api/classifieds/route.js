@@ -13,8 +13,8 @@ export async function GET(request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-        const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20')));
+        const page = Math.max(1, (parseInt(searchParams.get('page') || '1', 10) || 1));
+        const limit = Math.min(50, Math.max(1, (parseInt(searchParams.get('limit') || '20', 10) || 20)));
         const category = searchParams.get('category') || '';
         const afterId = searchParams.get('after') || ''; // Cursor for efficient pagination
 
@@ -105,7 +105,10 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Database not available' }, { status: 503 });
     }
     try {
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { title, description, category, price, contactName, contactPhone, phone, contactEmail, location, images, image, condition, whatsapp, sellerName } = body;
 
         if (!title || !title.trim()) {

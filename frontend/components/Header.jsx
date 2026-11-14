@@ -105,8 +105,11 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     email: '',
     address: '',
     description: '',
-    coverImage: ''
+    coverImage: '',
+    images: []
   })
+  const [uploadingBusinessImages, setUploadingBusinessImages] = useState(false)
+  const businessGalleryInputRef = useRef(null)
   const [businessCoverPreview, setBusinessCoverPreview] = useState('')
   const [submittingBusiness, setSubmittingBusiness] = useState(false)
   const businessCoverInputRef = useRef(null)
@@ -229,54 +232,46 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     return () => window.removeEventListener('openPostAdModal', handleOpen)
   }, [])
 
+  // Shared public image uploader: compresses large files, uploads, returns the hosted URL
+  const uploadPublicImage = async (file) => {
+    let fileToUpload = file
+    if (file.size > 650 * 1024) {
+      const result = await compressImageFile(file, { maxSizeKB: 650 })
+      fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+    }
+    const formDataUpload = new FormData()
+    formDataUpload.append('file', fileToUpload)
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formDataUpload
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.url) throw new Error(data.error || 'Failed to upload image')
+    return data.url
+  }
+
   // Classified Ad Image Upload
   const handleClassifiedImageUpload = async (e) => {
-    const files = Array.from(e.target.files)
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'))
+    e.target.value = ''
     if (files.length === 0) return
 
-    const totalImages = classifiedForm.images.length + files.length
-    if (totalImages > 8) {
+    if (classifiedForm.images.length + files.length > 8) {
       alert('Maximum 8 images allowed')
       return
     }
 
     for (const file of files) {
-      if (!file.type.startsWith('image/')) continue
-
       try {
-        // Auto-compress if needed
-        let fileToUpload = file
-        if (file.size > 650 * 1024) {
-          const result = await compressImageFile(file, { maxSizeKB: 650 })
-          fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
-        }
-
-        // Show preview
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          setClassifiedPreviews(prev => [...prev, event.target.result])
-        }
-        reader.readAsDataURL(fileToUpload)
-
-        const formDataUpload = new FormData()
-        formDataUpload.append('file', fileToUpload)
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
-          body: formDataUpload
-        })
-        if (res.ok) {
-          const data = await res.json()
-          setClassifiedForm(prev => ({
-            ...prev,
-            images: [...prev.images, data.url]
-          }))
-        } else {
-          const err = await res.json().catch(() => ({}))
-          alert(err.error || 'Failed to upload image')
-        }
+        const url = await uploadPublicImage(file)
+        // Keep previews and uploaded URLs in lockstep so removal by index stays correct
+        setClassifiedForm(prev => ({ ...prev, images: [...prev.images, url] }))
+        setClassifiedPreviews(prev => [...prev, url])
       } catch (err) {
         console.error('Image upload failed:', err)
+        alert(err.message || 'Failed to upload image')
       }
     }
   }
@@ -292,36 +287,52 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
   // Business Cover Image Upload
   const handleBusinessCoverUpload = async (e) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    e.target.value = ''
+    if (!file || !file.type.startsWith('image/')) return
 
+    setUploadingBusinessImages(true)
     try {
-      // Auto-compress if needed
-      let fileToUpload = file
-      if (file.size > 650 * 1024) {
-        const result = await compressImageFile(file, { maxSizeKB: 650 })
-        fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
-      }
-
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        setBusinessCoverPreview(event.target.result)
-      }
-      reader.readAsDataURL(fileToUpload)
-
-      const formDataUpload = new FormData()
-      formDataUpload.append('file', fileToUpload)
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { ...(typeof window !== 'undefined' && localStorage.getItem('token') ? { 'Authorization': `Bearer ${localStorage.getItem('token')}` } : {}) },
-        body: formDataUpload
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setBusinessForm(prev => ({ ...prev, coverImage: data.url }))
-      }
+      const url = await uploadPublicImage(file)
+      setBusinessCoverPreview(url)
+      setBusinessForm(prev => ({ ...prev, coverImage: url }))
     } catch (err) {
       console.error('Cover upload failed:', err)
+      alert(err.message || 'Failed to upload cover image')
+    } finally {
+      setUploadingBusinessImages(false)
     }
+  }
+
+  // Business Gallery (additional images) Upload
+  const MAX_BUSINESS_GALLERY = 6
+  const handleBusinessGalleryUpload = async (e) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'))
+    e.target.value = ''
+    if (files.length === 0) return
+
+    if ((businessForm.images?.length || 0) + files.length > MAX_BUSINESS_GALLERY) {
+      alert(`Maximum ${MAX_BUSINESS_GALLERY} additional images allowed`)
+      return
+    }
+
+    setUploadingBusinessImages(true)
+    try {
+      for (const file of files) {
+        try {
+          const url = await uploadPublicImage(file)
+          setBusinessForm(prev => ({ ...prev, images: [...(prev.images || []), url] }))
+        } catch (err) {
+          console.error('Gallery upload failed:', err)
+          alert(err.message || 'Failed to upload image')
+        }
+      }
+    } finally {
+      setUploadingBusinessImages(false)
+    }
+  }
+
+  const removeBusinessGalleryImage = (idx) => {
+    setBusinessForm(prev => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== idx) }))
   }
 
   // Handle Classified Submit
@@ -372,6 +383,11 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       return
     }
 
+    if (uploadingBusinessImages) {
+      alert('Please wait for images to finish uploading.')
+      return
+    }
+
     setSubmittingBusiness(true)
     try {
       const res = await fetch('/api/businesses', {
@@ -392,7 +408,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
           email: '',
           address: '',
           description: '',
-          coverImage: ''
+          coverImage: '',
+          images: []
         })
         setBusinessCoverPreview('')
       } else {
@@ -565,7 +582,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
         </div>
       </div>
 
-      <header className="hidden lg:block bg-[#E53935] sticky top-0 z-50">
+      <header className="hidden lg:block bg-[#E53935]/95 backdrop-blur-xl backdrop-saturate-150 sticky top-0 z-50">
         <div className="container mx-auto px-6">
           <nav className="flex items-center justify-between h-12">
             {/* Left: Navigation Links with subtle dividers */}
@@ -917,7 +934,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                                 <img src={businessCoverPreview} alt="" className="w-full h-full object-cover" />
                                 <button
                                   type="button"
-                                  onClick={() => { setBusinessCoverPreview(''); setBusinessForm({ ...businessForm, coverImage: '' }) }}
+                                  onClick={() => { setBusinessCoverPreview(''); setBusinessForm(prev => ({ ...prev, coverImage: '' })) }}
                                   className="absolute top-0.5 right-0.5 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
                                 >
                                   <X className="h-3 w-3" />
@@ -943,11 +960,53 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           />
                         </div>
 
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-semibold text-gray-700">More Images</Label>
+                            <span className="text-xs text-emerald-500 font-medium">(Auto-compressed, max {MAX_BUSINESS_GALLERY})</span>
+                          </div>
+                          <div className="flex flex-wrap gap-2 items-center">
+                            {(businessForm.images || []).map((img, idx) => (
+                              <div key={img + idx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
+                                <img src={img} alt={`Business image ${idx + 1}`} className="w-full h-full object-cover" />
+                                <button
+                                  type="button"
+                                  aria-label="Remove image"
+                                  onClick={() => removeBusinessGalleryImage(idx)}
+                                  className="absolute top-0.5 right-0.5 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            ))}
+                            {(businessForm.images?.length || 0) < MAX_BUSINESS_GALLERY && (
+                              <button
+                                type="button"
+                                disabled={uploadingBusinessImages}
+                                onClick={() => businessGalleryInputRef.current?.click()}
+                                className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center hover:border-blue-500 hover:bg-blue-50/50 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+                              >
+                                {uploadingBusinessImages ? <Loader2 className="h-4 w-4 text-gray-400 animate-spin" /> : <Upload className="h-4 w-4 text-gray-400" />}
+                                <span className="text-[9px] text-gray-500 mt-1 font-medium">+ Add</span>
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-gray-500">Show your shop, products or menu. These appear in your listing&apos;s photo gallery.</p>
+                          <input
+                            ref={businessGalleryInputRef}
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleBusinessGalleryUpload}
+                            className="hidden"
+                          />
+                        </div>
+
                         <DialogFooter className="pt-2">
                           <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingBusiness}>
                             {t('cancel')}
                           </Button>
-                          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold" disabled={submittingBusiness}>
+                          <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold" disabled={submittingBusiness || uploadingBusinessImages}>
                             {submittingBusiness ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</> : 'Submit Business'}
                           </Button>
                         </DialogFooter>
@@ -1014,7 +1073,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden w-full max-w-full overflow-hidden">
         {/* Top Red Bar: Main Navigation */}
-        <div className="bg-[#E53935] text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden w-full max-w-full">
+        <div className="bg-[#E53935]/95 backdrop-blur-xl backdrop-saturate-150 text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden w-full max-w-full">
           {/* Glossy shine overlay */}
           <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
 
@@ -1057,7 +1116,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
         </div>
 
         {/* Scrolling Category Bar */}
-        <div className="bg-white border-b border-gray-100 overflow-x-auto scrollbar-hide py-0.5 sticky top-16 z-40 w-full max-w-full">
+        <div className="bg-white/85 backdrop-blur-xl backdrop-saturate-150 border-b border-black/[0.05] overflow-x-auto scrollbar-hide py-0.5 sticky top-16 z-40 w-full max-w-full">
           <div className="flex items-center px-4 space-x-6 whitespace-nowrap">
             <button onClick={() => setCurrentView('home')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'home' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('home')}</button>
             <button onClick={() => setCurrentView('news')} className={`text-[13px] font-extrabold pb-2.5 pt-2 border-b-2 transition-all ${currentView === 'news' ? 'text-red-600 border-red-600' : 'text-gray-500 border-transparent'}`}>{t('news')}</button>

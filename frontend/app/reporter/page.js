@@ -5,6 +5,8 @@ import ReporterDashboard from '@/components/ReporterDashboard'
 
 import { auth, getFreshToken } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
+import { auth as firebaseClientAuth } from '@/lib/firebase'
+import { onIdTokenChanged } from 'firebase/auth'
 
 export default function ReporterPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -13,6 +15,31 @@ export default function ReporterPage() {
     const [error, setError] = useState('')
     const [loginData, setLoginData] = useState({ email: '', password: '' })
     const { toast } = useToast()
+
+    // Keep the stored Firebase ID token fresh (they expire after 1h). Without this a
+    // reporter who spends over an hour on an article gets a 401 when submitting.
+    useEffect(() => {
+        if (!firebaseClientAuth) return
+        const store = async (force = false) => {
+            const u = firebaseClientAuth.currentUser
+            if (!u) return
+            try {
+                const t = await u.getIdToken(force)
+                if (t) localStorage.setItem('token', t)
+            } catch (err) {
+                console.warn('Reporter token refresh failed:', err)
+            }
+        }
+        const unsubscribe = onIdTokenChanged(firebaseClientAuth, (fbUser) => { if (fbUser) store() })
+        const interval = setInterval(() => store(true), 30 * 60 * 1000)
+        const onFocus = () => store()
+        window.addEventListener('focus', onFocus)
+        return () => {
+            unsubscribe()
+            clearInterval(interval)
+            window.removeEventListener('focus', onFocus)
+        }
+    }, [])
 
     useEffect(() => {
         // Migration: purge old invalid 'reporterToken' from previous sessions

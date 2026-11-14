@@ -1,10 +1,17 @@
 import { getAuth, getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { requireSuperAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 // Diagnostic endpoint to check Firebase Admin status
 export async function GET(request) {
+    // Diagnostics expose infrastructure details: super admin only.
+    const authResult = await requireSuperAdmin(request);
+    if (authResult.error) {
+        return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
     const result = {
         timestamp: new Date().toISOString(),
         firebaseAdmin: { auth: false, db: false },
@@ -13,7 +20,6 @@ export async function GET(request) {
             hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
             hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
             privateKeyLength: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
-            privateKeyStart: process.env.FIREBASE_PRIVATE_KEY?.substring(0, 30) || 'MISSING',
         },
         tokenTest: null
     };

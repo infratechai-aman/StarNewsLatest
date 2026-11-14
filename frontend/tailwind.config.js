@@ -8,6 +8,8 @@ module.exports = {
       './src/**/*.{js,jsx}',
     ],
     prefix: "",
+    // Hover styles only apply on devices that can hover (no sticky hover on phones)
+    future: { hoverOnlyWhenSupported: true },
     theme: {
     	container: {
     		center: true,
@@ -68,6 +70,23 @@ module.exports = {
     				border: 'hsl(var(--sidebar-border))',
     				ring: 'hsl(var(--sidebar-ring))'
     			}
+    		},
+    		// Apple-style depth: soft, layered, low-opacity shadows (ambient + key light)
+    		boxShadow: {
+    			sm: '0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.03)',
+    			DEFAULT: '0 1px 3px rgba(0,0,0,0.05), 0 2px 8px -2px rgba(0,0,0,0.06)',
+    			md: '0 2px 4px -1px rgba(0,0,0,0.05), 0 6px 16px -4px rgba(0,0,0,0.08)',
+    			lg: '0 4px 8px -2px rgba(0,0,0,0.05), 0 12px 28px -6px rgba(0,0,0,0.10)',
+    			xl: '0 8px 16px -4px rgba(0,0,0,0.06), 0 20px 44px -10px rgba(0,0,0,0.14)',
+    			'2xl': '0 12px 24px -6px rgba(0,0,0,0.08), 0 32px 64px -16px rgba(0,0,0,0.20)',
+    		},
+    		// Apple-like default motion: quick, decelerating, no sluggish ease-in
+    		transitionTimingFunction: {
+    			DEFAULT: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    			out: 'cubic-bezier(0.23, 1, 0.32, 1)',
+    		},
+    		transitionDuration: {
+    			DEFAULT: '200ms',
     		},
     		borderRadius: {
     			lg: 'var(--radius)',

@@ -18,7 +18,7 @@ export async function GET(request) {
         // fix(P3-BE-03): Add limit to prevent unbounded query as DB grows.
         // Supports ?limit=N query param, capped at 500. Defaults to 200.
         const { searchParams } = new URL(request.url);
-        const limit = Math.min(500, Math.max(1, parseInt(searchParams.get('limit') || '200')));
+        const limit = Math.min(500, Math.max(1, (parseInt(searchParams.get('limit') || '200', 10) || 200)));
         const forceFresh = searchParams.get('fresh') === 'true';
 
         // opt(PERF-03): Cache admin news list for 2 minutes.

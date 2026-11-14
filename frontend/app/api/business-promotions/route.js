@@ -13,7 +13,10 @@ export async function POST(request) {
     }
 
     try {
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { businessName, name, ownerName, phone, email, address, description, category, whatsapp } = body;
 
         const finalName = (businessName || name || '').trim();
@@ -125,7 +128,10 @@ export async function PUT(request) {
             return NextResponse.json({ error: authResult.error }, { status: authResult.status });
         }
 
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const { id, status, adminNote } = body;
 
         if (!id || !status) {

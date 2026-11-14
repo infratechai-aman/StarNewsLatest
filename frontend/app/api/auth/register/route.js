@@ -11,7 +11,10 @@ export async function POST(request) {
     }
 
     try {
-        const body = await request.json()
+        const body = await request.json().catch(() => null)
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+        }
         const { email, password, name, role = ROLES.REGISTERED } = body
 
         if (!email || !password || !name) {

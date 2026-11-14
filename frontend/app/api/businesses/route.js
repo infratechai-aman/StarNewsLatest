@@ -14,8 +14,8 @@ export async function GET(request) {
         }
         const { searchParams } = new URL(request.url);
         const category = searchParams.get('category');
-        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
-        const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')));
+        const page = Math.max(1, (parseInt(searchParams.get('page') || '1', 10) || 1));
+        const limit = Math.min(100, Math.max(1, (parseInt(searchParams.get('limit') || '50', 10) || 50)));
 
         // Build cache key
         const cacheKey = `businesses_c${category || 'all'}_p${page}_l${limit}`;
@@ -65,7 +65,10 @@ export async function POST(request) {
     }
 
     try {
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        if (!body || typeof body !== 'object') {
+            return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+        }
         const {
             name,
             businessName,
@@ -76,6 +79,7 @@ export async function POST(request) {
             address,
             description,
             coverImage,
+            images,
             logo,
             website,
             area,
@@ -92,6 +96,13 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
         }
 
+        // Gallery: cover first, then extra images. Only accept http(s) or same-origin paths (e.g. /api/file/<id>), max 7 total.
+        const galleryImages = [coverImage, ...(Array.isArray(images) ? images : [])]
+            .filter(u => typeof u === 'string' && /^(https?:\/\/|\/(?!\/))/i.test(u.trim()))
+            .map(u => u.trim())
+            .filter((u, i, arr) => arr.indexOf(u) === i)
+            .slice(0, 7);
+
         const newBusiness = {
             name: finalName,
             businessName: finalName,
@@ -102,6 +113,7 @@ export async function POST(request) {
             address: (address || '').trim(),
             description: (description || '').trim(),
             coverImage: coverImage || '',
+            images: galleryImages,
             logo: logo || coverImage || '',
             website: (website || '').trim(),
             area: (area || '').trim(),

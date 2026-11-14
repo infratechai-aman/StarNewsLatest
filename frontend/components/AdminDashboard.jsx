@@ -525,6 +525,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
     try {
       if (isManual) setLoadingEnewspapers(true)
       const res = await authenticatedFetch(`/api/admin/enewspaper?_t=${Date.now()}`, { cache: 'no-store' })
+      if (!res.ok) throw new Error(`Failed to load e-newspapers (${res.status})`)
       const data = await res.json()
       setAllEnewspapers(data.papers || [])
       if (isManual) {
@@ -662,9 +663,9 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         })
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
       if (res.ok) {
-        const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter-login` : '/reporter-login'
+        const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter` : '/reporter'
         const successData = {
           name: accountFormData.name,
           email: accountFormData.email,
@@ -705,7 +706,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const copyFullCredentials = (app) => {
     const email = app.accountEmail || app.email
     const pwd = app.tempPassword || '(Password active in Auth)'
-    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter-login` : '/reporter-login'
+    const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/reporter` : '/reporter'
     const message = `✨ STAR NEWS - REPORTER LOGIN CREDENTIALS ✨\n\n👤 Name: ${app.fullName}\n📧 Login ID/Email: ${email}\n🔑 Password: ${pwd}\n🌐 Portal URL: ${portalUrl}\n\nPlease login and start submitting news!`
     
     navigator.clipboard.writeText(message)
@@ -4705,26 +4706,38 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           {(!paper.approvalStatus || paper.approvalStatus === 'pending') && (
                             <div className="flex items-center gap-1.5 border-l border-gray-200 pl-3 ml-1">
                               <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-9 w-9 p-0" onClick={async () => {
-                                const token = localStorage.getItem('token')
-                                await fetch(`/api/admin/enewspaper/${paper.id}/approve`, {
-                                  method: 'PUT',
-                                  headers: { 'Authorization': `Bearer ${token}` }
-                                })
+                                try {
+                                  const res = await authenticatedFetch(`/api/admin/enewspaper/${paper.id}/approve`, { method: 'PUT' })
+                                  if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}))
+                                    throw new Error(err.error || 'Approve failed')
+                                  }
+                                  toast({ title: 'E-Newspaper Approved' })
+                                } catch (err) {
+                                  toast({ title: 'Approve failed', description: err.message, variant: 'destructive' })
+                                }
                                 loadAllEnewspapers()
-                                toast({ title: 'E-Newspaper Approved' })
                               }}>
                                 <Check className="h-4 w-4" />
                               </Button>
                               <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 rounded-lg h-9 w-9 p-0" onClick={async () => {
                                 const reason = prompt('Rejection reason (optional):')
-                                const token = localStorage.getItem('token')
-                                await fetch(`/api/admin/enewspaper/${paper.id}/reject`, {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                                  body: JSON.stringify({ reason })
-                                })
+                                if (reason === null) return // admin pressed Cancel
+                                try {
+                                  const res = await authenticatedFetch(`/api/admin/enewspaper/${paper.id}/reject`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ reason })
+                                  })
+                                  if (!res.ok) {
+                                    const err = await res.json().catch(() => ({}))
+                                    throw new Error(err.error || 'Reject failed')
+                                  }
+                                  toast({ title: 'E-Newspaper Rejected' })
+                                } catch (err) {
+                                  toast({ title: 'Reject failed', description: err.message, variant: 'destructive' })
+                                }
                                 loadAllEnewspapers()
-                                toast({ title: 'E-Newspaper Rejected' })
                               }}>
                                 <X className="h-4 w-4" />
                               </Button>
