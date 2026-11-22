@@ -14,6 +14,7 @@ import {
   Clock,
   Shield,
   ChevronLeft,
+  ChevronRight,
   CheckCircle,
   User
 } from 'lucide-react'
