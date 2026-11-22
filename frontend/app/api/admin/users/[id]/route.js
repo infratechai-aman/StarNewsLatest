@@ -1,4 +1,4 @@
-import { getDb } from '@/lib/firebaseAdmin';
+import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 
@@ -49,8 +49,10 @@ export async function DELETE(request, { params }) {
         // 1. Delete from Firestore
         await db.collection('users').doc(id).delete();
 
-        // 2. Delete from Firebase Auth
+        // 2. Delete from Firebase Auth (so the person can no longer sign in)
         try {
+            const auth = getAuth();
+            if (!auth) throw new Error('Firebase Auth not initialised');
             await auth.deleteUser(id);
         } catch (authErr) {
             console.warn('User deleted from DB but failed in Auth (user might not exist in Auth):', authErr.message);
