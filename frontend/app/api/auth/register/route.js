@@ -39,8 +39,10 @@ export async function POST(request) {
         })
 
         // Create user document in Firestore
-        const userRole = (role === ROLES.ADVERTISER || role === ROLES.REPORTER) ? role : ROLES.REGISTERED
-        const userStatus = (role === ROLES.ADVERTISER || role === ROLES.REPORTER) ? 'pending' : 'active'
+        // Reporters are only created by an admin (application -> create-reporter). Self-registration
+        // may request advertiser (pending) or plain registered; never reporter.
+        const userRole = role === ROLES.ADVERTISER ? ROLES.ADVERTISER : ROLES.REGISTERED
+        const userStatus = role === ROLES.ADVERTISER ? 'pending' : 'active'
 
         const userData = {
             id: userRecord.uid,

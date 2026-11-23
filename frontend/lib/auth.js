@@ -225,6 +225,13 @@ export async function requireReporterOrAdmin(request) {
       return { error: 'Forbidden: Reporter or Admin access required', status: 403 };
     }
 
+    // A reporter account must be active: pending / rejected / suspended accounts get no access.
+    const isAdminRole = roleLower === ROLES.SUPER_ADMIN || roleLower === 'admin' || roleLower === 'superadmin' || isAllowlistedAdmin(decodedToken);
+    const statusLower = String(userData.status || 'active').toLowerCase().trim();
+    if (!isAdminRole && ['pending', 'rejected', 'suspended', 'inactive', 'blocked', 'disabled'].includes(statusLower)) {
+      return { error: 'Your reporter account is not active yet', status: 403 };
+    }
+
     return {
       user: {
         userId: uid,
