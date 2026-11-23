@@ -11,7 +11,15 @@ export { ROLES }
 const userDocCache = new Map()
 const USER_DOC_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
-async function getCachedUserDoc(db, uid, email = null) {
+// Bootstrap admins recognised by email. Only honoured when Firebase says the email is
+// VERIFIED: otherwise anyone could register one of these addresses (if unused) and get admin.
+const ADMIN_EMAIL_ALLOWLIST = ['riyaz@starnews.com', 'admin@starnews.local', 'talukdaraman24@gmail.com', 'arthomepune@gmail.com']
+function isAllowlistedAdmin(decodedToken) {
+  const email = String(decodedToken?.email || '').toLowerCase().trim()
+  return decodedToken?.email_verified === true && ADMIN_EMAIL_ALLOWLIST.includes(email)
+}
+
+async function getCachedUserDoc(db, uid, email = null, emailVerified = false) {
   const cached = userDocCache.get(uid)
   if (cached && (Date.now() - cached.ts < USER_DOC_CACHE_TTL)) {
     return cached.data
@@ -27,8 +35,9 @@ async function getCachedUserDoc(db, uid, email = null) {
     userDocCache.set(uid, { data, ts: Date.now() })
     return data
   }
-  // Fallback: lookup by email if user document key differs from UID
-  if (email) {
+  // Fallback: lookup by email if user document key differs from UID.
+  // Only for verified emails, so an unverified look-alike account can't inherit someone's profile/role.
+  if (email && emailVerified) {
     const emailSnap = await db.collection('users').where('email', '==', email.toLowerCase().trim()).get();
     if (!emailSnap.empty) {
       const data = emailSnap.docs[0].data();
@@ -144,22 +153,18 @@ export async function requireSuperAdmin(request) {
     const uid = decodedToken.uid;
 
     // fix(DEFECT-10): Use cached user doc lookup with email fallback
-    const userData = await getCachedUserDoc(db, uid, decodedToken.email);
+    const userData = await getCachedUserDoc(db, uid, decodedToken.email, decodedToken.email_verified === true);
 
     if (!userData) {
       return { error: 'User not found', status: 403 };
     }
 
     const roleLower = String(userData.role || '').toLowerCase().trim();
-    const emailLower = String(decodedToken.email || '').toLowerCase().trim();
     const isAdmin = 
       roleLower === ROLES.SUPER_ADMIN || 
       roleLower === 'admin' || 
       roleLower === 'superadmin' ||
-      emailLower === 'riyaz@starnews.com' ||
-      emailLower === 'admin@starnews.local' ||
-      emailLower === 'talukdaraman24@gmail.com' ||
-      emailLower === 'arthomepune@gmail.com';
+      isAllowlistedAdmin(decodedToken);
 
     if (!isAdmin) {
       return { error: 'Forbidden: Admin access required', status: 403 };
@@ -202,23 +207,19 @@ export async function requireReporterOrAdmin(request) {
     const uid = decodedToken.uid;
 
     // fix(DEFECT-10): Use cached user doc lookup with email fallback
-    const userData = await getCachedUserDoc(db, uid, decodedToken.email);
+    const userData = await getCachedUserDoc(db, uid, decodedToken.email, decodedToken.email_verified === true);
 
     if (!userData) {
       return { error: 'User not found', status: 403 };
     }
 
     const roleLower = String(userData.role || '').toLowerCase().trim();
-    const emailLower = String(decodedToken.email || '').toLowerCase().trim();
     const isAuthorized = 
       roleLower === ROLES.SUPER_ADMIN || 
       roleLower === ROLES.REPORTER || 
       roleLower === 'admin' || 
       roleLower === 'superadmin' ||
-      emailLower === 'riyaz@starnews.com' ||
-      emailLower === 'admin@starnews.local' ||
-      emailLower === 'talukdaraman24@gmail.com' ||
-      emailLower === 'arthomepune@gmail.com';
+      isAllowlistedAdmin(decodedToken);
 
     if (!isAuthorized) {
       return { error: 'Forbidden: Reporter or Admin access required', status: 403 };
