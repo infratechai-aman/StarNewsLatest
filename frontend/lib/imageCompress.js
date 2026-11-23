@@ -15,13 +15,13 @@
  * Compress an image File to under targetSizeKB.
  * @param {File} file - The image file to compress
  * @param {Object} options
- * @param {number} options.maxSizeKB - Max output size in KB (default: 650, gives buffer for 700KB server limit)
+ * @param {number} options.maxSizeKB - Max output size in KB (default: 300; keeps news photos light for readers on mobile data)
  * @param {number} options.maxWidth - Max output width in px (default: 1200)
  * @param {number} options.maxHeight - Max output height in px (default: 1200)
  * @returns {Promise<{blob: Blob, dataUrl: string, originalSize: number, compressedSize: number}>}
  */
 export const compressImageFile = (file, options = {}) => {
-  const { maxSizeKB = 650, maxWidth = 1200, maxHeight = 1200 } = options
+  const { maxSizeKB = 300, maxWidth = 1200, maxHeight = 1200 } = options
 
   return new Promise((resolve, reject) => {
     // If file is already small enough and is JPEG/WebP, return as-is
@@ -69,7 +69,7 @@ export const compressImageFile = (file, options = {}) => {
 
         // Try progressively lower quality until we fit
         const targetBytes = maxSizeKB * 1024
-        const qualities = [0.85, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25, 0.15, 0.1]
+        const qualities = [0.82, 0.75, 0.65, 0.55, 0.45, 0.35, 0.25, 0.15, 0.1]
 
         const tryCompress = (qualityIdx, currentCanvas, currentWidth, currentHeight) => {
           if (qualityIdx >= qualities.length) {
@@ -150,7 +150,7 @@ export const compressImageFile = (file, options = {}) => {
  * @param {number} maxWidth
  * @returns {Promise<string>} data URL
  */
-export const compressImage = async (file, maxSizeKB = 650, maxWidth = 1200) => {
+export const compressImage = async (file, maxSizeKB = 300, maxWidth = 1200) => {
   const result = await compressImageFile(file, { maxSizeKB, maxWidth })
   return result.dataUrl
 }

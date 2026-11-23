@@ -141,6 +141,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
   }
 
   const viewArticle = (article) => {
+    window.history.pushState({ view: 'news-detail', article }, '', `/news/${article.id}`)
     setSelectedArticle(article)
     setCurrentView('news-detail')
   }
@@ -184,7 +185,9 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
 
   // Featured article for hero (first article)
   const heroArticle = articles.length > 0 ? articles[0] : null
-  const gridArticles = visibleArticles.slice(1)
+  // The newest article sits in the desktop-only hero card; below lg it must stay in the grid,
+  // otherwise phones/tablets never see the latest story (BUG-024).
+  const gridArticles = visibleArticles
 
   return (
     <div className="px-4 md:px-8 max-w-[1920px] mx-auto pb-12">
@@ -296,15 +299,15 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
       </div>
 
       {/* Premium News Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
         {gridArticles.map((article, idx) => (
           <div
             key={article.id}
-            className="group rounded-2xl overflow-hidden cursor-pointer border border-gray-200 bg-white hover:shadow-xl transition-all duration-300 flex flex-col h-full"
+            className={`group rounded-2xl overflow-hidden cursor-pointer border border-gray-200 bg-white hover:shadow-xl active:scale-[0.99] transition-all duration-300 flex flex-row sm:flex-col h-full ${idx === 0 && heroArticle?.id === article.id ? 'lg:hidden' : ''}`}
             onClick={() => viewArticle(article)}
           >
             {/* Image Container */}
-            <div className="relative overflow-hidden bg-gray-100 aspect-[16/10] w-full">
+            <div className="relative overflow-hidden bg-gray-100 w-[118px] shrink-0 self-stretch min-h-[96px] sm:w-full sm:min-h-0 sm:aspect-[16/10]">
               <Image
                 src={proxyImageUrl(
                   (article.thumbnails && article.thumbnails[0]) ||
@@ -314,8 +317,8 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
                 )}
                 alt={(article && article.title) ? (getLocalizedText(article.title, language) || article.title) : 'News Article'}
                 fill
-                className="object-fill w-full h-full"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-[1.03]"
+                sizes="(max-width: 640px) 118px, (max-width: 1024px) 50vw, 25vw"
                 priority={idx === 0}
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder-news.svg';
@@ -324,7 +327,7 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               />
               
               {/* Top-Left Category Badge */}
-              <div className="absolute top-3 left-3 z-10">
+              <div className="absolute top-3 left-3 z-10 hidden sm:block">
                 <Badge className="bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold px-3 py-1 rounded-full border-none shadow-sm capitalize">
                   {getTranslatedCategory(article.category, language) || t('news')}
                 </Badge>
@@ -332,9 +335,9 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
             </div>
 
             {/* Content Container */}
-            <div className="p-5 flex-1 flex flex-col">
+            <div className="p-3 sm:p-5 flex-1 flex flex-col min-w-0">
               {/* Date/Time */}
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-2" suppressHydrationWarning>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 mb-1 sm:mb-2 order-last sm:order-none mt-auto sm:mt-0" suppressHydrationWarning>
                 <Clock className="w-3.5 h-3.5 text-red-500" />
                 <span suppressHydrationWarning>
                   {mounted && (article.publishedAt || article.createdAt) ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : language === 'mr' ? 'mr-IN' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
@@ -342,17 +345,17 @@ const NewsPage = ({ setSelectedArticle, setCurrentView, newsPageState, setNewsPa
               </div>
 
               {/* Title */}
-              <h3 className="font-heading font-black text-[17px] leading-tight mb-2 text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3">
+              <h3 className="font-heading font-black text-[15px] sm:text-[17px] leading-snug sm:leading-tight mb-1 sm:mb-2 text-gray-900 group-hover:text-red-600 transition-colors line-clamp-3">
                 {getLocalizedText(article.title, language) || article.title}
               </h3>
 
               {/* Excerpt */}
-              <p className="text-gray-500 text-xs line-clamp-2 mb-4 leading-relaxed">
+              <p className="hidden sm:block text-gray-500 text-xs line-clamp-2 mb-4 leading-relaxed">
                 {getLocalizedText(article.content, language)?.replace(/<[^>]*>/g, '').substring(0, 120) || article.metaDescription || 'Read the full story on StarNews...'}
               </p>
 
               {/* Read More */}
-              <div className="mt-auto pt-1">
+              <div className="mt-auto pt-1 hidden sm:block">
                 <span className="font-bold text-red-600 text-xs flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                   {t('readMore') || 'Read More'} <ArrowRight className="w-3.5 h-3.5" />
                 </span>

@@ -1,3 +1,4 @@
+import { withDeadline } from '@/lib/deadline'
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
@@ -16,7 +17,7 @@ export async function GET(request) {
         if (!db) {
             return NextResponse.json({ enabled: false, text: '', texts: [] });
         }
-        const doc = await db.collection('breaking_ticker').doc('main').get();
+        const doc = await withDeadline(db.collection('breaking_ticker').doc('main').get());
 
         if (!doc.exists) {
             return NextResponse.json({ enabled: false, text: '', texts: [] });

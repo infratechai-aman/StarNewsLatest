@@ -1,6 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
 import { getCache, setCache } from '@/lib/cache';
+import { extractYouTubeId, youtubeIdFromThumbnail } from '@/lib/youtube';
 
 export const dynamic = 'force-dynamic';
 
@@ -218,14 +219,6 @@ export const DEFAULT_CHANNELS = [
  * renders a branded tile instead of requesting the thumbnail at all. */
 const THUMB_TTL = 6 * 60 * 60 * 1000;
 
-function extractYouTubeId(url) {
-  if (!url) return null;
-  const str = String(url).trim();
-  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
-  const m = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/)
-    || str.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
 
 async function isThumbAlive(id) {
   const key = `yt_thumb_${id}`;
@@ -246,9 +239,9 @@ async function isThumbAlive(id) {
 async function annotateThumbnails(streams) {
   return Promise.all(streams.map(async (s) => {
     // Stored thumbnails that point at YouTube are validated too; other hosts are trusted
-    const storedYt = typeof s.thumbnail === 'string' && s.thumbnail.match(/(?:img\.youtube\.com|i\.ytimg\.com)\/vi\/([a-zA-Z0-9_-]{11})\//);
-    if (s.thumbnail && !storedYt) return s;
-    const id = storedYt ? storedYt[1] : extractYouTubeId(s.url);
+    const storedYtId = youtubeIdFromThumbnail(s.thumbnail);
+    if (s.thumbnail && !storedYtId) return s;
+    const id = storedYtId || extractYouTubeId(s.url);
     if (!id) return { ...s, thumbAvailable: false };
     const alive = await isThumbAlive(id);
     return { ...s, thumbAvailable: alive, thumbnail: alive ? `https://i.ytimg.com/vi/${id}/mqdefault.jpg` : null };

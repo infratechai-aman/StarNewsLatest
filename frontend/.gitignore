@@ -39,3 +39,10 @@ Thumbs.db
 
 # Misc
 .cache/
+
+# Playwright
+test-results/
+playwright-report/
+firestore-debug.log
+firebase-debug.log
+ui-debug.log

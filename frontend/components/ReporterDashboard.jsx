@@ -616,13 +616,13 @@ const ReporterDashboard = ({ user, onLogout }) => {
       <div className="max-w-[1600px] w-full mx-auto flex-1 flex flex-col lg:flex-row overflow-hidden">
         
         {/* ─── LEFT SIDEBAR (No middle scrollbar, sleek hide-scrollbar) ─── */}
-        <aside className="w-full lg:w-60 xl:w-64 bg-white lg:border-r border-gray-200/80 shrink-0 flex flex-col justify-between p-4 lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] hide-scrollbar overflow-y-auto">
+        <aside className="w-full lg:w-60 xl:w-64 bg-white lg:border-r border-gray-200/80 shrink-0 flex flex-col justify-between px-3 py-2.5 lg:p-4 border-b lg:border-b-0 lg:sticky lg:top-16 lg:h-[calc(100vh-64px)] hide-scrollbar overflow-y-auto">
           
-          <div className="space-y-1">
+          <div className="flex lg:block gap-2 lg:space-y-1 overflow-x-auto hide-scrollbar">
             {/* Primary Menu */}
             <button
               onClick={() => setActiveTab('submit-news')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap lg:w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === 'submit-news'
                   ? 'bg-red-600 text-white shadow-md shadow-red-600/25'
                   : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
@@ -634,7 +634,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
             <button
               onClick={() => setActiveTab('my-news')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap lg:w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                 activeTab === 'my-news'
                   ? 'bg-red-600 text-white shadow-md shadow-red-600/25 font-semibold'
                   : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
@@ -655,7 +655,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
             <button
               onClick={() => setActiveTab('breaking-ticker')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap lg:w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                 activeTab === 'breaking-ticker'
                   ? 'bg-red-600 text-white shadow-md shadow-red-600/25 font-semibold'
                   : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
@@ -672,7 +672,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
             <button
               onClick={() => setActiveTab('my-papers')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+              className={`shrink-0 whitespace-nowrap lg:w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                 activeTab === 'my-papers'
                   ? 'bg-red-600 text-white shadow-md shadow-red-600/25 font-semibold'
                   : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
@@ -692,10 +692,10 @@ const ReporterDashboard = ({ user, onLogout }) => {
             </button>
 
             {/* Secondary Menu */}
-            <div className="pt-4 mt-4 border-t border-gray-100 space-y-1">
+            <div className="contents lg:block lg:pt-4 lg:mt-4 lg:border-t lg:border-gray-100 lg:space-y-1">
               <button
                 onClick={() => setActiveTab('my-profile')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap lg:w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                   activeTab === 'my-profile'
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/25 font-semibold'
                     : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'
@@ -707,7 +707,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
 
               <button
                 onClick={() => setActiveTab('help-support')}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                className={`shrink-0 whitespace-nowrap lg:w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                   activeTab === 'help-support'
                     ? 'bg-red-600 text-white shadow-md shadow-red-600/25 font-semibold'
                     : 'text-gray-700 hover:bg-gray-100/70 hover:text-gray-900'

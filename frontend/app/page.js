@@ -23,11 +23,12 @@ async function fetchInitialNews() {
     const db = getDb()
     if (!db) return null
 
-    const snapshot = await db.collection('news_articles')
+    const { withDeadline } = await import('@/lib/deadline')
+    const snapshot = await withDeadline(db.collection('news_articles')
       .where('approvalStatus', '==', 'approved')
       .where('active', '==', true)
       .limit(100)
-      .get()
+      .get(), 5000)
 
     // Sort in memory (fallback method from API)
     let articles = snapshot.docs.map(doc => {

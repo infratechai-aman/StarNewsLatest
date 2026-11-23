@@ -67,7 +67,7 @@ const CityPage = ({ setCurrentView, setSelectedArticle }) => {
     }
 
     const handleNewsClick = (article) => {
-        window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
+        window.history.pushState({ view: 'news-detail', article }, '', `/news/${article.id}`)
         setSelectedArticle(article)
         setCurrentView('news-detail')
     }

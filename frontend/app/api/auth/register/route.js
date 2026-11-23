@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
+import { authLimiter } from '@/lib/rateLimit'
 import { getAuth, getDb } from '@/lib/firebaseAdmin'
 import { ROLES } from '@/lib/auth'
 
 export async function POST(request) {
+    // Throttle anonymous submissions per IP
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!authLimiter.check(`auth:${clientIp}`).success) {
+        return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
     const auth = getAuth();
     const db = getDb();
 

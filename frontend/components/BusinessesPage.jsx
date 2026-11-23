@@ -501,14 +501,14 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                           <a
                             href={`tel:${rawPhone}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="py-1.5 px-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                            className="min-h-[40px] py-2 px-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                             title="Call Business"
                           >
                             <Phone className="w-3 h-3 text-green-600" />
                             <span>Call</span>
                           </a>
                         ) : (
-                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-500 text-[11px] font-bold flex items-center justify-center gap-1">
+                          <div className="min-h-[40px] py-2 px-2 rounded-xl bg-gray-50 text-gray-500 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95">
                             <Building2 className="w-3 h-3" />
                             <span>Profile</span>
                           </div>
@@ -521,14 +521,14 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                             target="_blank"
                             rel="noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="py-1.5 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                            className="min-h-[40px] py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                             title="WhatsApp Business"
                           >
                             <MessageCircle className="w-3 h-3 text-emerald-600" />
                             <span>Chat</span>
                           </a>
                         ) : (
-                          <div className="py-1.5 px-2 rounded-lg bg-gray-50 text-gray-500 text-[11px] font-bold flex items-center justify-center gap-1">
+                          <div className="min-h-[40px] py-2 px-2 rounded-xl bg-gray-50 text-gray-500 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95">
                             <ChevronRight className="w-3 h-3" />
                             <span>Details</span>
                           </div>
@@ -540,7 +540,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="py-1.5 px-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-800 text-[11px] font-bold flex items-center justify-center gap-1 transition-all"
+                          className="min-h-[40px] py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all"
                           title="Open Google Maps Directions"
                         >
                           <Navigation className="w-3 h-3 text-blue-600" />

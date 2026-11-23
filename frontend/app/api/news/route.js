@@ -1,3 +1,4 @@
+import { withDeadline } from '@/lib/deadline'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES } from '@/lib/auth'
@@ -99,7 +100,7 @@ export async function GET(request) {
                 .limit(limit + 1)  // Fetch 1 extra to check hasMore
                 .offset((page - 1) * limit);
 
-            snapshot = await sortedQuery.get();
+            snapshot = await withDeadline(sortedQuery.get());
 
         } catch (err) {
             // Fallback Strategy: In-Memory Sort (No Index Required)
@@ -107,7 +108,7 @@ export async function GET(request) {
             if (err.message.includes('index') || err.message.includes('FAILED_PRECONDITION')) {
                 console.warn('⚠️ FIRESTORE INDEX MISSING: Falling back to in-memory sorting. Please create the index for better performance.');
 
-                snapshot = await query.limit(limit + 1).get();
+                snapshot = await withDeadline(query.limit(limit + 1).get());
 
                 let tempDocs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 tempDocs.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));

@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  Download, Newspaper, FileText,
+  Download, FileText, CalendarDays,
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
   Maximize2, Minimize2, Printer, Share2,
-  RotateCcw, BookOpen, Loader2, Grid3X3
+  RotateCcw, Loader2, LayoutGrid, AlertCircle, Check
 } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
-import Image from 'next/image'
 import { MONTH_NAMES, DAY_NAMES, CALENDAR_DAY_HEADERS, getLocalizedCity } from '@/lib/translations'
 
 // ─── Main Component ──────────────────────────────────────────────────────────
@@ -25,6 +24,8 @@ const EnewspaperPage = () => {
   const [zoom, setZoom] = useState(1)
   const [showThumbnails, setShowThumbnails] = useState(false)
   const [calMonth, setCalMonth] = useState(null) // { y, m } shown in the edition calendar
+  const [pdfError, setPdfError] = useState(false)
+  const [shareDone, setShareDone] = useState(false)
 
   const containerRef = useRef(null)
   const pageStripRef = useRef(null)
@@ -59,6 +60,7 @@ const EnewspaperPage = () => {
       setCurrentPage(0)
       setZoom(1)
       setShowThumbnails(false)
+      setPdfError(false)
 
       try {
         // Load pdfjs v3 from jsdelivr — v3 has proper UMD builds that set window.pdfjsLib
@@ -115,6 +117,7 @@ const EnewspaperPage = () => {
         }
       } catch (err) {
         console.error('Failed to load PDF:', err)
+        setPdfError(true)
         // If first paper fails, fallback to second paper if available
         if (newspapers.length > 1 && selectedPaper?.id === newspapers[0]?.id) {
           console.log('Falling back to next available edition...')
@@ -179,7 +182,13 @@ const EnewspaperPage = () => {
           url: window.location.href,
         })
       } catch (err) { /* cancelled */ }
+      return
     }
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setShareDone(true)
+      setTimeout(() => setShareDone(false), 1800)
+    } catch { /* clipboard blocked */ }
   }
 
   // Fullscreen
@@ -280,13 +289,20 @@ const EnewspaperPage = () => {
   const pagesWord = (n) => language === 'mr' ? 'पृष्ठे' : language === 'hi' ? 'पृष्ठ' : (n === 1 ? 'Page' : 'Pages')
   const noOtherText = language === 'mr' ? 'इतर आवृत्त्या नाहीत' : language === 'hi' ? 'कोई अन्य संस्करण नहीं' : 'No other editions yet'
 
+  const L = (en, mr, hi) => (language === 'mr' ? mr : language === 'hi' ? hi : en)
+  const coverOf = (p) => (p?.id === selectedPaper?.id && pageImages[0]) || p?.thumbnailUrl || null
+
   // ─── Loading skeleton ───
   if (loading) {
     return (
-      <div className="bg-[#0a0a0a] min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <Loader2 className="w-10 h-10 text-red-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm font-medium">Loading editions...</p>
+      <div className="bg-[#f6f3ee] min-h-[70vh]">
+        <div className="max-w-[1320px] mx-auto px-4 md:px-8 py-10 animate-pulse">
+          <div className="h-3 w-24 bg-black/10 rounded mb-4" />
+          <div className="h-10 w-72 bg-black/10 rounded mb-8" />
+          <div className="grid lg:grid-cols-[300px_1fr] gap-8">
+            <div className="hidden lg:block h-[520px] bg-black/[0.06] rounded-2xl" />
+            <div className="h-[520px] bg-black/[0.06] rounded-2xl" />
+          </div>
         </div>
       </div>
     )
@@ -295,10 +311,10 @@ const EnewspaperPage = () => {
   // ─── Empty state ───
   if (newspapers.length === 0) {
     return (
-      <div className="bg-[#0a0a0a] min-h-screen flex items-center justify-center px-4">
-        <div className="text-center py-16">
-          <FileText className="h-16 w-16 mx-auto mb-6 text-gray-600" />
-          <h3 className="text-xl font-black text-gray-400 mb-2">{t('noEpapers') || 'No E-Newspapers Available'}</h3>
+      <div className="bg-[#f6f3ee] min-h-[70vh] flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mx-auto mb-5"><FileText className="h-7 w-7 text-gray-400" /></div>
+          <h3 className="font-serif text-2xl text-gray-900 mb-2">{t('noEpapers') || 'No E-Newspapers Available'}</h3>
           <p className="text-sm text-gray-500">{t('checkBackLater') || 'Check back later for new editions'}</p>
         </div>
       </div>
@@ -306,293 +322,270 @@ const EnewspaperPage = () => {
   }
 
   const hasPages = pageImages.length > 0
+  const pageCount = totalPages || pageImages.length
+  const loadPct = totalPages ? Math.round((pageImages.length / totalPages) * 100) : 0
+
+  const ActionButtons = ({ compact = false }) => (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={() => handleDownload(selectedPaper)} className={`inline-flex items-center gap-2 rounded-full bg-[#B71C1C] text-white font-semibold shadow-sm hover:bg-[#9f1818] active:scale-95 transition ${compact ? 'h-9 px-3.5 text-[13px]' : 'h-10 px-5 text-sm'}`}>
+        <Download className="w-4 h-4" /> {L('Download', 'डाउनलोड', 'डाउनलोड')}
+      </button>
+      <button type="button" onClick={handlePrint} aria-label="Print" className={`hidden sm:inline-flex items-center justify-center rounded-full bg-white border border-black/10 text-gray-800 hover:bg-gray-50 active:scale-95 transition ${compact ? 'h-9 w-9' : 'h-10 w-10'}`}>
+        <Printer className="w-4 h-4" />
+      </button>
+      <button type="button" onClick={handleShare} aria-label="Share" className={`inline-flex items-center justify-center rounded-full bg-white border border-black/10 text-gray-800 hover:bg-gray-50 active:scale-95 transition ${compact ? 'h-9 w-9' : 'h-10 w-10'}`}>
+        {shareDone ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
+      </button>
+    </div>
+  )
+
+  const ToolbarButton = ({ onClick, disabled, label, children }) => (
+    <button type="button" onClick={onClick} disabled={disabled} aria-label={label} title={label}
+      className="h-9 w-9 inline-flex items-center justify-center rounded-full text-gray-200 hover:bg-white/10 active:scale-90 disabled:opacity-30 disabled:pointer-events-none transition">
+      {children}
+    </button>
+  )
 
   return (
-    <div ref={containerRef} className={`${isFullscreen ? 'fixed inset-0 z-50' : ''} bg-white min-h-screen flex flex-col`}>
-
-      {/* ═══════ HERO BANNER ═══════ */}
+    <div className="bg-[#f6f3ee] min-h-screen text-gray-900">
+      {/* ═══════ MASTHEAD ═══════ */}
       {!isFullscreen && (
-        <div className="relative w-full overflow-hidden h-[160px] md:h-[200px]">
-          <Image src="/enewspaper_banner_1789519347864.jpg" alt="E-Newspaper" fill className="absolute inset-0 object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
-          <div className="relative z-10 max-w-[1400px] mx-auto px-4 md:px-6 flex flex-col justify-center h-full">
-            <p className="text-gray-400 text-[10px] md:text-xs font-black uppercase tracking-widest mb-1 md:mb-3">{t('eNewspaper') || 'E-Newspaper'}</p>
-            <h1 className="text-white text-3xl md:text-4xl font-black leading-tight mb-2">
-              {t('readLatestEdition') || 'Read the Latest Edition'}
-            </h1>
-            <p className="text-gray-300 text-xs md:text-sm max-w-md mb-3 md:mb-5 hidden sm:block">
-              {language === 'mr' ? 'भारतभरातील सखोल बातम्या, विश्लेषण आणि कथांसाठी तुमचा विश्वासू स्रोत.' : language === 'hi' ? 'पूरे भारत से गहन समाचार, विश्लेषण और कहानियों के लिए आपका विश्वसनीय स्रोत।' : 'Your trusted source for in-depth news, analysis and stories from across India.'}
-            </p>
-            <div className="hidden md:flex flex-wrap gap-6">
-              {[
-                { icon: '📖', title: t('dailyEditions') || 'Daily Editions', sub: t('readAnytimeAnywhere') || 'Read anytime, anywhere' },
-                { icon: '📱', title: t('multiDevice') || 'Multi-Device', sub: t('desktopTabletMobile') || 'Desktop, tablet, mobile' },
-                { icon: '⬇️', title: t('download') || 'Download', sub: t('saveOffline') || 'Save for offline reading' },
-              ].map(item => (
-                <div key={item.title} className="flex items-center gap-2">
-                  <div className="w-9 h-9 rounded-lg border border-white/20 bg-white/10 flex items-center justify-center text-lg">{item.icon}</div>
-                  <div>
-                    <p className="text-white text-xs font-black">{item.title}</p>
-                    <p className="text-gray-400 text-[10px]">{item.sub}</p>
-                  </div>
-                </div>
-              ))}
+        <header className="border-b border-black/[0.08] bg-[linear-gradient(180deg,#fbf9f5_0%,#f6f3ee_100%)]">
+          <div className="max-w-[1320px] mx-auto px-4 md:px-8 pt-6 pb-5 md:pt-10 md:pb-8">
+            <div className="flex items-center gap-3 text-[11px] font-bold tracking-[0.18em] uppercase text-[#B71C1C]">
+              <span>{t('eNewspaper') || 'E-Paper'}</span>
+              <span className="h-px w-10 bg-[#B71C1C]/40" />
+              <span className="text-gray-500 tracking-[0.14em]">{getLocalizedCity('Pune', language)} {t('edition') || 'Edition'}</span>
             </div>
+            <div className="mt-3 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+              <div>
+                <h1 className="font-serif text-[34px] leading-[1.05] md:text-6xl tracking-tight text-gray-950">Star News India</h1>
+                <p className="mt-2 text-sm md:text-base text-gray-600">
+                  <span className="font-semibold text-gray-900">{selectedPaper?.title}</span>
+                  {selDate && <span> · {longDate(selDate)}</span>}
+                  {pageCount > 0 && <span> · {pageCount} {pagesWord(pageCount)}</span>}
+                </p>
+              </div>
+              <ActionButtons />
+            </div>
+            {/* double rule, like a printed masthead */}
+            <div className="mt-6 md:mt-8 border-t-2 border-gray-900" />
+            <div className="mt-[3px] border-t border-gray-900/60" />
+          </div>
+        </header>
+      )}
+
+      {/* ═══════ EDITIONS STRIP (phones / tablets) ═══════ */}
+      {!isFullscreen && (
+        <div className="lg:hidden max-w-[1320px] mx-auto px-4 pt-4">
+          <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-gray-500 mb-2.5">{L('Editions', 'आवृत्त्या', 'संस्करण')}</p>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x scrollbar-hide">
+            {newspapers.map((p) => {
+              const d = paperDate(p); const active = p.id === selectedPaper?.id; const cover = coverOf(p)
+              return (
+                <button key={p.id} type="button" onClick={() => openPaper(p)}
+                  className={`snap-start shrink-0 w-[132px] text-left rounded-xl overflow-hidden bg-white transition active:scale-95 ${active ? 'ring-2 ring-[#B71C1C] shadow-md' : 'ring-1 ring-black/[0.08]'}`}>
+                  <div className="aspect-[3/4] bg-[#ece8e1] overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {cover ? <img src={cover} alt="" className="w-full h-full object-cover object-top" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><FileText className="w-6 h-6 text-gray-400" /></div>}
+                  </div>
+                  <div className="px-2.5 py-2">
+                    <p className="text-[12px] font-bold text-gray-900 line-clamp-1">{d ? `${d.getDate()} ${(MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()].slice(0, 3)}` : p.title}</p>
+                    <p className="text-[10.5px] text-gray-500 line-clamp-1">{p.title}</p>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* ═══════ MAIN 3-COLUMN LAYOUT ═══════ */}
-      <div className={`flex-1 ${isFullscreen ? 'h-screen fixed inset-0 z-50 bg-[#f8f9fa]' : 'max-w-[1400px] mx-auto w-full px-4 lg:px-6 py-8'} flex flex-col md:flex-row gap-6`}>
-        
-        {/* LEFT SIDEBAR: Calendar & Quick Access (Hidden in fullscreen) */}
+      {/* ═══════ BODY ═══════ */}
+      <div className={`${isFullscreen ? '' : 'max-w-[1320px] mx-auto px-4 md:px-8 py-4 md:py-8'} grid lg:grid-cols-[300px_minmax(0,1fr)] gap-8`}>
+
+        {/* ── Sidebar: calendar + editions (desktop) ── */}
         {!isFullscreen && (
-          <div className="hidden md:flex flex-col w-[260px] shrink-0 gap-6">
-            {/* Calendar Widget */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
-              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-                <span className="text-gray-500">📅</span>
-                <h3 className="font-black text-sm text-gray-900">{t('selectEdition') || 'Select Edition'}</h3>
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <button onClick={() => shiftMonth(-1)} aria-label="Previous month" className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-                  <span className="font-bold text-sm text-gray-900 tabular-nums">{monthLabel}</span>
-                  <button onClick={() => shiftMonth(1)} aria-label="Next month" className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"><ChevronRight className="w-4 h-4" /></button>
+          <aside className="hidden lg:block">
+            <div className="sticky top-28 space-y-5">
+              <div className="bg-white rounded-2xl ring-1 ring-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <button type="button" onClick={() => shiftMonth(-1)} aria-label="Previous month" className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center"><ChevronLeft className="w-4 h-4" /></button>
+                  <p className="text-sm font-bold flex items-center gap-1.5"><CalendarDays className="w-4 h-4 text-[#B71C1C]" />{monthLabel}</p>
+                  <button type="button" onClick={() => shiftMonth(1)} aria-label="Next month" className="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center"><ChevronRight className="w-4 h-4" /></button>
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-[11px] mb-2">
-                  {(CALENDAR_DAY_HEADERS[language] || CALENDAR_DAY_HEADERS.en).map(d => (
-                    <div key={d} className="text-gray-400 font-bold">{d}</div>
-                  ))}
+                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-gray-400 mb-1">
+                  {(CALENDAR_DAY_HEADERS[language] || CALENDAR_DAY_HEADERS.en).map((d) => <span key={d} className="py-1">{d}</span>)}
                 </div>
-                <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold">
-                  {Array.from({ length: firstWeekday }, (_, i) => <span key={`pad-${i}`} />)}
-                  {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
-                    const date = new Date(viewMonth.y, viewMonth.m, d)
-                    const edition = editionsByDay.get(dayKey(date))
-                    const isSelected = selDate && dayKey(selDate) === dayKey(date)
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {Array.from({ length: firstWeekday }).map((_, i) => <span key={`b${i}`} />)}
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
+                    const day = i + 1
+                    const date = new Date(viewMonth.y, viewMonth.m, day)
+                    const paper = editionsByDay.get(dayKey(date))
+                    const isSel = selDate && dayKey(selDate) === dayKey(date)
                     const isToday = dayKey(today) === dayKey(date)
                     return (
-                      <button
-                        key={d}
-                        disabled={!edition}
-                        onClick={() => openPaper(edition)}
-                        title={edition ? (edition.title || 'Edition') : undefined}
-                        className={`relative w-7 h-7 rounded-full flex items-center justify-center mx-auto tabular-nums transition-colors ${
-                          isSelected ? 'bg-red-600 text-white font-bold shadow-sm'
-                            : edition ? 'text-gray-900 font-bold hover:bg-red-50 hover:text-red-600'
-                            : 'text-gray-300 cursor-default'
-                        } ${isToday && !isSelected ? 'ring-1 ring-red-300' : ''}`}
-                      >
-                        {d}
-                        {edition && !isSelected && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-red-500" />}
+                      <button key={day} type="button" disabled={!paper} onClick={() => openPaper(paper)}
+                        className={`h-8 rounded-lg text-[12.5px] font-semibold transition ${isSel ? 'bg-[#B71C1C] text-white shadow-sm' : paper ? 'bg-[#B71C1C]/[0.08] text-[#B71C1C] hover:bg-[#B71C1C]/15' : 'text-gray-300'} ${isToday && !isSel ? 'ring-1 ring-gray-900/40' : ''}`}>
+                        {day}
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="mt-3 text-[11px] text-gray-500 flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-[#B71C1C]/15 inline-block" />{L('Edition available', 'आवृत्ती उपलब्ध', 'संस्करण उपलब्ध')}</p>
+              </div>
+
+              <div>
+                <p className="text-[11px] font-bold tracking-[0.14em] uppercase text-gray-500 mb-3">{L('Recent editions', 'अलीकडील आवृत्त्या', 'हाल के संस्करण')}</p>
+                <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+                  {newspapers.length <= 1 && <p className="text-xs text-gray-400">{noOtherText}</p>}
+                  {newspapers.map((p) => {
+                    const d = paperDate(p); const active = p.id === selectedPaper?.id; const cover = coverOf(p)
+                    return (
+                      <button key={p.id} type="button" onClick={() => openPaper(p)}
+                        className={`w-full flex gap-3 p-2 rounded-xl text-left transition ${active ? 'bg-white ring-1 ring-[#B71C1C]/40 shadow-sm' : 'hover:bg-white/70'}`}>
+                        <div className="w-12 h-16 rounded-md overflow-hidden bg-[#ece8e1] shrink-0 ring-1 ring-black/5">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          {cover ? <img src={cover} alt="" className="w-full h-full object-cover object-top" loading="lazy" /> : <div className="w-full h-full flex items-center justify-center"><FileText className="w-4 h-4 text-gray-400" /></div>}
+                        </div>
+                        <div className="min-w-0 py-0.5">
+                          <p className={`text-[13px] font-bold line-clamp-1 ${active ? 'text-[#B71C1C]' : 'text-gray-900'}`}>{p.title}</p>
+                          <p className="text-[11.5px] text-gray-500 mt-0.5">{d ? getFormattedDate(d) : ''}</p>
+                          {active && <p className="text-[10px] font-bold uppercase tracking-wider text-[#B71C1C] mt-1">{L('Reading now', 'आता वाचत आहात', 'अभी पढ़ रहे हैं')}</p>}
+                        </div>
                       </button>
                     )
                   })}
                 </div>
               </div>
             </div>
-
-            {/* Quick Access List */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
-              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center gap-2">
-                <span className="text-gray-500">📄</span>
-                <h3 className="font-black text-sm text-gray-900">{t('quickAccess') || 'Quick Access'}</h3>
-              </div>
-              <div className="p-2 space-y-1">
-                {Array.from({ length: totalPages || 1 }, (_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => goToPage(idx)}
-                    disabled={idx >= pageImages.length}
-                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors disabled:opacity-40 ${currentPage === idx ? 'bg-red-600 text-white' : 'hover:bg-gray-50 text-gray-700'}`}
-                  >
-                    <span className="font-bold text-sm">{idx === 0 ? (t('frontPage') || 'Front Page') : `${pagesWord(1)} ${idx + 1}`}</span>
-                    <span className={`text-[10px] tabular-nums ${currentPage === idx ? 'text-red-100' : 'text-gray-400'}`}>{idx + 1}/{totalPages || 1}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+          </aside>
         )}
 
-        {/* CENTER VIEWER: The main EPaper reading experience */}
-        <div className="flex-1 flex flex-col min-w-0 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white h-[calc(100vh-140px)] md:h-[800px]">
-          
-          {/* Black Toolbar (Inside Viewer) */}
-          <div className="bg-[#1a1a1a] px-4 py-3 flex items-center justify-between shrink-0">
-            {/* Left */}
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-red-600 flex items-center justify-center shrink-0">
-                <Newspaper className="h-4 w-4 text-white" />
+        {/* ── Reader ── */}
+        <section ref={containerRef} className={`min-w-0 ${isFullscreen ? 'bg-[#1c1c1e] min-h-screen flex flex-col' : ''}`}>
+          {/* Toolbar */}
+          <div className={`${isFullscreen ? '' : 'sticky top-[104px] lg:top-28 z-20 rounded-2xl'} bg-[#1c1c1e]/95 backdrop-blur text-white flex items-center justify-between gap-2 px-2 md:px-3 h-12 shadow-[0_8px_24px_rgba(0,0,0,0.18)]`}>
+            <div className="flex items-center gap-0.5">
+              <ToolbarButton onClick={prevPage} disabled={currentPage === 0} label={L('Previous page', 'मागील पृष्ठ', 'पिछला पृष्ठ')}><ChevronLeft className="w-5 h-5" /></ToolbarButton>
+              <span className="text-[13px] font-semibold tabular-nums min-w-[64px] text-center">
+                {hasPages ? `${currentPage + 1} / ${pageCount || '…'}` : '— / —'}
+              </span>
+              <ToolbarButton onClick={nextPage} disabled={!hasPages || currentPage >= pageImages.length - 1} label={L('Next page', 'पुढील पृष्ठ', 'अगला पृष्ठ')}><ChevronRight className="w-5 h-5" /></ToolbarButton>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <div className="hidden md:flex items-center gap-0.5 mr-1 pr-1 border-r border-white/10">
+                <ToolbarButton onClick={handleZoomOut} disabled={!hasPages || zoom <= 0.5} label="Zoom out"><ZoomOut className="w-4 h-4" /></ToolbarButton>
+                <button type="button" onClick={resetZoom} className="text-[12px] font-semibold tabular-nums w-12 h-9 rounded-full hover:bg-white/10" title="Reset zoom">{Math.round(zoom * 100)}%</button>
+                <ToolbarButton onClick={handleZoomIn} disabled={!hasPages || zoom >= 3} label="Zoom in"><ZoomIn className="w-4 h-4" /></ToolbarButton>
               </div>
-              <h2 className="hidden sm:block text-sm font-black text-white">StarNews <span className="text-red-500">ePaper</span></h2>
-            </div>
-            
-            {/* Center (Title/Edition) */}
-            <div className="hidden lg:flex items-center gap-3 bg-[#2a2a2a] px-5 py-1.5 rounded-full border border-gray-700">
-              <span className="text-[10px] font-black text-gray-400 tracking-wider uppercase max-w-[180px] truncate">{selectedPaper?.title || 'Edition'}</span>
-              <span className="text-[11px] font-bold text-white tabular-nums">{getFormattedDate(paperDate(selectedPaper))}</span>
-            </div>
-
-            {/* Right Tools */}
-            <div className="flex items-center gap-1.5">
-              <button onClick={handleZoomOut} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomOut className="w-4 h-4" /></button>
-              <span className="text-[11px] font-bold text-gray-400 min-w-[36px] text-center">{Math.round(zoom * 100)}%</span>
-              <button onClick={handleZoomIn} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><ZoomIn className="w-4 h-4" /></button>
-              <div className="w-px h-4 bg-gray-700 mx-2" />
-              <button onClick={handleShare} className="hidden sm:block p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Share2 className="w-4 h-4" /></button>
-              <button onClick={handlePrint} className="hidden sm:block p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Printer className="w-4 h-4" /></button>
-              <button onClick={() => selectedPaper && handleDownload(selectedPaper)} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400"><Download className="w-4 h-4" /></button>
-              <button onClick={toggleFullscreen} className="p-1.5 rounded-lg hover:bg-gray-800 text-gray-400">
-                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-              </button>
+              <ToolbarButton onClick={() => setShowThumbnails((v) => !v)} disabled={!hasPages} label={L('All pages', 'सर्व पृष्ठे', 'सभी पृष्ठ')}><LayoutGrid className={`w-4 h-4 ${showThumbnails ? 'text-red-400' : ''}`} /></ToolbarButton>
+              <ToolbarButton onClick={toggleFullscreen} label={isFullscreen ? 'Exit full screen' : 'Full screen'}>{isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}</ToolbarButton>
             </div>
           </div>
 
-          {/* Sub-toolbar: Pages Strip */}
-          <div className="bg-[#111] border-t border-[#2a2a2a] px-4 py-2 flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider hidden sm:block w-[50px]">{t('pages') || 'PAGES'}</span>
-            <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-thin px-4 max-w-xl mx-auto">
-              {Array.from({ length: totalPages || 1 }, (_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => goToPage(idx)}
-                  className={`shrink-0 w-8 h-8 rounded-full text-[11px] font-bold transition-all ${
-                    currentPage === idx
-                      ? 'bg-red-600 text-white'
-                      : idx < pageImages.length
-                        ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
-                        : 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                  }`}
-                  disabled={idx >= pageImages.length}
-                >
-                  {idx + 1}
+          {/* Loading progress */}
+          {pdfLoading && (
+            <div className={`${isFullscreen ? 'mx-4' : ''} mt-3 h-1 rounded-full bg-black/10 overflow-hidden`}>
+              <div className="h-full bg-[#B71C1C] transition-[width] duration-300" style={{ width: `${Math.max(loadPct, 6)}%` }} />
+            </div>
+          )}
+
+          {/* Thumbnail grid */}
+          {showThumbnails && hasPages && (
+            <div className={`${isFullscreen ? 'mx-4' : ''} mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 p-4 rounded-2xl bg-white ring-1 ring-black/[0.06]`}>
+              {pageImages.map((src, i) => (
+                <button key={i} type="button" onClick={() => goToPage(i)} className={`group text-center ${i === currentPage ? '' : 'opacity-80 hover:opacity-100'}`}>
+                  <div className={`aspect-[3/4] rounded-md overflow-hidden bg-white ring-1 transition ${i === currentPage ? 'ring-2 ring-[#B71C1C]' : 'ring-black/10 group-hover:ring-black/30'}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={`Page ${i + 1}`} className="w-full h-full object-cover object-top" />
+                  </div>
+                  <span className={`block mt-1 text-[11px] font-bold ${i === currentPage ? 'text-[#B71C1C]' : 'text-gray-500'}`}>{i + 1}</span>
                 </button>
               ))}
             </div>
-            <span className="text-[11px] font-bold text-gray-500 shrink-0 w-[50px] text-right">{currentPage + 1}/{totalPages || 1}</span>
-          </div>
+          )}
 
-          {/* White Canvas Viewer */}
-          <div className="flex-1 bg-gray-100 relative overflow-hidden flex flex-col" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-            
-            {/* Loading Overlay */}
-            {pdfLoading && (
-              <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-gray-100/90 backdrop-blur-sm">
-                <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-red-600 animate-spin mb-3" />
-                <p className="text-sm font-bold text-gray-800">
-                  {language === 'mr' ? `${pageImages.length}/${totalPages || '...'} पृष्ठे लोड होत आहेत` : language === 'hi' ? `${pageImages.length}/${totalPages || '...'} पृष्ठ लोड हो रहे हैं` : `Loading ${pageImages.length}/${totalPages || '...'} pages`}
-                </p>
+          {/* Page */}
+          <div
+            className={`epaper-viewer relative overflow-auto ${isFullscreen ? 'flex-1 p-4 md:p-8' : 'mt-4 rounded-2xl bg-[#e9e6e0] p-3 sm:p-6 md:p-10 min-h-[60vh]'}`}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {hasPages && pageImages[currentPage] ? (
+              <div className="flex justify-center">
+                <div style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: 'top center', transition: 'transform 0.2s ease' }}
+                  className="bg-white shadow-[0_2px_6px_rgba(0,0,0,0.08),0_24px_48px_-12px_rgba(0,0,0,0.28)] ring-1 ring-black/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img key={currentPage} src={pageImages[currentPage]} alt={`Page ${currentPage + 1}`} className="block max-w-[980px] w-full animate-in fade-in duration-300" draggable={false} />
+                </div>
               </div>
-            )}
-
-            {/* The PDF Image */}
-            <div className="epaper-viewer flex-1 overflow-auto bg-[#e5e5e5] relative w-full h-full p-4 md:p-8">
-              {hasPages && pageImages[currentPage] ? (
-                <div className="w-full flex justify-center">
-                  <div style={{ transform: zoom !== 1 ? `scale(${zoom})` : undefined, transformOrigin: 'top center', transition: 'transform 0.2s ease' }} className="shadow-2xl">
-                    <img
-                      src={pageImages[currentPage]}
-                      alt={`Page ${currentPage + 1}`}
-                      className="max-w-[1000px] w-full object-contain bg-white"
-                      draggable={false}
-                    />
+            ) : pdfLoading ? (
+              <div className="flex justify-center">
+                <div className="w-full max-w-[680px] aspect-[3/4] bg-white/80 shadow-lg rounded-sm p-6 sm:p-10 animate-pulse">
+                  <div className="h-8 w-2/3 mx-auto bg-gray-200 rounded mb-6" />
+                  <div className="h-px bg-gray-300 mb-6" />
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-2 h-40 bg-gray-200 rounded" />
+                    <div className="space-y-2">{Array.from({ length: 7 }).map((_, i) => <div key={i} className="h-3 bg-gray-200 rounded" />)}</div>
                   </div>
+                  <div className="mt-6 space-y-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-3 bg-gray-200 rounded" />)}</div>
+                  <p className="mt-8 text-center text-xs font-semibold text-gray-500 flex items-center justify-center gap-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {L(`Preparing pages ${pageImages.length}/${totalPages || '…'}`, `पृष्ठे तयार होत आहेत ${pageImages.length}/${totalPages || '…'}`, `पृष्ठ तैयार हो रहे हैं ${pageImages.length}/${totalPages || '…'}`)}
+                  </p>
                 </div>
-              ) : !pdfLoading ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-400 font-bold">{t('selectEditionToRead') || 'Select an edition to read'}</p>
+              </div>
+            ) : pdfError && selectedPaper?.pdfUrl ? (
+              <div className="min-h-[50vh] flex items-center justify-center">
+                <div className="text-center max-w-sm bg-white rounded-2xl p-8 shadow-sm ring-1 ring-black/5">
+                  <AlertCircle className="w-8 h-8 text-[#B71C1C] mx-auto mb-3" />
+                  <p className="font-semibold text-gray-900 mb-1">{L("This edition couldn't be opened here.", 'ही आवृत्ती येथे उघडता आली नाही.', 'यह संस्करण यहाँ नहीं खुल सका।')}</p>
+                  <p className="text-sm text-gray-500 mb-5">{L('You can still open or download the PDF.', 'तुम्ही PDF उघडू किंवा डाउनलोड करू शकता.', 'आप PDF खोल या डाउनलोड कर सकते हैं।')}</p>
+                  <a href={selectedPaper.pdfUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-[#B71C1C] text-white text-sm font-semibold active:scale-95 transition">
+                    <FileText className="w-4 h-4" /> {L('Open PDF', 'PDF उघडा', 'PDF खोलें')}
+                  </a>
                 </div>
-              ) : null}
-            </div>
-
-            {/* Floating Navigation Arrows */}
-            {hasPages && currentPage > 0 && (
-              <button onClick={prevPage} className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur shadow-xl flex">
-                <ChevronLeft className="w-6 h-6" />
-              </button>
+              </div>
+            ) : (
+              <div className="min-h-[50vh] flex items-center justify-center text-gray-500 font-semibold">{t('selectEditionToRead') || 'Select an edition to read'}</div>
             )}
-            {hasPages && currentPage < totalPages - 1 && (
-              <button onClick={nextPage} className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full items-center justify-center bg-black/60 hover:bg-black/80 text-white backdrop-blur shadow-xl flex">
-                <ChevronRight className="w-6 h-6" />
-              </button>
+
+            {/* Side arrows on large screens */}
+            {hasPages && (
+              <>
+                <button type="button" onClick={prevPage} disabled={currentPage === 0} aria-label="Previous page"
+                  className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 shadow-md items-center justify-center hover:bg-white disabled:opacity-0 transition">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button type="button" onClick={nextPage} disabled={currentPage >= pageImages.length - 1} aria-label="Next page"
+                  className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/90 shadow-md items-center justify-center hover:bg-white disabled:opacity-0 transition">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </>
             )}
           </div>
-        </div>
 
-        {/* RIGHT SIDEBAR: Today's Edition & Others (Hidden in fullscreen) */}
-        {!isFullscreen && (
-          <div className="hidden xl:flex flex-col w-[320px] shrink-0 gap-6">
-            {/* Today's Edition */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden p-5">
-              <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <h3 className="font-black text-sm text-gray-900">{t('todaysEdition') || "Today's Edition"}</h3>
-              </div>
-              <p className="text-xs font-bold text-gray-800 mb-1">
-                {longDate(paperDate(newspapers[0]))}
-              </p>
-              <p className="text-[11px] text-gray-500 mb-1">
-                {getLocalizedCity('Pune', language)} {t('edition') || 'Edition'}
-              </p>
-              <p className="text-[11px] text-gray-400 mb-5">
-                {newspapers[0]?.title || ''}{selectedPaper?.id === newspapers[0]?.id && totalPages ? ` • ${totalPages} ${pagesWord(totalPages)}` : ''}
-              </p>
-              
-              <button onClick={() => openPaper(newspapers[0])} className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors mb-3">
-                <BookOpen className="w-4 h-4" /> {t('readNow') || 'Read Now'}
-              </button>
-              <button onClick={() => newspapers[0] && handleDownload(newspapers[0])} className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold py-2.5 rounded-lg transition-colors">
-                <Download className="w-4 h-4" /> {t('downloadPdf') || 'Download PDF'}
-              </button>
+          {/* Page strip */}
+          {hasPages && pageImages.length > 1 && (
+            <div ref={pageStripRef} className={`${isFullscreen ? 'px-4 pb-4' : ''} mt-4 flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide`}>
+              {pageImages.map((src, i) => (
+                <button key={i} data-page={i} type="button" onClick={() => goToPage(i)}
+                  className={`shrink-0 w-14 md:w-16 rounded-md overflow-hidden transition ${i === currentPage ? 'ring-2 ring-[#B71C1C] opacity-100' : 'ring-1 ring-black/10 opacity-70 hover:opacity-100'}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={`Page ${i + 1}`} className="w-full aspect-[3/4] object-cover object-top bg-white" />
+                </button>
+              ))}
             </div>
+          )}
 
-            {/* Other Editions */}
-            <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden p-5">
-              <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500">📅</span>
-                  <h3 className="font-black text-sm text-gray-900">{t('otherEditions') || 'Other Editions'}</h3>
-                </div>
-                <button className="text-[10px] font-bold text-red-600">{t('viewAll') || 'View All'} →</button>
-              </div>
-              
-              <div className="space-y-4">
-                {newspapers.slice(1, 7).length === 0 && (
-                  <p className="text-xs text-gray-400">{noOtherText}</p>
-                )}
-                {newspapers.slice(1, 7).map(p => {
-                  const d = paperDate(p)
-                  const active = selectedPaper?.id === p.id
-                  return (
-                    <button key={p.id} onClick={() => openPaper(p)} className="w-full text-left flex gap-3 group">
-                      <div className={`w-12 h-16 rounded-md overflow-hidden shrink-0 flex items-center justify-center border transition-colors ${active ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50 group-hover:border-red-300'}`}>
-                        {p.thumbnailUrl
-                          ? <img src={p.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                          : <Newspaper className={`w-5 h-5 ${active ? 'text-red-500' : 'text-gray-300'}`} />}
-                      </div>
-                      <div className="flex-1 py-1 min-w-0">
-                        <h4 className={`font-black text-xs truncate transition-colors ${active ? 'text-red-600' : 'text-gray-900 group-hover:text-red-600'}`}>{d ? (DAY_NAMES[language] || DAY_NAMES.en)[d.getDay()] : (p.title || 'Edition')}</h4>
-                        <p className="text-[10px] text-gray-500 truncate">{d ? `${d.getDate()} ${(MONTH_NAMES[language] || MONTH_NAMES.en)[d.getMonth()]} ${d.getFullYear()}` : ''}{p.title ? ` • ${p.title}` : ''}</p>
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+          {!isFullscreen && hasPages && (
+            <p className="md:hidden mt-2 text-center text-[11px] text-gray-500 flex items-center justify-center gap-1.5">
+              <RotateCcw className="w-3 h-3" /> {L('Swipe left or right to turn pages', 'पृष्ठ बदलण्यासाठी डावीकडे/उजवीकडे स्वाइप करा', 'पृष्ठ बदलने के लिए बाएँ/दाएँ स्वाइप करें')}
+            </p>
+          )}
+        </section>
       </div>
-
-      {/* Scrollbar + safe area styles */}
-      <style jsx global>{`
-        .scrollbar-thin::-webkit-scrollbar { height: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-      `}</style>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { withDeadline } from '@/lib/deadline'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
@@ -17,7 +18,7 @@ export async function GET() {
         return NextResponse.json({ enabled: false, imageUrl: '', linkUrl: '', title: '' });
     }
     try {
-        const doc = await db.collection('site_settings').doc('premium_ad').get()
+        const doc = await withDeadline(db.collection('site_settings').doc('premium_ad').get())
         let responseData = { enabled: false, imageUrl: '', linkUrl: '', title: '' };
 
         if (doc.exists) {

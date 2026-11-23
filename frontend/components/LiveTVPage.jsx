@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { extractYouTubeId } from '@/lib/youtube';
 import {
   Tv,
   Play,
@@ -33,16 +34,6 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Helper to extract YouTube ID
-const extractYouTubeId = (url) => {
-  if (!url) return null;
-  const str = String(url).trim();
-  if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
-  const match = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|live\/))([a-zA-Z0-9_-]{11})/);
-  if (match) return match[1];
-  const vMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (vMatch) return vMatch[1];
-  return null;
-};
 
 /* Thumbnail with a branded fallback: used when the YouTube video no longer exists
    (server marks thumbAvailable=false) or YouTube returns its 120px grey placeholder. */
@@ -170,6 +161,17 @@ export default function LiveTVPage({ setCurrentView }) {
     fetchChannels();
   }, []);
 
+  // Latest news videos (YouTube RSS of StarNews + major Marathi/Hindi channels)
+  const [newsVideos, setNewsVideos] = useState([]);
+  const [videoLang, setVideoLang] = useState('all');
+  const [videoLimit, setVideoLimit] = useState(12);
+  useEffect(() => {
+    fetch('/api/news-videos')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && Array.isArray(d.videos)) setNewsVideos(d.videos.filter((v) => !v.isShort)); })
+      .catch(() => {});
+  }, []);
+
   const activeChannel = useMemo(() => {
     return channels.find((ch) => ch.id === activeStreamId) || channels[0] || null;
   }, [channels, activeStreamId]);
@@ -203,6 +205,19 @@ export default function LiveTVPage({ setCurrentView }) {
     setHasDisliked(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+
+  // Play a news video in the main player (added as a temporary, non-live entry).
+  const playNewsVideo = (v) => {
+    const id = `vid-${v.videoId}`;
+    setChannels((prev) => (prev.some((c) => c.id === id) ? prev : [...prev, {
+      id, title: v.title, channelName: v.channel, category: 'news-videos',
+      url: `https://www.youtube.com/watch?v=${v.videoId}`,
+      thumbnail: `https://i.ytimg.com/vi/${v.videoId}/hqdefault.jpg`,
+      isLive: false, isActive: true, description: `${v.channel} • ${new Date(v.published).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}`,
+    }]));
+    switchChannel(id);
+  };
 
   const handleSubscribeToggle = () => {
     if (isSubscribed) {
@@ -391,7 +406,7 @@ export default function LiveTVPage({ setCurrentView }) {
       )}
 
       {/* ── 2. MAIN YOUTUBE VIEWPORT WORKSPACE ── */}
-      <main className="max-w-[1600px] mx-auto px-0 sm:px-4 py-0 sm:py-4">
+      <div role="region" aria-label="Live TV player and channels" className="max-w-[1600px] mx-auto px-0 sm:px-4 py-0 sm:py-4">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           
           {/* ── LEFT: YOUTUBE MAIN PLAYER & BROADCAST DETAILS ── */}
@@ -426,10 +441,14 @@ export default function LiveTVPage({ setCurrentView }) {
 
               {/* Top YouTube Live Indicator */}
               <div className="absolute top-3 left-3 z-10 flex items-center gap-2 pointer-events-none">
+                {activeChannel?.isLive === false ? (
+                  <span className="bg-black/70 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-lg tracking-wider">News Video</span>
+                ) : (
                 <span className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-1 rounded shadow-lg tracking-wider">
                   <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
                   <span>LIVE</span>
                 </span>
+                )}
                 <span className="bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded border border-white/10">
                   1080p Full HD
                 </span>
@@ -931,7 +950,64 @@ export default function LiveTVPage({ setCurrentView }) {
             );
           })}
         </div>
-      </main>
+      </div>
+
+      {/* ── LATEST NEWS VIDEOS (auto-updated from YouTube) ── */}
+      {newsVideos.length > 0 && (
+        <section className="max-w-[1800px] mx-auto px-4 sm:px-6 pb-12">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 className={`text-lg sm:text-xl font-black flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              <span className="w-1 h-5 bg-red-600 rounded-full" /> Latest News Videos
+            </h2>
+            <div className="flex gap-2">
+              {[['all', 'All'], ['mr', 'मराठी'], ['hi', 'हिंदी']].map(([k, label]) => (
+                <button key={k} type="button" onClick={() => { setVideoLang(k); setVideoLimit(12); }}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors ${videoLang === k ? 'bg-red-600 text-white' : isDark ? 'bg-[#272727] text-gray-200' : 'bg-white border border-gray-200 text-gray-700'}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {(() => {
+            const list = newsVideos.filter((v) => videoLang === 'all' || v.lang === videoLang);
+            return (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {list.slice(0, videoLimit).map((v) => {
+                    const playing = activeStreamId === `vid-${v.videoId}`;
+                    return (
+                      <button key={v.videoId} type="button" onClick={() => playNewsVideo(v)}
+                        className={`text-left rounded-2xl overflow-hidden group transition-transform active:scale-[0.98] ${isDark ? 'bg-[#1f1f1f]' : 'bg-white border border-gray-200'} ${playing ? 'ring-2 ring-red-600' : ''}`}>
+                        <div className="relative aspect-video bg-black overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={`https://i.ytimg.com/vi/${v.videoId}/mqdefault.jpg`} alt="" loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                          <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                            <span className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center"><Play className="w-5 h-5 text-white fill-white ml-0.5" /></span>
+                          </span>
+                          {playing && <span className="absolute top-2 left-2 bg-red-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">Now Playing</span>}
+                        </div>
+                        <div className="p-3">
+                          <h3 className={`text-sm font-bold leading-snug line-clamp-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{v.title}</h3>
+                          <p className={`text-[11px] font-semibold mt-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {v.channel} • {new Date(v.published).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {list.length > videoLimit && (
+                  <div className="flex justify-center mt-6">
+                    <button type="button" onClick={() => setVideoLimit((n) => n + 12)} className="px-6 py-2.5 rounded-full bg-red-600 text-white text-sm font-bold active:scale-95 transition-transform">
+                      Load more videos
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </section>
+      )}
     </div>
   );
 }

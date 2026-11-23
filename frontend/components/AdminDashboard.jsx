@@ -73,9 +73,9 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
   const compressAndUpload = async (file) => {
     try {
       let fileToUpload = file
-      // Auto-compress if file is an image and over 650KB
-      if (file.type.startsWith('image/') && file.size > 650 * 1024) {
-        const result = await compressImageFile(file, { maxSizeKB: 650 })
+      // Auto-compress if file is an image and over 300KB
+      if (file.type.startsWith('image/') && file.size > 300 * 1024) {
+        const result = await compressImageFile(file, { maxSizeKB: 300 })
         fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
         toast({ title: `Image compressed: ${formatFileSize(file.size)} → ${formatFileSize(result.compressedSize)}` })
       }
@@ -314,6 +314,19 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
     loadPendingData()
     loadApprovedNews()
     loadNavigation() // Load navigation from API instead of hardcoding
+  }, [])
+
+  // Platform Overview needs the full lists; load them shortly after the
+  // pending queue so the first paint isn't delayed.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      loadAllNews()
+      loadAllBusinesses()
+      loadAllClassifieds()
+      loadAllReporters()
+    }, 800)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 
@@ -1853,24 +1866,24 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6 mt-0">
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:gap-6 grid-cols-2 lg:grid-cols-4">
             {/* Pending Items Card */}
             <Card onClick={() => { setActiveTab('pending-approvals'); setPendingSubTab('businesses'); }} className="relative overflow-hidden border-0 shadow-lg group hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-[1.02]">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-red-500 opacity-90"></div>
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Clock className="w-24 h-24 text-white" />
               </div>
-              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+              <CardContent className="relative p-4 sm:p-6 z-10 flex flex-col justify-between h-full min-h-[112px] sm:min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Total Pending</p>
-                    <h3 className="text-white text-4xl font-bold">{totalPending}</h3>
+                    <p className="text-white/80 text-[11px] sm:text-sm font-semibold uppercase tracking-wider mb-1">Total Pending</p>
+                    <h3 className="text-white text-3xl sm:text-4xl font-bold tabular-nums">{totalPending}</h3>
                   </div>
                   <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
                     <Clock className="h-6 w-6 text-white" />
                   </div>
                 </div>
-                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                <p className="text-white/90 text-xs mt-4 font-medium items-center gap-1 hidden sm:flex">
                   <AlertCircle className="w-3 h-3" /> Action required &bull; Click to review
                 </p>
               </CardContent>
@@ -1882,17 +1895,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Newspaper className="w-24 h-24 text-white" />
               </div>
-              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+              <CardContent className="relative p-4 sm:p-6 z-10 flex flex-col justify-between h-full min-h-[112px] sm:min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending News</p>
-                    <h3 className="text-white text-4xl font-bold">{pendingData.news.length}</h3>
+                    <p className="text-white/80 text-[11px] sm:text-sm font-semibold uppercase tracking-wider mb-1">Pending News</p>
+                    <h3 className="text-white text-3xl sm:text-4xl font-bold tabular-nums">{pendingData.news.length}</h3>
                   </div>
                   <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
                     <Newspaper className="h-6 w-6 text-white" />
                   </div>
                 </div>
-                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                <p className="text-white/90 text-xs mt-4 font-medium items-center gap-1 hidden sm:flex">
                   <RefreshCw className="w-3 h-3" /> Awaiting review &bull; Click to review
                 </p>
               </CardContent>
@@ -1904,17 +1917,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Users className="w-24 h-24 text-white" />
               </div>
-              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+              <CardContent className="relative p-4 sm:p-6 z-10 flex flex-col justify-between h-full min-h-[112px] sm:min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Reporters</p>
-                    <h3 className="text-white text-4xl font-bold">{pendingData.users.length}</h3>
+                    <p className="text-white/80 text-[11px] sm:text-sm font-semibold uppercase tracking-wider mb-1">Reporters</p>
+                    <h3 className="text-white text-3xl sm:text-4xl font-bold tabular-nums">{pendingData.users.length}</h3>
                   </div>
                   <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
                     <Users className="h-6 w-6 text-white" />
                   </div>
                 </div>
-                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                <p className="text-white/90 text-xs mt-4 font-medium items-center gap-1 hidden sm:flex">
                   <Check className="w-3 h-3" /> New applications &bull; Click to review
                 </p>
               </CardContent>
@@ -1926,17 +1939,17 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
               <div className="absolute top-0 right-0 p-4 opacity-20 transform group-hover:scale-110 transition-transform duration-500">
                 <Building2 className="w-24 h-24 text-white" />
               </div>
-              <CardContent className="relative p-6 z-10 flex flex-col justify-between h-full min-h-[140px]">
+              <CardContent className="relative p-4 sm:p-6 z-10 flex flex-col justify-between h-full min-h-[112px] sm:min-h-[140px]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-white/80 text-sm font-semibold uppercase tracking-wider mb-1">Pending Businesses</p>
-                    <h3 className="text-white text-4xl font-bold">{pendingData.businesses.length}</h3>
+                    <p className="text-white/80 text-[11px] sm:text-sm font-semibold uppercase tracking-wider mb-1">Pending Businesses</p>
+                    <h3 className="text-white text-3xl sm:text-4xl font-bold tabular-nums">{pendingData.businesses.length}</h3>
                   </div>
                   <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
                     <Building2 className="h-6 w-6 text-white" />
                   </div>
                 </div>
-                <p className="text-white/90 text-xs mt-4 font-medium flex items-center gap-1">
+                <p className="text-white/90 text-xs mt-4 font-medium items-center gap-1 hidden sm:flex">
                   <Globe className="w-3 h-3" /> Listings to approve &bull; Click to review
                 </p>
               </CardContent>
@@ -1951,26 +1964,29 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                   <CardTitle className="text-lg font-bold text-gray-800">Platform Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="bg-white p-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-sm font-medium text-gray-500">Total News</span>
-                    <span className="text-2xl font-bold text-gray-800">{allNews?.length || 154}</span>
-                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +12% this week</span>
-                  </div>
-                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-sm font-medium text-gray-500">Reporters</span>
-                    <span className="text-2xl font-bold text-gray-800">{allReporters?.length || 24}</span>
-                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +2 new</span>
-                  </div>
-                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-sm font-medium text-gray-500">Businesses</span>
-                    <span className="text-2xl font-bold text-gray-800">{allBusinesses?.length || 89}</span>
-                    <span className="text-xs text-emerald-600 flex items-center gap-1"><TrendingUp className="w-3 h-3" /> +5% this week</span>
-                  </div>
-                  <div className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <span className="text-sm font-medium text-gray-500">Classifieds</span>
-                    <span className="text-2xl font-bold text-gray-800">{allClassifieds?.length || 312}</span>
-                    <span className="text-xs text-red-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" /> -2% this week</span>
-                  </div>
+                  {(() => {
+                    // Real numbers only: count + how many were created in the last 7 days.
+                    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+                    const ts = (v) => { if (!v) return 0; if (v.toDate) return v.toDate().getTime(); if (v._seconds) return v._seconds * 1000; if (v.seconds) return v.seconds * 1000; const t = new Date(v).getTime(); return Number.isFinite(t) ? t : 0 }
+                    const recent = (list) => (list || []).filter((x) => ts(x.createdAt) >= weekAgo).length
+                    return [
+                      ['Total News', allNews],
+                      ['Reporters', allReporters],
+                      ['Businesses', allBusinesses],
+                      ['Classifieds', allClassifieds],
+                    ].map(([label, list]) => {
+                      const added = recent(list)
+                      return (
+                        <div key={label} className="flex flex-col gap-2 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                          <span className="text-sm font-medium text-gray-500">{label}</span>
+                          <span className="text-2xl font-bold text-gray-800 tabular-nums">{(list || []).length}</span>
+                          <span className={`text-xs flex items-center gap-1 ${added > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                            {added > 0 && <TrendingUp className="w-3 h-3" />} {added > 0 ? `+${added} in last 7 days` : 'None new this week'}
+                          </span>
+                        </div>
+                      )
+                    })
+                  })()}
                 </CardContent>
               </Card>
 
@@ -2016,14 +2032,14 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><Database className="w-4 h-4" /></div>
                          <span className="font-medium text-sm text-gray-700">Database API</span>
                        </div>
-                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Online</span>
+                       {(allNews || []).length > 0 ? <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Online</span> : <span className="flex items-center gap-1.5 text-xs font-bold text-amber-600"><span className="w-2 h-2 rounded-full bg-amber-500"></span> No data loaded</span>}
                      </div>
                      <div className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                        <div className="flex items-center gap-3">
                          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600"><Video className="w-4 h-4" /></div>
                          <span className="font-medium text-sm text-gray-700">Live TV Stream</span>
                        </div>
-                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Active</span>
+                       <span className="flex items-center gap-1.5 text-xs font-bold text-green-600"><span className="w-2 h-2 rounded-full bg-green-500"></span> Configured</span>
                      </div>
                    </div>
                 </CardContent>
@@ -6439,7 +6455,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                       const file = e.target.files?.[0]
                       if (file) {
                         try {
-                          const result = await compressImageFile(file, { maxSizeKB: 650 })
+                          const result = await compressImageFile(file, { maxSizeKB: 300 })
                           if (result.wasCompressed) {
                             toast({ title: `Image compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)}` })
                           }
@@ -6508,7 +6524,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                           const file = e.target.files?.[0]
                           if (file) {
                             try {
-                              const result = await compressImageFile(file, { maxSizeKB: 650 })
+                              const result = await compressImageFile(file, { maxSizeKB: 300 })
                               if (result.wasCompressed) {
                                 toast({ title: `Thumbnail compressed: ${formatFileSize(result.originalSize)} → ${formatFileSize(result.compressedSize)}` })
                               }

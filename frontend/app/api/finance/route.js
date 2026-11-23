@@ -28,6 +28,7 @@ export async function GET(request) {
     }
 
     const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`, {
+      ...(typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { signal: AbortSignal.timeout(5000) } : {}),
       headers: {
         'User-Agent': 'Mozilla/5.0'
       }

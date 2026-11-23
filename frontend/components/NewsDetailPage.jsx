@@ -11,7 +11,9 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { getArticleAdSettings } from '@/lib/contentStore'
 import { news } from '@/lib/api'
 import DOMPurify from 'dompurify'
+import { formatArticleHtml, stripMarkdown } from '@/lib/articleFormat'
 import { proxyImageUrl } from '@/lib/imageProxy'
+import ReadingProgress from './ReadingProgress'
 
 /**
  * SECURITY: Sanitize HTML content to prevent XSS attacks.
@@ -39,56 +41,30 @@ function sanitizeHtml(html) {
   return DOMPurify.sanitize(formatArticleHtml(html), SANITIZE_CONFIG);
 }
 
-/**
- * Articles arrive as a mix of HTML, plain text and markdown pasted from other tools
- * (e.g. "### heading", "**bold**", and broken fragments like `text-align: center;">`).
- * Normalise to clean HTML before sanitising so readers never see raw syntax.
- */
-const escapeHtml = (s) => s.replace(/&(?!(?:[a-z]+|#\d+);)/gi, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-function formatArticleHtml(raw) {
-  let s = String(raw)
-  // Broken attribute leftovers in the TEXT (never inside a real tag):
-  // `text-align: center;">` and stray `/>`
-  const insideTag = (str, offset) => str.lastIndexOf('<', offset) > str.lastIndexOf('>', offset - 1)
-  s = s.replace(/[a-z-]+\s*:\s*[a-z0-9#%.,\s-]+;?\s*"\s*\/?>/gi, (m, offset, str) => insideTag(str, offset) ? m : '')
-  s = s.replace(/\/>/g, (m, offset, str) => insideTag(str, offset) ? m : '')
-  const hasBlockHtml = /<(p|div|h[1-6]|ul|ol|li|blockquote|table|figure|br)\b/i.test(s)
-  const inline = (t) => t
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|\s)#{2,6}\s*/g, '$1') // stray inline ### markers
-    .replace(/\*\*/g, '')
-  if (hasBlockHtml) {
-    // HTML article: only fix markdown that leaked into the text
-    return s
-      .replace(/<p[^>]*>\s*#{1,6}\s+([^<]+)<\/p>/gi, '<h3>$1</h3>')
-      .replace(/(^|>)\s*#{1,6}\s+([^<\n]+)/g, '$1<h3>$2</h3>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*\*/g, '')
+// Share buttons: links point at /news/<id>, which serves preview tags (headline + photo).
+const shareArticle = async (article, target) => {
+  if (typeof window === 'undefined' || !article?.id) return
+  const url = `${window.location.origin}/news/${encodeURIComponent(article.id)}`
+  const t = article.title
+  const title = typeof t === 'string' ? t : (t?.en || t?.mr || t?.hi || 'Star News India')
+  const links = {
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    x: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${title}
+${url}`)}`,
   }
-  // Plain text / markdown article: build paragraphs and headings
-  const blocks = s.split(/\n{2,}|\r\n\r\n|(?=\n#{1,6}\s)/).map(b => b.trim()).filter(Boolean)
-  return blocks.map((b) => {
-    const h = b.match(/^(#{1,6})\s+([^\n]+)\n?([\s\S]*)$/)
-    if (h) {
-      const tag = h[1].length <= 2 ? 'h2' : 'h3'
-      const rest = h[3].trim()
-      return `<${tag}>${inline(escapeHtml(h[2].trim()))}</${tag}>` +
-        (rest ? `<p>${inline(escapeHtml(rest)).replace(/\n/g, '<br/>')}</p>` : '')
-    }
-    return `<p>${inline(escapeHtml(b)).replace(/\n/g, '<br/>')}</p>`
-  }).join('')
+  if (target === 'native') {
+    if (navigator.share) { try { await navigator.share({ title, url }) } catch {} return }
+    try { await navigator.clipboard.writeText(url) } catch {}
+    return
+  }
+  window.open(links[target], '_blank', 'noopener,noreferrer')
 }
 
-/** Plain-text version for summaries/excerpts (no markdown symbols). */
-export function stripMarkdown(text) {
-  if (!text) return ''
-  return String(text)
-    .replace(/[a-z-]+\s*:\s*[a-z0-9#%.,\s-]+;?\s*"\s*\/?>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/#{1,6}\s*/g, '')
-    .replace(/\*\*/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
+// Byline shown in the author box: the real author, with the legacy import name mapped to the desk.
+const authorDisplayName = (a) => {
+  const n = a?.authorName || a?.author?.name
+  return !n || n === 'Pune Majha News' ? 'StarNews Admin' : n
 }
 
 const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
@@ -184,7 +160,6 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
   const activeArticle = fullArticle || article
 
-  if (!activeArticle) return null
 
   const [dynamicSummary, setDynamicSummary] = useState('')
   const [dynamicContent, setDynamicContent] = useState('')
@@ -239,6 +214,9 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   }, [activeArticle?.id, language, activeArticle?.metaDescription, activeArticle?.content])
 
   // Get localized content with dynamic fallback
+  // Early return only after every hook has run (rules of hooks)
+  if (!activeArticle) return null
+
   const title = getLocalizedText(activeArticle.title, language)
   const category = getTranslatedCategory(activeArticle.category, language)
   const content = dynamicContent || getLocalizedText(activeArticle.content, language)
@@ -283,6 +261,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8 min-w-0 overflow-x-hidden" key={language}>
+      <ReadingProgress />
       {/* Breadcrumbs */}
       <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] md:text-xs font-bold text-gray-500 mb-4 md:mb-6 overflow-hidden whitespace-nowrap min-w-0">
         <button onClick={handleBackToHome} className="hover:text-red-600 transition-colors cursor-pointer flex items-center gap-1 shrink-0">
@@ -388,15 +367,15 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               <span className="text-[11px] font-bold text-gray-500 mr-1">
                 {language === 'mr' ? 'शेअर करा:' : language === 'hi' ? 'शेयर करें:' : 'Share:'}
               </span>
-              <button className="w-7 h-7 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-80 transition-opacity"><Facebook className="w-3.5 h-3.5" /></button>
-              <button className="w-7 h-7 rounded-full bg-black text-white flex items-center justify-center hover:opacity-80 transition-opacity">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              <button type="button" aria-label="Share on Facebook" onClick={() => shareArticle(article, 'facebook')} className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition"><Facebook className="w-4 h-4" /></button>
+              <button type="button" aria-label="Share on X" onClick={() => shareArticle(article, 'x')} className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-black text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </button>
-              <button className="w-7 h-7 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:opacity-80 transition-opacity">
-                <MessageCircle className="w-3.5 h-3.5" />
+              <button type="button" aria-label="Share on WhatsApp" onClick={() => shareArticle(article, 'whatsapp')} className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition">
+                <MessageCircle className="w-4 h-4" />
               </button>
-              <button className="w-7 h-7 rounded-full bg-gray-600 text-white flex items-center justify-center hover:opacity-80 transition-opacity">
-                <Share2 className="w-3.5 h-3.5" />
+              <button type="button" aria-label="Share" onClick={() => shareArticle(article, 'native')} className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-gray-600 text-white flex items-center justify-center hover:opacity-85 active:scale-95 transition">
+                <Share2 className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -512,11 +491,11 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-5 border-t border-gray-200 w-full min-w-0">
+          <div className={`${activeArticle.tags?.length ? 'flex' : 'hidden'} flex-wrap items-center gap-2 sm:gap-3 pt-5 border-t border-gray-200 w-full min-w-0`}>
             <span className="text-xs sm:text-sm font-bold text-gray-500 shrink-0">
               {language === 'mr' ? 'टॅग्ज:' : language === 'hi' ? 'टैग:' : 'Tags:'}
             </span>
-            {(activeArticle.tags && activeArticle.tags.length > 0 ? activeArticle.tags : ['Maharashtra', 'Mumbai', 'Pune', 'India News', 'Live TV']).map((tag, idx) => {
+            {(activeArticle.tags || []).map((tag, idx) => {
               const tagTranslations = {
                 mr: {
                   'maharashtra': 'महाराष्ट्र',
@@ -551,11 +530,11 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 my-6 sm:my-8 w-full min-w-0 overflow-hidden">
             <div className="flex items-center gap-4 min-w-0">
               <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 flex items-center justify-center text-white font-black text-xl sm:text-2xl shadow-sm shrink-0">
-                S
+                {(authorDisplayName(activeArticle) || 'S').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate">StarNews Admin</h4>
+                  <h4 className="font-bold text-gray-900 text-base sm:text-lg truncate">{authorDisplayName(activeArticle)}</h4>
                   <svg className="w-4 h-4 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7L6 12.6l1.5-1.5 2.6 2.6 6.4-6.4 1.5 1.5-7.9 7.9z" />
                   </svg>

@@ -1,12 +1,18 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
+import { submitLimiter } from '@/lib/rateLimit';
 import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
 
 // POST: Submit Promotion (Public)
 export async function POST(request) {
+    // Throttle anonymous submissions per IP
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!submitLimiter.check(`business-promotions:${clientIp}`).success) {
+        return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
     const db = getDb();
     if (!db) {
         return NextResponse.json({ error: 'Database service not available' }, { status: 503 });

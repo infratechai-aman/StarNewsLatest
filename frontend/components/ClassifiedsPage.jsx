@@ -224,8 +224,8 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
 
         // Auto-compress if needed
         let fileToUpload = file
-        if (file.size > 650 * 1024) {
-          const result = await compressImageFile(file, { maxSizeKB: 650 })
+        if (file.size > 300 * 1024) {
+          const result = await compressImageFile(file, { maxSizeKB: 300 })
           fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
         }
 

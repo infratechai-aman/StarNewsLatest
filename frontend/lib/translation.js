@@ -65,7 +65,7 @@ export async function translateText(text, fromLang = 'en') {
             const translatedChunks = await Promise.all(chunks.map(async (chunk) => {
                 if (!chunk.trim()) return '';
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${fromLang}&tl=${lang}&dt=t&q=${encodeURIComponent(chunk)}`;
-                const response = await fetch(url);
+                const response = await fetch(url, { ...(typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { signal: AbortSignal.timeout(6000) } : {}) });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 if (data && data[0]) {

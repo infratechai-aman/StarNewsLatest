@@ -46,7 +46,10 @@ const getApp = () => {
     // Next.js automatically loads .env.local — no manual dotenv needed
 
     let projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_ADMIN_PROJECT_ID;
-    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    // TEMPORARY: also accept the old NEXT_PUBLIC_ name so existing Vercel settings keep
+    // working until FIREBASE_CLIENT_EMAIL is set there (server-only read; nothing is
+    // bundled for the browser). Remove once Vercel env is updated (SEC-009).
+    let clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.FIREBASE_ADMIN_CLIENT_EMAIL || process.env.NEXT_PUBLIC_FIREBASE_CLIENT_EMAIL;
     let rawKey = process.env.FIREBASE_PRIVATE_KEY || process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
     // Support cases where the entire Service Account JSON is pasted into FIREBASE_PRIVATE_KEY

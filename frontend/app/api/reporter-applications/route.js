@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { submitLimiter } from '@/lib/rateLimit';
 import { getDb, getAuth } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { purgeCache } from '@/lib/cache';
@@ -6,6 +7,11 @@ import { purgeCache } from '@/lib/cache';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
+    // Throttle anonymous submissions per IP
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!submitLimiter.check(`reporter-applications:${clientIp}`).success) {
+        return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
     try {
         const db = getDb();
         if (!db) {

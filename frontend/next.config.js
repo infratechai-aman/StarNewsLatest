@@ -1,3 +1,9 @@
+// Local QA only: allow the browser to reach the Firebase Auth emulator when it is configured
+// at build time. Empty in production, so the production CSP is unchanged.
+const QA_AUTH_EMULATOR_ORIGIN = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST
+  ? ` http://${process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST}`
+  : ''
+
 const nextConfig = {
   // fix(P2-CONFIG-01): Removed output: 'standalone'.
   // Vercel deploys Next.js natively — standalone mode conflicts with Vercel's
@@ -64,10 +70,25 @@ const nextConfig = {
     const allowedOrigin = process.env.CORS_ORIGINS || "*";
     return [
       {
+        // Fixed site images in /public: cache 30 days (was re-checked on every visit).
+        // Replace an image under a NEW file name if it must change immediately.
+        source: "/:file*.:ext(jpg|jpeg|png|webp|svg|ico|gif)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=2592000, stale-while-revalidate=86400" },
+        ],
+      },
+      {
+        source: "/(.*).webm",
+        headers: [
+          { key: "Accept-Ranges", value: "bytes" },
+          { key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" },
+        ],
+      },
+      {
         source: "/(.*).mp4",
         headers: [
           { key: "Accept-Ranges", value: "bytes" },
-          { key: "Cache-Control", value: "public, max-age=3600, must-revalidate" },
+          { key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=86400" },
         ],
       },
       {
@@ -87,7 +108,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' https://www.youtube.com https://*.youtube.com https://firebasestorage.googleapis.com https://storage.googleapis.com blob:",
               "frame-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://vercel.live https://*.vercel.live https://*.firebaseapp.com",
-              "connect-src 'self' data: blob: https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://*.firebaseapp.com wss://*.firebaseio.com https://translate.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com",
+              `connect-src 'self'${QA_AUTH_EMULATOR_ORIGIN} data: blob: https://cdn.jsdelivr.net https://*.googleapis.com https://*.firebaseio.com https://*.firebase.com https://*.firebaseapp.com wss://*.firebaseio.com https://translate.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://query1.finance.yahoo.com`,
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",

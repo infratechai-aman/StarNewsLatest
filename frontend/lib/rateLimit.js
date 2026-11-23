@@ -66,4 +66,5 @@ export function rateLimit({ windowMs = 60 * 1000, max = 10 } = {}) {
 export const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 15 });    // 15 per 15 min
 export const submitLimiter = rateLimit({ windowMs: 60 * 1000, max: 5 });         // 5 per minute
 export const uploadLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });        // 10 per minute
+export const passwordResetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 3 }); // 3 reset emails per address per 15 min
 export const generalLimiter = rateLimit({ windowMs: 60 * 1000, max: 30 });       // 30 per minute

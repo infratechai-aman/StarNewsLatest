@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { identityToolkitUrl } from '@/lib/identityToolkit';
+import { authLimiter, passwordResetLimiter } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +11,11 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request) {
     try {
+        // Throttle per IP (scripted abuse) before doing anything else
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+        if (!authLimiter.check(`reset-ip:${ip}`).success) {
+            return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+        }
         const body = await request.json();
         const { email } = body;
 
@@ -22,6 +29,11 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
         }
 
+        // Throttle per target address so nobody can flood a person's inbox with reset emails
+        if (!passwordResetLimiter.check(`reset-email:${email.toLowerCase().trim()}`).success) {
+            return NextResponse.json({ error: 'Too many reset requests for this email. Please try again in 15 minutes.' }, { status: 429 });
+        }
+
         const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
         if (!apiKey) {
             console.error('NEXT_PUBLIC_FIREBASE_API_KEY not set');
@@ -30,8 +42,9 @@ export async function POST(request) {
 
         // Use Firebase Auth REST API — this ACTUALLY sends the email
         const response = await fetch(
-            `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${apiKey}`,
+            identityToolkitUrl(`accounts:sendOobCode?key=${apiKey}`),
             {
+                ...(typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { signal: AbortSignal.timeout(10000) } : {}),
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

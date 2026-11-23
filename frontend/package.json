@@ -7,7 +7,14 @@
         "build": "next build",
         "start": "next start",
         "test:api": "node test-workflow.js",
-        "create-admin": "node create-admin.js"
+        "create-admin": "node create-admin.js",
+        "lint": "eslint --no-eslintrc -c eslint.config.audit.json --ext .js,.jsx app components contexts hooks lib",
+        "test:unit": "node --test --experimental-test-coverage --test-coverage-include=lib/** \"tests/unit/*.test.mjs\"",
+        "test:e2e": "playwright test",
+        "test": "npm run lint && npm run test:unit",
+        "emulators": "firebase emulators:start --project demo-qa --only firestore,auth",
+        "seed:emulator": "node tests/emulator/seed.mjs",
+        "test:backend": "playwright test -c playwright.emulator.config.mjs"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.1.1",
@@ -71,7 +78,13 @@
         "zod": "^3.25.67"
     },
     "devDependencies": {
+        "@next/eslint-plugin-next": "^14.2.35",
+        "@playwright/test": "^1.64.1",
         "autoprefixer": "^10.4.19",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react": "^7.37.2",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "firebase-tools": "^15.37.0",
         "globals": "^16.2.0",
         "postcss": "^8",
         "tailwindcss": "^3.4.1"

@@ -1,3 +1,4 @@
+import { withDeadline } from '@/lib/deadline'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin';
 import { getCurrentUser, isSuperAdmin } from '@/lib/auth'
@@ -18,7 +19,7 @@ export async function GET() {
         return NextResponse.json({ error: 'Database connection failed' }, { status: 503 });
     }
     try {
-        const doc = await db.collection('site_settings').doc('sidebar_ad').get()
+        const doc = await withDeadline(db.collection('site_settings').doc('sidebar_ad').get())
         let responseData = { enabled: false, items: [] };
 
         if (doc.exists) {

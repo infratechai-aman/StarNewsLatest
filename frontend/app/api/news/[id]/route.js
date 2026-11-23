@@ -1,3 +1,4 @@
+import { withDeadline } from '@/lib/deadline'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebaseAdmin'
 import { getCurrentUser, hasRole, ROLES, isSuperAdmin } from '@/lib/auth'
@@ -10,7 +11,7 @@ export async function GET(request, { params }) {
     }
     try {
         const { id } = params
-        const doc = await db.collection('news_articles').doc(id).get()
+        const doc = await withDeadline(db.collection('news_articles').doc(id).get())
 
         if (!doc.exists) {
             return NextResponse.json({ error: 'Article not found' }, { status: 404 })
@@ -28,10 +29,16 @@ export async function GET(request, { params }) {
         // Increment views (optional, might want to debounce this or use a separate counter to avoid write hotspots)
         // await db.collection('news_articles').doc(id).update({ views: admin.firestore.FieldValue.increment(1) })
 
-        return NextResponse.json({
+        const res = NextResponse.json({
             id: doc.id,
             ...data
         })
+        // Public, published articles are identical for everyone: let the CDN serve them for
+        // 60 s (+60 s stale) instead of running this function + Firestore on every view.
+        // Drafts/pending (visible only to author/admin) are never cached.
+        const isPublic = data.approvalStatus === 'approved' && !!data.active
+        res.headers.set('Cache-Control', isPublic ? 'public, s-maxage=60, stale-while-revalidate=60' : 'private, no-store')
+        return res
 
     } catch (error) {
         console.error('News [ID] GET Error:', error)

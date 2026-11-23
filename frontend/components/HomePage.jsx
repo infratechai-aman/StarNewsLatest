@@ -25,6 +25,7 @@ import { toast } from "sonner"
 import { Store, ChevronRight } from 'lucide-react'
 import WeatherWidget from './WeatherWidget'
 import ReporterApplicationModal from './ReporterApplicationModal'
+import LazyYouTube from './LazyYouTube'
 
 // WhatsApp Icon Component
 const WhatsAppIcon = ({ className }) => (
@@ -771,7 +772,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
   // Click handler for news items - push browser history for back button support
   const handleNewsClick = (article) => {
-    window.history.pushState({ view: 'news-detail', article: article }, '', `?article=${article.id}`)
+    window.history.pushState({ view: 'news-detail', article: article }, '', `/news/${article.id}`)
     setSelectedArticle(article)
     setCurrentView('news-detail')
   }
@@ -833,11 +834,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
       )}
 
       {/* --- PREMIUM MOBILE VIEW (Top of DOM) --- */}
-      <div className="lg:hidden space-y-6 mb-10 mt-0">
+      <div className="lg:hidden space-y-6 mb-10 pt-5">
         {/* Mobile Featured Carousel / Hero */}
         <div className="px-4">
           <div className="mag-section-header mb-4">
-            <h2 className="text-3xl font-heading font-black tracking-tighter flex items-center gap-2">
+            <h2 className="text-2xl font-heading font-black tracking-tight flex items-center gap-2 leading-tight">
               <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
               {t('featured') || 'Featured News'}
             </h2>
@@ -1387,15 +1388,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             <div
               className="block relative aspect-video bg-gray-900 overflow-hidden group cursor-pointer rounded-lg shadow-sm"
             >
-              <iframe
-                src="https://www.youtube-nocookie.com/embed/GFjuqQmfVIU?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1"
-                title="StarNews Live"
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                referrerPolicy="no-referrer-when-downgrade"
-                style={{ border: 'none' }}
-              />
+              <LazyYouTube videoId="GFjuqQmfVIU" title="StarNews Live" />
               <div className="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 uppercase rounded flex items-center gap-1.5 shadow-md pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                 {t('live') || 'LIVE'}

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { identityToolkitUrl } from '@/lib/identityToolkit';
 import { getCurrentUser } from '@/lib/auth';
 import { getAuth, getDb } from '@/lib/firebaseAdmin';
 
@@ -15,8 +16,9 @@ async function verifyOldPassword(email, password) {
     }
 
     const response = await fetch(
-        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        identityToolkitUrl(`accounts:signInWithPassword?key=${apiKey}`),
         {
+            ...(typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? { signal: AbortSignal.timeout(10000) } : {}),
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

@@ -39,6 +39,13 @@ export async function POST(request) {
         let userRecord;
         try {
             userRecord = await auth.getUserByEmail(cleanEmail);
+            // Never convert an admin account into a reporter (that would demote the admin and
+            // overwrite their password, locking them out).
+            const existingSnap = await db.collection('users').doc(userRecord.uid).get();
+            const existingRole = String(existingSnap.exists ? existingSnap.data().role || '' : '').toLowerCase();
+            if (['super_admin', 'admin', 'superadmin'].includes(existingRole)) {
+                return NextResponse.json({ error: 'This email belongs to an admin account and cannot be turned into a reporter.' }, { status: 409 });
+            }
             // User exists: update password and displayName
             await auth.updateUser(userRecord.uid, {
                 password: password,

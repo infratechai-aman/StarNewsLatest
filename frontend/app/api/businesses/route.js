@@ -1,5 +1,7 @@
+import { withDeadline } from '@/lib/deadline'
 import { getDb } from '@/lib/firebaseAdmin';
 import { NextResponse } from 'next/server';
+import { submitLimiter } from '@/lib/rateLimit';
 import { getCache, setCache, purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -30,7 +32,7 @@ export async function GET(request) {
             query = query.where('category', '==', category);
         }
 
-        const snapshot = await query.limit(limit).get();
+        const snapshot = await withDeadline(query.limit(limit).get());
         let businesses = snapshot.docs.map(doc => ({
             ...doc.data(),
             id: doc.id,
@@ -59,6 +61,11 @@ export async function GET(request) {
 
 // POST: Submit / Create Business (Public submission goes to pending queue)
 export async function POST(request) {
+    // Throttle anonymous submissions per IP
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (!submitLimiter.check(`businesses:${clientIp}`).success) {
+        return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
+    }
     const db = getDb();
     if (!db) {
         return NextResponse.json({ error: 'Database not initialized' }, { status: 503 });
@@ -88,6 +95,15 @@ export async function POST(request) {
 
         const finalName = (name || businessName || '').trim();
         const finalPhone = (phone || '').trim();
+
+        // Field length caps: public endpoint, so stop oversized payloads before they reach Firestore
+        const LIMITS = { name: [finalName, 150], ownerName: [ownerName, 100], phone: [phone, 20], whatsapp: [whatsapp, 20],
+            address: [address, 500], description: [description, 5000], website: [website, 300], area: [area, 100], googleMapsLink: [googleMapsLink, 500] };
+        for (const [field, [value, max]] of Object.entries(LIMITS)) {
+            if (value != null && String(value).length > max) {
+                return NextResponse.json({ error: `${field} is too long (max ${max} characters)` }, { status: 400 });
+            }
+        }
 
         if (!finalName) {
             return NextResponse.json({ error: 'Business name is required' }, { status: 400 });

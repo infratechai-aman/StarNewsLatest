@@ -50,14 +50,15 @@ const ReporterDashboard = dynamic(() => import('@/components/ReporterDashboard')
 const AdminDashboard = dynamic(() => import('@/components/AdminDashboard'), { loading: PageSkeleton, ssr: false })
 const AdvertiserDashboard = dynamic(() => import('@/components/AdvertiserDashboard'), { loading: PageSkeleton, ssr: false })
 
-const ClientApp = ({ initialNewsData }) => {
+const ClientApp = ({ initialNewsData, initialArticle = null }) => {
     const [user, setUser] = useState(null)
 
     // No longer blocking the whole app with loading! Only blocks if checking auth.
     // Actually, let's not block rendering for auth check. Default to null, update when fetched.
     const [loading, setLoading] = useState(true)
-    const [currentView, setCurrentView] = useState('home')
-    const [selectedArticle, setSelectedArticle] = useState(null)
+    // /news/<id> is server-rendered straight into the article view.
+    const [currentView, setCurrentView] = useState(initialArticle ? 'news-detail' : 'home')
+    const [selectedArticle, setSelectedArticle] = useState(initialArticle)
     const [selectedBusiness, setSelectedBusiness] = useState(null)
     const [selectedClassified, setSelectedClassified] = useState(null)
 
@@ -67,7 +68,9 @@ const ClientApp = ({ initialNewsData }) => {
         if (typeof window !== 'undefined') {
             window.scrollTo({ top: 0, behavior: 'instant' })
             try {
-                const url = view === 'home' ? '/' : `?view=${view}`
+                // Article callers already pushed the shareable /news/<id> URL.
+                if (view === 'news-detail' && window.location.pathname.startsWith('/news/')) return
+                const url = view === 'home' ? '/' : `/?view=${view}`
                 window.history.pushState({ view, ...extraState }, '', url)
             } catch (err) {
                 // Ignore history errors

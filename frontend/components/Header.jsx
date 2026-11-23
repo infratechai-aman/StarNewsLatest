@@ -66,6 +66,18 @@ const SOCIAL_LINKS = {
   twitter: ''
 }
 
+// Numbered section header for the Post Your Ad forms; turns green when the
+// section's required fields are filled (visual guide only, validation unchanged).
+const FormStep = ({ n, done, label }) => (
+  <div className="flex items-center gap-2.5 pt-2 first:pt-0">
+    <span className={`w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center transition-colors duration-200 ${done ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+      {done ? '✓' : n}
+    </span>
+    <span className="text-[13px] font-bold text-gray-900">{label}</span>
+    <span className="flex-1 h-px bg-gray-100" />
+  </div>
+)
+
 const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedArticle }) => {
   const [mounted, setMounted] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -198,7 +210,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       setSelectedArticle(article)
     }
     if (typeof window !== 'undefined') {
-      window.history.pushState({ view: 'news-detail', article }, '', `?article=${article.id}`)
+      window.history.pushState({ view: 'news-detail', article }, '', `/news/${article.id}`)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
     setCurrentView('news-detail')
@@ -235,8 +247,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
   // Shared public image uploader: compresses large files, uploads, returns the hosted URL
   const uploadPublicImage = async (file) => {
     let fileToUpload = file
-    if (file.size > 650 * 1024) {
-      const result = await compressImageFile(file, { maxSizeKB: 650 })
+    if (file.size > 300 * 1024) {
+      const result = await compressImageFile(file, { maxSizeKB: 300 })
       fileToUpload = new File([result.blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
     }
     const formDataUpload = new FormData()
@@ -675,7 +687,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                     <Briefcase className="h-3.5 w-3.5" />{t('promoteYourBusiness')}
                   </button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+                <DialogContent className="sm:max-w-[560px] max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-2xl p-6 pb-0 max-sm:top-auto max-sm:bottom-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl max-sm:border-x-0 max-sm:border-b-0">
                   <DialogHeader className="mb-2">
                     <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900">
                       <Tag className="h-5 w-5 text-[#E53935]" />
@@ -699,6 +711,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                     {/* TAB 1: CLASSIFIED AD */}
                     <TabsContent value="classified">
                       <form onSubmit={handleClassifiedSubmit} className="space-y-4">
+                        <FormStep n={1} done={!!(classifiedForm.title && classifiedForm.category && classifiedForm.price)} label={language === 'mr' ? 'तुम्ही काय पोस्ट करत आहात?' : language === 'hi' ? 'आप क्या पोस्ट कर रहे हैं?' : 'What are you posting?'} />
                         <div className="space-y-1.5">
                           <Label htmlFor="cTitle" className="text-sm font-semibold text-gray-700">Ad Title *</Label>
                           <Input
@@ -741,6 +754,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           </div>
                         </div>
 
+                        <FormStep n={2} done={!!(classifiedForm.phone && classifiedForm.location)} label={language === 'mr' ? 'संपर्क आणि तपशील' : language === 'hi' ? 'संपर्क और विवरण' : 'Contact & details'} />
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label htmlFor="cPhone" className="text-sm font-semibold text-gray-700">Phone Number *</Label>
@@ -779,6 +793,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           />
                         </div>
 
+                        <FormStep n={3} done={classifiedForm.images.length > 0} label={language === 'mr' ? 'फोटो (ऐच्छिक)' : language === 'hi' ? 'फ़ोटो (वैकल्पिक)' : 'Photos (optional)'} />
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm font-semibold text-gray-700">Upload Images</Label>
@@ -818,7 +833,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           />
                         </div>
 
-                        <DialogFooter className="pt-2">
+                        <DialogFooter className="sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-3 bg-white/95 backdrop-blur border-t border-gray-100 flex-row gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
                           <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingClassified}>
                             {t('cancel')}
                           </Button>
@@ -832,6 +847,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                     {/* TAB 2: PROMOTE BUSINESS */}
                     <TabsContent value="business">
                       <form onSubmit={handleBusinessSubmit} className="space-y-4">
+                        <FormStep n={1} done={!!(businessForm.businessName && businessForm.category)} label={language === 'mr' ? 'तुमचा व्यवसाय' : language === 'hi' ? 'आपका व्यवसाय' : 'Your business'} />
                         <div className="space-y-1.5">
                           <Label htmlFor="bName" className="text-sm font-semibold text-gray-700">Business Name *</Label>
                           <Input
@@ -873,6 +889,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           </div>
                         </div>
 
+                        <FormStep n={2} done={!!(businessForm.phone && businessForm.address)} label={language === 'mr' ? 'संपर्क आणि पत्ता' : language === 'hi' ? 'संपर्क और पता' : 'Contact & address'} />
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <Label htmlFor="bPhone" className="text-sm font-semibold text-gray-700">Phone *</Label>
@@ -923,6 +940,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           />
                         </div>
 
+                        <FormStep n={3} done={!!(businessForm.coverImage || businessForm.images?.length)} label={language === 'mr' ? 'फोटो' : language === 'hi' ? 'फ़ोटो' : 'Photos'} />
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm font-semibold text-gray-700">Cover Image / Logo</Label>
@@ -1002,7 +1020,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                           />
                         </div>
 
-                        <DialogFooter className="pt-2">
+                        <DialogFooter className="sticky bottom-0 -mx-6 px-6 pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-3 bg-white/95 backdrop-blur border-t border-gray-100 flex-row gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
                           <Button type="button" variant="outline" onClick={() => setPromoteDialogOpen(false)} disabled={submittingBusiness}>
                             {t('cancel')}
                           </Button>
@@ -1073,9 +1091,12 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       {/* --- PREMIUM MOBILE HEADER (Small Screens) --- */}
       <div className="lg:hidden w-full max-w-full overflow-hidden">
         {/* Top Red Bar: Main Navigation */}
-        <div className="bg-[#E53935]/95 backdrop-blur-xl backdrop-saturate-150 text-white border-b border-red-700 flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden w-full max-w-full">
-          {/* Glossy shine overlay */}
-          <div className="absolute inset-0 opacity-[0.07] pointer-events-none" style={{ background: 'linear-gradient(180deg, white 0%, transparent 50%, rgba(0,0,0,0.1) 100%)' }} />
+        <div className="text-white flex items-center justify-between px-4 h-16 sticky top-0 z-50 relative overflow-hidden w-full max-w-full shadow-[0_2px_12px_rgba(183,28,28,0.35)]" style={{ background: 'linear-gradient(180deg, #EF3B36 0%, #D32F2F 55%, #B71C1C 100%)' }}>
+          {/* Soft spotlight behind the logo badge + fine diagonal texture */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(120px 60px at 50% 50%, rgba(255,255,255,0.28), transparent 70%)' }} />
+          <div className="absolute inset-0 pointer-events-none opacity-[0.06]" style={{ backgroundImage: 'repeating-linear-gradient(135deg, #fff 0 1px, transparent 1px 9px)' }} />
+          {/* Thin light line along the bottom edge */}
+          <div className="absolute inset-x-0 bottom-0 h-px bg-white/25 pointer-events-none" />
 
           {/* Left: Hamburger Menu */}
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors active:scale-95 relative z-10">
@@ -1084,8 +1105,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
 
           {/* Center: Sleek Logo without white border or clipping */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer z-10" onClick={() => setCurrentView('home')}>
-            <div className="flex-shrink-0 w-[145px] h-[48px] relative flex items-center justify-center overflow-hidden">
-              <VideoLogo className="w-full h-full" />
+            <div className="flex-shrink-0 bg-white rounded-[13px] p-1 shadow-[0_6px_18px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(0,0,0,0.04)] ring-2 ring-white/40 active:scale-95 transition-transform duration-150">
+              <VideoLogo tight className="w-[80px] h-[47px] rounded-[9px]" />
             </div>
           </div>
 

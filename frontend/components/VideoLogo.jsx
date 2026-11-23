@@ -2,7 +2,9 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 
-export default function VideoLogo({ className = "", style = {}, videoSrc = "/LatestLogo.mp4" }) {
+// tight: crop the square 480×480 video to just the logo card (x 15.6-94.2%, y 23.3-69.2%),
+// so the caller can frame it evenly (e.g. a badge). Default keeps the old framing.
+export default function VideoLogo({ className = "", style = {}, videoSrc = "/LatestLogo.mp4", tight = false }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const isVisibleRef = useRef(false);
@@ -27,6 +29,14 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         let isDestroyed = false;
         let lastFrameTime = 0;
 
+        // Data Saver / 2G: keep the still logo and skip the video download entirely.
+        const conn = typeof navigator !== 'undefined' ? navigator.connection : null;
+        if (conn && (conn.saveData || /(^|-)2g$/.test(conn.effectiveType || ''))) return;
+
+        // WebM (VP9) is ~57% smaller than the MP4; browsers that can't play it keep the MP4.
+        const webmSrc = videoSrc.replace(/\.mp4$/, '.webm');
+        const sourceUrl = webmSrc !== videoSrc && video.canPlayType('video/webm; codecs="vp9"') ? webmSrc : videoSrc;
+
         // Force mobile-friendly attributes
         video.muted = true;
         video.defaultMuted = true;
@@ -39,8 +49,8 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
         const playVideo = async () => {
             if (isDestroyed || videoError || !video) return;
             try {
-                if (!video.src || !video.src.includes('LatestLogo.mp4')) {
-                    video.src = videoSrc;
+                if (!video.src) {
+                    video.src = sourceUrl;
                 }
                 video.muted = true;
                 video.defaultMuted = true;
@@ -57,7 +67,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
 
         // One-time interaction fallback to unlock audio/video engine on strict mobile browsers
         const unlockMobileVideo = () => {
-            if (video && video.paused && !videoError) {
+            if (video && video.paused && !videoError && isVisibleRef.current) {
                 video.play().catch(() => {});
             }
         };
@@ -175,9 +185,9 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
             }
         };
 
-        // Start processing loop
+        // Start processing loop. Playback starts only when this instance is on screen
+        // (IntersectionObserver), so the hidden desktop/mobile copy never downloads the video.
         scheduleNextFrame();
-        playVideo();
 
         return () => {
             isDestroyed = true;
@@ -197,7 +207,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
     }, [videoSrc, mounted, videoError]);
 
     return (
-        <div className={`relative ${className}`} style={style} suppressHydrationWarning>
+        <div className={`relative ${tight ? 'overflow-hidden' : ''} ${className}`} style={style} suppressHydrationWarning>
             {/* Fallback / primary static logo: shown while loading, during SSR, or if video fails */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -209,16 +219,21 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
 
             {/* Client-only video & canvas to prevent SSR hydration mismatch */}
             {mounted && !videoError && (
-                <>
+                <div className={tight ? 'absolute left-0 top-0 aspect-square w-[127.2%] ml-[-19.85%] mt-[-29.64%]' : 'contents'}>
                     <video
                         ref={videoRef}
-                        src={videoSrc}
-                        autoPlay
                         loop
                         muted
                         playsInline
-                        preload="auto"
-                        onError={() => {
+                        preload="metadata"
+                        onError={(e) => {
+                            // WebM failed to decode on this device: retry once with the MP4.
+                            const v = e.currentTarget;
+                            if (v.src && v.src.endsWith('.webm')) {
+                                v.src = videoSrc;
+                                v.play?.().catch(() => {});
+                                return;
+                            }
                             // Silently fall back to clean logo without uncaught error
                             setVideoError(true);
                         }}
@@ -226,9 +241,9 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
                     />
                     <canvas
                         ref={canvasRef}
-                        className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 scale-[1.75] ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-full object-contain pointer-events-none transition-opacity duration-300 ${tight ? '' : 'scale-[1.75]'} ${hasFirstFrame ? 'opacity-100' : 'opacity-0'}`}
                     />
-                </>
+                </div>
             )}
         </div>
     );
