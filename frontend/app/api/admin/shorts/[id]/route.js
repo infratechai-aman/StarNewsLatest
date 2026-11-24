@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireReporterOrAdmin } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { purgeCache } from '@/lib/cache';
 
@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 // PUT: Update/Edit a Short
 export async function PUT(request, { params }) {
-    const authResult = await requireReporterOrAdmin(request);
+    const authResult = await requireSuperAdmin(request);
     if (authResult.error) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 
     const db = getDb();
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
 
 // DELETE: Remove a Short
 export async function DELETE(request, { params }) {
-    const authResult = await requireReporterOrAdmin(request);
+    const authResult = await requireSuperAdmin(request);
     if (authResult.error) return NextResponse.json({ error: authResult.error }, { status: authResult.status });
 
     const db = getDb();

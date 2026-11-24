@@ -1,5 +1,5 @@
 import { getDb } from '@/lib/firebaseAdmin';
-import { requireReporterOrAdmin } from '@/lib/auth';
+import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { purgeCache } from '@/lib/cache';
 
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET: List all E-Newspapers (Admin or Reporter)
 export async function GET(request) {
     // Allow Reporter too as they might check history
-    const authResult = await requireReporterOrAdmin(request);
+    const authResult = await requireSuperAdmin(request);
     if (authResult.error) {
         return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
@@ -38,7 +38,7 @@ export async function GET(request) {
 
 // POST: Upload E-Newspaper (Admin or Reporter)
 export async function POST(request) {
-    const authResult = await requireReporterOrAdmin(request);
+    const authResult = await requireSuperAdmin(request);
     if (authResult.error) {
         return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
