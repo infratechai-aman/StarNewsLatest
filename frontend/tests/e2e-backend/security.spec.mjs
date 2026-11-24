@@ -34,6 +34,27 @@ test.describe('authorization boundaries (emulator)', () => {
     expect((await request.get('/api/admin/users', { headers: bearer(admin) })).status()).toBe(200)
   })
 
+  test('a reporter cannot use the admin Shorts / E-Paper endpoints (publish without approval)', async ({ request }) => {
+    const reporter = await idToken(request, USERS.reporter.email, USERS.reporter.password)
+    const admin = await idToken(request, USERS.admin.email, USERS.admin.password)
+    const shortBody = { title: uniq('short'), mediaUrl: 'https://www.youtube.com/shorts/abc123def45', mediaType: 'youtube' }
+    expect((await request.post('/api/admin/shorts', { headers: bearer(reporter), data: shortBody })).status()).toBe(403)
+    expect((await request.get('/api/admin/shorts', { headers: bearer(reporter) })).status()).toBe(403)
+    expect((await request.put('/api/admin/shorts/any-id', { headers: bearer(reporter), data: shortBody })).status()).toBe(403)
+    expect((await request.delete('/api/admin/shorts/any-id', { headers: bearer(reporter) })).status()).toBe(403)
+    expect((await request.post('/api/admin/shorts/any-id/toggle', { headers: bearer(reporter) })).status()).toBe(403)
+    expect((await request.post('/api/admin/enewspaper', { headers: bearer(reporter), data: { title: uniq('ep'), pdfUrl: 'https://example.com/a.pdf' } })).status()).toBe(403)
+    expect((await request.get('/api/admin/enewspaper', { headers: bearer(reporter) })).status()).toBe(403)
+    // Admin keeps access
+    expect((await request.get('/api/admin/shorts', { headers: bearer(admin) })).status()).toBe(200)
+    expect((await request.get('/api/admin/enewspaper', { headers: bearer(admin) })).status()).toBe(200)
+  })
+
+  test('a reporter cannot delete an admin-uploaded e-paper (no author field)', async ({ request }) => {
+    const reporter = await idToken(request, USERS.reporter.email, USERS.reporter.password)
+    expect((await request.delete('/api/reporter/enewspaper/seed-paper-2', { headers: bearer(reporter) })).status()).toBe(403)
+  })
+
   test('no token / garbage token is rejected', async ({ request }) => {
     expect((await request.get('/api/admin/users')).status()).toBe(401)
     expect([401, 403]).toContain((await request.get('/api/admin/users', { headers: bearer('not-a-jwt') })).status())
