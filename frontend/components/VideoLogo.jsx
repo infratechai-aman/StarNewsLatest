@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 
-// tight: crop the square 480×480 video to just the logo card (x 15.6-94.2%, y 23.3-69.2%),
+// tight: crop the square 480×480 video to the logo card plus a small even margin (x 9-96%, y 20-71%),
 // so the caller can frame it evenly (e.g. a badge). Default keeps the old framing.
 export default function VideoLogo({ className = "", style = {}, videoSrc = "/LatestLogo.mp4", tight = false }) {
     const videoRef = useRef(null);
@@ -219,7 +219,7 @@ export default function VideoLogo({ className = "", style = {}, videoSrc = "/Lat
 
             {/* Client-only video & canvas to prevent SSR hydration mismatch */}
             {mounted && !videoError && (
-                <div className={tight ? 'absolute left-0 top-0 aspect-square w-[127.2%] ml-[-19.85%] mt-[-29.64%]' : 'contents'}>
+                <div className={tight ? 'absolute left-0 top-0 aspect-square w-[114.9%] ml-[-10.34%] mt-[-22.99%]' : 'contents'}>
                     <video
                         ref={videoRef}
                         loop
