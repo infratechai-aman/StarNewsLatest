@@ -25,7 +25,7 @@ export async function DELETE(request, { params }) {
         const isAdmin = isSuperAdmin(authResult.user);
 
         // Enforce ownership: reporters can only delete their own e-newspapers
-        if (!isAdmin && data.authorId && data.authorId !== authResult.user.userId) {
+        if (!isAdmin && data.authorId !== authResult.user.userId) { // no author = admin upload: reporters may not delete it
             return NextResponse.json({ error: 'Forbidden: You can only delete your own e-newspapers' }, { status: 403 });
         }
 
