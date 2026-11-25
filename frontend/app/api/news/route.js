@@ -215,9 +215,12 @@ export async function POST(request) {
 
         const approvalStatus = status === 'submit' ? 'pending' : 'draft'
 
-        // Auto-translate Title and Content
+        // Auto-translate Title, Content, and Meta Description (auto-detects Hindi/English)
         const translatedTitle = await translateText(title);
         const translatedContent = await translateText(content);
+        const translatedMeta = metaDescription && typeof metaDescription === 'string'
+            ? await translateText(metaDescription)
+            : (metaDescription || '');
 
         // Fetch Category Name for denormalization
         const catDoc = await db.collection('news_categories').doc(categoryId).get()
@@ -235,7 +238,7 @@ export async function POST(request) {
             videoUrl,
             youtubeUrl,
             tags: tags || [],
-            metaDescription,
+            metaDescription: translatedMeta,
             authorId: user.userId,
             authorName: user.name || user.email, // Denormalized
             approvalStatus,

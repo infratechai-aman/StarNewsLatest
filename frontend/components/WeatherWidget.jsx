@@ -92,7 +92,7 @@ function renderWeatherIcon(conditionKey, className) {
   }
 }
 
-const WeatherWidget = ({ className = '' }) => {
+const WeatherWidget = ({ className = '', compact = false }) => {
   const { language } = useLanguage()
   const lang = language === 'hi' || language === 'mr' ? language : 'en'
   const locale = lang === 'hi' ? 'hi-IN' : lang === 'mr' ? 'mr-IN' : 'en-IN'
@@ -205,100 +205,170 @@ const WeatherWidget = ({ className = '' }) => {
         </div>
       </div>
 
-      {/* Location + Date + Weather Icon */}
-      <div className="flex items-start justify-between gap-3 relative z-10 mt-4">
-        <div className="min-w-0">
-          <h3 className="text-lg font-extrabold tracking-tight text-white leading-tight truncate">
-            {cityMeta.title[lang]}
-          </h3>
-          <p className="text-xs text-gray-400 font-medium mt-0.5 min-h-[16px]">
-            {mounted
-              ? new Date().toLocaleDateString(locale, {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'short',
-                })
-              : ''}
-          </p>
-        </div>
-        {renderWeatherIcon(
-          current.conditionKey,
-          'w-10 h-10 text-amber-400 shrink-0 drop-shadow-[0_2px_10px_rgba(251,191,36,0.25)]'
-        )}
-      </div>
-
-      {/* Main Temperature Display */}
-      <div className="flex items-center my-4 relative z-10">
-        <span className="text-5xl xl:text-[54px] font-black tracking-tighter leading-none text-white">
-          {current.temp}°
-        </span>
-        <div className="ml-4 min-w-0">
-          <span className="block text-sm font-bold text-white leading-snug truncate">
-            {conditionLabel}
-          </span>
-          <span className="block text-xs text-gray-400 font-semibold mt-0.5">
-            {lang === 'mr'
-              ? `कमाल: ${current.high}°  किमान: ${current.low}°`
-              : lang === 'hi'
-              ? `अधिकतम: ${current.high}°  न्यूनतम: ${current.low}°`
-              : `H: ${current.high}°  L: ${current.low}°`}
-          </span>
-        </div>
-      </div>
-
-      {/* 3-Column Metrics Grid: Wind | Humidity | AQI */}
-      <div className="grid grid-cols-3 gap-2 relative z-10 mb-3">
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-2">
-          <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
-            {UI_TEXT.wind[lang]}
-          </span>
-          <div className="flex items-baseline gap-0.5">
-            <span className="text-sm font-bold text-white leading-none">{current.wind}</span>
-            <span className="text-[10px] text-gray-400 font-medium">km/h</span>
-          </div>
-        </div>
-
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-2">
-          <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
-            {UI_TEXT.humidity[lang]}
-          </span>
-          <span className="block text-sm font-bold text-white leading-none">
-            {current.humidity}%
-          </span>
-        </div>
-
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-2">
-          <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
-            {UI_TEXT.aqi[lang]}
-          </span>
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-sm font-bold text-white leading-none">{current.aqi}</span>
-            <span
-              className={`text-[9px] font-bold px-1.5 py-0.5 rounded border leading-none ${aqiStyle.badge}`}
-            >
-              {aqiStyle.label}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom 3-Day Forecast Box */}
-      <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-2 py-2.5 relative z-10">
-        <p className="text-[9px] font-bold tracking-[0.14em] text-gray-400 uppercase text-center mb-2">
-          {UI_TEXT.forecastTitle[lang]}
-        </p>
-        <div className="grid grid-cols-3 divide-x divide-white/[0.08]">
-          {(current.forecast || DEFAULT_CITY_DATA.pune.forecast).slice(0, 3).map((day, idx) => (
-            <div key={day.date || idx} className="flex flex-col items-center gap-1 px-1">
-              <span className="text-[11px] font-semibold text-gray-400 min-h-[16px]">
-                {getForecastDayLabel(day, idx)}
-              </span>
-              {renderWeatherIcon(day.conditionKey, 'w-4 h-4 text-gray-300')}
-              <span className="text-sm font-bold text-white leading-none">{day.tempMax}°</span>
+      {compact ? (
+        <>
+          {/* Compact Main Row: Location + Condition on left, Icon + Big Temp on right */}
+          <div className="flex items-center justify-between gap-2 relative z-10 my-2">
+            <div className="min-w-0">
+              <h3 className="text-base font-extrabold tracking-tight text-white leading-tight truncate">
+                {cityMeta.title[lang]}
+              </h3>
+              <p className="text-[11px] text-gray-300 font-semibold mt-0.5 truncate">
+                {conditionLabel}
+              </p>
+              <p className="text-[10px] text-gray-400 font-medium mt-0.5 truncate">
+                {lang === 'mr'
+                  ? `कमाल: ${current.high}° · किमान: ${current.low}°`
+                  : lang === 'hi'
+                  ? `अधिकतम: ${current.high}° · न्यूनतम: ${current.low}°`
+                  : `H: ${current.high}° · L: ${current.low}°`}
+              </p>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {renderWeatherIcon(
+                current.conditionKey,
+                'w-8 h-8 text-amber-400 shrink-0 drop-shadow-[0_2px_8px_rgba(251,191,36,0.25)]'
+              )}
+              <span className="text-4xl font-black tracking-tighter leading-none text-white">
+                {current.temp}°
+              </span>
+            </div>
+          </div>
+
+          {/* Compact 3-Column Metrics Grid: Wind | Humidity | AQI */}
+          <div className="grid grid-cols-3 gap-1.5 relative z-10">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1.5">
+              <span className="block text-[9px] text-gray-400 font-medium leading-none mb-1">
+                {UI_TEXT.wind[lang]}
+              </span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-xs font-bold text-white leading-none">{current.wind}</span>
+                <span className="text-[9px] text-gray-400 font-medium">km/h</span>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1.5">
+              <span className="block text-[9px] text-gray-400 font-medium leading-none mb-1">
+                {UI_TEXT.humidity[lang]}
+              </span>
+              <span className="block text-xs font-bold text-white leading-none">
+                {current.humidity}%
+              </span>
+            </div>
+
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-1.5">
+              <span className="block text-[9px] text-gray-400 font-medium leading-none mb-1">
+                {UI_TEXT.aqi[lang]}
+              </span>
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-xs font-bold text-white leading-none">{current.aqi}</span>
+                <span
+                  className={`text-[8px] font-bold px-1 py-0.5 rounded border leading-none ${aqiStyle.badge}`}
+                >
+                  {aqiStyle.label}
+                </span>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Location + Date + Weather Icon */}
+          <div className="flex items-start justify-between gap-3 relative z-10 mt-4">
+            <div className="min-w-0">
+              <h3 className="text-lg font-extrabold tracking-tight text-white leading-tight truncate">
+                {cityMeta.title[lang]}
+              </h3>
+              <p className="text-xs text-gray-400 font-medium mt-0.5 min-h-[16px]">
+                {mounted
+                  ? new Date().toLocaleDateString(locale, {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'short',
+                    })
+                  : ''}
+              </p>
+            </div>
+            {renderWeatherIcon(
+              current.conditionKey,
+              'w-10 h-10 text-amber-400 shrink-0 drop-shadow-[0_2px_10px_rgba(251,191,36,0.25)]'
+            )}
+          </div>
+
+          {/* Main Temperature Display */}
+          <div className="flex items-center my-4 relative z-10">
+            <span className="text-5xl xl:text-[54px] font-black tracking-tighter leading-none text-white">
+              {current.temp}°
+            </span>
+            <div className="ml-4 min-w-0">
+              <span className="block text-sm font-bold text-white leading-snug truncate">
+                {conditionLabel}
+              </span>
+              <span className="block text-xs text-gray-400 font-semibold mt-0.5">
+                {lang === 'mr'
+                  ? `कमाल: ${current.high}°  किमान: ${current.low}°`
+                  : lang === 'hi'
+                  ? `अधिकतम: ${current.high}°  न्यूनतम: ${current.low}°`
+                  : `H: ${current.high}°  L: ${current.low}°`}
+              </span>
+            </div>
+          </div>
+
+          {/* 3-Column Metrics Grid: Wind | Humidity | AQI */}
+          <div className="grid grid-cols-3 gap-2 relative z-10 mb-3">
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-2">
+              <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
+                {UI_TEXT.wind[lang]}
+              </span>
+              <div className="flex items-baseline gap-0.5">
+                <span className="text-sm font-bold text-white leading-none">{current.wind}</span>
+                <span className="text-[10px] text-gray-400 font-medium">km/h</span>
+              </div>
+            </div>
+
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-2">
+              <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
+                {UI_TEXT.humidity[lang]}
+              </span>
+              <span className="block text-sm font-bold text-white leading-none">
+                {current.humidity}%
+              </span>
+            </div>
+
+            <div className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2 py-2">
+              <span className="block text-[10px] text-gray-400 font-medium leading-none mb-1.5">
+                {UI_TEXT.aqi[lang]}
+              </span>
+              <div className="flex items-center gap-1 flex-wrap">
+                <span className="text-sm font-bold text-white leading-none">{current.aqi}</span>
+                <span
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded border leading-none ${aqiStyle.badge}`}
+                >
+                  {aqiStyle.label}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom 3-Day Forecast Box */}
+          <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl px-2 py-2.5 relative z-10">
+            <p className="text-[9px] font-bold tracking-[0.14em] text-gray-400 uppercase text-center mb-2">
+              {UI_TEXT.forecastTitle[lang]}
+            </p>
+            <div className="grid grid-cols-3 divide-x divide-white/[0.08]">
+              {(current.forecast || DEFAULT_CITY_DATA.pune.forecast).slice(0, 3).map((day, idx) => (
+                <div key={day.date || idx} className="flex flex-col items-center gap-1 px-1">
+                  <span className="text-[11px] font-semibold text-gray-400 min-h-[16px]">
+                    {getForecastDayLabel(day, idx)}
+                  </span>
+                  {renderWeatherIcon(day.conditionKey, 'w-4 h-4 text-gray-300')}
+                  <span className="text-sm font-bold text-white leading-none">{day.tempMax}°</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

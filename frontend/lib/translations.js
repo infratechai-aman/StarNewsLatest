@@ -1808,9 +1808,9 @@ export const getTranslation = (language, key) => {
 
 // Language options for the switcher
 export const languageOptions = [
-    { code: 'en', label: 'EN', fullName: 'English' },
     { code: 'hi', label: 'हिं', fullName: 'हिंदी' },
-    { code: 'mr', label: 'मरा', fullName: 'मराठी' }
+    { code: 'mr', label: 'मरा', fullName: 'मराठी' },
+    { code: 'en', label: 'EN', fullName: 'English' }
 ]
 
 export default translations

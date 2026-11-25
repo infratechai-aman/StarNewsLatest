@@ -6,7 +6,7 @@ import { translations, getTranslation, languageOptions } from '@/lib/translation
 const LanguageContext = createContext()
 
 export function LanguageProvider({ children }) {
-    const [language, setLanguage] = useState('en')
+    const [language, setLanguage] = useState('hi')
 
     useEffect(() => {
         // Load saved language preference from localStorage
@@ -36,9 +36,9 @@ export function useLanguage() {
     const context = useContext(LanguageContext)
     if (!context) {
         return {
-            language: 'en',
+            language: 'hi',
             changeLanguage: () => {},
-            t: (key) => getTranslation('en', key),
+            t: (key) => getTranslation('hi', key),
             languageOptions
         }
     }

@@ -538,7 +538,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="font-semibold tracking-tight text-gray-600 hover:bg-gray-50 rounded-full px-3">
                       <Globe className="h-4 w-4 mr-1.5 text-gray-400" />
-                      {languageOptions.find(l => l.code === language)?.label || 'EN'}
+                      {languageOptions.find(l => l.code === language)?.label || 'हिं'}
                       <ChevronDown className="h-3 w-3 ml-1 opacity-40" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -1071,7 +1071,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   {/* Contact CTA — for custom / premium ads */}
                   <div className="mt-4 rounded-xl bg-gradient-to-r from-red-50 to-orange-50 border border-red-100 p-3.5 flex items-center gap-3">
                     <div className="flex-shrink-0 w-9 h-9 rounded-full bg-red-600 flex items-center justify-center shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z" /></svg>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-semibold text-red-700 uppercase tracking-wide">Want a Custom / Premium Ad?</p>
@@ -1406,8 +1406,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                   {(language === 'mr'
                     ? ['राजकारण', 'गुन्हे', 'महाराष्ट्र', 'खेळ', 'मनोरंजन', 'व्यापार', 'तंत्रज्ञान', 'लाइव्ह टीव्ही']
                     : language === 'hi'
-                    ? ['राजनीति', 'अपराध', 'महाराष्ट्र', 'खेल', 'मनोरंजन', 'व्यापार', 'तकनीक', 'लाइव टीवी']
-                    : ['Politics', 'Crime', 'Maharashtra', 'Sports', 'Entertainment', 'Business', 'Technology', 'Live TV']
+                      ? ['राजनीति', 'अपराध', 'महाराष्ट्र', 'खेल', 'मनोरंजन', 'व्यापार', 'तकनीक', 'लाइव टीवी']
+                      : ['Politics', 'Crime', 'Maharashtra', 'Sports', 'Entertainment', 'Business', 'Technology', 'Live TV']
                   ).map((topic) => (
                     <button
                       key={topic}

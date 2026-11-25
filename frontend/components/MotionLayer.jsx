@@ -60,19 +60,19 @@ export default function MotionLayer() {
     /* ---------- 2. Scroll reveal ---------- */
     const timers = new Set()
     const reveal = (el) => {
-        if (!el.classList.contains('reveal-pending')) return
-        io?.unobserve(el)
-        const delay = Number(el.dataset.revealDelay || 0)
-        el.style.transitionDelay = `${delay}ms`
-        el.classList.add('reveal-in')
-        el.classList.remove('reveal-pending')
-        // Drop our transition once done so the element's own hover transitions win again
-        const t = setTimeout(() => {
-          el.classList.remove('reveal-in')
-          el.style.transitionDelay = ''
-          timers.delete(t)
-        }, 800 + delay)
-        timers.add(t)
+      if (!el.classList.contains('reveal-pending')) return
+      io?.unobserve(el)
+      const delay = Number(el.dataset.revealDelay || 0)
+      el.style.transitionDelay = `${delay}ms`
+      el.classList.add('reveal-in')
+      el.classList.remove('reveal-pending')
+      // Drop our transition once done so the element's own hover transitions win again
+      const t = setTimeout(() => {
+        el.classList.remove('reveal-in')
+        el.style.transitionDelay = ''
+        timers.delete(t)
+      }, 800 + delay)
+      timers.add(t)
     }
     const io = reduceMotion ? null : new IntersectionObserver((entries) => {
       entries.forEach((entry) => { if (entry.isIntersecting) reveal(entry.target) })
@@ -118,9 +118,21 @@ export default function MotionLayer() {
         img.dataset.fade = '1'
         if (img.complete && img.naturalWidth > 0) return
         img.classList.add('img-fade')
-        const done = () => img.classList.add('img-loaded')
+        let fallbackTimer = 0
+        const done = () => {
+          img.classList.add('img-loaded')
+          if (fallbackTimer) {
+            clearTimeout(fallbackTimer)
+            timers.delete(fallbackTimer)
+            fallbackTimer = 0
+          }
+        }
+        // Safety fallback so cached/raced/lazy images never remain hidden at opacity: 0
+        fallbackTimer = setTimeout(done, 1200)
+        timers.add(fallbackTimer)
         img.addEventListener('load', done, { once: true })
         img.addEventListener('error', done, { once: true })
+        if (img.complete) done()
       })
     }
 

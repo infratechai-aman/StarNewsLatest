@@ -13,7 +13,22 @@ import { news } from '@/lib/api'
 import DOMPurify from 'dompurify'
 import { formatArticleHtml, stripMarkdown } from '@/lib/articleFormat'
 import { proxyImageUrl } from '@/lib/imageProxy'
+import { extractYouTubeId } from '@/lib/youtube'
 import ReadingProgress from './ReadingProgress'
+
+const resolveArticleImage = (item) =>
+  item?.mainImage ||
+  item?.thumbnailUrl ||
+  item?.thumbnails?.[0] ||
+  item?.images?.find((u) => u && !u.includes('transparent.gif')) ||
+  '/placeholder-news.svg'
+
+const fallbackToPlaceholder = (e) => {
+  if (!e.currentTarget.src.endsWith('/placeholder-news.svg')) {
+    e.currentTarget.src = '/placeholder-news.svg'
+    e.currentTarget.srcset = ''
+  }
+}
 
 /**
  * SECURITY: Sanitize HTML content to prevent XSS attacks.
@@ -169,15 +184,25 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
     setDynamicSummary('')
     setDynamicContent('')
 
-    if (language === 'en') return
+    const needsTranslation = (textVal, targetLang) => {
+      if (!textVal) return true
+      const hasDevanagari = /[\u0900-\u097F]/.test(textVal)
+      if (targetLang === 'en') return hasDevanagari
+      return !hasDevanagari && /[a-zA-Z]{4,}/.test(textVal)
+    }
 
-    // Translate summary / metaDescription dynamically if English-only or untranslated in DB
+    const extractSource = (raw) =>
+      typeof raw === 'string'
+        ? raw.trim()
+        : (raw && typeof raw === 'object' ? (raw.hi || raw.en || raw.mr || '').trim() : '')
+
+    // Translate summary / metaDescription dynamically if missing or in a different language script
     const rawSummary = activeArticle?.metaDescription || activeArticle?.shortDescription || activeArticle?.summary || ''
     const currentSummary = typeof rawSummary === 'object' ? (rawSummary[language] || '') : rawSummary
-    const needsSummaryTrans = !currentSummary || (!/[\u0900-\u097F]/.test(currentSummary) && /[a-zA-Z]{4,}/.test(currentSummary))
+    const summarySource = extractSource(rawSummary)
 
-    if (needsSummaryTrans && typeof rawSummary === 'string' && rawSummary.trim()) {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(rawSummary.trim())}`
+    if (needsTranslation(currentSummary, language) && summarySource) {
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(summarySource)}`
       fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -189,14 +214,14 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
         .catch(() => {})
     }
 
-    // Translate content dynamically if English-only or untranslated in DB
+    // Translate content dynamically if missing or in a different language script
     const rawContent = activeArticle?.content || ''
     const currentContent = typeof rawContent === 'object' ? (rawContent[language] || '') : rawContent
-    const needsContentTrans = !currentContent || (!/[\u0900-\u097F]/.test(currentContent) && /[a-zA-Z]{4,}/.test(currentContent))
+    const contentSource = extractSource(rawContent)
 
-    if (needsContentTrans && typeof rawContent === 'string' && rawContent.trim()) {
-      const cleanPlain = rawContent.replace(/<[^>]*>/g, ' ').substring(0, 3000)
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(cleanPlain.trim())}`
+    if (needsTranslation(currentContent, language) && contentSource) {
+      const cleanPlain = contentSource.replace(/<[^>]*>/g, ' ').substring(0, 3000).trim()
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(cleanPlain)}`
       fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -381,43 +406,44 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
           </div>
 
           {/* Visual Content: Video or Image */}
-          {(article.youtubeUrl || article.videoUrl) ? (() => {
-            const url = article.youtubeUrl || article.videoUrl
-            let videoId = ''
-            if (url.includes('youtube.com/watch')) {
-              videoId = url.split('v=')[1]?.split('&')[0] || ''
-            } else if (url.includes('youtu.be/')) {
-              videoId = url.split('youtu.be/')[1]?.split('?')[0] || ''
-            } else if (url.includes('youtube.com/embed/')) {
-              videoId = url.split('embed/')[1]?.split('?')[0] || ''
+          {(() => {
+            const videoId = extractYouTubeId(article.youtubeUrl || article.videoUrl)
+            if (videoId) {
+              return (
+                <div className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm min-w-0" style={{ paddingTop: '56.25%' }}>
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
+                    className="absolute top-0 left-0 w-full h-full"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  ></iframe>
+                </div>
+              )
             }
-            if (!videoId) return null
+            const heroImage =
+              article.mainImage ||
+              article.thumbnailUrl ||
+              article.thumbnails?.[0] ||
+              article.images?.find((u) => u && !u.includes('transparent.gif'))
+            if (!heroImage) return null
             return (
-              <div className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm min-w-0" style={{ paddingTop: '56.25%' }}>
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&rel=0`}
-                  className="absolute top-0 left-0 w-full h-full"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                ></iframe>
+              <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100 w-full max-w-full min-w-0">
+                <Image
+                  src={proxyImageUrl(heroImage)}
+                  alt={title}
+                  fill
+                  className="object-cover w-full h-full"
+                  priority
+                  onError={fallbackToPlaceholder}
+                />
+                <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm">
+                  FILE PHOTO
+                </div>
               </div>
             )
-          })() : article.mainImage && (
-            <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 w-full max-w-full min-w-0">
-              <Image
-                src={proxyImageUrl(article.mainImage)}
-                alt={title}
-                fill
-                className="object-fill w-full h-full"
-                priority
-              />
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-red-600 text-white text-[9px] font-black tracking-widest px-2.5 py-0.5 rounded shadow-sm">
-                FILE PHOTO
-              </div>
-            </div>
-          )}
+          })()}
 
           {/* Article Body with Inline Gallery Images */}
           <div className={`text-gray-800 leading-relaxed space-y-6 pb-6 break-words [overflow-wrap:anywhere] article-prose-content w-full min-w-0 ${
@@ -453,8 +479,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                     />
                     <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                       {galleryImgs.map((img, idx) => (
-                        <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
-                          <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
+                        <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm bg-gray-100" style={{ aspectRatio: '16/10' }}>
+                          <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" onError={fallbackToPlaceholder} />
                         </div>
                       ))}
                     </div>
@@ -474,8 +500,8 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   />
                   <div className="my-6 sm:my-8 space-y-6 w-full min-w-0">
                     {galleryImgs.map((img, idx) => (
-                      <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm" style={{ aspectRatio: '16/10' }}>
-                        <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" />
+                      <div key={idx} className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm bg-gray-100" style={{ aspectRatio: '16/10' }}>
+                        <Image src={proxyImageUrl(img)} alt={`${title} - Image ${idx + 2}`} fill className="object-cover" onError={fallbackToPlaceholder} />
                       </div>
                     ))}
                   </div>
@@ -610,10 +636,11 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                 >
                   <div className="relative w-20 sm:w-24 h-16 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <Image
-                      src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                      src={proxyImageUrl(resolveArticleImage(item))}
                       alt={getLocalizedText(item.title, language)}
                       fill
-                      className="object-fill w-full h-full"
+                      className="object-cover w-full h-full"
+                      onError={fallbackToPlaceholder}
                     />
                   </div>
                   <div className="flex-1 py-0.5 sm:py-1 flex flex-col min-w-0">
@@ -651,10 +678,11 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
                   </div>
                   <div className="relative w-14 sm:w-16 h-10 sm:h-12 shrink-0 rounded-md overflow-hidden bg-gray-100">
                     <Image
-                      src={proxyImageUrl(newsItem.mainImage || newsItem.images?.[0] || '/placeholder-news.svg')}
+                      src={proxyImageUrl(resolveArticleImage(newsItem))}
                       alt=""
                       fill
-                      className="object-fill w-full h-full"
+                      className="object-cover w-full h-full"
+                      onError={fallbackToPlaceholder}
                     />
                   </div>
                   <p className="font-bold text-xs sm:text-sm text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug break-words flex-1 min-w-0">

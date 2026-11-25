@@ -56,13 +56,17 @@ const BreakingNewsTicker = () => {
   useEffect(() => {
     let isMounted = true;
     const updateTranslation = async () => {
-      if (language === 'en') {
+      const hasDevanagari = /[\u0900-\u097F]/.test(ticker.text || '');
+      const skip =
+        (language === 'hi' && hasDevanagari) ||
+        (language === 'en' && !hasDevanagari);
+      if (skip) {
         if (isMounted) setTranslatedText(ticker.text);
         return;
       }
       try {
         const { translateText } = await import('@/lib/translation');
-        const res = await translateText(ticker.text, 'en');
+        const res = await translateText(ticker.text, hasDevanagari ? 'hi' : 'en');
         if (isMounted) setTranslatedText(res[language] || ticker.text);
       } catch (err) {
         console.error('Translation failed', err);

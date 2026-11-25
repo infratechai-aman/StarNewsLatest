@@ -70,10 +70,13 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Content too large (max 500KB)' }, { status: 400 });
         }
 
-        // Auto-translate Title and Content (parallel for speed)
-        const [translatedTitle, translatedContent] = await Promise.all([
+        // Auto-translate Title, Content, and Meta Description (parallel for speed)
+        const [translatedTitle, translatedContent, translatedMeta] = await Promise.all([
             translateText(title),
-            translateText(content)
+            translateText(content),
+            metaDescription && typeof metaDescription === 'string'
+                ? translateText(metaDescription)
+                : Promise.resolve(metaDescription || '')
         ]);
 
         // Resolve Category
@@ -90,7 +93,7 @@ export async function POST(request) {
             videoUrl: videoUrl || '',
             youtubeUrl: youtubeUrl || '',
             tags: tags || [],
-            metaDescription: metaDescription || '',
+            metaDescription: translatedMeta,
             authorId: authResult.user.userId,
             authorEmail: authResult.user.email || '',
             authorName: authorName || authResult.user.name || '',

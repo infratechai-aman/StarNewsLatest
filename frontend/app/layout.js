@@ -22,7 +22,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="overflow-x-hidden supports-[overflow:clip]:overflow-x-clip max-w-full" suppressHydrationWarning>
+    <html lang="hi" className="overflow-x-hidden supports-[overflow:clip]:overflow-x-clip max-w-full" suppressHydrationWarning>
       <head>
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />

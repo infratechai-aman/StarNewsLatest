@@ -37,22 +37,27 @@ function chunkText(text, maxSize = 3000) {
 /**
  * Translates text into all supported languages
  * @param {string} text The text to translate
- * @param {string} fromLang The source language (default: 'en')
+ * @param {string} fromLang The source language (default: 'hi')
  * @returns {Promise<Object>} Object with translations {en, hi, mr}
  */
-export async function translateText(text, fromLang = 'en') {
+export async function translateText(text, fromLang = 'hi') {
     if (!text) return { en: '', hi: '', mr: '' };
 
-    // If text is already an object, assume it's already translated
+    // If text is already an object, pick a non-empty base string
     if (typeof text === 'object') {
-        const baseText = text[fromLang] || text.en || text.hi || text.mr || '';
+        const baseText = text[fromLang] || text.hi || text.en || text.mr || '';
         if (!baseText) return text;
         text = baseText;
     }
 
-    // Auto-detect Devanagari script if fromLang is set to English
-    if (fromLang === 'en' && typeof text === 'string' && /[\u0900-\u097F]/.test(text)) {
-        fromLang = 'hi';
+    // Auto-detect source script so both Hindi uploads and English uploads translate reliably
+    if (typeof text === 'string') {
+        const hasDevanagari = /[\u0900-\u097F]/.test(text);
+        if (hasDevanagari) {
+            fromLang = fromLang === 'mr' ? 'mr' : 'hi';
+        } else if (/[a-zA-Z]/.test(text)) {
+            fromLang = 'en';
+        }
     }
 
     const chunks = chunkText(text);
@@ -95,7 +100,7 @@ export async function translateText(text, fromLang = 'en') {
  * @param {string} defaultLang 
  * @returns {Object} {en, hi, mr}
  */
-export function normalizeLocalized(value, defaultLang = 'en') {
+export function normalizeLocalized(value, defaultLang = 'hi') {
     if (!value) return { en: '', hi: '', mr: '' };
     if (typeof value === 'object') {
         return {

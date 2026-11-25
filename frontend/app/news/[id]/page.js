@@ -13,7 +13,7 @@ export const revalidate = 300
 const text = (v) => {
   if (!v) return ''
   if (typeof v === 'string') return v
-  return v.en || v.mr || v.hi || Object.values(v).find((x) => typeof x === 'string') || ''
+  return v.hi || v.mr || v.en || Object.values(v).find((x) => typeof x === 'string') || ''
 }
 const plain = (html, n = 180) => text(html).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n)
 const absolute = (SITE, u) => (!u ? `${SITE}/starnews-favicon.png` : /^https?:\/\//.test(u) ? u : `${SITE}${u.startsWith('/') ? '' : '/'}${u}`)

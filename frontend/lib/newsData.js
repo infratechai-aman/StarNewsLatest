@@ -13,13 +13,13 @@ const decodeHTMLEntities = (text) => {
         .replace(/&nbsp;/g, ' ');
 };
 
-export const getLocalizedText = (obj, lang = 'en') => {
+export const getLocalizedText = (obj, lang = 'hi') => {
     if (!obj) return '';
     let result = '';
 
     if (typeof obj === 'object' && obj !== null) {
-        // Prefer the requested language
-        result = obj[lang] || obj.en || obj.mr || obj.hi || '';
+        // Prefer the requested language, falling back to Hindi first
+        result = obj[lang] || obj.hi || obj.mr || obj.en || '';
     } else if (typeof obj === 'string') {
         result = obj;
     }
@@ -104,7 +104,7 @@ const CATEGORY_MAP = {
     'नोकरी': 'jobs'
 };
 
-export const getTranslatedCategory = (cat, lang = 'en') => {
+export const getTranslatedCategory = (cat, lang = 'hi') => {
     if (!cat) return '';
     if (typeof cat === 'object' && cat !== null) {
         return getLocalizedText(cat, lang);

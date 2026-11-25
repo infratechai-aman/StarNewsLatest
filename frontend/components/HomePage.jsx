@@ -148,6 +148,20 @@ const SafeDate = ({ date, format = 'short', className = '', showClock = false, c
   )
 }
 
+const resolveNewsImage = (item) =>
+  item?.mainImage ||
+  item?.thumbnailUrl ||
+  item?.thumbnails?.[0] ||
+  item?.images?.find((u) => u && !u.includes('transparent.gif')) ||
+  '/placeholder-news.svg'
+
+const fallbackNewsImage = (e) => {
+  if (!e.currentTarget.src.endsWith('/placeholder-news.svg')) {
+    e.currentTarget.src = '/placeholder-news.svg'
+    e.currentTarget.srcset = ''
+  }
+}
+
 // News Box Component - Language Aware with API data support
 const NewsBox = ({ item, onClick, language }) => {
   const { t } = useLanguage()
@@ -166,7 +180,7 @@ const NewsBox = ({ item, onClick, language }) => {
 
   const getValidImages = () => {
     const imgList = []
-    const isValidUrl = (url) => url && (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/api/') || url.startsWith('/wp-content/'))
+    const isValidUrl = (url) => url && !url.includes('transparent.gif') && (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/api/') || url.startsWith('/wp-content/'))
 
     // Priority: mainImage first (most reliable from API), then thumbnailUrl, galleryImages, then legacy fields
     if (isValidUrl(item.mainImage)) imgList.push(proxyImageUrl(item.mainImage))
@@ -191,6 +205,7 @@ const NewsBox = ({ item, onClick, language }) => {
           alt={title}
           fill
           className="object-fill w-full h-full"
+          onError={fallbackNewsImage}
           sizes="(max-width: 768px) 100vw, 33vw"
           unoptimized={true}
           referrerPolicy="no-referrer"
@@ -227,10 +242,10 @@ const NewsCard = ({ item, onClick, accentColor = 'red', language }) => {
   // getLocalizedText handles both string and {en,hi,mr} object formats
   const title = getLocalizedText(item.title, language) || item.title || ''
   const category = getTranslatedCategory(item.category, t, language)
-  const [imgSrc, setImgSrc] = useState(proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg'))
+  const [imgSrc, setImgSrc] = useState(proxyImageUrl(resolveNewsImage(item)))
 
   useEffect(() => {
-    setImgSrc(proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg'))
+    setImgSrc(proxyImageUrl(resolveNewsImage(item)))
   }, [item])
 
   const accentBorderHover = {
@@ -852,10 +867,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 className="relative w-full flex-shrink-0 min-w-full sm:min-w-[340px] h-[75dvh] sm:h-auto sm:aspect-square rounded-none sm:rounded-[32px] overflow-hidden cursor-pointer snap-center shadow-lg border-y sm:border border-gray-100"
               >
                 <Image
-                  src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                  src={proxyImageUrl(resolveNewsImage(item))}
                   alt={getLocalizedText(item.title, language) || 'News Image'}
                   fill
                   className="object-fill w-full h-full"
+                  onError={fallbackNewsImage}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10"></div>
                 <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -880,24 +896,39 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
 
         {/* Mobile Ads Block 1 - Rotating Sidebar Ads */}
         <div className="px-4">
-          {sidebarAdSettings?.enabled && sidebarAdSettings.items?.length > 0 ? (
-            <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl) window.open(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length].destinationUrl, '_blank') }}>
-              <CardContent className="p-0 aspect-[16/9] relative bg-gray-100">
-                <Image
-                  src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')}
-                  alt="Advertisement"
-                  fill
-                  className="object-cover transition-opacity duration-1000"
-                />
-                <Badge className="absolute top-3 right-3 bg-black/50 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
-                  {sidebarAdSettings.items.map((_, idx) => (
-                    <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === (currentAdIndex % sidebarAdSettings.items.length) ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
+          {sidebarAdSettings?.enabled && sidebarAdSettings.items?.length > 0 ? (() => {
+            const mItems = sidebarAdSettings.items
+            const mIdx = currentAdIndex % mItems.length
+            const mAd = mItems[mIdx]
+            const mImgSrc = proxyImageUrl(mAd?.imageUrl || '/placeholder-news.svg')
+            return (
+              <Card className="overflow-hidden border border-gray-100 shadow-md cursor-pointer rounded-2xl" onClick={() => { if (mAd?.destinationUrl) window.open(mAd.destinationUrl, '_blank') }}>
+                <CardContent className="p-0 aspect-[4/3] relative bg-[#0f111a]">
+                  <Image
+                    src={mImgSrc}
+                    alt=""
+                    fill
+                    aria-hidden="true"
+                    className="object-cover scale-110 blur-xl opacity-55 brightness-75 pointer-events-none"
+                    onError={fallbackNewsImage}
+                  />
+                  <Image
+                    src={mImgSrc}
+                    alt="Advertisement"
+                    fill
+                    className="object-contain p-1 transition-opacity duration-700"
+                    onError={fallbackNewsImage}
+                  />
+                  <Badge className="absolute top-3 right-3 bg-black/60 text-white text-[9px] px-2 py-1 backdrop-blur-sm border-none uppercase tracking-wider">{t('advertisement') || 'Advertisement'}</Badge>
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                    {mItems.map((_, idx) => (
+                      <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === mIdx ? 'bg-white w-4' : 'bg-white/50 w-1.5'}`} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })() : null}
         </div>
 
         {/* Mobile Today's E-Paper Card */}
@@ -997,11 +1028,12 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 style={{ minHeight: '460px' }}
               >
                 <Image
-                  src={proxyImageUrl(cleanMainNews[0].mainImage || cleanMainNews[0].images?.[0] || '/placeholder-news.svg')}
+                  src={proxyImageUrl(resolveNewsImage(cleanMainNews[0]))}
                   alt={getLocalizedText(cleanMainNews[0].title, language)}
                   fill
                   className="object-fill w-full h-full"
                   priority
+                  onError={fallbackNewsImage}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent rounded-xl"></div>
                 <div className="absolute bottom-0 left-0 p-6 w-full">
@@ -1035,10 +1067,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               >
                 <div className="relative w-full aspect-[16/10] flex-shrink-0 overflow-hidden bg-gray-100">
                   <Image
-                    src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                    src={proxyImageUrl(resolveNewsImage(item))}
                     alt={getLocalizedText(item.title, language)}
                     fill
                     className="object-fill w-full h-full"
+                    onError={fallbackNewsImage}
                   />
                   <div className="absolute top-2.5 left-2.5 z-10">
                     <span className="bg-red-600 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded shadow-md">
@@ -1072,24 +1105,62 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             ))}
           </div>
 
-          {/* RIGHT SIDEBAR: Rotating Ad + E-Paper + Weather */}
+          {/* RIGHT SIDEBAR: Tall Rotating Ad + E-Paper + Compact Weather */}
           <div className="col-span-3 flex flex-col gap-4">
-            {/* Rotating sidebar ad */}
-            {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (
-              <div
-                className="relative overflow-hidden cursor-pointer bg-gray-100 aspect-[4/3] rounded-xl shadow-sm"
-                onClick={() => {
-                  const url = sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl;
-                  if (url) window.open(url, '_blank')
-                }}
-              >
-                <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 border-none rounded-sm">Ad</Badge>
-              </div>
-            )}
+            {/* Tall rotating sidebar ad — ambient backdrop + crisp contain fit for portrait & landscape creatives */}
+            {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (() => {
+              const items = sidebarAdSettings.items
+              const activeIdx = currentAdIndex % items.length
+              const activeAd = items[activeIdx]
+              const adImageSrc = proxyImageUrl(activeAd?.imageUrl || '/placeholder-news.svg')
+              return (
+                <div
+                  className="relative overflow-hidden cursor-pointer bg-[#0f111a] flex-1 min-h-[360px] rounded-xl shadow-sm group"
+                  onClick={() => {
+                    if (activeAd?.destinationUrl) window.open(activeAd.destinationUrl, '_blank')
+                  }}
+                >
+                  <Image
+                    src={adImageSrc}
+                    alt=""
+                    fill
+                    aria-hidden="true"
+                    className="object-cover scale-110 blur-xl opacity-55 brightness-75 pointer-events-none"
+                    onError={fallbackNewsImage}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45 pointer-events-none" />
+                  <Image
+                    src={adImageSrc}
+                    alt="Advertisement"
+                    fill
+                    className="object-contain p-1.5 transition-opacity duration-700"
+                    onError={fallbackNewsImage}
+                  />
+                  <Badge className="absolute top-2.5 right-2.5 bg-black/60 text-white text-[9px] px-1.5 py-0.5 border-none rounded-sm backdrop-blur-sm z-10">
+                    Ad
+                  </Badge>
+                  {items.length > 1 && (
+                    <div className="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5 z-10">
+                      {items.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          aria-label={`Ad slide ${idx + 1}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setCurrentAdIndex(idx)
+                          }}
+                          className={`h-1.5 rounded-full transition-all ${idx === activeIdx ? 'bg-white w-4 shadow' : 'bg-white/50 hover:bg-white/80 w-1.5'}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Today's E-Paper widget */}
-            <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
+            <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group shrink-0" onClick={() => setCurrentView('enewspaper')}>
               <div className="p-4 pb-2 relative z-10 bg-white">
                 <h3 className="font-black text-base text-gray-900">{t('todaysEpaper') || "Today's E-Paper"}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{t('readLatestEdition') || 'Read the latest edition'}</p>
@@ -1109,8 +1180,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </button>
             </div>
 
-            {/* Weather widget */}
-            <WeatherWidget className="rounded-xl shadow-lg p-5 mb-0 w-full flex-1" />
+            {/* Compact Weather widget matching upper-ad box height */}
+            <WeatherWidget compact className="rounded-xl shadow-lg p-3.5 mb-0 w-full shrink-0" />
           </div>
         </div>
 
@@ -1130,10 +1201,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 <div key={item.id} onClick={() => handleNewsClick(item)} className="cursor-pointer group flex flex-col h-full">
                   <div className="relative aspect-[4/3] overflow-hidden bg-gray-100 mb-3 rounded-lg shadow-sm">
                     <Image
-                      src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                      src={proxyImageUrl(resolveNewsImage(item))}
                       alt={getLocalizedText(item.title, language)}
                       fill
                       className="object-fill w-full h-full"
+                      onError={fallbackNewsImage}
                     />
                   </div>
                   {item.category && (
@@ -1264,10 +1336,11 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                     >
                       <div className="relative aspect-[16/10] overflow-hidden bg-gray-900 rounded-t-xl">
                         <Image
-                          src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')}
+                          src={proxyImageUrl(resolveNewsImage(item))}
                           alt={getLocalizedText(item.title, language)}
                           fill
                           className="object-fill w-full h-full"
+                          onError={fallbackNewsImage}
                         />
                         <span className={`absolute top-2.5 left-2.5 ${labelColors[idx]} text-white text-[9px] font-black px-2.5 py-1 uppercase tracking-wider rounded shadow-md`}>
                           {labels[idx]}
@@ -1320,7 +1393,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {cleanPoliticsNews[0] && (
                 <div onClick={() => handleNewsClick(cleanPoliticsNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
-                    <Image src={proxyImageUrl(cleanPoliticsNews[0].mainImage || '/placeholder-news.svg')} alt="Politics" fill className="object-fill w-full h-full" />
+                    <Image src={proxyImageUrl(resolveNewsImage(cleanPoliticsNews[0]))} alt="Politics" fill className="object-fill w-full h-full" onError={fallbackNewsImage} />
                     <Badge className="absolute top-2 left-2 bg-red-600 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('politics') || 'Politics'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanPoliticsNews[0].title, language)}</h3>
@@ -1331,7 +1404,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {cleanPoliticsNews.slice(1, 3).map((item, idx) => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
-                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" />
+                      <Image src={proxyImageUrl(resolveNewsImage(item))} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" onError={fallbackNewsImage} />
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
@@ -1353,7 +1426,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               {cleanCrimeNews[0] && (
                 <div onClick={() => handleNewsClick(cleanCrimeNews[0])} className="cursor-pointer group mb-3">
                   <div className="relative aspect-video overflow-hidden bg-gray-100 mb-2 rounded-lg">
-                    <Image src={proxyImageUrl(cleanCrimeNews[0].mainImage || '/placeholder-news.svg')} alt="Crime" fill className="object-fill w-full h-full" />
+                    <Image src={proxyImageUrl(resolveNewsImage(cleanCrimeNews[0]))} alt="Crime" fill className="object-fill w-full h-full" onError={fallbackNewsImage} />
                     <Badge className="absolute top-2 left-2 bg-gray-900 text-white border-none text-[9px] font-black uppercase px-2 py-0.5 tracking-wider rounded-sm">{t('crime') || 'Crime'}</Badge>
                   </div>
                   <h3 className="font-bold text-[14px] leading-tight group-hover:text-red-600 transition-colors mb-1">{getLocalizedText(cleanCrimeNews[0].title, language)}</h3>
@@ -1364,7 +1437,7 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
                 {cleanCrimeNews.slice(1, 3).map((item, idx) => (
                   <div key={item.id} onClick={() => handleNewsClick(item)} className={`flex gap-3 cursor-pointer group py-3 ${idx < 1 ? 'border-b border-gray-100' : ''}`}>
                     <div className="relative w-24 h-16 flex-shrink-0 overflow-hidden bg-gray-100 rounded-md">
-                      <Image src={proxyImageUrl(item.mainImage || item.images?.[0] || '/placeholder-news.svg')} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" />
+                      <Image src={proxyImageUrl(resolveNewsImage(item))} alt={getLocalizedText(item.title, language)} fill className="object-fill w-full h-full" onError={fallbackNewsImage} />
                     </div>
                     <div className="min-w-0">
                       <h4 className="text-[12px] font-bold text-gray-900 leading-[1.4] line-clamp-2 group-hover:text-red-600 transition-colors">{getLocalizedText(item.title, language)}</h4>
