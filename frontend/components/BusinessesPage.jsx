@@ -8,10 +8,6 @@ import { Input } from '@/components/ui/input'
 import Image from 'next/image'
 import { Search, MapPin, Phone, Globe, Star, Building2, Filter, Store, ChevronRight, Zap, LayoutGrid, Utensils, HeartPulse, GraduationCap, Home, Car, Laptop, Scissors, Plane, Scale, Hammer, MoreHorizontal, ShieldCheck, MessageCircle, Navigation, ExternalLink, CheckCircle2 } from 'lucide-react'
 import { businesses } from '@/lib/api'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { toast } from "sonner"
 import { useLanguage } from '@/contexts/LanguageContext'
 
 const BUSINESS_CATEGORIES = [
@@ -38,43 +34,10 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
   const [selectedCategory, setSelectedCategory] = useState('All Categories')
   const [selectedLocality, setSelectedLocality] = useState('All Localities')
 
-  // Promotion Form State
-  const [promotionOpen, setPromotionOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [promotionData, setPromotionData] = useState({
-    businessName: '', ownerName: '', category: 'Services', phone: '', whatsapp: '', email: '', address: '', description: ''
-  })
-
-  const handlePromotionSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    try {
-      const res = await fetch('/api/businesses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(promotionData)
-      })
-
-      const data = await res.json()
-
-      if (res.ok) {
-        toast.success("Business Submitted!", {
-          description: "Your listing has been sent to the Admin queue for approval."
-        })
-        setPromotionOpen(false)
-        setPromotionData({ businessName: '', ownerName: '', category: 'Services', phone: '', whatsapp: '', email: '', address: '', description: '' })
-      } else {
-        toast.error("Submission Failed", {
-          description: data.error || "Please try again later."
-        })
-      }
-    } catch (error) {
-      console.error('Promotion submit error:', error)
-      toast.error("Error", {
-        description: "Something went wrong. Please check your connection."
-      })
-    } finally {
-      setIsSubmitting(false)
+  // Open the shared Header "Promote Business" modal directly (businessOnly hides Classified Ad tab)
+  const openBusinessPromoteModal = () => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('openPostAdModal', { detail: { tab: 'business', businessOnly: true } }))
     }
   }
 
@@ -318,7 +281,7 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-6 lg:gap-8">
 
           {/* LEFT: Filters (desktop; phones use the locality chips + category tiles above) */}
-          <div className="hidden lg:block space-y-5">
+          <aside className="hidden lg:block lg:sticky lg:top-[68px] lg:self-start lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto scrollbar-hide space-y-5 bg-slate-50/70 border border-gray-200/80 rounded-2xl p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-black text-sm text-gray-900">{t('filters') || 'Filters'}</h3>
               <button 
@@ -385,10 +348,10 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
             </div>
 
             <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-sm">{t('applyFilters') || 'Apply Filters'}</Button>
-          </div>
+          </aside>
 
           {/* CENTER: Results Grid */}
-          <div>
+          <div className="lg:border-l lg:border-gray-200 lg:pl-7">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-500 tabular-nums">{t('showing') || 'Showing'} <span className="font-bold text-gray-900">{filteredBusinesses.length}</span> {t('businesses') || 'businesses'}</p>
               <div className="flex items-center gap-2">
@@ -593,30 +556,13 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                   </li>
                 ))}
               </ul>
-              <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-lg">{t('addYourBusiness') || '+ Add Your Business'}</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px] p-8 rounded-2xl shadow-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold text-gray-900 mb-2">{t('promoteYourBusinessTitle') || 'Promote Your Business'}</DialogTitle>
-                    <DialogDescription className="text-gray-600">{t('promoteYourBusinessDesc') || 'Fill out the form and our team will contact you to help promote your business.'}</DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handlePromotionSubmit} className="grid gap-4 py-4">
-                    <div className="grid gap-2"><Label htmlFor="businessName2">{t('businessName') || 'Business Name'}</Label><Input id="businessName2" placeholder="e.g., My Awesome Restaurant" value={promotionData.businessName} onChange={e => setPromotionData({...promotionData, businessName: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    <div className="grid gap-2"><Label htmlFor="ownerName2">{t('yourName') || 'Your Name'}</Label><Input id="ownerName2" placeholder="e.g., John Doe" value={promotionData.ownerName} onChange={e => setPromotionData({...promotionData, ownerName: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="grid gap-2"><Label htmlFor="phone2">{t('phone') || 'Phone'}</Label><Input id="phone2" type="tel" placeholder="+91 98765 43210" value={promotionData.phone} onChange={e => setPromotionData({...promotionData, phone: e.target.value})} required className="h-11 rounded-lg" /></div>
-                      <div className="grid gap-2"><Label htmlFor="email2">{t('email') || 'Email'}</Label><Input id="email2" type="email" placeholder="you@example.com" value={promotionData.email} onChange={e => setPromotionData({...promotionData, email: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    </div>
-                    <div className="grid gap-2"><Label htmlFor="address2">{t('address') || 'Business Address'}</Label><Input id="address2" placeholder="123 Main St, Pune" value={promotionData.address} onChange={e => setPromotionData({...promotionData, address: e.target.value})} required className="h-11 rounded-lg" /></div>
-                    <div className="grid gap-2"><Label htmlFor="description2">{t('description') || 'Description'}</Label><Textarea id="description2" placeholder="Tell us more about your business..." value={promotionData.description} onChange={e => setPromotionData({...promotionData, description: e.target.value})} rows={3} className="rounded-lg" /></div>
-                    <Button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold">
-                      {isSubmitting ? (t('submitting') || 'Submitting...') : (t('submitRequest') || 'Submit Request')}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button
+                type="button"
+                onClick={openBusinessPromoteModal}
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-lg"
+              >
+                {t('addYourBusiness') || '+ Add Your Business'}
+              </Button>
             </div>
 
             {/* Good Businesses Banner */}
@@ -625,7 +571,13 @@ const BusinessesPage = ({ setSelectedBusiness, setCurrentView }) => {
                 <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">{t('goodBusinesses') || 'Good Businesses'}</p>
                 <h3 className="text-white font-black text-base leading-tight mb-2">{t('buildGreatCities') || 'Build Great Cities'}</h3>
                 <p className="text-gray-400 text-[11px] mb-3">{t('goodBusinessesDesc') || 'Let your business be part of a stronger, informed India.'}</p>
-                <button className="bg-white text-gray-900 text-xs font-black px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors">{t('listNow') || 'List Now →'}</button>
+                <button
+                  type="button"
+                  onClick={openBusinessPromoteModal}
+                  className="bg-white text-gray-900 text-xs font-black px-4 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  {t('listNow') || 'List Now →'}
+                </button>
               </div>
             </div>
 

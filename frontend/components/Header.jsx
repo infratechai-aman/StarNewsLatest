@@ -11,11 +11,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, LogIn, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2, Upload, IndianRupee, Sparkles, CheckCircle } from 'lucide-react'
+import { Menu, X, Home, Newspaper, Building2, FileText, Tag, Shield, LogOut, LogIn, Search, ChevronDown, Briefcase, UserPlus, Globe, MapPin, Zap, Loader2, Upload, IndianRupee, Sparkles, CheckCircle, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import VideoLogo from '@/components/VideoLogo'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useToast } from '@/hooks/use-toast'
 import { getLocalizedText } from '@/lib/newsData'
 import { compressImageFile, formatFileSize } from '@/lib/imageCompress'
 
@@ -94,6 +95,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
 
   // Post Your Ad / Promote Business State
   const [postAdTab, setPostAdTab] = useState('classified')
+  const [businessOnlyMode, setBusinessOnlyMode] = useState(false)
 
   const [classifiedForm, setClassifiedForm] = useState({
     title: '',
@@ -134,9 +136,14 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     portfolio: '',
     message: ''
   })
+  const [reporterDialogOpen, setReporterDialogOpen] = useState(false)
+  const [submittingReporter, setSubmittingReporter] = useState(false)
+  const [reporterSubmitted, setReporterSubmitted] = useState(false)
+  const REPORTER_GOOGLE_FORM_URL = (process.env.NEXT_PUBLIC_REPORTER_GOOGLE_FORM_URL || 'https://forms.gle/MRDCbZL3mVqJACxa8').trim()
 
   // Use language context
   const { language, changeLanguage, t, languageOptions } = useLanguage()
+  const { toast } = useToast()
 
   const userRoleLower = String(user?.role || '').toLowerCase().trim()
   const userEmailLower = String(user?.email || '').toLowerCase().trim()
@@ -238,6 +245,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       if (e?.detail?.tab) {
         setPostAdTab(e.detail.tab)
       }
+      setBusinessOnlyMode(Boolean(e?.detail?.businessOnly))
       setPromoteDialogOpen(true)
     }
     window.addEventListener('openPostAdModal', handleOpen)
@@ -435,9 +443,6 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
     }
   }
 
-  const [reporterDialogOpen, setReporterDialogOpen] = useState(false)
-  const [submittingReporter, setSubmittingReporter] = useState(false)
-
   const handleReporterSubmit = async (e) => {
     e.preventDefault()
     if (!reporterForm.name || !reporterForm.phone || !reporterForm.email) {
@@ -460,8 +465,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       })
       const data = await res.json()
       if (res.ok) {
-        alert('Thank you! Your request has been sent. Our team will contact you soon.')
-        setReporterDialogOpen(false)
+        setReporterSubmitted(true)
         setReporterForm({ name: '', phone: '', email: '', experience: '', portfolio: '', message: '' })
       } else {
         alert(data.error || 'Failed to submit application. Please try again.')
@@ -471,6 +475,13 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
       alert('Something went wrong. Please try again later.')
     } finally {
       setSubmittingReporter(false)
+    }
+  }
+
+  const handleReporterDialogChange = (open) => {
+    setReporterDialogOpen(open)
+    if (!open) {
+      setReporterSubmitted(false)
     }
   }
 
@@ -681,32 +692,57 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 <span>{t('search') || 'Search'}</span>
               </button>
 
-              <Dialog open={promoteDialogOpen} onOpenChange={setPromoteDialogOpen}>
+              <Dialog
+                open={promoteDialogOpen}
+                onOpenChange={(open) => {
+                  setPromoteDialogOpen(open)
+                  if (!open) setBusinessOnlyMode(false)
+                }}
+              >
                 <DialogTrigger asChild>
-                  <button className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md">
+                  <button
+                    onClick={() => {
+                      setBusinessOnlyMode(false)
+                      setPostAdTab('business')
+                    }}
+                    className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+                  >
                     <Briefcase className="h-3.5 w-3.5" />{t('promoteYourBusiness')}
                   </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[560px] max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto rounded-2xl p-6 pb-0 max-sm:top-auto max-sm:bottom-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-3xl max-sm:border-x-0 max-sm:border-b-0">
                   <DialogHeader className="mb-2">
                     <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900">
-                      <Tag className="h-5 w-5 text-[#E53935]" />
-                      {t('postYourAd') || (language === 'mr' ? 'तुमची जाहिरात पोस्ट करा' : language === 'hi' ? 'अपना विज्ञापन पोस्ट करें' : 'Post Your Ad')}
+                      {businessOnlyMode ? (
+                        <>
+                          <Briefcase className="h-5 w-5 text-blue-600" />
+                          {t('promoteYourBusinessTitle') || (language === 'mr' ? 'तुमचा व्यवसाय प्रचारित करा' : language === 'hi' ? 'अपना व्यवसाय प्रचारित करें' : 'Promote Your Business')}
+                        </>
+                      ) : (
+                        <>
+                          <Tag className="h-5 w-5 text-[#E53935]" />
+                          {t('postYourAd') || (language === 'mr' ? 'तुमची जाहिरात पोस्ट करा' : language === 'hi' ? 'अपना विज्ञापन पोस्ट करें' : 'Post Your Ad')}
+                        </>
+                      )}
                     </DialogTitle>
                     <DialogDescription>
-                      {language === 'mr' ? 'वर्गीकृत जाहिरात सबमिट करा किंवा तुमच्या व्यवसायाची यादी प्रचारित करा.' : language === 'hi' ? 'वर्गीकृत विज्ञापन सबमिट करें या अपनी व्यावसायिक लिस्टिंग का प्रचार करें।' : 'Submit a classified ad or promote your business directory listing.'}
+                      {businessOnlyMode
+                        ? (t('promoteYourBusinessDesc') || (language === 'mr' ? 'तुमच्या व्यवसायाची यादी StarNews वर प्रचारित करण्यासाठी खालील तपशील भरा.' : language === 'hi' ? 'StarNews बिजनेस डायरेक्टरी में अपना व्यवसाय जोड़ने के लिए विवरण भरें।' : 'Fill in your details and photos to promote your business on StarNews Directory.'))
+                        : (language === 'mr' ? 'वर्गीकृत जाहिरात सबमिट करा किंवा तुमच्या व्यवसायाची यादी प्रचारित करा.' : language === 'hi' ? 'वर्गीकृत विज्ञापन सबमिट करें या अपनी व्यावसायिक लिस्टिंग का प्रचार करें।' : 'Submit a classified ad or promote your business directory listing.')}
                     </DialogDescription>
                   </DialogHeader>
 
-                  <Tabs value={postAdTab} onValueChange={setPostAdTab} className="w-full">
-                    <TabsList className="grid grid-cols-2 mb-4 h-11 bg-gray-100 p-1 rounded-xl">
-                      <TabsTrigger value="classified" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
-                        {language === 'mr' ? 'वर्गीकृत जाहिरात' : language === 'hi' ? 'वर्गीकृत विज्ञापन' : 'Classified Ad'}
-                      </TabsTrigger>
-                      <TabsTrigger value="business" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
-                        {language === 'mr' ? 'व्यवसाय प्रचार' : language === 'hi' ? 'व्यापार प्रचार' : 'Promote Business'}
-                      </TabsTrigger>
-                    </TabsList>
+                  <Tabs value={businessOnlyMode ? 'business' : postAdTab} onValueChange={setPostAdTab} className="w-full">
+                    {!businessOnlyMode && (
+                      <TabsList className="grid grid-cols-2 mb-4 h-11 bg-gray-100 p-1 rounded-xl">
+                        <TabsTrigger value="classified" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                          {language === 'mr' ? 'वर्गीकृत जाहिरात' : language === 'hi' ? 'वर्गीकृत विज्ञापन' : 'Classified Ad'}
+                        </TabsTrigger>
+                        <TabsTrigger value="business" className="rounded-lg font-bold data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+                          {language === 'mr' ? 'व्यवसाय प्रचार' : language === 'hi' ? 'व्यापार प्रचार' : 'Promote Business'}
+                        </TabsTrigger>
+                      </TabsList>
+                    )}
 
                     {/* TAB 1: CLASSIFIED AD */}
                     <TabsContent value="classified">
@@ -1051,8 +1087,8 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 </DialogContent>
               </Dialog>
 
-              {/* Join as Reporter Dialog (Desktop) */}
-              <Dialog open={reporterDialogOpen} onOpenChange={setReporterDialogOpen}>
+              {/* Join as Reporter Dialog (Desktop — original clean white UI + Step 2 Google Form) */}
+              <Dialog open={reporterDialogOpen} onOpenChange={handleReporterDialogChange}>
                 <DialogTrigger asChild>
                   <button className="flex items-center gap-1.5 bg-white/95 hover:bg-white text-[#E53935] font-bold text-[12px] px-3.5 py-1.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md">
                     <UserPlus className="h-3.5 w-3.5" />{t('joinAsReporter')}
@@ -1063,24 +1099,85 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                     <DialogTitle className="text-xl font-bold">{t('joinAsReporter')}</DialogTitle>
                     <DialogDescription>{t('reportJoinDesc')}</DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleReporterSubmit}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid gap-2"><Label htmlFor="reporterName">{language === 'mr' ? 'पूर्ण नाव *' : language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}</Label><Input id="reporterName" value={reporterForm.name} onChange={(e) => setReporterForm({ ...reporterForm, name: e.target.value })} placeholder={language === 'mr' ? 'तुमचे पूर्ण नाव प्रविष्ट करा' : language === 'hi' ? 'अपना पूरा नाम दर्ज करें' : 'Enter your full name'} required /></div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="grid gap-2"><Label htmlFor="reporterPhone">{language === 'mr' ? 'फोन *' : language === 'hi' ? 'फ़ोन *' : 'Phone *'}</Label><Input id="reporterPhone" type="tel" value={reporterForm.phone} onChange={(e) => setReporterForm({ ...reporterForm, phone: e.target.value })} placeholder="+91 XXXXX" required /></div>
-                        <div className="grid gap-2"><Label htmlFor="reporterEmail">{language === 'mr' ? 'ईमेल *' : language === 'hi' ? 'ईमेल *' : 'Email *'}</Label><Input id="reporterEmail" type="email" value={reporterForm.email} onChange={(e) => setReporterForm({ ...reporterForm, email: e.target.value })} placeholder="email@example.com" required /></div>
+                  {reporterSubmitted ? (
+                    <div className="py-5 text-center space-y-4">
+                      <div className="mx-auto w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                        <CheckCircle className="h-8 w-8 text-green-600" />
                       </div>
-                      <div className="grid gap-2"><Label htmlFor="experience">{language === 'mr' ? 'अनुभव (वर्षे)' : language === 'hi' ? 'अनुभव (वर्ष)' : 'Experience (Years)'}</Label><Input id="experience" value={reporterForm.experience} onChange={(e) => setReporterForm({ ...reporterForm, experience: e.target.value })} placeholder={language === 'mr' ? 'उदा., पत्रकारितेत २ वर्षे' : language === 'hi' ? 'उदा., पत्रकारिता में 2 वर्ष' : 'e.g., 2 years in journalism'} /></div>
-                      <div className="grid gap-2"><Label htmlFor="portfolio">{language === 'mr' ? 'पोर्टफोलिओ/सोशल मीडिया लिंक' : language === 'hi' ? 'पोर्टफोलियो/सोशल मीडिया लिंक' : 'Portfolio/Social Media Link'}</Label><Input id="portfolio" value={reporterForm.portfolio} onChange={(e) => setReporterForm({ ...reporterForm, portfolio: e.target.value })} placeholder="https://your-portfolio.com" /></div>
-                      <div className="grid gap-2"><Label htmlFor="reporterMessage">{language === 'mr' ? 'तुम्हाला सामील का व्हायचे आहे?' : language === 'hi' ? 'आप क्यों जुड़ना चाहते हैं?' : 'Why do you want to join?'}</Label><Textarea id="reporterMessage" value={reporterForm.message} onChange={(e) => setReporterForm({ ...reporterForm, message: e.target.value })} placeholder={language === 'mr' ? 'तुमच्याबद्दल थोडी माहिती द्या...' : language === 'hi' ? 'अपने बारे में बताएं...' : 'Tell us about yourself...'} rows={3} /></div>
+                      <div className="space-y-1">
+                        <h3 className="text-lg font-bold text-gray-900">Application Received!</h3>
+                        <p className="text-sm text-gray-600">
+                          Thank you! Your details have been submitted to our editorial desk.
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-red-100 bg-red-50/70 p-4 text-left space-y-2.5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-red-600">
+                          Step 2: Complete Verification Form
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          Complete your Reporter KYC &amp; ID verification Google Form to speed up your Press ID approval.
+                        </p>
+                        {REPORTER_GOOGLE_FORM_URL ? (
+                          <a
+                            href={REPORTER_GOOGLE_FORM_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 px-4 bg-[#E53935] hover:bg-red-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <span>Open Verification Google Form</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        ) : (
+                          <a
+                            href="https://wa.me/917020873300?text=Hi%20StarNews%20Team%2C%20I%20just%20submitted%20my%20Reporter%20Application%20and%20want%20to%20complete%20verification."
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-2 transition-colors"
+                          >
+                            <span>Complete Verification on WhatsApp</span>
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <Button type="button" variant="outline" onClick={() => handleReporterDialogChange(false)} className="flex-1">
+                          {t('close') || 'Close'}
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            handleReporterDialogChange(false)
+                            toast({
+                              title: 'Application Submitted!',
+                              description: 'Our team will contact you soon.',
+                            })
+                          }}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold"
+                        >
+                          Done ✓
+                        </Button>
+                      </div>
                     </div>
-                    <DialogFooter>
-                      <Button type="button" variant="outline" onClick={() => setReporterDialogOpen(false)} disabled={submittingReporter}>{t('cancel') || 'Cancel'}</Button>
-                      <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingReporter}>
-                        {submittingReporter ? t('pleaseWait') : t('submitApplication')}
-                      </Button>
-                    </DialogFooter>
-                  </form>
+                  ) : (
+                    <form onSubmit={handleReporterSubmit}>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2"><Label htmlFor="reporterName">{language === 'mr' ? 'पूर्ण नाव *' : language === 'hi' ? 'पूरा नाम *' : 'Full Name *'}</Label><Input id="reporterName" value={reporterForm.name} onChange={(e) => setReporterForm({ ...reporterForm, name: e.target.value })} placeholder={language === 'mr' ? 'तुमचे पूर्ण नाव प्रविष्ट करा' : language === 'hi' ? 'अपना पूरा नाम दर्ज करें' : 'Enter your full name'} required /></div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-2"><Label htmlFor="reporterPhone">{language === 'mr' ? 'फोन *' : language === 'hi' ? 'फ़ोन *' : 'Phone *'}</Label><Input id="reporterPhone" type="tel" value={reporterForm.phone} onChange={(e) => setReporterForm({ ...reporterForm, phone: e.target.value })} placeholder="+91 XXXXX" required /></div>
+                          <div className="grid gap-2"><Label htmlFor="reporterEmail">{language === 'mr' ? 'ईमेल *' : language === 'hi' ? 'ईमेल *' : 'Email *'}</Label><Input id="reporterEmail" type="email" value={reporterForm.email} onChange={(e) => setReporterForm({ ...reporterForm, email: e.target.value })} placeholder="email@example.com" required /></div>
+                        </div>
+                        <div className="grid gap-2"><Label htmlFor="experience">{language === 'mr' ? 'अनुभव (वर्षे)' : language === 'hi' ? 'अनुभव (वर्ष)' : 'Experience (Years)'}</Label><Input id="experience" value={reporterForm.experience} onChange={(e) => setReporterForm({ ...reporterForm, experience: e.target.value })} placeholder={language === 'mr' ? 'उदा., पत्रकारितेत २ वर्षे' : language === 'hi' ? 'उदा., पत्रकारिता में 2 वर्ष' : 'e.g., 2 years in journalism'} /></div>
+                        <div className="grid gap-2"><Label htmlFor="portfolio">{language === 'mr' ? 'पोर्टफोलिओ/सोशल मीडिया लिंक' : language === 'hi' ? 'पोर्टफोलियो/सोशल मीडिया लिंक' : 'Portfolio/Social Media Link'}</Label><Input id="portfolio" value={reporterForm.portfolio} onChange={(e) => setReporterForm({ ...reporterForm, portfolio: e.target.value })} placeholder="https://your-portfolio.com" /></div>
+                        <div className="grid gap-2"><Label htmlFor="reporterMessage">{language === 'mr' ? 'तुम्हाला सामील का व्हायचे आहे?' : language === 'hi' ? 'आप क्यों जुड़ना चाहते हैं?' : 'Why do you want to join?'}</Label><Textarea id="reporterMessage" value={reporterForm.message} onChange={(e) => setReporterForm({ ...reporterForm, message: e.target.value })} placeholder={language === 'mr' ? 'तुमच्याबद्दल थोडी माहिती द्या...' : language === 'hi' ? 'अपने बारे में बताएं...' : 'Tell us about yourself...'} rows={3} /></div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => handleReporterDialogChange(false)} disabled={submittingReporter}>{t('cancel') || 'Cancel'}</Button>
+                        <Button type="submit" className="bg-[#E53935] hover:bg-red-700" disabled={submittingReporter}>
+                          {submittingReporter ? t('pleaseWait') : t('submitApplication')}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
@@ -1188,7 +1285,7 @@ const Header = ({ user, currentView, setCurrentView, handleLogout, setSelectedAr
                 </Button>
 
                 <div className="my-2"></div>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-center" onClick={() => { setPromoteDialogOpen(true); setMobileMenuOpen(false) }}>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-center" onClick={() => { setBusinessOnlyMode(false); setPostAdTab('business'); setPromoteDialogOpen(true); setMobileMenuOpen(false) }}>
                   <Briefcase className="mr-2 h-4 w-4" />{t('promoteYourBusiness')}
                 </Button>
                 <Button className="w-full bg-green-600 hover:bg-green-700 text-white justify-center mt-2" onClick={() => { setReporterDialogOpen(true); setMobileMenuOpen(false) }}>

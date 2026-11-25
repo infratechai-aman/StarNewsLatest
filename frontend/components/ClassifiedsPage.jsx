@@ -439,9 +439,8 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 <button
                   key={cat.label}
                   onClick={() => setActiveTab(cat.label)}
-                  className={`shrink-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2 min-w-[76px] h-[72px] sm:min-w-[95px] sm:h-[90px] rounded-2xl sm:rounded-[18px] border transition-all duration-300 ${
-                    isActive ? 'border-red-500 bg-red-50/50 shadow-sm text-red-600' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md hover:-translate-y-1 text-gray-700'
-                  }`}
+                  className={`shrink-0 flex flex-col items-center justify-center gap-1.5 sm:gap-2 min-w-[76px] h-[72px] sm:min-w-[95px] sm:h-[90px] rounded-2xl sm:rounded-[18px] border transition-all duration-300 ${isActive ? 'border-red-500 bg-red-50/50 shadow-sm text-red-600' : 'border-gray-100 bg-white hover:border-gray-200 hover:shadow-md hover:-translate-y-1 text-gray-700'
+                    }`}
                 >
                   <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${isActive ? 'bg-white shadow-sm' : cat.color}`}>
                     {isActive ? <LayoutGrid className="w-5 h-5 text-red-500" /> : cat.icon}
@@ -452,7 +451,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             })}
           </div>
           <button onClick={() => setShowCreateModal(true)} className="shrink-0 h-12 md:h-[90px] px-8 bg-red-600 hover:bg-red-700 text-white rounded-xl md:rounded-[18px] shadow-lg shadow-red-200 flex md:flex-col items-center justify-center gap-2 md:gap-1 transition-all hover:-translate-y-1 w-full md:w-auto">
-            <span className="font-black text-sm flex items-center gap-1"><Plus className="w-4 h-4"/> {t('postClassifiedAd') || 'Post a Classified Ad'}</span>
+            <span className="font-black text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> {t('postClassifiedAd') || 'Post a Classified Ad'}</span>
             <span className="text-[10px] opacity-80 font-medium">{t('freeAndEasy') || "It's free and easy"}</span>
           </button>
         </div>
@@ -461,14 +460,14 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
       {/* ─── MAIN LAYOUT ─── */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-5 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-6 lg:gap-8">
-          
+
           {/* LEFT: Filters (desktop only; phones use the search box + category tabs) */}
-          <div className="hidden lg:block space-y-6">
+          <aside className="hidden lg:block lg:sticky lg:top-[68px] lg:self-start lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto scrollbar-hide space-y-5 bg-slate-50/70 border border-gray-200/80 rounded-2xl p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-black text-sm text-gray-900">{t('filters') || 'Filters'}</h3>
               <button className="text-red-600 text-[11px] font-bold">{t('clearAll') || 'Clear All'}</button>
             </div>
-            
+
             {/* Location */}
             <div>
               <p className="text-[10px] font-black text-gray-700 mb-2 flex items-center gap-1 tracking-wider uppercase"><MapPin className="w-3 h-3" /> {t('location') || 'Location'}</p>
@@ -514,12 +513,12 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 </label>
               ))}
             </div>
-            
+
             <Button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg h-11 text-sm mt-4">{t('applyFilters') || 'Apply Filters'}</Button>
-          </div>
+          </aside>
 
           {/* CENTER: Grid */}
-          <div>
+          <div className="lg:border-l lg:border-gray-200 lg:pl-7">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-500 font-medium tabular-nums">{t('showing') || 'Showing'} <span className="font-bold text-gray-900">{visibleAds.length}</span> {t('ads') || 'ads'}</p>
               <div className="flex items-center gap-2">
@@ -531,7 +530,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 </select>
               </div>
             </div>
-            
+
             {visibleAds.length === 0 ? (
               <div className="text-center py-16 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
                 <Tag className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -557,9 +556,9 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                       <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                         <Image src={cardImg} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" sizes="(max-width: 768px) 100vw, 33vw" />
                         {['New', 'Excellent', 'Urgent'].includes(ad.condition) && (
-                        <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>
-                          {ad.condition === 'New' ? (t('newCondition') || 'NEW') : ad.condition === 'Excellent' ? (language === 'mr' ? 'खास' : language === 'hi' ? 'विशेष' : 'FEATURED') : (language === 'mr' ? 'तातडीचे' : language === 'hi' ? 'तत्काल' : 'URGENT')}
-                        </Badge>
+                          <Badge className={`absolute top-2 left-2 ${ad.condition === 'New' ? 'bg-green-500 text-white' : ad.condition === 'Urgent' ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-950'} hover:opacity-90 border-none px-2 py-0.5 text-[9px] font-black uppercase shadow-sm`}>
+                            {ad.condition === 'New' ? (t('newCondition') || 'NEW') : ad.condition === 'Excellent' ? (language === 'mr' ? 'खास' : language === 'hi' ? 'विशेष' : 'FEATURED') : (language === 'mr' ? 'तातडीचे' : language === 'hi' ? 'तत्काल' : 'URGENT')}
+                          </Badge>
                         )}
                         <button className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm">
                           <Heart className="w-3.5 h-3.5" />
@@ -619,7 +618,7 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
             <div className="bg-[#1a1c29] rounded-2xl p-6 relative overflow-hidden text-white shadow-md">
               <img src="https://images.unsplash.com/photo-1596706059432-850f865f1a58?w=400&q=80" alt="Pune" className="absolute inset-0 w-full h-full object-cover opacity-[0.15] mix-blend-overlay" />
               <div className="relative z-10">
-                <h3 className="font-black text-xl leading-tight mb-2">{t('localPeople') || 'Local People'}<br/><span className="text-red-400">{t('realOpportunities') || 'Real Opportunities'}</span></h3>
+                <h3 className="font-black text-xl leading-tight mb-2">{t('localPeople') || 'Local People'}<br /><span className="text-red-400">{t('realOpportunities') || 'Real Opportunities'}</span></h3>
                 <p className="text-xs text-gray-300 mb-5 leading-relaxed">{t('classifiedSideDesc') || 'From homes to jobs, find it all on StarNews Classifieds.'}</p>
                 <Button size="sm" onClick={() => setShowCreateModal(true)} className="bg-red-600 hover:bg-red-700 text-[11px] font-bold h-8 rounded-lg shadow-sm cursor-pointer active:scale-95 transition-transform">{t('postYourAd') || 'Post Your Ad'} →</Button>
               </div>
@@ -632,8 +631,8 @@ const ClassifiedsPage = ({ user, toast, setSelectedClassified, setCurrentView })
                 {(language === 'mr'
                   ? ['२ बीएचके फ्लॅट', 'वापरलेल्या गाड्या', 'पुण्यात नोकऱ्या', 'लॅपटॉप', 'घरगुती शिकवणी', 'व्यावसायिक जागा', 'फर्निचर', 'रॉयल एनफील्ड', 'एसी विक्रीसाठी', 'पाळीव प्राणी']
                   : language === 'hi'
-                  ? ['2 बीएचके फ्लैट', 'पुरानी कारें', 'पुणे में नौकरियां', 'लैपटॉप', 'होम ट्यूशन', 'कमर्शियल स्पेस', 'फर्नीचर', 'रॉयल एनफील्ड', 'बिक्री के लिए एसी', 'पालतू जानवर']
-                  : ['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets']
+                    ? ['2 बीएचके फ्लैट', 'पुरानी कारें', 'पुणे में नौकरियां', 'लैपटॉप', 'होम ट्यूशन', 'कमर्शियल स्पेस', 'फर्नीचर', 'रॉयल एनफील्ड', 'बिक्री के लिए एसी', 'पालतू जानवर']
+                    : ['2 BHK Flat', 'Used Cars', 'Jobs in Pune', 'Laptop', 'Home Tuition', 'Commercial Space', 'Furniture', 'Royal Enfield', 'AC for Sale', 'Pets']
                 ).map(search => (
                   <div key={search} className="flex items-center gap-3 cursor-pointer group">
                     <Search className="w-3.5 h-3.5 text-gray-400 group-hover:text-red-500 transition-colors" />

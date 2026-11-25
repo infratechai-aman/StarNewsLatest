@@ -5,8 +5,12 @@ export const metadata = {
   title: 'StarNews India - Breaking News 24x7',
   description: 'Your trusted source for breaking news, local updates, and business directory',
   icons: {
-    icon: '/star_news_favicon.jpg',
-    apple: '/star_news_favicon.jpg',
+    icon: [
+      { url: '/starnews-favicon.png', type: 'image/png', sizes: '256x256' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: '/starnews-favicon.png',
+    apple: '/apple-touch-icon.png',
   },
 }
 

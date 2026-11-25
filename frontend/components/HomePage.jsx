@@ -1072,10 +1072,21 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
             ))}
           </div>
 
-          {/* RIGHT SIDEBAR: Weather + E-Paper */}
+          {/* RIGHT SIDEBAR: Rotating Ad + E-Paper + Weather */}
           <div className="col-span-3 flex flex-col gap-4">
-            {/* Weather widget */}
-            <WeatherWidget className="rounded-xl shadow-lg p-5 mb-0 w-full" />
+            {/* Rotating sidebar ad */}
+            {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (
+              <div
+                className="relative overflow-hidden cursor-pointer bg-gray-100 aspect-[4/3] rounded-xl shadow-sm"
+                onClick={() => {
+                  const url = sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl;
+                  if (url) window.open(url, '_blank')
+                }}
+              >
+                <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
+                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 border-none rounded-sm">Ad</Badge>
+              </div>
+            )}
 
             {/* Today's E-Paper widget */}
             <div className="border border-gray-100 bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setCurrentView('enewspaper')}>
@@ -1098,19 +1109,8 @@ const HomePage = ({ setCurrentView, setSelectedArticle, newsData, setNewsData })
               </button>
             </div>
 
-            {/* Rotating sidebar ad */}
-            {sidebarAdSettings?.enabled && sidebarAdSettings?.items?.length > 0 && (
-              <div
-                className="relative overflow-hidden cursor-pointer bg-gray-100 aspect-[4/3] rounded-xl shadow-sm"
-                onClick={() => {
-                  const url = sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.destinationUrl;
-                  if (url) window.open(url, '_blank')
-                }}
-              >
-                <Image src={proxyImageUrl(sidebarAdSettings.items[currentAdIndex % sidebarAdSettings.items.length]?.imageUrl || '/placeholder-news.svg')} alt="Advertisement" fill className="object-cover transition-opacity duration-1000" />
-                <Badge className="absolute top-2 right-2 bg-black/50 text-white text-[9px] px-1.5 py-0.5 border-none rounded-sm">Ad</Badge>
-              </div>
-            )}
+            {/* Weather widget */}
+            <WeatherWidget className="rounded-xl shadow-lg p-5 mb-0 w-full flex-1" />
           </div>
         </div>
 

@@ -14,9 +14,13 @@ import {
   Briefcase,
   FileText,
   Sparkles,
-  Award
+  Award,
+  ExternalLink
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useToast } from '@/hooks/use-toast';
+
+const REPORTER_GOOGLE_FORM_URL = (process.env.NEXT_PUBLIC_REPORTER_GOOGLE_FORM_URL || 'https://forms.gle/MRDCbZL3mVqJACxa8').trim();
 
 const MAHARASHTRA_DISTRICTS = [
   'Pune',
@@ -66,6 +70,7 @@ const BEATS = [
 
 export default function ReporterApplicationModal({ isOpen, onClose }) {
   const { language } = useLanguage();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -176,33 +181,89 @@ export default function ReporterApplicationModal({ isOpen, onClose }) {
         {/* Body Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5 hide-scrollbar">
           {isSuccess ? (
-            <div className="py-8 flex flex-col items-center text-center space-y-4 animate-in zoom-in-95 duration-200">
-              <div className="w-20 h-20 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-xl">
-                <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
+            <div className="py-5 flex flex-col items-center text-center space-y-4 animate-in zoom-in-95 duration-200">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-xl">
+                <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
               </div>
               <div className="space-y-1">
+                <span className="inline-block text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded-full mb-1">
+                  Step 1 of 2 Completed
+                </span>
                 <h3 className="text-2xl font-black text-white">Application Received!</h3>
                 <p className="text-gray-300 text-xs sm:text-sm max-w-md">
-                  Thank you, <strong className="text-white">{formData.fullName}</strong>. Our chief editorial desk will review your details for the <strong className="text-red-400">{formData.district}</strong> bureau and reach out on WhatsApp / Phone within 24–48 hours.
+                  Thank you, <strong className="text-white">{formData.fullName}</strong>. Your initial details for the <strong className="text-red-400">{formData.district}</strong> bureau have been submitted to our editorial desk.
                 </p>
               </div>
+
+              {/* Step 2: Official Google Form Verification */}
+              <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-red-600/20 via-red-950/30 to-white/5 border border-red-500/35 p-4 text-left space-y-3 shadow-lg">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-400">
+                    Step 2 (Final Verification)
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                    Required for Press ID
+                  </span>
+                </div>
+                <p className="text-xs text-gray-200 leading-relaxed">
+                  Please complete our official Reporter KYC &amp; Document Verification Google Form to fast-track your Press ID and CMS access.
+                </p>
+                {REPORTER_GOOGLE_FORM_URL ? (
+                  <a
+                    href={REPORTER_GOOGLE_FORM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-red-900/40 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  >
+                    <span>Open Verification Google Form</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <a
+                    href="https://wa.me/917020873300?text=Hi%20StarNews%20Team%2C%20I%20just%20submitted%20my%20Reporter%20Application%20and%20want%20to%20complete%20verification."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  >
+                    <span>Complete Verification on WhatsApp</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+
               <div className="bg-white/5 border border-white/10 rounded-2xl p-4 w-full max-w-md text-left text-xs text-gray-300 space-y-2">
                 <div className="flex items-center gap-2 text-white font-semibold">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
                   <span>Next Steps in Onboarding:</span>
                 </div>
                 <ul className="list-disc pl-5 space-y-1 text-gray-400">
-                  <li>Credential verification & phone orientation with Senior Editor</li>
-                  <li>Digital Press ID card generation with StarNews verification QR</li>
-                  <li>Access to StarNews Reporter CMS Workspace for instant ground reporting</li>
+                  <li>Complete the verification Google Form &amp; document check</li>
+                  <li>Credential verification &amp; phone orientation with Senior Editor</li>
+                  <li>Digital Press ID card generation &amp; Reporter CMS Workspace access</li>
                 </ul>
               </div>
-              <button
-                onClick={handleResetAndClose}
-                className="mt-4 px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-black text-xs uppercase tracking-wider rounded-full shadow-lg shadow-red-900/40 transition-all active:scale-95"
-              >
-                Close & Return to Home
-              </button>
+              <div className="flex items-center gap-3 w-full max-w-md pt-2">
+                <button
+                  type="button"
+                  onClick={handleResetAndClose}
+                  className="flex-1 px-6 py-2.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all active:scale-95"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleResetAndClose();
+                    toast({
+                      title: 'Application Submitted!',
+                      description: 'Our team will contact you soon.',
+                    });
+                  }}
+                  className="flex-1 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider rounded-full shadow-lg shadow-emerald-900/40 transition-all active:scale-95"
+                >
+                  Done ✓
+                </button>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">

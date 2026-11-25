@@ -26,6 +26,9 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     value: "1:439568692956:web:d14ae11617c2d6a6cde619"
     availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_REPORTER_GOOGLE_FORM_URL
+    value: "https://forms.gle/MRDCbZL3mVqJACxa8"
+    availability: [BUILD, RUNTIME]
   - variable: FIREBASE_PROJECT_ID
     value: "starnews-dd052"
     availability: [RUNTIME]

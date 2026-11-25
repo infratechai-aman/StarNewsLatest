@@ -16,7 +16,7 @@ const text = (v) => {
   return v.en || v.mr || v.hi || Object.values(v).find((x) => typeof x === 'string') || ''
 }
 const plain = (html, n = 180) => text(html).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n)
-const absolute = (SITE, u) => (!u ? `${SITE}/star_news_favicon.jpg` : /^https?:\/\//.test(u) ? u : `${SITE}${u.startsWith('/') ? '' : '/'}${u}`)
+const absolute = (SITE, u) => (!u ? `${SITE}/starnews-favicon.png` : /^https?:\/\//.test(u) ? u : `${SITE}${u.startsWith('/') ? '' : '/'}${u}`)
 
 // cache(): metadata and page share one Firestore read per request.
 const getArticle = cache(async (id) => {
