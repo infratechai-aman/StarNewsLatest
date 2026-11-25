@@ -60,7 +60,7 @@ test('UI: reporter logs in on /reporter and sees the dashboard', async ({ page }
 })
 
 test('UI: admin logs in and the dashboard loads', async ({ page }) => {
-  await page.goto('/adminRiyazStarNews')
+  await page.goto('/admin')
   await page.locator('input[type="email"], input[type="text"]').first().fill(USERS.admin.email)
   await page.locator('input[type="password"]').fill(USERS.admin.password)
   await page.locator('form button[type="submit"]').click()
