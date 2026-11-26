@@ -1,7 +1,7 @@
 import { getDb } from '@/lib/firebaseAdmin';
 import { requireSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
-import { translateText } from '@/lib/translation';
+import { translateText, isLocalizedComplete } from '@/lib/translation';
 import { purgeCache } from '@/lib/cache';
 
 export const dynamic = 'force-dynamic';
@@ -29,9 +29,9 @@ export async function POST(request) {
             if (translatedCount >= limit) break;
             const data = doc.data();
 
-            const needsTitleTranslation = typeof data.title === 'string';
-            const needsContentTranslation = typeof data.content === 'string';
-            const needsMetaTranslation = typeof data.metaDescription === 'string' && data.metaDescription.trim().length > 0;
+            const needsTitleTranslation = !isLocalizedComplete(data.title);
+            const needsContentTranslation = !isLocalizedComplete(data.content);
+            const needsMetaTranslation = Boolean(data.metaDescription) && !isLocalizedComplete(data.metaDescription);
 
             if (needsTitleTranslation || needsContentTranslation || needsMetaTranslation) {
                 const updatePayload = {

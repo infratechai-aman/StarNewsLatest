@@ -5,6 +5,7 @@ import { getCache, setCache, purgeCache, invalidateCache } from '../../lib/cache
 import { rateLimit } from '../../lib/rateLimit.js'
 import { getProxiedImageUrl } from '../../lib/imageProxy.js'
 import { ROLES } from '../../lib/roles.js'
+import { chunkText, isLocalizedComplete, normalizeLocalized } from '../../lib/translation.js'
 
 // ---------- YouTube ----------
 test('extractYouTubeId handles all common URL shapes', () => {
@@ -84,4 +85,21 @@ test('getProxiedImageUrl never double-proxies', () => {
 test('role names are stable (server checks compare these strings)', () => {
   assert.equal(ROLES.SUPER_ADMIN, 'super_admin')
   assert.equal(ROLES.REPORTER, 'reporter')
+})
+
+// ---------- translation chunking & normalization ----------
+test('chunkText keeps Devanagari Hindi/Marathi chunks under safe URI size', () => {
+  const marathi = 'पुण्यातील कोंढवा परिसरात अनधिकृत बांधकामांवर महापालिकेची मोठी कारवाई करण्यात आली आहे.\n\n'.repeat(40)
+  const chunks = chunkText(marathi, 900)
+  assert.ok(chunks.length > 5)
+  for (const c of chunks) {
+    assert.ok(encodeURIComponent(c).length <= 900, `encoded length too large: ${encodeURIComponent(c).length}`)
+  }
+})
+
+test('isLocalizedComplete rejects identical fallback objects and accepts translated ones', () => {
+  assert.equal(isLocalizedComplete('plain text'), false)
+  assert.equal(isLocalizedComplete({ en: 'Same text for every field', hi: 'Same text for every field', mr: 'Same text for every field' }), false)
+  assert.equal(isLocalizedComplete({ en: 'Hello news headline', hi: 'नमस्ते समाचार शीर्षक', mr: 'नमस्कार बातम्यांचे शीर्षक' }), true)
+  assert.deepEqual(normalizeLocalized('खबर'), { en: '', hi: 'खबर', mr: '' })
 })

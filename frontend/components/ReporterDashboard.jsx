@@ -18,6 +18,10 @@ import { INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { getFreshToken, authenticatedFetch } from '@/lib/api'
 import { compressImage } from '@/lib/imageCompress'
 import { proxyImageUrl } from '@/lib/imageProxy'
+import { translateText, isLocalizedComplete } from '@/lib/translation'
+
+const extractReporterText = (v) =>
+  !v ? '' : typeof v === 'string' ? v : (v.hi || v.mr || v.en || Object.values(v).find((x) => typeof x === 'string') || '')
 
 const ReporterDashboard = ({ user, onLogout }) => {
   const { toast } = useToast()
@@ -271,15 +275,36 @@ const ReporterDashboard = ({ user, onLogout }) => {
         }
       }
 
-      const [mainImageUrl, secondImageUrl, thumbnailUrl] = await Promise.all([
+      const localizeField = async (rawValue, existingValue) => {
+        if (!rawValue || typeof rawValue !== 'string') return rawValue || ''
+        if (
+          existingValue &&
+          isLocalizedComplete(existingValue) &&
+          extractReporterText(existingValue) === rawValue
+        ) {
+          return existingValue
+        }
+        try {
+          return await translateText(rawValue)
+        } catch {
+          return rawValue
+        }
+      }
+
+      const [mainImageUrl, secondImageUrl, thumbnailUrl, translatedTitle, translatedContent, translatedMeta] = await Promise.all([
         uploadIfNeeded(newsFormData.mainImage),
         uploadIfNeeded(newsFormData.secondImage),
-        uploadIfNeeded(newsFormData.thumbnailUrl)
+        uploadIfNeeded(newsFormData.thumbnailUrl),
+        localizeField(newsFormData.title, editingNewsItem?.title),
+        localizeField(newsFormData.content, editingNewsItem?.content),
+        newsFormData.metaDescription?.trim()
+          ? localizeField(newsFormData.metaDescription, editingNewsItem?.metaDescription)
+          : Promise.resolve('')
       ])
 
       const payload = {
-        title: newsFormData.title,
-        content: newsFormData.content,
+        title: translatedTitle,
+        content: translatedContent,
         categoryId: newsFormData.categoryId,
         category: newsFormData.categoryId,
         city: newsFormData.city,
@@ -288,7 +313,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
         youtubeUrl: newsFormData.youtubeUrl,
         videoUrl: newsFormData.youtubeUrl,
         thumbnailUrl: thumbnailUrl,
-        metaDescription: newsFormData.metaDescription,
+        metaDescription: translatedMeta,
         tags: newsFormData.tags ? newsFormData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         featured: newsFormData.featured,
         showOnHome: newsFormData.showOnHome,
@@ -417,8 +442,8 @@ const ReporterDashboard = ({ user, onLogout }) => {
   }
 
   const handleEditNews = (article) => {
-    const title = typeof article.title === 'object' ? article.title.en : article.title
-    const content = typeof article.content === 'object' ? article.content.en : article.content
+    const title = extractReporterText(article.title)
+    const content = extractReporterText(article.content)
     setEditingNewsItem(article)
     setNewsFormData({
       title: title || '',
@@ -429,7 +454,7 @@ const ReporterDashboard = ({ user, onLogout }) => {
       secondImage: (article.galleryImages && article.galleryImages[0]) || '',
       youtubeUrl: article.youtubeUrl || article.videoUrl || '',
       thumbnailUrl: article.thumbnailUrl || (article.thumbnails && article.thumbnails[0]) || '',
-      metaDescription: article.metaDescription || '',
+      metaDescription: extractReporterText(article.metaDescription),
       tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
       featured: article.featured || false,
       showOnHome: article.showOnHome !== false,

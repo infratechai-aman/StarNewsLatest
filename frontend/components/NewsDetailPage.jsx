@@ -14,6 +14,7 @@ import DOMPurify from 'dompurify'
 import { formatArticleHtml, stripMarkdown } from '@/lib/articleFormat'
 import { proxyImageUrl } from '@/lib/imageProxy'
 import { extractYouTubeId } from '@/lib/youtube'
+import { translateToTarget } from '@/lib/translation'
 import ReadingProgress from './ReadingProgress'
 
 const resolveArticleImage = (item) =>
@@ -176,73 +177,116 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
   const activeArticle = fullArticle || article
 
 
+  const [dynamicTitle, setDynamicTitle] = useState('')
   const [dynamicSummary, setDynamicSummary] = useState('')
   const [dynamicContent, setDynamicContent] = useState('')
 
   useEffect(() => {
     let isCancelled = false
+    setDynamicTitle('')
     setDynamicSummary('')
     setDynamicContent('')
 
-    const needsTranslation = (textVal, targetLang) => {
-      if (!textVal) return true
-      const hasDevanagari = /[\u0900-\u097F]/.test(textVal)
-      if (targetLang === 'en') return hasDevanagari
-      return !hasDevanagari && /[a-zA-Z]{4,}/.test(textVal)
-    }
+    if (!activeArticle?.id) return
+
+    const cacheKey = `tr_v2_${activeArticle.id}_${language}`
+    try {
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed.title) setDynamicTitle(parsed.title)
+        if (parsed.summary) setDynamicSummary(parsed.summary)
+        if (parsed.content) setDynamicContent(parsed.content)
+        if (parsed.done) return
+      }
+    } catch {}
 
     const extractSource = (raw) =>
       typeof raw === 'string'
         ? raw.trim()
-        : (raw && typeof raw === 'object' ? (raw.hi || raw.en || raw.mr || '').trim() : '')
+        : (raw && typeof raw === 'object' ? (raw.hi || raw.mr || raw.en || '').trim() : '')
 
-    // Translate summary / metaDescription dynamically if missing or in a different language script
-    const rawSummary = activeArticle?.metaDescription || activeArticle?.shortDescription || activeArticle?.summary || ''
-    const currentSummary = typeof rawSummary === 'object' ? (rawSummary[language] || '') : rawSummary
-    const summarySource = extractSource(rawSummary)
-
-    if (needsTranslation(currentSummary, language) && summarySource) {
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(summarySource)}`
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (!isCancelled && data && data[0]) {
-            const translated = data[0].map(item => item[0]).join('')
-            if (translated) setDynamicSummary(translated)
-          }
-        })
-        .catch(() => {})
+    // Translate when missing, identical to another language slot (failed 429 fallback), or wrong script
+    const needsTranslation = (rawField, targetLang) => {
+      if (!rawField) return false
+      if (typeof rawField === 'string') {
+        const hasDevanagari = /[\u0900-\u097F]/.test(rawField)
+        if (targetLang === 'en') return hasDevanagari
+        return (!hasDevanagari && /[a-zA-Z]{4,}/.test(rawField)) || (targetLang === 'mr' && hasDevanagari)
+      }
+      const val = (rawField[targetLang] || '').trim()
+      if (!val) return true
+      const others = ['en', 'hi', 'mr']
+        .filter((k) => k !== targetLang)
+        .map((k) => (rawField[k] || '').trim())
+        .filter(Boolean)
+      if (val.length > 8 && others.some((o) => o === val)) return true
+      const hasDevanagari = /[\u0900-\u097F]/.test(val)
+      if (targetLang === 'en' && hasDevanagari) return true
+      if (targetLang !== 'en' && !hasDevanagari && /[a-zA-Z]{4,}/.test(val)) return true
+      return false
     }
 
-    // Translate content dynamically if missing or in a different language script
-    const rawContent = activeArticle?.content || ''
-    const currentContent = typeof rawContent === 'object' ? (rawContent[language] || '') : rawContent
-    const contentSource = extractSource(rawContent)
+    const rawTitle = activeArticle.title || ''
+    const rawSummary = activeArticle.metaDescription || activeArticle.shortDescription || activeArticle.summary || ''
+    const rawContent = activeArticle.content || ''
 
-    if (needsTranslation(currentContent, language) && contentSource) {
-      const cleanPlain = contentSource.replace(/<[^>]*>/g, ' ').substring(0, 3000).trim()
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(cleanPlain)}`
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (!isCancelled && data && data[0]) {
-            const translated = data[0].map(item => item[0]).join('')
-            if (translated) setDynamicContent(translated)
+    const runDynamicTranslations = async () => {
+      const out = { title: '', summary: '', content: '', done: false }
+
+      if (needsTranslation(rawTitle, language)) {
+        const src = extractSource(rawTitle)
+        if (src) {
+          const r = await translateToTarget(src, language, 'auto')
+          if (!isCancelled && r.ok && r.translated && r.translated !== src) {
+            out.title = r.translated
+            setDynamicTitle(r.translated)
           }
-        })
-        .catch(() => {})
+        }
+      }
+
+      if (needsTranslation(rawSummary, language)) {
+        const src = extractSource(rawSummary)
+        if (src) {
+          const r = await translateToTarget(src, language, 'auto')
+          if (!isCancelled && r.ok && r.translated && r.translated !== src) {
+            out.summary = r.translated
+            setDynamicSummary(r.translated)
+          }
+        }
+      }
+
+      if (needsTranslation(rawContent, language)) {
+        const src = extractSource(rawContent)
+        if (src) {
+          const r = await translateToTarget(src, language, 'auto')
+          if (!isCancelled && r.ok && r.translated && r.translated !== src) {
+            out.content = r.translated
+            setDynamicContent(r.translated)
+          }
+        }
+      }
+
+      if (!isCancelled) {
+        out.done = true
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(out))
+        } catch {}
+      }
     }
+
+    runDynamicTranslations().catch(() => {})
 
     return () => {
       isCancelled = true
     }
-  }, [activeArticle?.id, language, activeArticle?.metaDescription, activeArticle?.content])
+  }, [activeArticle?.id, language, activeArticle?.title, activeArticle?.metaDescription, activeArticle?.content])
 
   // Get localized content with dynamic fallback
   // Early return only after every hook has run (rules of hooks)
   if (!activeArticle) return null
 
-  const title = getLocalizedText(activeArticle.title, language)
+  const title = dynamicTitle || getLocalizedText(activeArticle.title, language)
   const category = getTranslatedCategory(activeArticle.category, language)
   const content = dynamicContent || getLocalizedText(activeArticle.content, language)
   const summary = dynamicSummary || getLocalizedText(activeArticle.metaDescription || activeArticle.shortDescription || activeArticle.summary, language)

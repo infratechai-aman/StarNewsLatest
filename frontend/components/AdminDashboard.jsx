@@ -31,6 +31,7 @@ import {
 import { POPULAR_CITIES, INDIAN_CITIES_SORTED } from '@/lib/indianCities'
 import { compressImageFile, formatFileSize } from '@/lib/imageCompress'
 import { getProxiedImageUrl } from '@/lib/imageProxy'
+import { translateText, isLocalizedComplete } from '@/lib/translation'
 
 // News categories
 const NEWS_CATEGORIES = [
@@ -1302,8 +1303,31 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
         }
       }
 
-      // Upload images first if they are base64
-      const mainImageUrl = await uploadIfNeeded(newsForm.mainImage)
+      const localizeField = async (rawValue, existingValue) => {
+        if (!rawValue || typeof rawValue !== 'string') return rawValue || ''
+        if (
+          existingValue &&
+          isLocalizedComplete(existingValue) &&
+          getTextValue(existingValue) === rawValue
+        ) {
+          return existingValue
+        }
+        try {
+          return await translateText(rawValue)
+        } catch {
+          return rawValue
+        }
+      }
+
+      // Upload images first if they are base64, and pre-translate text in browser (avoids server 429)
+      const [mainImageUrl, translatedTitle, translatedContent, translatedMeta] = await Promise.all([
+        uploadIfNeeded(newsForm.mainImage),
+        localizeField(newsForm.title, editingNews?.title),
+        localizeField(newsForm.content, editingNews?.content),
+        newsForm.metaDescription?.trim()
+          ? localizeField(newsForm.metaDescription, editingNews?.metaDescription)
+          : Promise.resolve('')
+      ])
       const currentThumbs = newsForm.thumbnails?.length
         ? newsForm.thumbnails
         : (newsForm.galleryImages?.length
@@ -1313,14 +1337,14 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
 
       // Map form fields to API expected fields (save inside-article images to both galleryImages and thumbnails)
       const payload = {
-        title: newsForm.title,
-        content: newsForm.content,
+        title: translatedTitle,
+        content: translatedContent,
         categoryId: newsForm.category,
         category: newsForm.category,
         city: newsForm.city || '',
         mainImage: mainImageUrl || uploadedThumbs[0] || '',
         galleryImages: uploadedThumbs,
-        metaDescription: newsForm.metaDescription || '',
+        metaDescription: translatedMeta || '',
         videoUrl: newsForm.youtubeUrl || '',
         youtubeUrl: newsForm.youtubeUrl || '',
         thumbnails: uploadedThumbs,
@@ -1361,7 +1385,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
       city: article.city || '',
       content: getTextValue(article.content),
       mainImage: article.mainImage || '',
-      metaDescription: article.metaDescription || '',
+      metaDescription: getTextValue(article.metaDescription),
       tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
       featured: article.featured || false,
       showOnHome: article.showOnHome !== false,
@@ -5784,7 +5808,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                                     youtubeUrl: article.youtubeUrl || article.videoUrl || '',
                                     thumbnails: [...new Set([...(article.galleryImages || []), ...(article.thumbnails || [])])].filter(Boolean).slice(0, 3),
                                     thumbnailUrl: article.thumbnailUrl || '',
-                                    metaDescription: article.metaDescription || '',
+                                    metaDescription: getTextValue(article.metaDescription),
                                     tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
                                     featured: article.featured || false,
                                     showOnHome: article.showOnHome !== false

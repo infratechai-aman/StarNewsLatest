@@ -2,6 +2,7 @@ import { getDb } from '@/lib/firebaseAdmin';
 import { requireReporterOrAdmin, isSuperAdmin } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import { purgeCache } from '@/lib/cache';
+import { translateText } from '@/lib/translation';
 
 const purgeNewsCaches = () => { ['news_', 'admin_news_list_', 'admin_pending', 'admin_stats', 'admin_reporters_with_stats'].forEach(k => purgeCache(k)); };
 
@@ -80,6 +81,17 @@ export async function PUT(request, { params }) {
             if (body[field] !== undefined) {
                 updateData[field] = body[field];
             }
+        }
+
+        // Ensure title, content, and metaDescription stay translated across EN/HI/MR
+        if (updateData.title !== undefined) {
+            updateData.title = await translateText(updateData.title);
+        }
+        if (updateData.content !== undefined) {
+            updateData.content = await translateText(updateData.content);
+        }
+        if (updateData.metaDescription && typeof updateData.metaDescription === 'string') {
+            updateData.metaDescription = await translateText(updateData.metaDescription);
         }
 
         // Force pending on resave
