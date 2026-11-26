@@ -407,7 +407,7 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
 
           {/* Visual Content: Video or Image */}
           {(() => {
-            const videoId = extractYouTubeId(article.youtubeUrl || article.videoUrl)
+            const videoId = extractYouTubeId(activeArticle.youtubeUrl || activeArticle.videoUrl)
             if (videoId) {
               return (
                 <div className="relative w-full max-w-full rounded-xl overflow-hidden shadow-sm min-w-0" style={{ paddingTop: '56.25%' }}>
@@ -423,10 +423,10 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
               )
             }
             const heroImage =
-              article.mainImage ||
-              article.thumbnailUrl ||
-              article.thumbnails?.[0] ||
-              article.images?.find((u) => u && !u.includes('transparent.gif'))
+              activeArticle.mainImage ||
+              activeArticle.thumbnailUrl ||
+              activeArticle.thumbnails?.[0] ||
+              activeArticle.images?.find((u) => u && !u.includes('transparent.gif'))
             if (!heroImage) return null
             return (
               <div className="relative aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-gray-100 w-full max-w-full min-w-0">
@@ -450,9 +450,32 @@ const NewsDetailPage = ({ article, setCurrentView, setSelectedArticle }) => {
             fontSizeLevel === 'sm' ? 'text-sm sm:text-base' : fontSizeLevel === 'lg' ? 'text-lg sm:text-xl' : 'text-base sm:text-lg'
           }`}>
             {(() => {
-              // Skip gallery images that repeat the cover image (or each other)
-              const galleryImgs = (Array.isArray(article.galleryImages) ? article.galleryImages : [])
-                .filter((img, i, arr) => img && img !== article.mainImage && arr.indexOf(img) === i)
+              const hasTopVideo = Boolean(extractYouTubeId(activeArticle.youtubeUrl || activeArticle.videoUrl))
+              const rawGallery = Array.isArray(activeArticle.galleryImages) ? activeArticle.galleryImages : []
+              const rawThumbs = Array.isArray(activeArticle.thumbnails) ? activeArticle.thumbnails : []
+              const rawImages = Array.isArray(activeArticle.images) ? activeArticle.images : []
+
+              // Include thumbnails when uploaded as gallery (2+ items or distinct from card thumbnail) or when video takes the top slot
+              const extraThumbs = (hasTopVideo || rawThumbs.length > 1 || (rawThumbs.length === 1 && rawThumbs[0] !== activeArticle.thumbnailUrl))
+                ? rawThumbs
+                : []
+
+              // If a YouTube video occupies the top hero slot, keep mainImage visible inside the article body
+              const candidateImgs = [
+                ...(hasTopVideo && activeArticle.mainImage ? [activeArticle.mainImage] : []),
+                ...rawGallery,
+                ...extraThumbs,
+                ...rawImages,
+              ]
+
+              const galleryImgs = candidateImgs.filter(
+                (img, i, arr) =>
+                  img &&
+                  typeof img === 'string' &&
+                  !img.includes('transparent.gif') &&
+                  (hasTopVideo || img !== activeArticle.mainImage) &&
+                  arr.indexOf(img) === i
+              )
 
               if (galleryImgs.length === 0) {
                 return (

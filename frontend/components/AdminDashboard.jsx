@@ -1251,7 +1251,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
 
   // ===== NEWS CRUD Handlers =====
   const resetNewsForm = () => {
-    setNewsForm({ title: '', category: '', city: '', content: '', mainImage: '', metaDescription: '', tags: '', featured: false, showOnHome: true, videoUrl: '', youtubeUrl: '', mediaItems: [], thumbnailUrl: '' })
+    setNewsForm({ title: '', category: '', city: '', content: '', mainImage: '', metaDescription: '', tags: '', featured: false, showOnHome: true, videoUrl: '', youtubeUrl: '', mediaItems: [], thumbnailUrl: '', thumbnails: [], galleryImages: [] })
     setEditingNews(null)
   }
 
@@ -1304,22 +1304,27 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
 
       // Upload images first if they are base64
       const mainImageUrl = await uploadIfNeeded(newsForm.mainImage)
-      const currentThumbs = newsForm.thumbnails || (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : [])
-      const uploadedThumbs = await Promise.all(currentThumbs.map(thumb => uploadIfNeeded(thumb)))
+      const currentThumbs = newsForm.thumbnails?.length
+        ? newsForm.thumbnails
+        : (newsForm.galleryImages?.length
+            ? newsForm.galleryImages
+            : (newsForm.thumbnailUrl ? [newsForm.thumbnailUrl] : []))
+      const uploadedThumbs = (await Promise.all(currentThumbs.map(thumb => uploadIfNeeded(thumb)))).filter(Boolean)
 
-      // Map form fields to API expected fields
+      // Map form fields to API expected fields (save inside-article images to both galleryImages and thumbnails)
       const payload = {
         title: newsForm.title,
         content: newsForm.content,
         categoryId: newsForm.category,
         category: newsForm.category,
         city: newsForm.city || '',
-        mainImage: mainImageUrl || '',
+        mainImage: mainImageUrl || uploadedThumbs[0] || '',
+        galleryImages: uploadedThumbs,
         metaDescription: newsForm.metaDescription || '',
         videoUrl: newsForm.youtubeUrl || '',
         youtubeUrl: newsForm.youtubeUrl || '',
-        thumbnails: uploadedThumbs.filter(Boolean),
-        thumbnailUrl: uploadedThumbs[0] || mainImageUrl || '',
+        thumbnails: uploadedThumbs,
+        thumbnailUrl: mainImageUrl || uploadedThumbs[0] || '',
         tags: newsForm.tags ? newsForm.tags.split(',').map(t => t.trim()) : [],
         featured: newsForm.featured || false,
         showOnHome: newsForm.showOnHome !== false,
@@ -1361,7 +1366,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
       featured: article.featured || false,
       showOnHome: article.showOnHome !== false,
       youtubeUrl: article.youtubeUrl || article.videoUrl || '',
-      thumbnails: article.thumbnails || (article.thumbnailUrl ? [article.thumbnailUrl] : []),
+      thumbnails: [...new Set([...(article.galleryImages || []), ...(article.thumbnails || [])])].filter(Boolean).slice(0, 3),
       authorName: article.authorName || ''
     })
     setShowNewsForm(true)
@@ -5777,7 +5782,7 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
                                     city: article.city || '',
                                     mainImage: article.mainImage || '',
                                     youtubeUrl: article.youtubeUrl || article.videoUrl || '',
-                                    thumbnails: article.thumbnails || (article.thumbnailUrl ? [article.thumbnailUrl] : []),
+                                    thumbnails: [...new Set([...(article.galleryImages || []), ...(article.thumbnails || [])])].filter(Boolean).slice(0, 3),
                                     thumbnailUrl: article.thumbnailUrl || '',
                                     metaDescription: article.metaDescription || '',
                                     tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
@@ -6480,8 +6485,8 @@ const AdminDashboard = ({ user, toast, onLogout, setCurrentView }) => {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-sm font-bold text-gray-700">Gallery Thumbnails (Max 3)</Label>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">For Rotating Effect</span>
+                <Label className="text-sm font-bold text-gray-700">Article Gallery Images (Max 3)</Label>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Shown Inside Article</span>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
